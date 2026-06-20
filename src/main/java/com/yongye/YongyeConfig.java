@@ -207,7 +207,9 @@ public class YongyeConfig {
     public double lootChanceEpic = 0.02;
     public double lootChanceGodly = 0.008;
     /** 普通怪掉落"生命碎片"的概率(文档 15.1) */
-    public double lifeShardDropChance = 0.01;
+    public double lifeShardDropChance = 1.0;     // 生命碎片:必掉
+    public double lifeCrystalDropChance = 0.65;  // 生命结晶:常掉
+    public double lifeCoreDropChance = 0.05;     // 生命核心:稀有
     /** 仅当怪物被玩家击杀才触发随机掉落 */
     public boolean lootRequirePlayerKill = true;
 

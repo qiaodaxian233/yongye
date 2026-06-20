@@ -154,8 +154,16 @@ public final class SkillEffectManager {
     private static void applySatiety(ServerPlayerEntity p) {
         int s = getLearnedLevel(p, SkillType.SATIETY);
         if (s <= 0) return;
-        // 饱食度强化:每秒补充饱食度+饱和度(add 自动封顶 饱食度20/饱和度<=饱食度),等级越高越不会饿
-        p.getHungerManager().add(Math.max(1, s / 8), 0.8f);
+        // 直接钉满饱食度 + 留足饱和度缓冲 + 清零耗竭 → 食物条不再抖动
+        var hm = p.getHungerManager();
+        hm.setFoodLevel(20);
+        hm.setSaturationLevel(Math.min(20f, 8f + s * 0.2f));
+        hm.setExhaustion(0f);
+        // 饱食充盈时缓慢回血(尊重禁疗),让血量也能动
+        long until = p.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L);
+        if (p.getWorld().getTime() >= until && p.getHealth() < p.getMaxHealth()) {
+            p.heal(Math.min(3f, 0.5f + s * 0.02f));
+        }
     }
 
     /** 闪避:返回 true 表示本次伤害被完全闪避(上限 50%)。 */

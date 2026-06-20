@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "III",
+    "ISI",
+    "III"
+  ],
+  "key": {
+    "I": "minecraft:iron_block",
+    "S": "minecraft:shield"
+  },
+  "result": {
+    "id": "yongye:artifact_iron_core",
+    "count": 1
+  }
+}

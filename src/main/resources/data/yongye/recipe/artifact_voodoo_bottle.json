@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "FBF",
+    "SLS",
+    "FBF"
+  ],
+  "key": {
+    "F": "minecraft:fermented_spider_eye",
+    "B": "minecraft:glass_bottle",
+    "S": "yongye:life_shard",
+    "L": "minecraft:milk_bucket"
+  },
+  "result": {
+    "id": "yongye:artifact_voodoo_bottle",
+    "count": 1
+  }
+}

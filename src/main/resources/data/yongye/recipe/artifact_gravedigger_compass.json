@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "RBR",
+    "BCB",
+    "RBR"
+  ],
+  "key": {
+    "R": "minecraft:rotten_flesh",
+    "B": "minecraft:bone",
+    "C": "minecraft:compass"
+  },
+  "result": {
+    "id": "yongye:artifact_gravedigger_compass",
+    "count": 1
+  }
+}

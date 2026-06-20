@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "GAG",
+    "SHS",
+    "GAG"
+  ],
+  "key": {
+    "G": "minecraft:gold_ingot",
+    "A": "minecraft:golden_apple",
+    "S": "yongye:life_crystal",
+    "H": "minecraft:totem_of_undying"
+  },
+  "result": {
+    "id": "yongye:artifact_life_idol",
+    "count": 1
+  }
+}

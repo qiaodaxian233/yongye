@@ -5,6 +5,8 @@ import com.yongye.YongyeConfig;
 import com.yongye.registry.ModAttachments;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -31,12 +33,23 @@ public final class HimJumpscareHandler {
     public static final String NAME = "HIM";
 
     private static final Map<UUID, Long> ACTIVE = new HashMap<>();
+    private static final Map<java.util.UUID, Long> PENDING = new HashMap<>();
     private static int tick = 0;
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             YongyeConfig cfg = YongyeConfig.get();
             long now = server.getTicks();
+
+            // 待生成:失明 5 秒后再让 HIM 出现
+            if (!PENDING.isEmpty()) {
+                PENDING.entrySet().removeIf(e -> {
+                    if (now < e.getValue()) return false;
+                    ServerPlayerEntity p = server.getPlayerManager().getPlayer(e.getKey());
+                    if (p != null && p.getWorld() instanceof ServerWorld w) spawnHim(w, p, cfg, now);
+                    return true;
+                });
+            }
 
             if (!ACTIVE.isEmpty()) {
                 ACTIVE.entrySet().removeIf(e -> {
@@ -62,7 +75,9 @@ public final class HimJumpscareHandler {
                 if (!(p.getWorld() instanceof ServerWorld world)) continue;
                 if (cfg.himNightOrCaveOnly && !isNightOrDark(world, p)) continue;
                 if (world.getRandom().nextDouble() >= cfg.himChance) continue;
-                spawnHim(world, p, cfg, now);
+                // 出现前失明 5 秒
+                p.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 100, 0, false, false, true));
+                PENDING.put(p.getUuid(), now + 100);
             }
         });
         Yongye.LOGGER.info("[亡途荒夜] HIM 惊吓系统已挂载");

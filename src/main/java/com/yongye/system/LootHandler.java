@@ -133,10 +133,15 @@ public final class LootHandler {
                 }
             }
 
-            // 独立的"生命碎片"掉落(文档 15.1),精英翻倍掉率
-            double shardChance = cfg.lifeShardDropChance * (elite ? 2.0 : 1.0);
-            if (r.nextDouble() < shardChance) {
+            // 强化材料掉落:碎片(必掉)/ 结晶(常掉)/ 核心(稀有);精英结晶、核心翻倍
+            if (r.nextDouble() < cfg.lifeShardDropChance) {
                 drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, 1));
+            }
+            if (r.nextDouble() < cfg.lifeCrystalDropChance * (elite ? 2.0 : 1.0)) {
+                drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL, 1));
+            }
+            if (r.nextDouble() < cfg.lifeCoreDropChance * (elite ? 2.0 : 1.0)) {
+                drop(world, entity, new ItemStack(ModItems.LIFE_CORE, 1));
             }
         });
         Yongye.LOGGER.info("[亡途荒夜] 随机掉落系统已挂载");

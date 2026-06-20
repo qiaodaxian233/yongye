@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "OEO",
+    "ERE",
+    "OEO"
+  ],
+  "key": {
+    "O": "minecraft:obsidian",
+    "E": "minecraft:ender_pearl",
+    "R": "minecraft:respawn_anchor"
+  },
+  "result": {
+    "id": "yongye:artifact_world_anchor",
+    "count": 1
+  }
+}
