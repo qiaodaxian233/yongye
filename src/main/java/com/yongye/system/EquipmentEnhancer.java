@@ -41,6 +41,7 @@ public final class EquipmentEnhancer {
         }
         if (hasArmor) return Kind.ARMOR;
         if (hasDmg) return Kind.WEAPON;
+        if (item instanceof net.minecraft.item.ArmorItem) return Kind.ARMOR; // 兜底:属性组件没暴露 generic.armor 的盔甲
         return Kind.NONE;
     }
 
