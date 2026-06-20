@@ -1,0 +1,239 @@
+package com.yongye.system;
+
+import com.yongye.Yongye;
+import com.yongye.YongyeConfig;
+import com.yongye.item.PlayerClass;
+import com.yongye.registry.ModAttachments;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * 职业专属技能(m41,触发型,纯 Fabric 事件实现,不依赖 mixin)。
+ * 战士:吸血 / 斩杀     坦克:嘲讽 / 护盾(被动抗性=守护者天赋)
+ * 刺客:背刺 / 闪避 / 脱战加速   术士:潜行攻击牺牲生命换范围伤害
+ * 武僧:空手连击 / 缴械(拳意见 m37)   剑客:剑气波 / 格挡反击
+ * 追加伤害沿用 WeaponCombatHandler 的做法:target.damage(...) 后 timeUntilRegen=0,与原版攻击叠加。
+ */
+public final class ClassSkillHandler {
+    private ClassSkillHandler() {}
+
+    // 瞬态状态(无需持久化,relog 重置即可)
+    private static final Map<UUID, Integer> comboCount = new HashMap<>();
+    private static final Map<UUID, Integer> comboTarget = new HashMap<>();
+    private static final Map<UUID, Long> comboUntil = new HashMap<>();
+    private static final Map<UUID, Long> lastCombat = new HashMap<>();
+
+    private static boolean isBossLike(LivingEntity e) {
+        return e.getAttachedOrElse(ModAttachments.IS_BOSS, false)
+                || e.getAttachedOrElse(ModAttachments.IS_PAIN, false);
+    }
+
+    public static void register() {
+        // ===== 近战命中触发 =====
+        AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (world.isClient || hand != Hand.MAIN_HAND) return ActionResult.PASS;
+            if (!(player instanceof ServerPlayerEntity p)) return ActionResult.PASS;
+            if (!(entity instanceof LivingEntity target) || !target.isAlive()) return ActionResult.PASS;
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.enableClassSkills) return ActionResult.PASS;
+
+            lastCombat.put(p.getUuid(), world.getTime());
+            boolean charged = p.getAttackCooldownProgress(0.5f) >= 0.9f;
+            DamageSource atkSrc = world.getDamageSources().playerAttack(p);
+            boolean empty = p.getMainHandStack().isEmpty();
+
+            // 战士:吸血 + 斩杀
+            if (charged && ClassManager.isActive(p, PlayerClass.WARRIOR)) {
+                double atk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+                float heal = (float) (atk * Math.max(0.0, cfg.warriorLifestealFraction));
+                if (heal > 0) p.heal(heal);
+                if (!(target instanceof PlayerEntity) && !isBossLike(target)
+                        && target.getHealth() / target.getMaxHealth() <= cfg.warriorExecuteThreshold) {
+                    float exec = (float) (target.getMaxHealth() * Math.max(0.0, cfg.warriorExecuteBonusFraction));
+                    bonusHit(target, atkSrc, exec, world);
+                    feedback(world, target, ParticleTypes.DAMAGE_INDICATOR, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 1.4f);
+                }
+            }
+
+            // 刺客:背刺(从目标背后命中追加伤害)
+            if (charged && ClassManager.isActive(p, PlayerClass.ASSASSIN)) {
+                Vec3d face = target.getRotationVector();
+                Vec3d toAtk = p.getPos().subtract(target.getPos());
+                double fh = Math.hypot(face.x, face.z), th = Math.hypot(toAtk.x, toAtk.z);
+                if (fh > 1e-4 && th > 1e-4) {
+                    double dot = (face.x * toAtk.x + face.z * toAtk.z) / (fh * th);
+                    if (dot < -0.2) {
+                        bonusHit(target, atkSrc, (float) cfg.assassinBackstabBonus, world);
+                        feedback(world, target, ParticleTypes.CRIT, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 1.5f);
+                    }
+                }
+            }
+
+            // 武僧:空手连击(连续命中同一目标叠加伤害)+ 缴械
+            if (charged && empty && ClassManager.isActive(p, PlayerClass.MONK)) {
+                long now = world.getTime();
+                UUID u = p.getUuid();
+                int cnt = (comboTarget.getOrDefault(u, -1) == target.getId()
+                        && now <= comboUntil.getOrDefault(u, 0L)) ? comboCount.getOrDefault(u, 0) + 1 : 1;
+                comboCount.put(u, cnt);
+                comboTarget.put(u, target.getId());
+                comboUntil.put(u, now + cfg.monkComboWindowTicks);
+                int stacks = Math.min(cnt - 1, cfg.monkComboMaxStacks);
+                if (stacks > 0) {
+                    bonusHit(target, atkSrc, (float) (stacks * cfg.monkComboBonusPerHit), world);
+                    feedback(world, target, ParticleTypes.SWEEP_ATTACK, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, 1.0f + 0.05f * stacks);
+                }
+                if (target instanceof HostileEntity && !target.getMainHandStack().isEmpty()
+                        && p.getRandom().nextDouble() < cfg.monkDisarmChance) {
+                    ItemStack w = target.getMainHandStack().copy();
+                    target.equipStack(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+                    target.dropStack(w);
+                    p.sendMessage(Text.literal("缴械!").formatted(Formatting.GOLD), true);
+                }
+            }
+
+            // 术士:潜行近战 → 牺牲生命,范围魔法伤害
+            if (charged && p.isSneaking() && ClassManager.isActive(p, PlayerClass.WARLOCK)) {
+                if (p.getHealth() > cfg.warlockAoeHpCost + 1.0f) {
+                    p.setHealth(Math.max(1.0f, p.getHealth() - (float) cfg.warlockAoeHpCost));
+                    DamageSource magic = world.getDamageSources().magic();
+                    Box area = target.getBoundingBox().expand(cfg.warlockAoeRadius);
+                    for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, area,
+                            e -> e.isAlive() && e != p && !(e instanceof PlayerEntity))) {
+                        le.damage(magic, (float) cfg.warlockAoeDamage);
+                        le.timeUntilRegen = 0;
+                    }
+                    feedback(world, target, ParticleTypes.SOUL_FIRE_FLAME, SoundEvents.ENTITY_WITHER_SHOOT, 1.0f);
+                }
+            }
+
+            // 剑客:持剑命中 → 前方剑气波
+            if (charged && ClassManager.isActive(p, PlayerClass.SWORDSMAN) && EquipmentEnhancer.isWeapon(p.getMainHandStack())) {
+                DamageSource src = world.getDamageSources().playerAttack(p);
+                Vec3d dir = p.getRotationVector();
+                Box wave = p.getBoundingBox().expand(cfg.swordsmanWaveRange)
+                        .offset(dir.x * cfg.swordsmanWaveRange, 0, dir.z * cfg.swordsmanWaveRange);
+                for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, wave,
+                        e -> e.isAlive() && e != p && e != target && !(e instanceof PlayerEntity))) {
+                    le.damage(src, (float) cfg.swordsmanWaveDamage);
+                    le.timeUntilRegen = 0;
+                }
+                if (world instanceof ServerWorld sw) {
+                    Vec3d c = p.getPos().add(dir.x * 1.5, p.getStandingEyeHeight() * 0.6, dir.z * 1.5);
+                    sw.spawnParticles(ParticleTypes.SWEEP_ATTACK, c.x, c.y, c.z, 6, 0.6, 0.2, 0.6, 0.0);
+                }
+            }
+
+            return ActionResult.PASS;
+        });
+
+        // ===== 受到伤害触发:刺客闪避 / 剑客格挡反击 =====
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            if (!(entity instanceof ServerPlayerEntity p)) return true;
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.enableClassSkills) return true;
+            if (source.getAttacker() == null) return true; // 仅闪避/格挡来自实体的攻击
+
+            lastCombat.put(p.getUuid(), p.getWorld().getTime());
+
+            // 剑客:举盾格挡时被近战命中 → 否决并反伤
+            if (p.isBlocking() && ClassManager.isActive(p, PlayerClass.SWORDSMAN)
+                    && source.getAttacker() instanceof LivingEntity attacker
+                    && attacker.distanceTo(p) <= 5.0) {
+                attacker.damage(p.getWorld().getDamageSources().playerAttack(p), (float) cfg.swordsmanParryReflect);
+                attacker.timeUntilRegen = 0;
+                if (p.getWorld() instanceof ServerWorld sw) {
+                    sw.playSound(null, p.getX(), p.getY(), p.getZ(),
+                            SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.PLAYERS, 1.0f, 1.4f);
+                }
+                p.sendMessage(Text.literal("格挡反击!").formatted(Formatting.AQUA), true);
+                return false;
+            }
+
+            // 刺客:概率闪避(完全免疫这次伤害)
+            if (ClassManager.isActive(p, PlayerClass.ASSASSIN) && p.getRandom().nextDouble() < cfg.assassinDodgeChance) {
+                if (p.getWorld() instanceof ServerWorld sw) {
+                    sw.spawnParticles(ParticleTypes.CLOUD, p.getX(), p.getBodyY(0.5), p.getZ(), 8, 0.3, 0.3, 0.3, 0.02);
+                    sw.playSound(null, p.getX(), p.getY(), p.getZ(),
+                            SoundEvents.ENTITY_PHANTOM_FLAP, SoundCategory.PLAYERS, 0.8f, 1.6f);
+                }
+                p.sendMessage(Text.literal("闪避!").formatted(Formatting.GREEN), true);
+                return false;
+            }
+            return true;
+        });
+
+        // ===== 被动 tick:坦克嘲讽/护盾、刺客脱战加速 =====
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.enableClassSkills) return;
+            boolean slow = server.getTicks() % Math.max(1, cfg.tankTauntIntervalTicks) == 0;
+            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                // 坦克护盾(吸收)每秒续命
+                if (server.getTicks() % 20 == 0 && ClassManager.isActive(p, PlayerClass.TANK)) {
+                    p.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 60,
+                            Math.max(0, cfg.tankShieldAmplifier), true, false, false));
+                }
+                // 坦克嘲讽:周期性把附近怪物的目标拉到自己身上
+                if (slow && ClassManager.isActive(p, PlayerClass.TANK) && p.getWorld() instanceof ServerWorld sw) {
+                    Box box = p.getBoundingBox().expand(cfg.tankTauntRadius);
+                    for (HostileEntity mob : sw.getEntitiesByClass(HostileEntity.class, box,
+                            e -> e.isAlive() && e.getTarget() != p)) {
+                        mob.setTarget(p);
+                    }
+                }
+                // 刺客脱战加速:离开战斗一段时间后获得迅捷
+                if (server.getTicks() % 20 == 0 && ClassManager.isActive(p, PlayerClass.ASSASSIN)) {
+                    long last = lastCombat.getOrDefault(p.getUuid(), 0L);
+                    if (p.getWorld().getTime() - last >= cfg.assassinUncombatTicks) {
+                        p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 40,
+                                Math.max(0, cfg.assassinSprintAmplifier), true, false, false));
+                    }
+                }
+            }
+        });
+
+        Yongye.LOGGER.info("[亡途荒夜] 职业专属技能已挂载");
+    }
+
+    private static void bonusHit(LivingEntity target, DamageSource src, float dmg, net.minecraft.world.World world) {
+        if (dmg <= 0) return;
+        target.damage(src, dmg);
+        target.timeUntilRegen = 0;
+    }
+
+    private static void feedback(net.minecraft.world.World world, LivingEntity target,
+                                 net.minecraft.particle.ParticleEffect particle,
+                                 net.minecraft.registry.entry.RegistryEntry<net.minecraft.sound.SoundEvent> sound, float pitch) {
+        if (world instanceof ServerWorld sw) {
+            sw.spawnParticles(particle, target.getX(), target.getBodyY(0.6), target.getZ(), 10, 0.3, 0.3, 0.3, 0.3);
+            sw.playSound(null, target.getX(), target.getY(), target.getZ(), sound, SoundCategory.PLAYERS, 0.8f, pitch);
+        }
+    }
+}

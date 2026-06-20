@@ -63,6 +63,16 @@ public final class ClassManager {
         return new ArrayList<>(p.getAttachedOrElse(ModAttachments.LEARNED_CLASSES, List.of()));
     }
 
+    /** 纯查询:该职业是否已习得且当前等级达标(无副作用,供技能系统判定)。 */
+    public static boolean isActive(ServerPlayerEntity p, PlayerClass c) {
+        List<String> learned = learnedList(p);
+        int idx = learned.indexOf(c.id);
+        if (idx < 0) return false;
+        YongyeConfig cfg = YongyeConfig.get();
+        int need = idx == 0 ? cfg.classLevel1 : cfg.classLevel2;
+        return p.experienceLevel >= need;
+    }
+
     public static boolean learn(ServerPlayerEntity p, PlayerClass type) {
         YongyeConfig cfg = YongyeConfig.get();
         List<String> learned = learnedList(p);

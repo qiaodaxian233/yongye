@@ -261,6 +261,35 @@ public class YongyeConfig {
     public int talentStartLevel = 50;        // 从该等级起,每升 1 级发放天赋点
     public int talentPointsPerLevel = 1;     // 每级发放的天赋点数
 
+    // ===== 职业专属技能(m41,触发型)=====
+    public boolean enableClassSkills = true;
+    // 战士
+    public double warriorLifestealFraction = 0.15;   // 近战命中按攻击力比例回血
+    public double warriorExecuteThreshold = 0.20;     // 目标生命比例低于此触发斩杀
+    public double warriorExecuteBonusFraction = 0.5;  // 斩杀追加伤害 = 目标最大生命 × 此值
+    // 坦克
+    public double tankTauntRadius = 12.0;
+    public int tankTauntIntervalTicks = 40;
+    public int tankShieldAmplifier = 1;               // 吸收等级(0=吸收I=4心)
+    // 刺客
+    public double assassinBackstabBonus = 4.0;
+    public double assassinDodgeChance = 0.20;
+    public int assassinUncombatTicks = 100;           // 脱战多少 tick 后获得加速
+    public int assassinSprintAmplifier = 1;
+    // 术士
+    public double warlockAoeHpCost = 6.0;             // 潜行攻击消耗的生命
+    public double warlockAoeRadius = 4.0;
+    public double warlockAoeDamage = 8.0;
+    // 武僧
+    public int monkComboWindowTicks = 40;
+    public double monkComboBonusPerHit = 1.0;
+    public int monkComboMaxStacks = 5;
+    public double monkDisarmChance = 0.15;
+    // 剑客
+    public double swordsmanWaveRange = 4.0;
+    public double swordsmanWaveDamage = 5.0;
+    public double swordsmanParryReflect = 6.0;
+
     // ===== 时间进度系统 =====
     public boolean enableProgression = true;
     public boolean firstDayLong = true;          // 第一天白天放慢
