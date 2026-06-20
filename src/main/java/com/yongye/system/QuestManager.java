@@ -94,6 +94,7 @@ public final class QuestManager {
             assignCounter = 0;
             if (server.getTicks() >= cfg.questStartGraceTicks) {
                 for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                    if (ProgressionManager.isNewbie(p.getWorld())) continue; // 新手期不派任务
                     if (!ACTIVE.containsKey(p.getUuid())) {
                         assign(p, pickType(p));
                     }
@@ -163,7 +164,10 @@ public final class QuestManager {
     /** 循序渐进:前期(永夜不足)只派可达成的逃离/存活;永夜到一定等级才派猎杀精英。 */
     private static Type pickType(ServerPlayerEntity p) {
         var rnd = p.getRandom();
-        if (NightfallManager.getLevel() >= YongyeConfig.get().questHuntEliteMinNightfall) {
+        long day = ProgressionManager.gameDay(p.getWorld());
+        boolean combatOk = NightfallManager.getLevel() >= YongyeConfig.get().questHuntEliteMinNightfall
+                && day >= YongyeConfig.get().eliteStartDay; // 第3天前不派需要精英/据点的任务
+        if (combatOk) {
             return Type.values()[rnd.nextInt(Type.values().length)];
         }
         Type[] early = { Type.FLEE, Type.SURVIVE, Type.GATHER };

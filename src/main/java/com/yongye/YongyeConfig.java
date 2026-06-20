@@ -123,6 +123,7 @@ public class YongyeConfig {
     public double painRebirthThreshold = 0.3;     // 轮回天生触发血量比例
     public boolean painNaturalSpawn = true;       // 是否允许长门作为终局事件自然降临
     public int painSpawnMinNightfall = 4;          // 触发自然降临的最低永夜等级(IV灾变)
+    public int painSpawnMinDay = 5;                // 自然降临的最低游戏天数(早期不刷)
     public double painNaturalSpawnChance = 0.25;  // 每次检定的降临概率
     public int painNaturalCheckIntervalTicks = 1200; // 检定间隔(默认60秒)
     public int painDeathRedeemLevels = 2;          // 击败长门降低的永夜级数

@@ -152,6 +152,15 @@ public final class ModCommands {
                                     return 1;
                                 })))
 
+                        .then(CommandManager.literal("level")
+                                .then(CommandManager.argument("n", IntegerArgumentType.integer(0, 5000)).executes(ctx -> {
+                                    ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                    int n = IntegerArgumentType.getInteger(ctx, "n");
+                                    p.setExperienceLevel(n);
+                                    ctx.getSource().sendFeedback(() -> Text.literal("已设置等级为 " + n).formatted(Formatting.GREEN), false);
+                                    return 1;
+                                })))
+
                         .then(CommandManager.literal("chaosblade").executes(ctx -> {
                             ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
                             p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.CHAOS_BLADE));

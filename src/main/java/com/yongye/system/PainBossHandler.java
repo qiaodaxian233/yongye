@@ -117,6 +117,7 @@ public final class PainBossHandler {
 
         if (activePain != null) return;                              // 已存在,不重复
         if (NightfallManager.getLevel() < cfg.painSpawnMinNightfall) return;
+        if (ProgressionManager.gameDay(server.getOverworld()) < cfg.painSpawnMinDay) return; // 早期不降临
         if (server.getPlayerManager().getPlayerList().isEmpty()) return;
 
         // 重启兜底:若已有持久长门在某玩家附近加载着,认领它,避免再刷一个
