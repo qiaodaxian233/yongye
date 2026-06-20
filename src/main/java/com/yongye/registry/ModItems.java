@@ -2,11 +2,13 @@ package com.yongye.registry;
 
 import com.yongye.Yongye;
 import com.yongye.item.ArtifactItem;
+import com.yongye.item.ChaosBladeItem;
 import com.yongye.item.ArtifactType;
 import com.yongye.item.HealthSkillBookItem;
 import com.yongye.item.SkillBookItem;
 import com.yongye.item.SkillType;
 import net.minecraft.item.Item;
+import net.minecraft.util.Rarity;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
@@ -24,6 +26,13 @@ public final class ModItems {
 
     public static final Item HEALTH_SKILL_BOOK = register("health_skill_book",
             new HealthSkillBookItem(new Item.Settings().maxCount(64)));
+
+    // —— 混沌之刃:专属传说武器(固定高属性 + 三技能无需解锁) ——
+    public static final Item CHAOS_BLADE = register("chaos_blade",
+            new ChaosBladeItem(new Item.Settings()
+                    .maxDamage(2500)
+                    .rarity(Rarity.EPIC)
+                    .attributeModifiers(ChaosBladeItem.baseAttributes())));
 
     // —— 超稀有材料(用于技能书 / 神器升级,详见文档第 15 章)——
     public static final Item LIFE_SHARD            = register("life_shard", new Item(new Item.Settings()));

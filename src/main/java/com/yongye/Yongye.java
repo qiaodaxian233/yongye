@@ -12,6 +12,7 @@ import com.yongye.system.BossHandler;
 import com.yongye.system.BossAbilityHandler;
 import com.yongye.system.CatastropheCoreManager;
 import com.yongye.system.EliteHandler;
+import com.yongye.system.HardcoreSurvivalHandler;
 import com.yongye.system.HighHpCounterHandler;
 import com.yongye.system.LootHandler;
 import com.yongye.system.MobEnhancementHandler;
@@ -79,6 +80,7 @@ public class Yongye implements ModInitializer {
         SkillEffectManager.register();
         WeaponCombatHandler.register();
         WeaponSkillManager.init();
+        HardcoreSurvivalHandler.register();
         com.yongye.network.YongyeNet.register();
         ModCommands.register();
 

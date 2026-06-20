@@ -267,6 +267,9 @@ public final class PainBossHandler {
         drop(world, pain, ArtifactItem.create(at, 4 + r.nextInt(3)));        // 4~6 级
         drop(world, pain, new ItemStack(Items.NETHERITE_INGOT, 2 + r.nextInt(3)));
         drop(world, pain, new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 3));
+        if (r.nextDouble() < 0.15) {
+            drop(world, pain, new ItemStack(ModItems.CHAOS_BLADE));
+        }
     }
 
     private static void drop(ServerWorld world, LivingEntity src, ItemStack stack) {

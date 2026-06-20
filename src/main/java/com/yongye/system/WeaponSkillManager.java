@@ -43,7 +43,8 @@ public final class WeaponSkillManager {
         }
         int level = EquipmentEnhancer.getLevel(weapon);
         WeaponSkill skill = WeaponSkill.values()[index];
-        if (!skill.isUnlocked(level)) {
+        boolean chaosBlade = weapon.getItem() == com.yongye.registry.ModItems.CHAOS_BLADE;
+        if (!chaosBlade && !skill.isUnlocked(level)) {
             actionbar(player, "【" + skill.cn + "】未解锁(需品质「" + skill.unlockTier.cn + "」)", Formatting.GRAY);
             return;
         }

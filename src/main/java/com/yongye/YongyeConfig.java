@@ -156,6 +156,22 @@ public class YongyeConfig {
     public double mobScalingAttackRatio = 0.3;        // 攻击按血量缩放的 30% 同步提升
     public double mobScalingMaxMultiplier = 60.0;     // 缩放倍率上限
 
+    // ===== 硬核开局生存包 =====
+    public boolean enableHardcoreSurvival = true;
+    public boolean hcNoSleepSkip = true;
+    public double hcHungerDrainPerSecond = 0.35;
+    public boolean hcNightAmbush = true;
+    public double hcAmbushChance = 0.35;
+    public int hcAmbushIntervalTicks = 200;
+    public double hcAmbushRadius = 12.0;
+    public int hcAmbushMaxNearby = 8;
+    public boolean hcCaveDanger = true;
+    public int hcCaveYThreshold = 50;
+    public double hcCaveSpawnChance = 0.5;
+    public double hcCaveDebuffChance = 0.15;
+    public boolean hcResourceHarder = true;
+    public double hcResourceFatigueChance = 0.5;
+
     // ============ 随机掉落(文档 11.2 普通怪概率)============
     public double lootChanceCommon = 0.60;
     public double lootChanceUseful = 0.25;

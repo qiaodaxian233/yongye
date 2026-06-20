@@ -4,6 +4,7 @@ import com.yongye.YongyeConfig;
 import com.yongye.item.WeaponQuality;
 import com.yongye.item.WeaponSkill;
 import com.yongye.registry.ModComponents;
+import com.yongye.registry.ModItems;
 import com.yongye.system.EquipmentEnhancer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -117,7 +118,7 @@ public class WeaponInfoScreen extends Screen {
             int[] cds = {c.skillSlashCooldown, c.skillDevourCooldown, c.skillFinalityCooldown};
             WeaponSkill[] skills = WeaponSkill.values();
             for (int i = 0; i < skills.length; i++) {
-                boolean unlocked = skills[i].isUnlocked(level);
+                boolean unlocked = skills[i].isUnlocked(level) || stack.getItem() == ModItems.CHAOS_BLADE;
                 Formatting col = unlocked ? Formatting.WHITE : Formatting.DARK_GRAY;
                 String head = (unlocked ? "✦ " : "✖ ") + skills[i].cn + "  CD" + (cds[i] / 20) + "s"
                         + (unlocked ? "" : "  (需「" + skills[i].unlockTier.cn + "」)");
