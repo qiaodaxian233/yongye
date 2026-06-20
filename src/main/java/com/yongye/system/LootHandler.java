@@ -113,6 +113,11 @@ public final class LootHandler {
                 drop(world, entity, hi.get(r.nextInt(hi.size())).make(r));
                 if (r.nextDouble() < 0.25) drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL));
                 if (r.nextDouble() < 0.08) drop(world, entity, new ItemStack(ModItems.LIFE_CORE));
+                // 精英概率掉落职业书(随机职业)
+                if (r.nextDouble() < cfg.classBookDropChance) {
+                    com.yongye.item.PlayerClass[] cls = com.yongye.item.PlayerClass.values();
+                    drop(world, entity, new ItemStack(ModItems.getClassBook(cls[r.nextInt(cls.length)])));
+                }
             } else {
                 // 普通怪:按品质表单选
                 double roll = r.nextDouble();

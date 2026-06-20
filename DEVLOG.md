@@ -189,6 +189,14 @@
   - **早期怪不挖方块**:PursuitHandler 挖掘按 mobDigStartDay(5)解锁。
 - 怪物随永夜/天数渐强逻辑保留(MobEnhancement),配合进化倍率叠加。
 
+## 里程碑 37 — 职业系统(B,第一版)
+- 6 职业 PlayerClass(肉盾/战士/术士/剑客/武僧/刺客),属性修饰由 ClassManager 每秒应用(最大生命/护甲/攻击/移速/方块·实体交互距离)。
+- **获得**:精英概率掉落职业书 `class_book_<id>`(classBookDropChance 0.15),右键学习;`/yongye classbook <type>` 给书。
+- **等级门控**:第一职业需 classLevel1(50)、第二职业需 classLevel2(100);**降级跌破即失去该职业**(消失,需重新学)。最多 2 职业。
+- **特性**:武僧空手击杀生物 → 永久 +1 拳击伤害(空手时生效);刺客夜视。
+- 附件 LEARNED_CLASSES(有序,copyOnDeath)+ MONK_FIST_BONUS。
+- **未完(待下轮)**:武僧武器耐久×2(需 mixin)、刺客暴击专属机制(暂用攻击加成代替)、术士远程伤害专属加成(暂用攻击+交互距离代替)、职业选择 GUI。**整套未本地编译,待联调;交互距离属性字段名是最可能的编译点。**
+
 ---
 
 > 后续待办、已知边界与可做方向见 **[HANDOVER.md](HANDOVER.md)** 第 6 节。

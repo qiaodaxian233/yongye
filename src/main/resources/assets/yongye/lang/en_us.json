@@ -58,5 +58,17 @@
   "key.yongye.skill1": "Weapon Skill 1",
   "key.yongye.skill2": "Weapon Skill 2",
   "key.yongye.skill3": "Weapon Skill 3",
-  "item.yongye.chaos_blade": "Chaos Blade"
+  "item.yongye.chaos_blade": "Chaos Blade",
+  "item.yongye.class_book_tank": "Class Book: Tank",
+  "item.yongye.class_book.tank.desc": "Tank class",
+  "item.yongye.class_book_warrior": "Class Book: Warrior",
+  "item.yongye.class_book.warrior.desc": "Warrior class",
+  "item.yongye.class_book_warlock": "Class Book: Warlock",
+  "item.yongye.class_book.warlock.desc": "Warlock class",
+  "item.yongye.class_book_swordsman": "Class Book: Swordsman",
+  "item.yongye.class_book.swordsman.desc": "Swordsman class",
+  "item.yongye.class_book_monk": "Class Book: Monk",
+  "item.yongye.class_book.monk.desc": "Monk class",
+  "item.yongye.class_book_assassin": "Class Book: Assassin",
+  "item.yongye.class_book.assassin.desc": "Assassin class"
 }

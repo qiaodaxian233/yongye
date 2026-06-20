@@ -250,6 +250,11 @@ public class YongyeConfig {
     public double pursuitTeleportMinDist = 3.0; // 距玩家小于此距离不传送(已贴脸)
 
     // ============ 随机任务(文档第 9 章)============
+    // ===== 职业系统 =====
+    public int classLevel1 = 50;             // 第一职业所需等级
+    public int classLevel2 = 100;            // 第二职业所需等级
+    public double classBookDropChance = 0.15; // 精英掉落职业书概率
+
     // ===== 时间进度系统 =====
     public boolean enableProgression = true;
     public boolean firstDayLong = true;          // 第一天白天放慢

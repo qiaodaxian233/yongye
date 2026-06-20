@@ -31,6 +31,22 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "learned_skills"));
 
+    /** LEARNED_CLASSES: 玩家已学职业(有序,最多2),按学习顺序;槽位等级门控。 */
+    public static final AttachmentType<java.util.List<String>> LEARNED_CLASSES =
+            AttachmentRegistry.<java.util.List<String>>builder()
+                    .persistent(Codec.STRING.listOf())
+                    .initializer(java.util.ArrayList::new)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "learned_classes"));
+
+    /** MONK_FIST_BONUS: 武僧空手击杀累计的额外拳击伤害。 */
+    public static final AttachmentType<Integer> MONK_FIST_BONUS =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .initializer(() -> 0)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "monk_fist_bonus"));
+
     /**
      * MOB_ENHANCED: 标记某个怪物是否已被增强,避免反复 re-roll 随机药水。
      */

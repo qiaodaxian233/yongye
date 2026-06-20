@@ -58,5 +58,17 @@
   "key.yongye.skill1": "武器技能 1(混沌斩)",
   "key.yongye.skill2": "武器技能 2(深渊吞噬)",
   "key.yongye.skill3": "武器技能 3(终焉降临)",
-  "item.yongye.chaos_blade": "混沌之刃"
+  "item.yongye.chaos_blade": "混沌之刃",
+  "item.yongye.class_book_tank": "职业书·肉盾",
+  "item.yongye.class_book.tank.desc": "开局40血、护甲高、伤害低、移速慢",
+  "item.yongye.class_book_warrior": "职业书·战士",
+  "item.yongye.class_book.warrior.desc": "各项平衡,无短板",
+  "item.yongye.class_book_warlock": "职业书·术士",
+  "item.yongye.class_book.warlock.desc": "远程强、交互距离远、开局仅10血",
+  "item.yongye.class_book_swordsman": "职业书·剑客",
+  "item.yongye.class_book.swordsman.desc": "近战伤害高、护甲降低",
+  "item.yongye.class_book_monk": "职业书·武僧",
+  "item.yongye.class_book.monk.desc": "开局30血、护甲高、交互距离远、空手击杀叠加拳击伤害",
+  "item.yongye.class_book_assassin": "职业书·刺客",
+  "item.yongye.class_book.assassin.desc": "移速高、暴击强、护甲低、夜视"
 }

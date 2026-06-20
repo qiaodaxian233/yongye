@@ -4,6 +4,8 @@ import com.yongye.Yongye;
 import com.yongye.item.ArtifactItem;
 import com.yongye.item.ChaosBladeItem;
 import com.yongye.item.ArtifactType;
+import com.yongye.item.ClassBookItem;
+import com.yongye.item.PlayerClass;
 import com.yongye.item.HealthSkillBookItem;
 import com.yongye.item.SkillBookItem;
 import com.yongye.item.WardBookItem;
@@ -62,6 +64,20 @@ public final class ModItems {
 
     public static Map<ArtifactType, Item> artifacts() {
         return ARTIFACTS;
+    }
+
+    // —— 职业书(精英掉落,右键学习)——
+    private static final Map<PlayerClass, Item> CLASS_BOOKS = new EnumMap<>(PlayerClass.class);
+    static {
+        for (PlayerClass c : PlayerClass.values()) {
+            CLASS_BOOKS.put(c, register("class_book_" + c.id, new ClassBookItem(c, new Item.Settings().maxCount(1))));
+        }
+    }
+    public static Item getClassBook(PlayerClass c) {
+        return CLASS_BOOKS.get(c);
+    }
+    public static Map<PlayerClass, Item> classBooks() {
+        return CLASS_BOOKS;
     }
 
     // —— 通用技能书(文档 13.4)——
