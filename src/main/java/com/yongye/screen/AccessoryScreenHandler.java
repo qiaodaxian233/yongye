@@ -26,9 +26,11 @@ public class AccessoryScreenHandler extends ScreenHandler {
         this.acc = acc;
         acc.onOpen(playerInv.player);
 
-        // 4 个饰品槽(只接受神器)
+        // 10 个饰品槽(2 行 5 列,只接受神器)
         for (int i = 0; i < AccessoryStorage.SIZE; i++) {
-            addSlot(new Slot(acc, i, 53 + i * 22, 20) {
+            int col = i % 5;
+            int row = i / 5;
+            addSlot(new Slot(acc, i, 44 + col * 18, 18 + row * 20) {
                 @Override
                 public boolean canInsert(ItemStack stack) {
                     return stack.getItem() instanceof ArtifactItem;
@@ -42,12 +44,12 @@ public class AccessoryScreenHandler extends ScreenHandler {
         // 玩家背包 3x9
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 9; c++) {
-                addSlot(new Slot(playerInv, 9 + r * 9 + c, 8 + c * 18, 51 + r * 18));
+                addSlot(new Slot(playerInv, 9 + r * 9 + c, 8 + c * 18, 70 + r * 18));
             }
         }
         // 快捷栏
         for (int c = 0; c < 9; c++) {
-            addSlot(new Slot(playerInv, c, 8 + c * 18, 109));
+            addSlot(new Slot(playerInv, c, 8 + c * 18, 132));
         }
     }
 

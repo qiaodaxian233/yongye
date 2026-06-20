@@ -13,7 +13,7 @@ import net.minecraft.util.collection.DefaultedList;
 public final class AccessoryStorage {
     private AccessoryStorage() {}
 
-    public static final int SIZE = 4;
+    public static final int SIZE = 10;
 
     /** 从玩家附件载入饰品到一个新的 SimpleInventory(开界面时用)。 */
     public static SimpleInventory load(PlayerEntity p) {

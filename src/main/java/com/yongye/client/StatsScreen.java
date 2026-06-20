@@ -15,7 +15,7 @@ public class StatsScreen extends Screen {
     private final Screen parent;
 
     // 顺序须与 SkillType.values() 一致:攻击/护甲/恢复/闪避/反伤/抗性
-    private static final String[] NAMES = {"攻击强化", "护甲强化", "生命恢复", "闪避强化", "反伤强化", "抗性强化"};
+    private static final String[] NAMES = {"攻击强化", "护甲强化", "生命恢复", "闪避强化", "反伤强化", "抗性强化", "饱食强化", "抢夺强化"};
 
     public StatsScreen(Screen parent) {
         super(Text.literal("成长面板"));
@@ -54,7 +54,9 @@ public class StatsScreen extends Screen {
                 "  每秒回血 " + fmt(level(2) * 0.1),
                 "  闪避 " + (int) Math.round(Math.min(0.5, level(3) * 0.01) * 100) + "%",
                 "  反伤 ×" + fmt(Math.min(3.0, level(4) * 0.05)),
-                "  清负面 " + (int) Math.round(Math.min(0.8, level(5) * 0.01) * 100) + "% + 抗火"
+                "  清负面 " + (int) Math.round(Math.min(0.8, level(5) * 0.01) * 100) + "% + 抗火",
+                "  持续回饱食度(几乎不会饿)",
+                "  抢夺概率 " + (int) Math.round(Math.min(0.9, level(7) * 0.005) * 100) + "%"
         };
 
         for (int i = 0; i < NAMES.length; i++) {
