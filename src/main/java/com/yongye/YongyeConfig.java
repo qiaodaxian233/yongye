@@ -104,7 +104,7 @@ public class YongyeConfig {
     public boolean coreDestroyRedeems = true;
 
     // —— 长门(佩恩)Boss ——
-    public double painBossMaxHealth = 400.0;
+    public double painBossMaxHealth = 1000.0;
     public double painBossAttack = 12.0;
     public double painBossArmor = 10.0;
     public int painAbilityIntervalTicks = 120;   // 技能间隔
