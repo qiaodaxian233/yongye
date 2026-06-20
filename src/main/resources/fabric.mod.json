@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "yongye",
+  "version": "${version}",
+  "name": "亡途荒夜 (Yongye)",
+  "description": "极难灾变生存玩法：白天跑图，夜晚逃命，永夜追杀，靠装备血量、技能书(V65535)、背包神器与随机掉落反向变强。Fabric 1.21.1。",
+  "authors": ["qiaodaxian233"],
+  "contact": {
+    "homepage": "https://github.com/qiaodaxian233/yongye",
+    "sources": "https://github.com/qiaodaxian233/yongye"
+  },
+  "license": "ARR",
+  "icon": "assets/yongye/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.yongye.Yongye"]
+  },
+  "mixins": [
+    "yongye.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

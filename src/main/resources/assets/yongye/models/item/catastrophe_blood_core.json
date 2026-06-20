@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "yongye:item/catastrophe_blood_core"
+  }
+}

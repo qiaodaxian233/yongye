@@ -1,0 +1,20 @@
+{
+  "itemGroup.yongye.general": "亡途荒夜",
+
+  "item.yongye.health_skill_book": "血量强化技能书",
+  "item.yongye.life_shard": "生命碎片",
+  "item.yongye.life_crystal": "生命结晶",
+  "item.yongye.life_core": "生命核心",
+  "item.yongye.catastrophe_blood_core": "灾变血核",
+  "item.yongye.endless_night_dust": "永夜之尘",
+  "item.yongye.rift_fragment": "裂界残片",
+  "item.yongye.abyss_soul_crystal": "深渊魂晶",
+  "item.yongye.ending_essence": "终焉神髓",
+
+  "item.yongye.health_skill_book.tooltip.level": "等级 V%s",
+  "item.yongye.health_skill_book.tooltip.effect": "学习后永久增加 %s 点最大生命",
+  "item.yongye.health_skill_book.tooltip.use": "右键学习 · 工作台同级合成升级",
+
+  "message.yongye.learned_health": "你学习了血量强化 V%1$s，当前血量强化累计 V%2$s（+%3$s 最大生命）",
+  "message.yongye.health_capped": "血量强化已达上限 V65535"
+}

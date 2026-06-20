@@ -1,0 +1,20 @@
+{
+  "itemGroup.yongye.general": "Yongye",
+
+  "item.yongye.health_skill_book": "Health Skill Book",
+  "item.yongye.life_shard": "Life Shard",
+  "item.yongye.life_crystal": "Life Crystal",
+  "item.yongye.life_core": "Life Core",
+  "item.yongye.catastrophe_blood_core": "Catastrophe Blood Core",
+  "item.yongye.endless_night_dust": "Endless Night Dust",
+  "item.yongye.rift_fragment": "Rift Fragment",
+  "item.yongye.abyss_soul_crystal": "Abyss Soul Crystal",
+  "item.yongye.ending_essence": "Ending Essence",
+
+  "item.yongye.health_skill_book.tooltip.level": "Level V%s",
+  "item.yongye.health_skill_book.tooltip.effect": "Learn to permanently gain %s max health",
+  "item.yongye.health_skill_book.tooltip.use": "Right-click to learn · combine same level in crafting table",
+
+  "message.yongye.learned_health": "Learned Health V%1$s. Total Health Boost V%2$s (+%3$s max health)",
+  "message.yongye.health_capped": "Health boost capped at V65535"
+}
