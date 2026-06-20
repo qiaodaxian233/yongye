@@ -18,7 +18,9 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import com.yongye.registry.ModBlocks;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,13 +33,14 @@ import java.util.UUID;
 public final class QuestManager {
     private QuestManager() {}
 
-    public enum Type { HUNT_ELITE, SURVIVE, FLEE }
+    public enum Type { HUNT_ELITE, SURVIVE, FLEE, CLEAR_CORE }
 
     private static class Quest {
         Type type;
         int endTick;
         int totalTicks;
         Vec3d origin;
+        BlockPos corePos;
         boolean done;
         ServerBossBar bar;
     }
@@ -111,6 +114,13 @@ public final class QuestManager {
             if (q.bar != null) q.bar.clearPlayers();
             return true;
         }
+        if (q.type == Type.CLEAR_CORE && q.corePos != null
+                && p.getWorld() instanceof ServerWorld sw
+                && !sw.getBlockState(q.corePos).isOf(ModBlocks.CATASTROPHE_CORE)) {
+            complete(p);
+            if (q.bar != null) q.bar.clearPlayers();
+            return true;
+        }
 
         // 超时失败
         if (left <= 0) {
@@ -137,16 +147,21 @@ public final class QuestManager {
         q.totalTicks = cfg.questTimeLimitTicks;
         q.endTick = player.getServer().getTicks() + cfg.questTimeLimitTicks;
         q.origin = player.getPos();
+        if (type == Type.CLEAR_CORE) {
+            q.corePos = CatastropheCoreManager.spawnCoreNear(player);
+        }
 
         Text title = switch (type) {
             case HUNT_ELITE -> Text.literal("任务·猎杀:击杀一只精英怪").formatted(Formatting.GOLD);
             case SURVIVE -> Text.literal("任务·守住据点:在限时内存活").formatted(Formatting.GREEN);
             case FLEE -> Text.literal("任务·限时逃离:远离此地 50 格").formatted(Formatting.AQUA);
+            case CLEAR_CORE -> Text.literal("任务·清除灾厄核心:摧毁附近的灾厄核心").formatted(Formatting.DARK_RED);
         };
         BossBar.Color color = switch (type) {
             case HUNT_ELITE -> BossBar.Color.YELLOW;
             case SURVIVE -> BossBar.Color.GREEN;
             case FLEE -> BossBar.Color.BLUE;
+            case CLEAR_CORE -> BossBar.Color.RED;
         };
         q.bar = new ServerBossBar(title, color, BossBar.Style.PROGRESS);
         q.bar.addPlayer(player);
@@ -158,7 +173,10 @@ public final class QuestManager {
 
     private static void complete(ServerPlayerEntity player) {
         Quest q = ACTIVE.get(player.getUuid());
-        if (q != null) q.done = true;
+        if (q != null) {
+            if (q.done) return;
+            q.done = true;
+        }
         player.sendMessage(Text.literal("【任务完成】奖励已发放").formatted(Formatting.GREEN), false);
         reward(player);
     }

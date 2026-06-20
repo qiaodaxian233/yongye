@@ -54,6 +54,10 @@ public final class ModCommands {
                                 .then(CommandManager.literal("flee").executes(ctx -> {
                                     QuestManager.assign(ctx.getSource().getPlayerOrThrow(), QuestManager.Type.FLEE);
                                     return 1;
+                                }))
+                                .then(CommandManager.literal("core").executes(ctx -> {
+                                    QuestManager.assign(ctx.getSource().getPlayerOrThrow(), QuestManager.Type.CLEAR_CORE);
+                                    return 1;
                                 })))
 
                         .then(CommandManager.literal("book")
@@ -98,6 +102,16 @@ public final class ModCommands {
                                             p.giveItemStack(SkillBookItem.create(type, IntegerArgumentType.getInteger(ctx, "level")));
                                             return 1;
                                         }))))
+
+                        .then(CommandManager.literal("core").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            net.minecraft.util.math.BlockPos pos = CatastropheCoreManager.spawnCoreNear(p);
+                            if (pos != null) {
+                                ctx.getSource().sendFeedback(() -> Text.literal("已在 " + pos.getX() + ", " + pos.getY()
+                                        + ", " + pos.getZ() + " 生成灾厄核心").formatted(Formatting.DARK_RED), false);
+                            }
+                            return 1;
+                        }))
                 ));
 
         Yongye.LOGGER.info("[亡途荒夜] 指令已注册");

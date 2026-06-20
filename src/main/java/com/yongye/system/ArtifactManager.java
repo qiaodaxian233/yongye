@@ -191,6 +191,18 @@ public final class ArtifactManager {
 
     private static void pointToTarget(ServerPlayerEntity p) {
         if (!(p.getWorld() instanceof ServerWorld world)) return;
+
+        // 优先指向最近的灾厄核心(文档 14:掘墓人罗盘指向灾厄核心)
+        net.minecraft.util.math.BlockPos core = CatastropheCoreManager.getNearest(p.getBlockPos());
+        if (core != null) {
+            double cdx = core.getX() + 0.5 - p.getX();
+            double cdz = core.getZ() + 0.5 - p.getZ();
+            int cdist = (int) Math.sqrt(cdx * cdx + cdz * cdz);
+            p.sendMessage(Text.literal("【掘墓罗盘】灾厄核心:" + compassDir(cdx, cdz) + " " + cdist + " 格")
+                    .formatted(Formatting.DARK_RED), true);
+            return;
+        }
+
         Box box = p.getBoundingBox().expand(64);
         List<MobEntity> targets = world.getEntitiesByClass(MobEntity.class, box,
                 m -> m.isAlive() && (m.getAttachedOrElse(ModAttachments.IS_ELITE, false)

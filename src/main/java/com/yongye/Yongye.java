@@ -1,6 +1,7 @@
 package com.yongye;
 
 import com.yongye.registry.ModAttachments;
+import com.yongye.registry.ModBlocks;
 import com.yongye.registry.ModComponents;
 import com.yongye.registry.ModItemGroups;
 import com.yongye.registry.ModItems;
@@ -8,6 +9,7 @@ import com.yongye.registry.ModRecipes;
 import com.yongye.system.ArmorHealthHandler;
 import com.yongye.system.ArtifactManager;
 import com.yongye.system.BossHandler;
+import com.yongye.system.CatastropheCoreManager;
 import com.yongye.system.EliteHandler;
 import com.yongye.system.HighHpCounterHandler;
 import com.yongye.system.LootHandler;
@@ -46,6 +48,7 @@ public class Yongye implements ModInitializer {
         // 注册层
         ModComponents.init();
         ModAttachments.init();
+        ModBlocks.init();
         ModItems.init();
         ModItemGroups.init();
         ModRecipes.init();
@@ -62,6 +65,7 @@ public class Yongye implements ModInitializer {
         NightfallManager.register();
         PursuitHandler.register();
         QuestManager.register();
+        CatastropheCoreManager.register();
 
         // 玩法系统(Phase 4:神器 / 高血量反制 / 指令)
         ArtifactManager.register();

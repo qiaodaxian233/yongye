@@ -49,6 +49,8 @@ public final class ModItemGroups {
             entries.add(ModItems.RIFT_FRAGMENT);
             entries.add(ModItems.ABYSS_SOUL_CRYSTAL);
             entries.add(ModItems.ENDING_ESSENCE);
+            // 方块
+            entries.add(ModBlocks.CATASTROPHE_CORE);
 
             // 背包神器:每种放 残破(1)/远古(3)/终焉(6) 三档示例
             for (com.yongye.item.ArtifactType t : com.yongye.item.ArtifactType.values()) {

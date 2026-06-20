@@ -1,6 +1,6 @@
 {
   "itemGroup.yongye.general": "亡途荒夜",
-
+  "block.yongye.catastrophe_core": "灾厄核心",
   "item.yongye.health_skill_book": "血量强化技能书",
   "item.yongye.life_shard": "生命碎片",
   "item.yongye.life_crystal": "生命结晶",
@@ -10,7 +10,6 @@
   "item.yongye.rift_fragment": "裂界残片",
   "item.yongye.abyss_soul_crystal": "深渊魂晶",
   "item.yongye.ending_essence": "终焉神髓",
-
   "item.yongye.health_skill_book.tooltip.level": "等级 V%s",
   "item.yongye.health_skill_book.tooltip.effect": "学习后永久增加 %s 点最大生命",
   "item.yongye.health_skill_book.tooltip.use": "右键学习 · 工作台同级合成升级",
@@ -26,10 +25,8 @@
   "item.yongye.skill_book.evasion.desc": "概率完全闪避一次伤害(每级 +1%,上限 50%)",
   "item.yongye.skill_book.thorns.desc": "受击时反弹伤害给攻击者(每级 ×0.05,上限 ×3)",
   "item.yongye.skill_book.resistance.desc": "抗火 + 概率清除负面状态(每级 +1% 清除几率,上限 80%)",
-
   "message.yongye.learned_health": "你学习了血量强化 V%1$s，当前血量强化累计 V%2$s（+%3$s 最大生命）",
   "message.yongye.health_capped": "血量强化已达上限 V65535",
-
   "item.yongye.artifact_life_idol": "生命神像",
   "item.yongye.artifact_iron_core": "铁壁核心",
   "item.yongye.artifact_bone_arrow_charm": "骨箭护符",
@@ -40,7 +37,6 @@
   "item.yongye.artifact_nightfall_eye": "永夜之眼",
   "item.yongye.artifact_glutton_heart": "饕餮心脏",
   "item.yongye.artifact_world_anchor": "世界锚石",
-
   "item.yongye.artifact.life_idol.desc": "大幅增加最大生命",
   "item.yongye.artifact.iron_core.desc": "减少受到的物理伤害（近似:抗性）",
   "item.yongye.artifact.bone_arrow_charm.desc": "概率免疫/弹开箭矢，克制精英骷髅",
@@ -51,6 +47,5 @@
   "item.yongye.artifact.nightfall_eye.desc": "永夜中获得夜视并降低被锁定强度",
   "item.yongye.artifact.glutton_heart.desc": "击杀怪物恢复生命",
   "item.yongye.artifact.world_anchor.desc": "降低附近怪物的挖墙与爬墙能力",
-
   "item.yongye.artifact.in_bag": "放入背包即生效 · 同类只取最高等级"
 }

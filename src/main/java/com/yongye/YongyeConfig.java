@@ -105,6 +105,17 @@ public class YongyeConfig {
     /** 永夜 I~V 对应的怪物锁定半径(格) */
     public double[] nightfallLockRadius = {0.0, 16.0, 24.0, 32.0, 40.0, 48.0};
 
+    // —— 灾厄核心(文档 9.3 / 第 14、15 章)——
+    public boolean enableCatastropheCore = true;
+    public int coreMaxActive = 3;                 // 同时存在的自然核心上限
+    public int coreMinNightfall = 2;              // 永夜达到此级才会自然生成
+    public double coreNaturalSpawnChance = 0.04;  // 每 2 秒判定一次的生成几率
+    public int coreSpawnDistanceMin = 32;
+    public int coreSpawnDistanceMax = 64;
+    public int coreMobSpawnRadius = 28;           // 玩家进入此半径,核心开始刷怪
+    public int coreMobMaxNearby = 6;              // 核心周围怪上限
+    public double coreMobSpawnChance = 0.5;       // 每次判定的刷怪几率
+
     // ============ 追杀 AI(文档第 8 章)============
     public boolean enablePursuit = true;
     /** 追杀逻辑作用半径(只处理玩家附近的怪) */
