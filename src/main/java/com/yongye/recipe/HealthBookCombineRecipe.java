@@ -45,7 +45,7 @@ public class HealthBookCombineRecipe extends SpecialCraftingRecipe {
         int materialCount = 0;
         int otherCount = 0;
 
-        for (int i = 0; i < input.size(); i++) {
+        for (int i = 0; i < input.getSize(); i++) {
             ItemStack s = input.getStackInSlot(i);
             if (s.isEmpty()) continue;
             if (s.getItem() instanceof HealthSkillBookItem) {
@@ -89,7 +89,7 @@ public class HealthBookCombineRecipe extends SpecialCraftingRecipe {
     @Override
     public ItemStack craft(CraftingRecipeInput input, RegistryWrapper.WrapperLookup lookup) {
         int bookLevel = 1;
-        for (int i = 0; i < input.size(); i++) {
+        for (int i = 0; i < input.getSize(); i++) {
             ItemStack s = input.getStackInSlot(i);
             if (!s.isEmpty() && s.getItem() instanceof HealthSkillBookItem) {
                 bookLevel = HealthSkillBookItem.getLevel(s);

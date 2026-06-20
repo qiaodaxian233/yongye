@@ -159,7 +159,6 @@ public final class EliteHandler {
         Random r = skeleton.getRandom();
         double roll = r.nextDouble();
         ItemStack stack;
-        int punch = 0;
         if (roll < 0.45) {
             stack = new ItemStack(Items.TIPPED_ARROW);
             RegistryEntry<StatusEffect> eff = ARROW_EFFECTS.get(r.nextInt(ARROW_EFFECTS.size()));
@@ -168,11 +167,9 @@ public final class EliteHandler {
                     List.of(new StatusEffectInstance(eff, 120, 0))));
         } else {
             stack = new ItemStack(Items.ARROW);
-            if (roll < 0.60) punch = 2; // 击退箭
         }
 
         ArrowEntity arrow = new ArrowEntity(sw, skeleton, stack, new ItemStack(Items.BOW));
-        if (punch > 0) arrow.setPunch(punch);
 
         double dx = target.getX() - skeleton.getX();
         double dy = target.getBodyY(0.3333) - arrow.getY();

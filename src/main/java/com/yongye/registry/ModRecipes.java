@@ -3,7 +3,7 @@ package com.yongye.registry;
 import com.yongye.Yongye;
 import com.yongye.recipe.HealthBookCombineRecipe;
 import net.minecraft.recipe.RecipeSerializer;
-import net.minecraft.recipe.SpecialCraftingRecipe;
+import net.minecraft.recipe.SpecialRecipeSerializer;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
@@ -14,7 +14,7 @@ public final class ModRecipes {
     public static final RecipeSerializer<HealthBookCombineRecipe> HEALTH_BOOK_COMBINE =
             Registry.register(Registries.RECIPE_SERIALIZER,
                     Identifier.of(Yongye.MOD_ID, "health_book_combine"),
-                    new SpecialCraftingRecipe.SpecialRecipeSerializer<>(HealthBookCombineRecipe::new));
+                    new SpecialRecipeSerializer<>(HealthBookCombineRecipe::new));
 
     public static void init() {
         Yongye.LOGGER.info("[亡途荒夜] 配方序列化器已注册");
