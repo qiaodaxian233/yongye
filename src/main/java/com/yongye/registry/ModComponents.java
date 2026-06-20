@@ -33,6 +33,16 @@ public final class ModComponents {
                     .build()
     );
 
+    /** ENHANCE_LEVEL: 装备(武器/盔甲)的强化等级,挂在 ItemStack 上,无上限;品质由等级换算。 */
+    public static final ComponentType<Integer> ENHANCE_LEVEL = Registry.register(
+            Registries.DATA_COMPONENT_TYPE,
+            Identifier.of(Yongye.MOD_ID, "enhance_level"),
+            ComponentType.<Integer>builder()
+                    .codec(Codec.INT)
+                    .packetCodec(PacketCodecs.INTEGER)
+                    .build()
+    );
+
     public static void init() {
         Yongye.LOGGER.info("[亡途荒夜] 数据组件已注册");
     }

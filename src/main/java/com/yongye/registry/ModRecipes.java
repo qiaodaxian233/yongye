@@ -2,6 +2,7 @@ package com.yongye.registry;
 
 import com.yongye.Yongye;
 import com.yongye.recipe.ArtifactUpgradeRecipe;
+import com.yongye.recipe.EquipmentEnhanceRecipe;
 import com.yongye.recipe.HealthBookCombineRecipe;
 import com.yongye.recipe.SkillBookCombineRecipe;
 import net.minecraft.recipe.RecipeSerializer;
@@ -27,6 +28,11 @@ public final class ModRecipes {
             Registry.register(Registries.RECIPE_SERIALIZER,
                     Identifier.of(Yongye.MOD_ID, "artifact_upgrade"),
                     new SpecialRecipeSerializer<>(ArtifactUpgradeRecipe::new));
+
+    public static final RecipeSerializer<EquipmentEnhanceRecipe> EQUIPMENT_ENHANCE =
+            Registry.register(Registries.RECIPE_SERIALIZER,
+                    Identifier.of(Yongye.MOD_ID, "equipment_enhance"),
+                    new SpecialRecipeSerializer<>(EquipmentEnhanceRecipe::new));
 
     public static void init() {
         Yongye.LOGGER.info("[亡途荒夜] 配方序列化器已注册");

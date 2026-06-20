@@ -1,17 +1,24 @@
 package com.yongye.client;
 
 import com.yongye.Yongye;
+import com.yongye.item.WeaponQuality;
 import com.yongye.network.StatsPayload;
+import com.yongye.registry.ModComponents;
+import com.yongye.system.EquipmentEnhancer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 /**
  * 客户端入口:
@@ -40,9 +47,28 @@ public class YongyeClient implements ClientModInitializer {
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("成长"),
                         b -> client.setScreen(new StatsScreen(screen)))
                         .dimensions(bx, by, 44, 16).build());
+                // 「装备」按钮:查看手持武器/盔甲的品质介绍
+                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("装备"), b -> {
+                    if (client.player == null) return;
+                    ItemStack held = client.player.getMainHandStack();
+                    if (!held.isEmpty() && EquipmentEnhancer.isEnhanceable(held.getItem())) {
+                        client.setScreen(new WeaponInfoScreen(screen, held));
+                    }
+                }).dimensions(bx + 46, by, 44, 16).build());
             }
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 客户端:精英皮肤 + 成长面板已注册");
+        // 装备强化:tooltip 显示品质 + 强化等级(任意装备通用,零 mixin)
+        ItemTooltipCallback.EVENT.register((stack, ctx, type, lines) -> {
+            int lvl = stack.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);
+            if (lvl > 0) {
+                WeaponQuality q = WeaponQuality.forLevel(lvl);
+                lines.add(Text.literal("【" + q.cn + "】").formatted(q.color)
+                        .append(Text.literal("  稀有度 " + q.grade).formatted(Formatting.GRAY)));
+                lines.add(Text.literal("✦ 强化 +" + lvl).formatted(Formatting.AQUA));
+            }
+        });
+
+        Yongye.LOGGER.info("[亡途荒夜] 客户端:精英皮肤 + 成长面板 + 装备介绍已注册");
     }
 }

@@ -118,6 +118,19 @@ public class YongyeConfig {
     public int painNaturalCheckIntervalTicks = 1200; // 检定间隔(默认60秒)
     public int painDeathRedeemLevels = 2;          // 击败长门降低的永夜级数
 
+    // ===== 装备无限强化 / 品质 =====
+    public boolean enableEquipmentEnhance = true;
+    public double enhanceDamagePerLevel = 0.5;     // 武器每级 +攻击力
+    public double enhanceArmorPerLevel = 0.3;      // 盔甲每级 +护甲
+    public double enhanceToughnessPerLevel = 0.1;  // 盔甲每级 +护甲韧性
+    public double enhanceHealthPerLevel = 1.0;     // 盔甲每级 +最大生命
+    public int enhanceDurabilityPerLevel = 8;      // 每级 +最大耐久
+    public double enhanceCritBonusMultiplier = 0.75; // 暴击额外伤害 = 强化攻击加成 × 此值
+    public int enhanceShardValue = 1;              // 生命碎片 = +1 级
+    public int enhanceCrystalValue = 10;           // 生命结晶 = +10 级
+    public int enhanceCoreValue = 100;             // 生命核心 = +100 级
+    public int enhanceBloodCoreValue = 1000;       // 灾变血核 = +1000 级
+
     // ============ 随机掉落(文档 11.2 普通怪概率)============
     public double lootChanceCommon = 0.60;
     public double lootChanceUseful = 0.25;

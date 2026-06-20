@@ -118,6 +118,23 @@ public final class ModCommands {
                             PainBossHandler.spawnPainBossNear(p);
                             return 1;
                         }))
+
+                        .then(CommandManager.literal("enhance")
+                                .then(CommandManager.argument("level", IntegerArgumentType.integer(0)).executes(ctx -> {
+                                    ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                    int lvl = IntegerArgumentType.getInteger(ctx, "level");
+                                    net.minecraft.item.ItemStack held = p.getMainHandStack();
+                                    if (held.isEmpty() || !EquipmentEnhancer.isEnhanceable(held.getItem())) {
+                                        ctx.getSource().sendError(Text.literal("手持物品不是可强化的武器/盔甲"));
+                                        return 0;
+                                    }
+                                    p.setStackInHand(net.minecraft.util.Hand.MAIN_HAND,
+                                            EquipmentEnhancer.withLevel(held, lvl));
+                                    com.yongye.item.WeaponQuality q = com.yongye.item.WeaponQuality.forLevel(lvl);
+                                    ctx.getSource().sendFeedback(() ->
+                                            Text.literal("已强化至 +" + lvl + " 【" + q.cn + "】").formatted(q.color), false);
+                                    return 1;
+                                })))
                 ));
 
         Yongye.LOGGER.info("[亡途荒夜] 指令已注册");
