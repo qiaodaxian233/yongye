@@ -111,6 +111,10 @@
 - 触发源是本 mod 给精英怪挂的**永久 GLOWING**(及精英箭的 GLOWING)。
 - 修复:精英发光改配置项 `eliteGlowing`(默认 false,精英已有金色名牌识别);精英箭 GLOWING 换为 NAUSEA。本 mod 不再触发该描边路径。
 
+## 里程碑 22 — 混沌之刃合成配方 + 直给命令
+- 新增 shaped 配方 `data/yongye/recipe/chaos_blade.json`:无尽夜尘×2 + 终焉神髓 + 深渊之魂结晶×2 + 下界合金剑 + 裂隙碎片×2 + 灾变血核 → 混沌之刃(物品默认属性来自 Item.Settings,配方无需 NBT)。
+- 新增命令 `/yongye chaosblade` 直接给一把(测试用,OP)。
+
 ---
 
 > 后续待办、已知边界与可做方向见 **[HANDOVER.md](HANDOVER.md)** 第 6 节。

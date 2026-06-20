@@ -119,6 +119,14 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        .then(CommandManager.literal("chaosblade").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.CHAOS_BLADE));
+                            ctx.getSource().sendFeedback(() ->
+                                    Text.literal("已获得【混沌之刃】").formatted(Formatting.DARK_PURPLE), false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("enhance")
                                 .then(CommandManager.argument("level", IntegerArgumentType.integer(0)).executes(ctx -> {
                                     ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
