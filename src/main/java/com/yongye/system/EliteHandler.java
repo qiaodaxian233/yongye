@@ -88,6 +88,7 @@ public final class EliteHandler {
             if (now < player.getAttachedOrElse(ModAttachments.DISARM_COOLDOWN_UNTIL, 0L)) return true;
             ItemStack held = player.getMainHandStack();
             if (held.isEmpty() || !EquipmentEnhancer.isWeapon(held)) return true;
+            if (held.getOrDefault(com.yongye.registry.ModComponents.DISARM_PROOF, false)) return true; // 守护武器不被夺
             if (player.getRandom().nextDouble() >= cfg.eliteDisarmChance) return true;
             // 抢夺:精英装上玩家武器,死亡掉落;玩家主手清空
             attacker.equipStack(EquipmentSlot.MAINHAND, held.copy());

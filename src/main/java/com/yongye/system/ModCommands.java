@@ -123,6 +123,13 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        .then(CommandManager.literal("wardbook").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.WARD_BOOK));
+                            ctx.getSource().sendFeedback(() -> Text.literal("已获得【守护附魔书】").formatted(Formatting.LIGHT_PURPLE), false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("chaosblade").executes(ctx -> {
                             ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
                             p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.CHAOS_BLADE));

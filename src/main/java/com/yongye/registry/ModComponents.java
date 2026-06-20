@@ -43,6 +43,16 @@ public final class ModComponents {
                     .build()
     );
 
+    /** DISARM_PROOF: 武器是否「无法被精英夺取」(守护附魔书赋予)。 */
+    public static final ComponentType<Boolean> DISARM_PROOF = Registry.register(
+            Registries.DATA_COMPONENT_TYPE,
+            Identifier.of(Yongye.MOD_ID, "disarm_proof"),
+            ComponentType.<Boolean>builder()
+                    .codec(Codec.BOOL)
+                    .packetCodec(PacketCodecs.BOOL)
+                    .build()
+    );
+
     public static void init() {
         Yongye.LOGGER.info("[亡途荒夜] 数据组件已注册");
     }

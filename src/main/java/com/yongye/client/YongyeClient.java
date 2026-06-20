@@ -73,6 +73,9 @@ public class YongyeClient implements ClientModInitializer {
                         .append(Text.literal("  稀有度 " + q.grade).formatted(Formatting.GRAY)));
                 lines.add(Text.literal("✦ 强化 +" + lvl).formatted(Formatting.AQUA));
             }
+            if (stack.getOrDefault(ModComponents.DISARM_PROOF, false)) {
+                lines.add(Text.literal("⚔ 无法被夺取").formatted(Formatting.LIGHT_PURPLE));
+            }
         });
 
         // 武器主动技能按键(默认 R / G / V)→ 发包给服务端施放

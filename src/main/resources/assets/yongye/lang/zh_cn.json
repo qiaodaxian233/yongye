@@ -20,6 +20,8 @@
   "item.yongye.skill_book.thorns": "反伤强化技能书",
   "item.yongye.skill_book.resistance": "抗性强化技能书",
   "item.yongye.skill_book.satiety": "饱食度强化技能书",
+  "item.yongye.ward_book": "守护附魔书",
+  "item.yongye.ward_book.desc": "另一只手持武器右键 → 该武器无法被精英夺取(建议:守护书主手、武器副手)",
   "item.yongye.skill_book.satiety.desc": "学习后持续补充饱食度,等级越高越不会饿",
   "item.yongye.skill_book.armor.desc": "增加护甲与护甲韧性(每级 +0.5 护甲 / +0.25 韧性)",
   "item.yongye.skill_book.attack.desc": "增加攻击伤害(每级 +0.5 点)",

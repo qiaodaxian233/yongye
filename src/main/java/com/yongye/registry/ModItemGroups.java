@@ -30,6 +30,7 @@ public final class ModItemGroups {
         ItemGroupEvents.modifyEntriesEvent(GENERAL_KEY).register(entries -> {
             // 技能书:放几本不同等级方便测试
             entries.add(ModItems.CHAOS_BLADE);
+            entries.add(ModItems.WARD_BOOK);
             entries.add(HealthSkillBookItem.create(1));
             entries.add(HealthSkillBookItem.create(5));
             entries.add(HealthSkillBookItem.create(10));

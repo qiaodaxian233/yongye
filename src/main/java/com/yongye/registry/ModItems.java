@@ -6,6 +6,7 @@ import com.yongye.item.ChaosBladeItem;
 import com.yongye.item.ArtifactType;
 import com.yongye.item.HealthSkillBookItem;
 import com.yongye.item.SkillBookItem;
+import com.yongye.item.WardBookItem;
 import com.yongye.item.SkillType;
 import net.minecraft.item.Item;
 import net.minecraft.util.Rarity;
@@ -28,6 +29,8 @@ public final class ModItems {
             new HealthSkillBookItem(new Item.Settings().maxCount(64)));
 
     // —— 混沌之刃:专属传说武器(固定高属性 + 三技能无需解锁) ——
+    public static final Item WARD_BOOK = register("ward_book", new WardBookItem(new Item.Settings().maxCount(16)));
+
     public static final Item CHAOS_BLADE = register("chaos_blade",
             new ChaosBladeItem(new Item.Settings()
                     .maxDamage(2500)

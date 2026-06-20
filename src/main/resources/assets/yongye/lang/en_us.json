@@ -20,6 +20,8 @@
   "item.yongye.skill_book.thorns": "Thorns Skill Book",
   "item.yongye.skill_book.resistance": "Resistance Skill Book",
   "item.yongye.skill_book.satiety": "Satiety Skill Book",
+  "item.yongye.ward_book": "Ward Enchant Book",
+  "item.yongye.ward_book.desc": "Right-click with a weapon in the other hand to make it immune to elite disarm",
   "item.yongye.skill_book.satiety.desc": "Continuously restores hunger; higher level = rarely hungry",
   "item.yongye.skill_book.attack.desc": "Increases attack damage (+0.5 per level)",
   "item.yongye.skill_book.armor.desc": "Increases armor and armor toughness (+0.5 armor / +0.25 toughness per level)",
