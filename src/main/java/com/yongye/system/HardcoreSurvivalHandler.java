@@ -103,8 +103,8 @@ public final class HardcoreSurvivalHandler {
             boolean hard = state.isIn(BlockTags.LOGS) || state.isIn(BlockTags.BASE_STONE_OVERWORLD)
                     || state.isIn(BlockTags.COAL_ORES) || state.isIn(BlockTags.IRON_ORES);
             if (!hard) return;
+            // 挖掘减速由 MiningSpeedMixin 处理;这里仅按概率额外扣体力(挖矿很累)
             if (sp.getRandom().nextDouble() < cfg.hcResourceFatigueChance) {
-                sp.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, 60, 0, false, true, true));
                 sp.getHungerManager().addExhaustion(2.0f);
             }
         });
