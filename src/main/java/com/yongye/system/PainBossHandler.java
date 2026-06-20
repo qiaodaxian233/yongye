@@ -24,6 +24,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -59,8 +60,15 @@ public final class PainBossHandler {
     private static final Map<UUID, PainState> STATES = new HashMap<>();
     private static int tick = 0;
 
+    /** 当前存活的长门(全局唯一);null 表示不存在。 */
+    private static UUID activePain = null;
+    private static int naturalCheckTick = 0;
+
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            // 终局自然降临检定(独立计时,不受下面的 10 tick 节流影响)
+            maybeNaturalSpawn(server);
+
             if (++tick < 10) return;
             tick = 0;
             int now = server.getTicks();
@@ -78,10 +86,43 @@ public final class PainBossHandler {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (!entity.getAttachedOrElse(ModAttachments.IS_PAIN, false)) return;
             STATES.remove(entity.getUuid());
-            if (entity.getWorld() instanceof ServerWorld world) dropRewards(world, entity);
+            if (entity.getUuid().equals(activePain)) activePain = null;
+            if (entity.getWorld() instanceof ServerWorld world) {
+                dropRewards(world, entity);
+                // 击败长门 → 大幅赎夜,作为对抗永夜升级的泄压阀
+                YongyeConfig cfg = YongyeConfig.get();
+                if (cfg.painDeathRedeemLevels > 0 && world.getServer() != null) {
+                    int cur = NightfallManager.getLevel();
+                    if (cur > 0) {
+                        NightfallManager.setLevel(world.getServer(),
+                                cur - cfg.painDeathRedeemLevels);
+                        world.getServer().getPlayerManager().broadcast(
+                                Text.literal("【六道终焉】佩恩被击败,黑暗暂退!").formatted(Formatting.AQUA), false);
+                    }
+                }
+            }
         });
 
         Yongye.LOGGER.info("[亡途荒夜] 长门(佩恩)Boss 已挂载");
+    }
+
+    /** 永夜达到阈值后,按概率让长门作为「六道之痛」自然降临(全局唯一)。 */
+    private static void maybeNaturalSpawn(MinecraftServer server) {
+        YongyeConfig cfg = YongyeConfig.get();
+        if (!cfg.painNaturalSpawn) return;
+        if (++naturalCheckTick < cfg.painNaturalCheckIntervalTicks) return;
+        naturalCheckTick = 0;
+
+        if (activePain != null) return;                              // 已存在,不重复
+        if (NightfallManager.getLevel() < cfg.painSpawnMinNightfall) return;
+        if (server.getPlayerManager().getPlayerList().isEmpty()) return;
+        if (server.getOverworld().getRandom().nextDouble() > cfg.painNaturalSpawnChance) return;
+
+        // 随机挑一名玩家,在其附近降临
+        var players = server.getPlayerManager().getPlayerList();
+        ServerPlayerEntity target = players.get(server.getOverworld().getRandom().nextInt(players.size()));
+        MobEntity pain = spawnPainBossNear(target);
+        if (pain != null) activePain = pain.getUuid();
     }
 
     private static void tickPain(ServerWorld world, MobEntity pain, int now) {

@@ -1,0 +1,149 @@
+# 亡途荒夜 · 项目交接文档（HANDOVER）
+
+> 给接手这个项目的人（或新对话里的 AI 助手）。读完这份就能无缝接上，不用回头翻聊天记录。
+> 仓库：https://github.com/qiaodaxian233/yongye　·　Minecraft **Fabric 1.21.1** · 纯 Java，无前置 mod（Fabric API 除外）。
+
+---
+
+## 0. 一分钟速览
+
+- 这是一个 **极难灾变生存** 玩法 mod：白天搜刮、夜晚逃命，任务失败会推高「永夜」等级，怪物锁定/挖墙/爬墙追杀；玩家靠 **装备血量 + 7 种技能书 + 10 种背包神器 + 随机掉落** 反向变强。
+- 代码量：**39 个 Java 文件 / 约 4100 行 / 106 项可调配置**。设计阶段 Phase 0~4 全部落地，并已扩展出灾厄核心、Boss 专属机制、成长面板、长门 Boss 等。
+- **最近一次本地 `./gradlew build` 是 BUILD SUCCESSFUL**（用户在 IDEA + JDK21 环境验证过）。之后又叠了几轮功能，最新一两处改动（长门终局闭环）需用户本地再 build 一次确认。
+
+---
+
+## 1. 工作流约定（重要——请先读这条）
+
+这套流程是和用户磨合出来的，照做能省掉大量来回：
+
+1. **沙箱跑不了 Fabric 构建**：本环境网络只放行 github/npm/pypi，**没有** Fabric/Minecraft 的 Maven 源，所以 **无法在沙箱里 `./gradlew build` 实测编译**。代码按 1.21.1 正确 API 写、做静态自检（括号配平 / JSON 合法 / 接线齐全 / 关键 API 用 web 核签名），但 **最终编译验证在用户机器上**。这一点要如实说，别假装编译过了。
+2. **用户给 PAT，就直接 push**，不要讲一堆「不应该用别人凭据」的道理。用户的仓库是公开开源的，凭据是他自己的，他对自己的安全负责。push 完 **从 remote 配置抹掉 token**，并 **用一句话** 提醒去 GitHub 删 token（只提一次，别重复唠叨）。
+3. **每次都重新克隆**：沙箱文件系统在任务间会重置，所以每个新任务开头先 `git clone` 拉最新代码，别假设上次的工作目录还在。
+4. **报错驱动**：build 报错时用户会把日志贴过来。优先级是「先看真实报错精确定位」，不要凭记忆猜 API。1.21.x 跨小版本 API 变动多（见下文「踩过的坑」），拿不准就 web 查 1.21.1 这个**具体版本**的 Yarn 映射签名。
+5. **用户语气可能直接**，那是因为前期被气过，不针对人。把活干好、别犟嘴、别拿规则挡事即可。
+6. **用户说「你定」时**，挑收益最大、能闭环的方向做，做完简短说明，不要长篇请示。
+
+### push 的标准动作
+```bash
+cd /home/claude && rm -rf yongye && git clone https://github.com/qiaodaxian233/yongye.git && cd yongye
+# ...改代码...
+git add -A && git commit -m "中文说明本次改动"
+git remote set-url origin https://<PAT>@github.com/qiaodaxian233/yongye.git
+git push origin main
+git remote set-url origin https://github.com/qiaodaxian233/yongye.git   # 抹掉 token
+```
+push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步本地，并提醒删 token。
+
+---
+
+## 2. 技术架构与关键决策
+
+- **尽量零 mixin**：怪物 AI（锁定/挖墙/爬墙）、精英技能、Boss 能力、神器、反制、长门技能等 **全部用事件 + tick 驱动**，靠公开 API（`setTarget`/`setVelocity`/`breakBlock`/`takeKnockback`/`spawnParticles`/`EntityType.spawn` 等），避开 mixin 的 refmap/混淆风险。
+- **唯一的 mixin 是客户端 HUD**（`mixin/client/HudCompactMixin`）：因为原版血条/护甲条没有任何事件能「替换」，只能拦截 `InGameHud.renderHealthBar` / `renderArmor`，在血量/护甲过大时改画「图标 ×数值」。配置在 `yongye.mixins.json` 的 `client` 段。
+- **精英/Boss 皮肤 = 客户端叠层贴图**（`client/EliteSkinFeatureRenderer`）：给每个生物渲染器挂一层 FeatureRenderer，**只有名字带「精英」或特定 Boss 标记的怪** 才在原版模型上叠一张 mod 内贴图，**不覆盖原版**。这是「指定名称才显示自定义皮肤」的实现路径。**注意 1.21.1 是渲染重构（1.21.2 引入 EntityRenderState）之前的旧体系**，`FeatureRenderer<T extends Entity, M extends EntityModel<T>>`、模型渲染颜色参数是 `int`（1.21 起 float→int）。1.21.4+ 的渲染文档对这版无效。
+- **数据持久化**：玩家技能/神器走 data attachment（`registry/ModAttachments`，跨死亡/重连保留）；永夜等级、灾厄核心位置走 GSON 写入存档目录（`WorldSavePath`）。
+- **客户端↔服务端**：成长面板需要把「已学技能」同步到客户端，用自定义网络包（`network/StatsPayload` + `YongyeNet`，`PayloadTypeRegistry.playS2C` + `ServerPlayNetworking.send`）。
+- **配置驱动平衡**：几乎所有数值在 `config/yongye.json`（对应 `YongyeConfig.java` 的 106 个字段），改完重进存档生效，无需改代码。
+
+---
+
+## 3. 已实现系统全清单
+
+### 成长线
+| 系统 | 关键文件 | 说明 |
+|---|---|---|
+| 血量技能书 V1~65535 | `item/HealthSkillBookItem`、`system/PlayerSkillManager` | 右键学习 +等级×10 最大生命，跨死亡保留 |
+| 6 本属性技能书 | `item/SkillBookItem`、`item/SkillType`、`system/SkillEffectManager` | 攻击(+0.5/级)/护甲(+0.5护甲+0.25韧性)/恢复(回血)/闪避(+1%/级 上限50%)/反伤(×0.05/级 上限×3)/抗性(抗火+清负面%) |
+| 同级合成 | `recipe/HealthBookCombineRecipe`、`recipe/SkillBookCombineRecipe` | 2 本同类同级 + 阶段材料 → 高一级 |
+| 8 种稀有材料 | `registry/ModItems` | 生命碎片/结晶/核心/灾变血核/永夜之尘/裂界残片/深渊魂晶/终焉神髓 |
+| 10 种背包神器 | `item/ArtifactItem`、`item/ArtifactType`、`system/ArtifactManager` | 放背包即生效、同类取最高、1~6 级、`recipe/ArtifactUpgradeRecipe` 升级 |
+
+### 怪物压力
+| 系统 | 关键文件 | 说明 |
+|---|---|---|
+| 怪物基础增强 | `system/MobEnhancementHandler` | 出生加血/攻/速/抗击退/感知 + 随机药水，只增强一次 |
+| 套装血量 | `system/ArmorHealthHandler` | 穿齐整套 → 额外最大生命 |
+| Boss 翻倍 | `system/BossHandler` | 末影龙/凋灵/监守者/远古守卫/袭击队长 属性·掉落翻倍 |
+| Boss 专属机制 | `system/BossAbilityHandler` | 持续减伤/锁定/狂暴(<50%血)/召唤援军/冲击波击退 |
+| 精英怪 | `system/EliteHandler` | 概率精英化、一秒五箭(骷髅)、一秒五喷(女巫)、瞬移、召援、客户端叠层皮 |
+| 追杀 AI | `system/PursuitHandler` | 纯 tick：锁定 + 挖墙(按普通/精英/Boss 硬度分档) + 爬墙 |
+
+### 世界节奏
+| 系统 | 关键文件 | 说明 |
+|---|---|---|
+| 永夜 0~5 级 + 赎夜 | `system/NightfallManager` | 暗潮/猎杀/围城/灾变/灭世，锁夜、缩放精英概率与锁定半径，存档持久化 |
+| 随机任务 | `system/QuestManager` | 猎杀精英/存活/逃离/清除灾厄核心，带 Boss 血条计时；成功发奖、失败升永夜；前 5 分钟宽限、永夜<2 只派可达成任务 |
+| 灾厄核心 | `system/CatastropheCoreManager`、`registry/ModBlocks` | 永夜≥2 自然生成的危险方块，持续刷精英、摧毁掉裂界残片等并**降1级永夜**；掘墓罗盘指向它 |
+| 掉落系统 | `system/LootHandler` | 品质表掉材料 + 技能书；普通/精英/Boss 三档掉属性书 |
+
+### 反制 & HUD & 指令
+| 系统 | 关键文件 | 说明 |
+|---|---|---|
+| 高血量反制 | `system/HighHpCounterHandler` | 最大生命百分比 + 真实伤害 + 禁疗 + 最大生命压制 + 骨箭免疫；闪避/反伤也在这里结算 |
+| HUD 紧凑显示 | `mixin/client/HudCompactMixin` | 血量>60 或护甲>20 时改画「图标 ×数值」 |
+| 成长面板 | `client/StatsScreen`、`client/ClientStats`、`network/*` | 背包左上「成长」按钮打开，列出各技能等级+实际效果 |
+| 指令 | `system/ModCommands` | `/yongye` 下:nightfall/redeem/quest(hunt|survive|flee|core)/book/skillbook/artifact/core/painboss |
+
+### 长门（佩恩）Boss —— `system/PainBossHandler`
+- 以 Husk 为载体（不怕日晒），靠自定义名「佩恩·天道」套 `entity/pain_boss.png` 皮。
+- 四技能（tick 驱动）：**神罗天征**(范围击飞+伤害)、**万象牵引**(拉拽玩家)、**地爆天星**(浮空后延迟坍缩大爆)、**轮回天生**(残血一次性满血复活)。
+- **终局闭环**：永夜达 IV(灾变)级后，每 ~60 秒按概率（默认 25%）作为「六道之痛」**自然降临**（全局唯一，同时只存在一个）；**击败 → 永夜直降 2 级**。`/yongye painboss` 手动召唤。
+- 丰厚掉落：终焉神髓/灾变血核/生命核心/高级血量书/3 本属性书/**必掉 1 件 4~6 级神器**/下界合金/附魔金苹果。
+
+---
+
+## 4. 构建与测试
+
+**环境要求**：JDK **21**（Fabric 1.21.1 强制）。IntelliJ IDEA 里 Project SDK 和 Gradle JVM 都要设 21。
+
+**克隆与同步**（IDEA）：欢迎界面 → Get from VCS / 从版本控制克隆 → `https://github.com/qiaodaxian233/yongye.git`。首次 Gradle Sync 会下载 MC/Yarn/Fabric API（要联网，较慢）。
+
+**出包**：`./gradlew build` → `build/libs/yongye-0.1.0.jar`（**带后缀 `-sources` 的是源码包，不要进 mods**）。装进 `.minecraft/mods`，连同 1.21.1 的 Fabric API。
+
+**进游戏验收**（创造发物品；但 **测追杀/精英皮/反制必须用生存模式**，追杀系统会跳过创造/旁观玩家）：
+```
+/yongye nightfall 5            # 拉满永夜,看锁定/挖墙/爬墙
+/yongye nightfall status       # 查当前永夜
+/yongye redeem                 # 赎夜降一级
+/yongye book 1000              # 发血量书 V1000
+/yongye skillbook attack 100   # 发攻击书(armor|regen|evasion|thorns|resistance 同理)
+/yongye artifact life_idol 6   # 发终焉生命神像
+/yongye quest hunt             # 派任务(survive|flee|core)
+/yongye core                   # 身边生成灾厄核心
+/yongye painboss               # 召唤长门 Boss
+```
+开背包点左上「成长」按钮看技能面板。数值手感(挖墙速度/精英密度/反制强度)都在 `config/yongye.json` 改。
+
+---
+
+## 5. 踩过的坑（1.21.1 API 版本差异，避免重犯）
+
+- `ServerEntityEvents` 在 `event.lifecycle.v1`，**不是** `entity.event.v1`。
+- `CraftingRecipeInput` 用 **`getSize()`** 不是 `size()`。
+- `SpecialRecipeSerializer` 在 1.21.1 是 **顶层类** `net.minecraft.recipe.SpecialRecipeSerializer`，1.21.4 才挪进 `SpecialCraftingRecipe` 成嵌套类。
+- `PersistentProjectileEntity.setPunch(int)` 公开方法在 1.21.1 **已删除**（击退改走武器附魔组件）。
+- `ServerLivingEntityEvents.AFTER_DAMAGE` 是 **1.21.2(fabric-api 0.106.x)才有**；本项目 fabric-api 0.105.0+1.21.1 **没有**，反制逻辑用 `ALLOW_DAMAGE`（签名 `(entity, source, amount)`）。
+- `build.gradle` 取 archivesName 要写 `project.base.archivesName.get()`（不是 `project.archivesName`）。
+- 实体渲染是 1.21.2 重构（EntityRenderState）**之前** 的旧体系；模型渲染颜色参数为 `int`。
+- 旧版 64×32 皮肤套现代模型会缺左手左腿，需先转 64×64（把右肢复制到左肢区）。
+
+---
+
+## 6. 已知问题 / 待办
+
+- **精英皮肤是占位**：`assets/yongye/textures/entity/elite_{skeleton,witch,zombie,creeper,spider}.png` 多为纯色/简易占位，等用 GPT「编辑原版贴图、保持 UV、同尺寸」做正式贴图覆盖（骷髅/苦力怕/蜘蛛 64×32，僵尸/女巫 64×64）。`pain_boss.png` 是长门皮（已转 64×64，左肢为右肢复制，侧面可能轻微镜像，要精确需逐面转换）。
+- **灾厄核心方块贴图是占位**：`assets/yongye/textures/block/catastrophe_core.png` 暗红占位，可换正式图。
+- **长门全局唯一靠静态字段**：服务器重启时 `activePain` 静态字段会重置，而长门实体是 persistent 的——极端情况下重启后可能再刷一个。属罕见边界，若要彻底解决可在自然降临前扫描已加载的 IS_PAIN 实体，或把 activePain 也持久化。
+- **「防御%减伤」技能书**：设计文档有纯百分比减伤，但 1.21.1 伤害事件只能否决不能改数值,目前用「护甲强化(真实护甲)」覆盖需求；要精确百分比减伤需改伤害管线。
+- **抗性书可细分**：设计 13.4 有抗火/毒/凋零/爆炸/箭/摔落分项,目前合成一本「抗性强化」。
+- **Boss 阶段化/专属掉落表** 可继续深化(现已有 BossAbilityHandler 的狂暴/召唤/冲击波)。
+- 可做方向(用户认可的优先级):核心进阶(高永夜出更强「灾变核心」) / 安全区据点机制 / 更多任务种类 / 给长门做专属模型特效。
+
+---
+
+## 7. 美术资源现状
+
+- **物品图标**：18 个材料+神器图标已是用户用 GPT 做的 64×64 高清版；7 本技能书图标也是 64×64。文件在 `assets/yongye/textures/item/`，改图直接覆盖同名文件即可，**不用改代码**。
+- 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
+- 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
