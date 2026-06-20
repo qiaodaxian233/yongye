@@ -85,6 +85,11 @@ public final class BossHandler {
         double m = cfg.bossDropMultiplier;
 
         dropMany(world, boss, scale(3, m), rr -> HealthSkillBookItem.create(10 + rr.nextInt(11))); // V10~V20
+        // 属性技能书:随机类型 V3~V8,数本
+        dropMany(world, boss, scale(3, m), rr -> {
+            com.yongye.item.SkillType[] ts = com.yongye.item.SkillType.values();
+            return com.yongye.item.SkillBookItem.create(ts[rr.nextInt(ts.length)], 3 + rr.nextInt(6));
+        });
         dropMany(world, boss, scale(4, m), rr -> new ItemStack(ModItems.LIFE_CRYSTAL));
         dropMany(world, boss, scale(2, m), rr -> new ItemStack(ModItems.LIFE_CORE));
         dropMany(world, boss, scale(1, m), rr -> new ItemStack(ModItems.CATASTROPHE_BLOOD_CORE));

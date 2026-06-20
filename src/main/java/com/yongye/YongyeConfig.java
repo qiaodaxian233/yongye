@@ -45,6 +45,11 @@ public class YongyeConfig {
 
     // ============ 技能书(文档 13)============
     public int skillBookMaxLevel = 65535;
+
+    /** 属性技能书(攻击/护甲/恢复/闪避/反伤/抗性)掉落几率:普通怪 / 精英 / Boss。普通怪受永夜等级加成。 */
+    public double skillBookDropChanceNormal = 0.02;
+    public double skillBookDropChanceElite = 0.6;
+    public double skillBookDropChanceBoss = 1.0;
     /** 合成到该结果等级时需要"生命结晶" */
     public int lifeCrystalThreshold = 10;
     /** 需要"生命核心" */

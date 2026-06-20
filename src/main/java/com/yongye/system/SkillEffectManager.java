@@ -50,6 +50,7 @@ public final class SkillEffectManager {
         copy.put(type.id, next);
         player.setAttached(ModAttachments.LEARNED_SKILLS, copy);
         applyAttributes(player);
+        com.yongye.network.YongyeNet.sendStats(player);
         return LearnResult.OK;
     }
 

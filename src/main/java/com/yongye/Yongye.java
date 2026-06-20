@@ -67,6 +67,7 @@ public class Yongye implements ModInitializer {
         ArtifactManager.register();
         HighHpCounterHandler.register();
         SkillEffectManager.register();
+        com.yongye.network.YongyeNet.register();
         ModCommands.register();
 
         // 玩家加入 / 重生时,根据持久化的累计等级重新应用血量强化

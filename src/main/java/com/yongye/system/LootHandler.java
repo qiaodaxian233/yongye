@@ -3,6 +3,8 @@ package com.yongye.system;
 import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import com.yongye.item.HealthSkillBookItem;
+import com.yongye.item.SkillBookItem;
+import com.yongye.item.SkillType;
 import com.yongye.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.ItemEntity;
@@ -41,6 +43,14 @@ public final class LootHandler {
 
     private static LootFactory bookRange(int min, int max) {
         return r -> HealthSkillBookItem.create(min + (max > min ? r.nextInt(max - min + 1) : 0));
+    }
+
+    /** 随机一本属性技能书(攻击/护甲/恢复/闪避/反伤/抗性),等级 [minV, maxV]。 */
+    private static ItemStack randomSkillBook(Random r, int minV, int maxV) {
+        SkillType[] types = SkillType.values();
+        SkillType t = types[r.nextInt(types.length)];
+        int lvl = minV + (maxV > minV ? r.nextInt(maxV - minV + 1) : 0);
+        return SkillBookItem.create(t, lvl);
     }
 
     private static final List<LootFactory> COMMON = List.of(
@@ -89,8 +99,12 @@ public final class LootHandler {
             boolean elite = entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_ELITE, false);
 
             if (elite) {
-                // 精英专属:保底一本技能书 + 一件稀有以上战利品 + 概率材料
+                // 精英专属:保底一本血量书 + 一件稀有以上战利品 + 概率材料
                 drop(world, entity, HealthSkillBookItem.create(1 + r.nextInt(3))); // V1~V3
+                // 概率掉一本属性技能书(V1~V3)
+                if (r.nextDouble() < cfg.skillBookDropChanceElite) {
+                    drop(world, entity, randomSkillBook(r, 1, 3));
+                }
                 List<LootFactory> hi = switch (r.nextInt(3)) {
                     case 0 -> RARE;
                     case 1 -> EPIC;
@@ -106,6 +120,11 @@ public final class LootHandler {
                 if (pool != null) {
                     LootFactory f = pool.get(r.nextInt(pool.size()));
                     drop(world, entity, f.make(r));
+                }
+                // 普通怪小概率掉一本属性技能书(V1),永夜等级越高几率越大
+                double sbChance = cfg.skillBookDropChanceNormal * (1.0 + NightfallManager.getLevel() * 0.5);
+                if (r.nextDouble() < sbChance) {
+                    drop(world, entity, randomSkillBook(r, 1, 1));
                 }
             }
 

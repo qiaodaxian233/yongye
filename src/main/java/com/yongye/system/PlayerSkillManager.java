@@ -35,6 +35,7 @@ public final class PlayerSkillManager {
         int next = Math.min(max, cur + Math.max(1, level));
         player.setAttached(ModAttachments.LEARNED_HEALTH, next);
         applyHealthModifier(player);
+        com.yongye.network.YongyeNet.sendStats(player);
         return LearnResult.OK;
     }
 
