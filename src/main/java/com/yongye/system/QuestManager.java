@@ -182,13 +182,15 @@ public final class QuestManager {
             q.corePos = CatastropheCoreManager.spawnCoreNear(player);
         }
         int nf = NightfallManager.getLevel();
+        int players = Math.max(1, player.getServer().getPlayerManager().getPlayerList().size());
+        double pScale = 1 + (players - 1) * cfg.questPlayerScaling; // 人越多越难
         if (type == Type.GATHER) {
             Need need = GATHER_POOL[rnd.nextInt(GATHER_POOL.length)];
             q.targetItem = need.item();
-            q.targetCount = (int) Math.ceil(need.count() * (1 + nf * 0.4));
+            q.targetCount = (int) Math.ceil(need.count() * (1 + nf * 0.4) * pScale);
         }
-        if (type == Type.HUNT_ELITE) q.killNeed = cfg.questHuntEliteCount + nf / 2;
-        if (type == Type.SLAY) q.killNeed = cfg.questSlayCount + nf * 5;
+        if (type == Type.HUNT_ELITE) q.killNeed = (int) Math.ceil((cfg.questHuntEliteCount + nf / 2.0) * pScale);
+        if (type == Type.SLAY) q.killNeed = (int) Math.ceil((cfg.questSlayCount + nf * 5) * pScale);
         q.fleeDistance = cfg.questFleeDistance * (1 + nf * 0.2);
 
         Text title = switch (type) {

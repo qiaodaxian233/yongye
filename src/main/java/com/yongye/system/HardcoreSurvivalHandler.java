@@ -13,6 +13,9 @@ import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.world.GameMode;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.Heightmap;
@@ -53,6 +56,12 @@ public final class HardcoreSurvivalHandler {
 
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
                 if (!(p.getWorld() instanceof ServerWorld world)) continue;
+                // 反作弊:创造模式自动切回生存(OP 可豁免),每秒检查一次
+                if (tick % 20 == 0 && cfg.forceSurvival && p.isCreative()
+                        && !(cfg.forceSurvivalExemptOp && p.hasPermissionLevel(2))) {
+                    p.changeGameMode(GameMode.SURVIVAL);
+                    p.sendMessage(Text.literal("本世界禁止创造模式,已切回生存").formatted(Formatting.RED), true);
+                }
                 if (p.isCreative() || p.isSpectator()) continue;
 
                 if (tick % 20 == 0 && cfg.hcHungerDrainPerSecond > 0) {
@@ -69,7 +78,7 @@ public final class HardcoreSurvivalHandler {
                         }
                         if (world.getRandom().nextDouble() < cfg.hcCaveDebuffChance) {
                             p.addStatusEffect(new StatusEffectInstance(
-                                    world.getRandom().nextBoolean() ? StatusEffects.BLINDNESS : StatusEffects.MINING_FATIGUE,
+                                    StatusEffects.BLINDNESS,
                                     120, 0, false, true, true));
                         }
                     }

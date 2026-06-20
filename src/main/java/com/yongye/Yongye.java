@@ -91,8 +91,10 @@ public class Yongye implements ModInitializer {
         // 玩家加入 / 重生时,根据持久化的累计等级重新应用血量强化
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 PlayerSkillManager.applyHealthModifier(handler.getPlayer()));
-        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) ->
-                PlayerSkillManager.applyHealthModifier(newPlayer));
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+            PlayerSkillManager.applyHealthModifier(newPlayer);
+            newPlayer.setHealth(newPlayer.getMaxHealth()); // 复活回满血(而非默认20)
+        });
 
         LOGGER.info("[亡途荒夜] 初始化完成。活到天亮就是胜利。");
     }

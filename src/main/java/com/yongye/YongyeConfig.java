@@ -181,6 +181,8 @@ public class YongyeConfig {
 
     // ===== 硬核开局生存包 =====
     public boolean enableHardcoreSurvival = true;
+    public boolean forceSurvival = true;          // 创造模式自动切回生存(反作弊)
+    public boolean forceSurvivalExemptOp = true;  // OP 豁免(便于管理/搭建)
     public boolean hcNoSleepSkip = true;
     public double hcHungerDrainPerSecond = 0.35;
     public boolean hcNightAmbush = true;
@@ -194,7 +196,7 @@ public class YongyeConfig {
     public double hcCaveDebuffChance = 0.15;
     public boolean hcResourceHarder = true;
     public double hcResourceFatigueChance = 0.5;
-    public boolean hcMiningSlowdown = true;        // 直接拖慢挖掘速度(极难生存核心)
+    public boolean hcMiningSlowdown = false;       // 已关闭:不再限制砍树/挖矿速度
     public double hcMiningSpeedMultiplier = 0.3;   // 挖掘速度系数(0.3≈耗时3.3倍;越小越慢)
     public boolean hcMiningSlowAll = false;        // true=所有方块减速;false=只木头/石头/矿物
 
@@ -205,7 +207,7 @@ public class YongyeConfig {
     public double lootChanceEpic = 0.02;
     public double lootChanceGodly = 0.008;
     /** 普通怪掉落"生命碎片"的概率(文档 15.1) */
-    public double lifeShardDropChance = 0.02;
+    public double lifeShardDropChance = 0.01;
     /** 仅当怪物被玩家击杀才触发随机掉落 */
     public boolean lootRequirePlayerKill = true;
 
@@ -258,6 +260,7 @@ public class YongyeConfig {
     public int questHuntEliteCount = 3;       // 猎杀任务需击杀的精英数(随永夜+)
     public int questSlayCount = 20;           // 屠戮任务需击杀的怪物数(随永夜+)
     public double questFleeDistance = 120.0;  // 逃离任务所需距离(随永夜+)
+    public double questPlayerScaling = 0.5;   // 每多一名在线玩家,任务目标量倍率增量
 
     // ============ 背包神器(文档第 14 章)============
     public boolean enableArtifacts = true;
