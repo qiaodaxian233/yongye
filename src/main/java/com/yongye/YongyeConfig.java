@@ -217,6 +217,11 @@ public class YongyeConfig {
     public double digMaxHardnessBoss = 60.0;    // 含黑曜石
     /** 爬墙竖直速度 */
     public double climbSpeed = 0.22;
+    /** 卡住兜底:船卡/水/岩浆/挖不动的墙后,传送到玩家身边 */
+    public boolean pursuitTeleportStuck = true;
+    public int pursuitStuckTicks = 60;          // 持续无进展多久判定卡住(tick,3s)
+    public double pursuitTeleportRadius = 6.0;  // 传送落点距玩家半径
+    public double pursuitTeleportMinDist = 3.0; // 距玩家小于此距离不传送(已贴脸)
 
     // ============ 随机任务(文档第 9 章)============
     public boolean enableQuests = true;

@@ -7,11 +7,15 @@ import com.yongye.registry.ModAttachments;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.Monster;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 
@@ -29,6 +33,8 @@ public final class PursuitHandler {
     private PursuitHandler() {}
 
     private static final Map<MobEntity, Integer> LAST_DIG_AGE = new WeakHashMap<>();
+    // 卡住跟踪:{最近距玩家最小平方距离, 取得该最小值时的 age}
+    private static final Map<MobEntity, double[]> STUCK = new WeakHashMap<>();
     private static int tickCounter = 0;
 
     public static void register() {
@@ -78,6 +84,27 @@ public final class PursuitHandler {
                     boolean wallAhead = !world.getBlockState(base.offset(dir)).isAir()
                             || !world.getBlockState(base.up().offset(dir)).isAir();
 
+                    // —— 卡住兜底:船卡/水/岩浆/挖不动的墙后,传送到玩家身边 ——
+                    if (!anchor && cfg.pursuitTeleportStuck) {
+                        double distSq = mob.squaredDistanceTo(player);
+                        double[] st = STUCK.computeIfAbsent(mob, k -> new double[]{distSq, mob.age});
+                        if (distSq < st[0] - 0.5) { st[0] = distSq; st[1] = mob.age; } // 有进展则刷新
+                        boolean stuckLong = mob.age - st[1] > cfg.pursuitStuckTicks;
+                        boolean inFluid = mob.isInLava() || mob.isSubmergedInWater();
+                        boolean riding = mob.hasVehicle();
+                        double minSq = cfg.pursuitTeleportMinDist * cfg.pursuitTeleportMinDist;
+
+                        if (distSq > minSq && (riding || (inFluid && distSq > 16)
+                                || (stuckLong && wallAhead))) {
+                            if (teleportNear(world, mob, player, cfg)) {
+                                st[0] = mob.squaredDistanceTo(player);
+                                st[1] = mob.age;
+                                mob.setTarget(player);
+                                continue; // 本 tick 不再挖/爬
+                            }
+                        }
+                    }
+
                     // —— 挖墙 ——
                     if (!anchor && wallAhead) {
                         double maxHardness = boss ? cfg.digMaxHardnessBoss
@@ -105,6 +132,41 @@ public final class PursuitHandler {
         });
 
         Yongye.LOGGER.info("[亡途荒夜] 追杀系统已挂载");
+    }
+
+    /** 在玩家附近(相近高度)找一个可站立的安全点把怪传过去。成功返回 true。 */
+    private static boolean teleportNear(ServerWorld world, MobEntity mob, ServerPlayerEntity player, YongyeConfig cfg) {
+        if (mob.hasVehicle()) mob.stopRiding();
+        var rnd = mob.getRandom();
+        int py = MathHelper.floor(player.getY());
+        int[] dyTry = {0, -1, 1, -2, 2};
+        for (int i = 0; i < 14; i++) {
+            double ang = rnd.nextDouble() * Math.PI * 2;
+            double d = cfg.pursuitTeleportMinDist + rnd.nextDouble() * cfg.pursuitTeleportRadius;
+            int x = MathHelper.floor(player.getX() + Math.cos(ang) * d);
+            int z = MathHelper.floor(player.getZ() + Math.sin(ang) * d);
+            for (int dy : dyTry) {
+                BlockPos feet = new BlockPos(x, py + dy, z);
+                BlockPos below = feet.down();
+                if (!world.getBlockState(below).isSolidBlock(world, below)) continue;
+                if (!world.getBlockState(feet).isAir() || !world.getBlockState(feet.up()).isAir()) continue;
+                if (!world.getFluidState(feet).isEmpty() || !world.getFluidState(feet.up()).isEmpty()) continue;
+
+                world.spawnParticles(ParticleTypes.PORTAL, mob.getX(), mob.getBodyY(0.5), mob.getZ(),
+                        20, 0.3, 0.5, 0.3, 0.4);
+                mob.getNavigation().stop();
+                mob.refreshPositionAndAngles(x + 0.5, py + dy, z + 0.5, mob.getYaw(), mob.getPitch());
+                mob.setVelocity(Vec3d.ZERO);
+                mob.velocityModified = true;
+                mob.fallDistance = 0.0f;
+                world.spawnParticles(ParticleTypes.PORTAL, x + 0.5, py + dy + 0.5, z + 0.5,
+                        20, 0.3, 0.5, 0.3, 0.4);
+                world.playSound(null, feet, SoundEvents.ENTITY_ENDERMAN_TELEPORT,
+                        SoundCategory.HOSTILE, 0.8f, 1.0f);
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean tryDig(ServerWorld world, MobEntity mob, Direction dir, double maxHardness) {
