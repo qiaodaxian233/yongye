@@ -62,6 +62,7 @@ public final class SkillEffectManager {
                 applyAttributes(p);
                 applyRegen(p);
                 applyResistance(p);
+                applySatiety(p);
             }
         });
         Yongye.LOGGER.info("[亡途荒夜] 技能书(护甲/恢复/闪避/反伤/抗性)系统已挂载");
@@ -115,6 +116,13 @@ public final class SkillEffectManager {
                 p.removeStatusEffect(eff);
             }
         }
+    }
+
+    private static void applySatiety(ServerPlayerEntity p) {
+        int s = getLearnedLevel(p, SkillType.SATIETY);
+        if (s <= 0) return;
+        // 饱食度强化:每秒补充饱食度+饱和度(add 自动封顶 饱食度20/饱和度<=饱食度),等级越高越不会饿
+        p.getHungerManager().add(Math.max(1, s / 8), 0.8f);
     }
 
     /** 闪避:返回 true 表示本次伤害被完全闪避(上限 50%)。 */

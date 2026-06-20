@@ -23,11 +23,11 @@ public class YongyeConfig {
 
     // ============ 怪物基础增强(文档 5)============
     /** 最大生命倍率(在原版基础上 ADD_MULTIPLIED_BASE) */
-    public double mobHealthMultiplier = 2.0;
+    public double mobHealthMultiplier = 3.0;
     /** 攻击力倍率 */
-    public double mobAttackMultiplier = 1.5;
+    public double mobAttackMultiplier = 2.2;
     /** 移速倍率 */
-    public double mobSpeedMultiplier = 1.15;
+    public double mobSpeedMultiplier = 1.2;
     /** 击退抗性附加值(0~1) */
     public double mobKnockbackResistanceAdd = 0.2;
     /** 感知/跟踪范围附加(格) */
@@ -50,6 +50,8 @@ public class YongyeConfig {
     public double skillBookDropChanceNormal = 0.02;
     public double skillBookDropChanceElite = 0.6;
     public double skillBookDropChanceBoss = 1.0;
+    public int skillBookEarlyGameDays = 3;        // 前几个游戏日视为前期
+    public double skillBookEarlyGameChance = 0.2; // 前期技能书爆率压制系数
     /** 合成到该结果等级时需要"生命结晶" */
     public int lifeCrystalThreshold = 10;
     /** 需要"生命核心" */
@@ -64,6 +66,9 @@ public class YongyeConfig {
     /** 怪物精英化的基础概率 */
     public double eliteChance = 0.04;
     /** 精英在"基础增强之上"再追加的属性倍率/数值 */
+    public boolean eliteCanDisarm = true;          // 精英命中玩家时概率夺走主手武器
+    public double eliteDisarmChance = 0.12;        // 缴械概率(每次精英命中)
+    public int eliteDisarmCooldownTicks = 200;     // 同一玩家两次被缴械的冷却(tick)
     public double eliteHealthMultiplier = 3.0;
     public double eliteAttackMultiplier = 2.0;
     public double eliteSpeedMultiplier = 1.3;
@@ -152,11 +157,11 @@ public class YongyeConfig {
 
     // ===== 怪物随进度递增(血量/攻击跟着玩家变强) =====
     public boolean enableMobScaling = true;
-    public double mobScalingPerNightfall = 0.6;       // 每级永夜 +60% 血
-    public double mobScalingPerDay = 0.04;            // 每个游戏日 +4% 血
+    public double mobScalingPerNightfall = 0.8;       // 每级永夜 +60% 血
+    public double mobScalingPerDay = 0.06;            // 每个游戏日 +4% 血
     public int mobScalingMaxDays = 100;               // 计入天数上限
     public double mobScalingPlayerHealthFactor = 0.5; // 按附近玩家「超出20的最大生命」比例的 50% 给怪加血
-    public double mobScalingAttackRatio = 0.3;        // 攻击按血量缩放的 30% 同步提升
+    public double mobScalingAttackRatio = 0.4;        // 攻击按血量缩放的 30% 同步提升
     public double mobScalingMaxMultiplier = 60.0;     // 缩放倍率上限
 
     // ===== HIM 突脸惊吓(无伤害) =====

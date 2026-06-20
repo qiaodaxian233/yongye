@@ -8,6 +8,7 @@ package com.yongye.item;
  *  - EVASION 闪避强化:概率完全闪避一次伤害(上限 50%)
  *  - THORNS 反伤强化:受击反弹伤害
  *  - RESISTANCE 抗性强化:抗火 + 削弱/清除负面状态
+ *  - SATIETY 饱食度强化:持续补充饱食度与饱和度,等级越高越不会饿
  */
 public enum SkillType {
     ATTACK("attack"),
@@ -15,7 +16,8 @@ public enum SkillType {
     REGEN("regen"),
     EVASION("evasion"),
     THORNS("thorns"),
-    RESISTANCE("resistance");
+    RESISTANCE("resistance"),
+    SATIETY("satiety");
 
     public final String id;
 

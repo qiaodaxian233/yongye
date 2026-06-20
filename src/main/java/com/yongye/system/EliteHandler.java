@@ -3,10 +3,12 @@ package com.yongye.system;
 import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import com.yongye.registry.ModAttachments;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -32,7 +34,9 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.random.Random;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Hand;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -73,6 +77,29 @@ public final class EliteHandler {
             StatusEffects.STRENGTH, StatusEffects.SPEED, StatusEffects.RESISTANCE, StatusEffects.REGENERATION);
 
     public static void register() {
+        // —— 精英缴械:命中玩家时概率夺走主手武器,精英死亡掉落(击杀夺回)——
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.eliteCanDisarm || cfg.eliteDisarmChance <= 0) return true;
+            if (!(entity instanceof ServerPlayerEntity player)) return true;
+            if (!(source.getAttacker() instanceof MobEntity attacker)) return true;
+            if (!attacker.getAttachedOrElse(ModAttachments.IS_ELITE, false)) return true;
+            long now = player.getWorld().getTime();
+            if (now < player.getAttachedOrElse(ModAttachments.DISARM_COOLDOWN_UNTIL, 0L)) return true;
+            ItemStack held = player.getMainHandStack();
+            if (held.isEmpty() || !EquipmentEnhancer.isWeapon(held)) return true;
+            if (player.getRandom().nextDouble() >= cfg.eliteDisarmChance) return true;
+            // 抢夺:精英装上玩家武器,死亡掉落;玩家主手清空
+            attacker.equipStack(EquipmentSlot.MAINHAND, held.copy());
+            attacker.setEquipmentDropChance(EquipmentSlot.MAINHAND, 1.0f);
+            player.setStackInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
+            player.setAttached(ModAttachments.DISARM_COOLDOWN_UNTIL, now + cfg.eliteDisarmCooldownTicks);
+            player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.ENTITY_ITEM_BREAK, SoundCategory.PLAYERS, 1.0f, 0.8f);
+            player.sendMessage(Text.literal("精英怪夺走了你的武器!击杀它夺回").formatted(Formatting.RED), true);
+            return true;
+        });
+
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
             YongyeConfig cfg = YongyeConfig.get();
             if (!cfg.enableElite) return;

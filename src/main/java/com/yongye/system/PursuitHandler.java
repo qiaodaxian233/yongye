@@ -66,6 +66,15 @@ public final class PursuitHandler {
                     boolean elite = mob.getAttachedOrElse(ModAttachments.IS_ELITE, false);
                     boolean boss = mob.getAttachedOrElse(ModAttachments.IS_BOSS, false);
 
+                    // —— 嵌墙兜底:怪整只卡在实心方块里(会憋闷)→ 直接传送到该玩家附近,不要求它在追你 ——
+                    if (!anchor && cfg.pursuitTeleportStuck && isStuckInWall(world, mob)) {
+                        if (teleportNear(world, mob, player, cfg)) {
+                            STUCK.remove(mob);
+                            mob.setTarget(player);
+                            continue;
+                        }
+                    }
+
                     // —— 锁定 ——
                     if (nf >= 1 && effLock > 0 && mob.getTarget() == null
                             && mob.squaredDistanceTo(player) <= effLock * effLock) {
@@ -168,6 +177,17 @@ public final class PursuitHandler {
             }
         }
         return false;
+    }
+
+    /** 怪是否整只嵌在实心方块里(脚部或眼部所在方块会致憋闷)。 */
+    private static boolean isStuckInWall(ServerWorld world, MobEntity mob) {
+        BlockPos feet = mob.getBlockPos();
+        BlockPos eye = BlockPos.ofFloored(mob.getX(), mob.getEyeY(), mob.getZ());
+        return suffocates(world, feet) || suffocates(world, eye);
+    }
+
+    private static boolean suffocates(ServerWorld world, BlockPos pos) {
+        return world.getBlockState(pos).shouldSuffocate(world, pos);
     }
 
     private static boolean tryDig(ServerWorld world, MobEntity mob, Direction dir, double maxHardness) {

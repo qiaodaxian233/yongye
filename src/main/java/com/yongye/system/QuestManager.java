@@ -99,6 +99,8 @@ public final class QuestManager {
         if (p == null) { if (q.bar != null) q.bar.clearPlayers(); return true; }
 
         int left = q.endTick - server.getTicks();
+        // 死亡重生后玩家是新实体,血条引用失效 → 每 tick 把当前玩家挂回血条(守住据点死亡不判败)
+        if (q.bar != null && !q.bar.getPlayers().contains(p)) q.bar.addPlayer(p);
         if (q.bar != null) q.bar.setPercent(Math.max(0f, Math.min(1f, (float) left / q.totalTicks)));
 
         if (q.done) { if (q.bar != null) q.bar.clearPlayers(); return true; }
@@ -153,7 +155,7 @@ public final class QuestManager {
 
         Text title = switch (type) {
             case HUNT_ELITE -> Text.literal("任务·猎杀:击杀一只精英怪").formatted(Formatting.GOLD);
-            case SURVIVE -> Text.literal("任务·守住据点:在限时内存活").formatted(Formatting.GREEN);
+            case SURVIVE -> Text.literal("任务·守住据点:在限时内存活(死亡不算失败)").formatted(Formatting.GREEN);
             case FLEE -> Text.literal("任务·限时逃离:远离此地 50 格").formatted(Formatting.AQUA);
             case CLEAR_CORE -> Text.literal("任务·清除灾厄核心:摧毁附近的灾厄核心").formatted(Formatting.DARK_RED);
         };

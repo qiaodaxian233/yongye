@@ -119,10 +119,15 @@ public final class LootHandler {
                 List<LootFactory> pool = pickPool(roll, cfg);
                 if (pool != null) {
                     LootFactory f = pool.get(r.nextInt(pool.size()));
-                    drop(world, entity, f.make(r));
+                    ItemStack loot = f.make(r);
+                    // 前期(游戏天数少)压制技能书爆率
+                    if (!(isSkillBookStack(loot) && isEarlyGame(world, cfg) && r.nextDouble() >= cfg.skillBookEarlyGameChance)) {
+                        drop(world, entity, loot);
+                    }
                 }
-                // 普通怪小概率掉一本属性技能书(V1),永夜等级越高几率越大
+                // 普通怪小概率掉一本属性技能书(V1),永夜等级越高几率越大;前期再乘压制系数
                 double sbChance = cfg.skillBookDropChanceNormal * (1.0 + NightfallManager.getLevel() * 0.5);
+                if (isEarlyGame(world, cfg)) sbChance *= cfg.skillBookEarlyGameChance;
                 if (r.nextDouble() < sbChance) {
                     drop(world, entity, randomSkillBook(r, 1, 1));
                 }
@@ -149,6 +154,14 @@ public final class LootHandler {
         if (roll < e) return EPIC;
         if (roll < g) return GODLY;
         return null; // 落空
+    }
+
+    private static boolean isSkillBookStack(ItemStack stack) {
+        return stack.getItem() instanceof HealthSkillBookItem || stack.getItem() instanceof SkillBookItem;
+    }
+
+    private static boolean isEarlyGame(ServerWorld world, YongyeConfig cfg) {
+        return (world.getTimeOfDay() / 24000L) < cfg.skillBookEarlyGameDays;
     }
 
     private static void drop(ServerWorld world, LivingEntity entity, ItemStack stack) {

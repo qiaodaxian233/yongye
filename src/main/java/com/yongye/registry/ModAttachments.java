@@ -73,6 +73,13 @@ public final class ModAttachments {
                     .initializer(() -> 0L)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "no_heal_until"));
 
+    /** DISARM_COOLDOWN_UNTIL: 玩家被精英缴械的冷却截止游戏时刻。 */
+    public static final AttachmentType<Long> DISARM_COOLDOWN_UNTIL =
+            AttachmentRegistry.<Long>builder()
+                    .persistent(Codec.LONG)
+                    .initializer(() -> 0L)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "disarm_cooldown_until"));
+
     /** EMBER_READY_AT: 不灭余烬下一次可触发的游戏时刻。 */
     public static final AttachmentType<Long> EMBER_READY_AT =
             AttachmentRegistry.<Long>builder()
