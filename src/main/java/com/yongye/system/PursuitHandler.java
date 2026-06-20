@@ -55,7 +55,8 @@ public final class PursuitHandler {
                 double r = cfg.pursuitRadius;
                 Box box = player.getBoundingBox().expand(r);
                 List<MobEntity> mobs = world.getEntitiesByClass(MobEntity.class, box,
-                        m -> m.isAlive() && m instanceof Monster);
+                        m -> m.isAlive() && m instanceof Monster
+                                && !m.getAttachedOrElse(ModAttachments.IS_HIM, false));
 
                 boolean anchor = ArtifactManager.getActiveLevel(player, ArtifactType.WORLD_ANCHOR) > 0;
                 int eyeLevel = ArtifactManager.getActiveLevel(player, ArtifactType.NIGHTFALL_EYE);

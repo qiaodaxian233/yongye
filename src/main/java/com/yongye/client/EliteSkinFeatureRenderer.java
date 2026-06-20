@@ -54,6 +54,9 @@ public class EliteSkinFeatureRenderer<T extends Entity, M extends EntityModel<T>
         if (n.contains("佩恩") || n.contains("长门")) {
             return Identifier.of(Yongye.MOD_ID, "textures/entity/pain_boss.png");
         }
+        if (n.equals("HIM")) {
+            return Identifier.of(Yongye.MOD_ID, "textures/entity/him.png");
+        }
         // 精英怪:按怪种选图
         if (n.contains("精英")) {
             String name;

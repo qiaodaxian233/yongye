@@ -60,6 +60,12 @@ public final class ModAttachments {
                     .initializer(() -> false)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_pain"));
 
+    /** IS_HIM: 该实体为 HIM 突脸惊吓体(无 AI、无敌、无伤害、短暂存在)。 */
+    public static final AttachmentType<Boolean> IS_HIM =
+            AttachmentRegistry.<Boolean>builder()
+                    .initializer(() -> false)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_him"));
+
     /** NO_HEAL_UNTIL: 玩家禁疗截止的游戏时刻(world time)。 */
     public static final AttachmentType<Long> NO_HEAL_UNTIL =
             AttachmentRegistry.<Long>builder()

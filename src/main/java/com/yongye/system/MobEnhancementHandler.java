@@ -53,6 +53,7 @@ public final class MobEnhancementHandler {
             if (!(entity instanceof MobEntity mob) || !(entity instanceof Monster)) return;
             if (BossHandler.isBoss(entity)) return; // Boss 走翻倍系统,不吃基础增强
             if (mob.getAttachedOrElse(ModAttachments.IS_PAIN, false)) return;
+            if (mob.getAttachedOrElse(ModAttachments.IS_HIM, false)) return;
             if (mob.getAttachedOrElse(ModAttachments.MOB_ENHANCED, false)) return;
 
             mob.setAttached(ModAttachments.MOB_ENHANCED, true);

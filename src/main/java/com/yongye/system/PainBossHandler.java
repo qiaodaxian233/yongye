@@ -8,6 +8,7 @@ import com.yongye.item.HealthSkillBookItem;
 import com.yongye.item.SkillBookItem;
 import com.yongye.item.SkillType;
 import com.yongye.registry.ModAttachments;
+import com.yongye.registry.ModSounds;
 import com.yongye.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -88,6 +89,7 @@ public final class PainBossHandler {
             STATES.remove(entity.getUuid());
             if (entity.getUuid().equals(activePain)) activePain = null;
             if (entity.getWorld() instanceof ServerWorld world) {
+                stopBgmNear(world, entity);
                 dropRewards(world, entity);
                 // 击败长门 → 大幅赎夜,作为对抗永夜升级的泄压阀
                 YongyeConfig cfg = YongyeConfig.get();
@@ -171,6 +173,7 @@ public final class PainBossHandler {
     /** 神罗天征:范围强力排斥 + 伤害。 */
     private static void almightyPush(ServerWorld world, MobEntity pain, YongyeConfig cfg) {
         broadcast(world, "【佩恩】神罗天征!");
+        playSkill(world, pain, ModSounds.PAIN_ALMIGHTY_PUSH);
         world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, pain.getX(), pain.getY() + 0.5, pain.getZ(), 1, 0, 0, 0, 0);
         Box area = new Box(pain.getBlockPos()).expand(cfg.painPushRadius);
         for (PlayerEntity p : world.getEntitiesByClass(PlayerEntity.class, area, e -> e.isAlive())) {
@@ -186,6 +189,7 @@ public final class PainBossHandler {
     /** 万象牵引:把范围内玩家拉向佩恩。 */
     private static void universalPull(ServerWorld world, MobEntity pain, YongyeConfig cfg) {
         broadcast(world, "【佩恩】万象牵引!");
+        playSkill(world, pain, ModSounds.PAIN_UNIVERSAL_PULL);
         world.spawnParticles(ParticleTypes.PORTAL, pain.getX(), pain.getY() + 1.0, pain.getZ(), 40, 0.4, 0.8, 0.4, 0.6);
         Box area = new Box(pain.getBlockPos()).expand(cfg.painPullRadius);
         for (PlayerEntity p : world.getEntitiesByClass(PlayerEntity.class, area, e -> e.isAlive())) {
@@ -200,6 +204,7 @@ public final class PainBossHandler {
     private static void planetaryDevastation(ServerWorld world, MobEntity pain, PlayerEntity tgt,
                                              PainState st, int now, YongyeConfig cfg) {
         broadcast(world, "【佩恩】地爆天星!");
+        playSkill(world, pain, ModSounds.PAIN_PLANETARY);
         Vec3d center = new Vec3d(tgt.getX(), tgt.getY() + 10, tgt.getZ());
         st.devastationCenter = center;
         st.devastationAt = now + 70;
@@ -249,6 +254,7 @@ public final class PainBossHandler {
         pain.setHealth(pain.getMaxHealth());
 
         world.spawnEntity(pain);
+        playBgmNear(world, pain);
         if (world.getServer() != null) {
             world.getServer().getPlayerManager().broadcast(
                     Text.literal("【佩恩】六道之痛降临……").formatted(Formatting.DARK_RED), false);
@@ -286,6 +292,31 @@ public final class PainBossHandler {
         ItemEntity ie = new ItemEntity(world, src.getX(), src.getY() + 0.5, src.getZ(), stack);
         ie.setToDefaultPickupDelay();
         world.spawnEntity(ie);
+    }
+
+    /** 在佩恩处播放技能音效。 */
+    private static void playSkill(ServerWorld world, MobEntity pain, net.minecraft.sound.SoundEvent sound) {
+        world.playSound(null, pain.getX(), pain.getY(), pain.getZ(), sound,
+                net.minecraft.sound.SoundCategory.HOSTILE, 2.0f, 1.0f);
+    }
+
+    /** 降临 BGM:对附近玩家播放遭遇音乐。 */
+    private static void playBgmNear(ServerWorld world, MobEntity pain) {
+        for (ServerPlayerEntity p : world.getPlayers()) {
+            if (p.squaredDistanceTo(pain) <= 64 * 64) {
+                p.playSoundToPlayer(ModSounds.PAIN_BGM, net.minecraft.sound.SoundCategory.MUSIC, 1.0f, 1.0f);
+            }
+        }
+    }
+
+    /** 佩恩死亡:让附近玩家停止 BGM。 */
+    private static void stopBgmNear(ServerWorld world, LivingEntity pain) {
+        var pkt = new net.minecraft.network.packet.s2c.play.StopSoundS2CPacket(
+                net.minecraft.util.Identifier.of(com.yongye.Yongye.MOD_ID, "pain_bgm"),
+                net.minecraft.sound.SoundCategory.MUSIC);
+        for (ServerPlayerEntity p : world.getPlayers()) {
+            if (p.squaredDistanceTo(pain) <= 96 * 96) p.networkHandler.sendPacket(pkt);
+        }
     }
 
     private static void broadcast(ServerWorld world, String msg) {

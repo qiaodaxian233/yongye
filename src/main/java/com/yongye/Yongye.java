@@ -5,6 +5,7 @@ import com.yongye.registry.ModBlocks;
 import com.yongye.registry.ModComponents;
 import com.yongye.registry.ModItemGroups;
 import com.yongye.registry.ModItems;
+import com.yongye.registry.ModSounds;
 import com.yongye.registry.ModRecipes;
 import com.yongye.system.ArmorHealthHandler;
 import com.yongye.system.ArtifactManager;
@@ -13,6 +14,7 @@ import com.yongye.system.BossAbilityHandler;
 import com.yongye.system.CatastropheCoreManager;
 import com.yongye.system.EliteHandler;
 import com.yongye.system.HardcoreSurvivalHandler;
+import com.yongye.system.HimJumpscareHandler;
 import com.yongye.system.HighHpCounterHandler;
 import com.yongye.system.LootHandler;
 import com.yongye.system.MobEnhancementHandler;
@@ -81,6 +83,8 @@ public class Yongye implements ModInitializer {
         WeaponCombatHandler.register();
         WeaponSkillManager.init();
         HardcoreSurvivalHandler.register();
+        ModSounds.init();
+        HimJumpscareHandler.register();
         com.yongye.network.YongyeNet.register();
         ModCommands.register();
 

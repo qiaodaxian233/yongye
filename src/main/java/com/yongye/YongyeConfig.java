@@ -157,6 +157,14 @@ public class YongyeConfig {
     public double mobScalingAttackRatio = 0.3;        // 攻击按血量缩放的 30% 同步提升
     public double mobScalingMaxMultiplier = 60.0;     // 缩放倍率上限
 
+    // ===== HIM 突脸惊吓(无伤害) =====
+    public boolean enableHim = true;
+    public int himCheckIntervalTicks = 600;
+    public double himChance = 0.04;
+    public int himDurationTicks = 35;
+    public boolean himNightOrCaveOnly = true;
+    public double himSpawnDistance = 2.2;
+
     // ===== 硬核开局生存包 =====
     public boolean enableHardcoreSurvival = true;
     public boolean hcNoSleepSkip = true;

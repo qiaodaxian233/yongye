@@ -79,6 +79,7 @@ public final class EliteHandler {
             if (!(entity instanceof MobEntity mob) || !(entity instanceof Monster)) return;
             if (BossHandler.isBoss(mob)) return;
             if (mob.getAttachedOrElse(ModAttachments.IS_PAIN, false)) return;
+            if (mob.getAttachedOrElse(ModAttachments.IS_HIM, false)) return;
             if (mob.getAttachedOrElse(ModAttachments.IS_ELITE, false)) {
                 ELITES.add(mob); // 重新加载时恢复追踪
                 return;
