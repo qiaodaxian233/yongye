@@ -58,6 +58,10 @@ public final class ModCommands {
                                 .then(CommandManager.literal("core").executes(ctx -> {
                                     QuestManager.assign(ctx.getSource().getPlayerOrThrow(), QuestManager.Type.CLEAR_CORE);
                                     return 1;
+                                }))
+                                .then(CommandManager.literal("gather").executes(ctx -> {
+                                    QuestManager.assign(ctx.getSource().getPlayerOrThrow(), QuestManager.Type.GATHER);
+                                    return 1;
                                 })))
 
                         .then(CommandManager.literal("book")

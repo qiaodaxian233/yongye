@@ -12,6 +12,7 @@ import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -33,7 +34,7 @@ import java.util.UUID;
 public final class QuestManager {
     private QuestManager() {}
 
-    public enum Type { HUNT_ELITE, SURVIVE, FLEE, CLEAR_CORE }
+    public enum Type { HUNT_ELITE, SURVIVE, FLEE, CLEAR_CORE, GATHER }
 
     private static class Quest {
         Type type;
@@ -43,7 +44,18 @@ public final class QuestManager {
         BlockPos corePos;
         boolean done;
         ServerBossBar bar;
+        Item targetItem;
+        int targetCount;
     }
+
+    private record Need(Item item, int count) {}
+    private static final Need[] GATHER_POOL = {
+            new Need(Items.IRON_INGOT, 8), new Need(Items.GOLD_INGOT, 6), new Need(Items.DIAMOND, 3),
+            new Need(Items.COAL, 16), new Need(Items.BONE, 12), new Need(Items.ROTTEN_FLESH, 16),
+            new Need(Items.GUNPOWDER, 8), new Need(Items.STRING, 12), new Need(Items.ENDER_PEARL, 2),
+            new Need(Items.REDSTONE, 16), new Need(Items.SLIME_BALL, 4), new Need(Items.LEATHER, 6),
+            new Need(ModItems.LIFE_SHARD, 3),
+    };
 
     private static final Map<UUID, Quest> ACTIVE = new HashMap<>();
     private static int assignCounter = 0;
@@ -123,6 +135,12 @@ public final class QuestManager {
             if (q.bar != null) q.bar.clearPlayers();
             return true;
         }
+        if (q.type == Type.GATHER && q.targetItem != null
+                && p.getInventory().count(q.targetItem) >= q.targetCount) {
+            complete(p);
+            if (q.bar != null) q.bar.clearPlayers();
+            return true;
+        }
 
         // 超时失败
         if (left <= 0) {
@@ -139,11 +157,13 @@ public final class QuestManager {
         if (NightfallManager.getLevel() >= YongyeConfig.get().questHuntEliteMinNightfall) {
             return Type.values()[rnd.nextInt(Type.values().length)];
         }
-        return rnd.nextBoolean() ? Type.FLEE : Type.SURVIVE;
+        Type[] early = { Type.FLEE, Type.SURVIVE, Type.GATHER };
+        return early[rnd.nextInt(early.length)];
     }
 
     public static void assign(ServerPlayerEntity player, Type type) {
         YongyeConfig cfg = YongyeConfig.get();
+        var rnd = player.getRandom();
         Quest q = new Quest();
         q.type = type;
         q.totalTicks = cfg.questTimeLimitTicks;
@@ -152,18 +172,26 @@ public final class QuestManager {
         if (type == Type.CLEAR_CORE) {
             q.corePos = CatastropheCoreManager.spawnCoreNear(player);
         }
+        if (type == Type.GATHER) {
+            Need need = GATHER_POOL[rnd.nextInt(GATHER_POOL.length)];
+            q.targetItem = need.item();
+            q.targetCount = need.count();
+        }
 
         Text title = switch (type) {
             case HUNT_ELITE -> Text.literal("任务·猎杀:击杀一只精英怪").formatted(Formatting.GOLD);
             case SURVIVE -> Text.literal("任务·守住据点:在限时内存活(死亡不算失败)").formatted(Formatting.GREEN);
             case FLEE -> Text.literal("任务·限时逃离:远离此地 50 格").formatted(Formatting.AQUA);
             case CLEAR_CORE -> Text.literal("任务·清除灾厄核心:摧毁附近的灾厄核心").formatted(Formatting.DARK_RED);
+            case GATHER -> Text.literal("任务·搜集物资:限时内集齐 " + q.targetCount + "× ").formatted(Formatting.LIGHT_PURPLE)
+                    .append(q.targetItem.getName());
         };
         BossBar.Color color = switch (type) {
             case HUNT_ELITE -> BossBar.Color.YELLOW;
             case SURVIVE -> BossBar.Color.GREEN;
             case FLEE -> BossBar.Color.BLUE;
             case CLEAR_CORE -> BossBar.Color.RED;
+            case GATHER -> BossBar.Color.PURPLE;
         };
         q.bar = new ServerBossBar(title, color, BossBar.Style.PROGRESS);
         q.bar.addPlayer(player);
@@ -185,7 +213,14 @@ public final class QuestManager {
 
     private static void fail(ServerPlayerEntity player) {
         player.sendMessage(Text.literal("【任务失败】黑暗加深……").formatted(Formatting.DARK_RED), false);
-        if (player.getServer() != null) NightfallManager.escalate(player.getServer());
+        if (player.getServer() != null) {
+            Text msg = Text.literal("【任务失败】" + player.getName().getString()
+                    + " 未在限时内完成任务,永夜加深!").formatted(Formatting.DARK_RED);
+            for (ServerPlayerEntity pp : player.getServer().getPlayerManager().getPlayerList()) {
+                if (pp != player) pp.sendMessage(msg, false);
+            }
+            NightfallManager.escalate(player.getServer());
+        }
     }
 
     private static void reward(ServerPlayerEntity player) {
