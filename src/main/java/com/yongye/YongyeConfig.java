@@ -164,6 +164,11 @@ public class YongyeConfig {
     public double mobScalingAttackRatio = 0.4;        // 攻击按血量缩放的 30% 同步提升
     public double mobScalingMaxMultiplier = 60.0;     // 缩放倍率上限
 
+    // ===== 防卡死:全局怪量预算 + 传送限流 =====
+    public int globalMaxHostilesNearby = 60;          // 玩家附近敌对生物总数上限,超了本 mod 不再额外刷怪
+    public double globalHostileRadius = 28.0;         // 统计半径
+    public int pursuitMaxTeleportsPerTick = 3;        // 追杀/嵌墙传送每 tick 上限
+
     // ===== HIM 突脸惊吓(无伤害) =====
     public boolean enableHim = true;
     public int himCheckIntervalTicks = 600;
@@ -286,6 +291,12 @@ public class YongyeConfig {
             Yongye.LOGGER.error("[亡途荒夜] 读取配置失败,使用默认值", e);
             INSTANCE = new YongyeConfig();
         }
+    }
+
+    /** 重置为默认配置并写盘(/yongye config reset 调用)。 */
+    public static void reset() {
+        INSTANCE = new YongyeConfig();
+        save();
     }
 
     public static void save() {

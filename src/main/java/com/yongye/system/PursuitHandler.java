@@ -36,6 +36,7 @@ public final class PursuitHandler {
     // 卡住跟踪:{最近距玩家最小平方距离, 取得该最小值时的 age}
     private static final Map<MobEntity, double[]> STUCK = new WeakHashMap<>();
     private static int tickCounter = 0;
+    private static int teleportsThisTick = 0;
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -43,6 +44,7 @@ public final class PursuitHandler {
             if (!cfg.enablePursuit) return;
             if (++tickCounter < 2) return; // 每 2 tick 跑一次,兼顾响应与开销
             tickCounter = 0;
+            teleportsThisTick = 0;
 
             int nf = NightfallManager.getLevel();
             double lockRadius = NightfallManager.getLockRadius();
@@ -68,7 +70,9 @@ public final class PursuitHandler {
 
                     // —— 嵌墙兜底:怪整只卡在实心方块里(会憋闷)→ 直接传送到该玩家附近,不要求它在追你 ——
                     if (!anchor && cfg.pursuitTeleportStuck && isStuckInWall(world, mob)) {
-                        if (teleportNear(world, mob, player, cfg)) {
+                        if (teleportsThisTick < cfg.pursuitMaxTeleportsPerTick
+                                && teleportNear(world, mob, player, cfg)) {
+                            teleportsThisTick++;
                             STUCK.remove(mob);
                             mob.setTarget(player);
                             continue;
@@ -106,7 +110,9 @@ public final class PursuitHandler {
 
                         if (distSq > minSq && (riding || (inFluid && distSq > 16)
                                 || (stuckLong && wallAhead))) {
-                            if (teleportNear(world, mob, player, cfg)) {
+                            if (teleportsThisTick < cfg.pursuitMaxTeleportsPerTick
+                                    && teleportNear(world, mob, player, cfg)) {
+                                teleportsThisTick++;
                                 st[0] = mob.squaredDistanceTo(player);
                                 st[1] = mob.age;
                                 mob.setTarget(player);

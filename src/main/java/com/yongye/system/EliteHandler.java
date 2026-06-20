@@ -93,6 +93,7 @@ public final class EliteHandler {
             // 抢夺:精英装上玩家武器,死亡掉落;玩家主手清空
             attacker.equipStack(EquipmentSlot.MAINHAND, held.copy());
             attacker.setEquipmentDropChance(EquipmentSlot.MAINHAND, 1.0f);
+            attacker.setPersistent(); // 抢了武器的精英不自然消失,确保玩家能击杀夺回
             player.setStackInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
             player.setAttached(ModAttachments.DISARM_COOLDOWN_UNTIL, now + cfg.eliteDisarmCooldownTicks);
             player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),

@@ -117,6 +117,10 @@ public final class HardcoreSurvivalHandler {
         long nearby = world.getEntitiesByClass(HostileEntity.class,
                 player.getBoundingBox().expand(cfg.hcAmbushRadius + 4), e -> e.isAlive()).size();
         if (nearby >= cfg.hcAmbushMaxNearby) return;
+        // 全局怪量预算:附近敌对生物过多则不再刷,防止实体爆炸卡死
+        long global = world.getEntitiesByClass(HostileEntity.class,
+                player.getBoundingBox().expand(cfg.globalHostileRadius), e -> e.isAlive()).size();
+        if (global >= cfg.globalMaxHostilesNearby) return;
 
         var r = world.getRandom();
         double ang = r.nextDouble() * Math.PI * 2;

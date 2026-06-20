@@ -123,6 +123,14 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        .then(CommandManager.literal("config")
+                                .then(CommandManager.literal("reset").executes(ctx -> {
+                                    com.yongye.YongyeConfig.reset();
+                                    ctx.getSource().sendFeedback(() ->
+                                            Text.literal("配置已重置为默认值(部分改动重进世界生效)").formatted(Formatting.AQUA), false);
+                                    return 1;
+                                })))
+
                         .then(CommandManager.literal("wardbook").executes(ctx -> {
                             ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
                             p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.WARD_BOOK));

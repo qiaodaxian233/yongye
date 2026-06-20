@@ -98,7 +98,10 @@ public final class CatastropheCoreManager {
                     <= (double) cfg.coreMobSpawnRadius * cfg.coreMobSpawnRadius) {
                 int nearby = world.getEntitiesByClass(HostileEntity.class,
                         new Box(pos).expand(cfg.coreMobSpawnRadius), e -> true).size();
-                if (nearby < cfg.coreMobMaxNearby && world.getRandom().nextDouble() < cfg.coreMobSpawnChance) {
+                long global = world.getEntitiesByClass(HostileEntity.class,
+                        new Box(pos).expand(cfg.globalHostileRadius), e -> e.isAlive()).size();
+                if (nearby < cfg.coreMobMaxNearby && global < cfg.globalMaxHostilesNearby
+                        && world.getRandom().nextDouble() < cfg.coreMobSpawnChance) {
                     spawnMob(world, pos);
                 }
             }
