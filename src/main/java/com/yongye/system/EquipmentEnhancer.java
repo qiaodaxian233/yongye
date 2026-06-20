@@ -132,8 +132,9 @@ public final class EquipmentEnhancer {
         if (level > 0 && pristine.isDamageable()) {
             int baseMax = pristine.getMaxDamage();
             int newMax = baseMax + level * c.enhanceDurabilityPerLevel;
+            int curDamage = out.getDamage(); // 保留已损耗,不免费修复
             out.set(DataComponentTypes.MAX_DAMAGE, newMax);
-            out.set(DataComponentTypes.DAMAGE, 0);
+            out.set(DataComponentTypes.DAMAGE, Math.min(curDamage, newMax - 1));
         }
         return out;
     }

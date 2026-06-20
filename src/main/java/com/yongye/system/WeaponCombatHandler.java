@@ -30,6 +30,9 @@ public final class WeaponCombatHandler {
             int lvl = EquipmentEnhancer.getLevel(weapon);
             if (lvl <= 0) return ActionResult.PASS;
 
+            // 仅在攻击基本蓄满时才可暴击(连点刷子不吃暴击,尊重攻速)
+            if (player.getAttackCooldownProgress(0.5f) < 0.9f) return ActionResult.PASS;
+
             WeaponQuality q = WeaponQuality.forLevel(lvl);
             if (q.critChance <= 0) return ActionResult.PASS;
             if (player.getRandom().nextDouble() >= q.critChance) return ActionResult.PASS;

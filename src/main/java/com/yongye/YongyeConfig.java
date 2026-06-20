@@ -142,6 +142,7 @@ public class YongyeConfig {
     public double skillDevourDamagePerLevel = 0.3;
     public double skillDevourRadius = 7.0;
     public double skillDevourHealRatio = 0.4;  // 伤害转治疗比例
+    public double skillDevourHealMaxPct = 0.25; // 单次吸血治疗上限(最大生命百分比)
     public int skillFinalityCooldown = 900;    // 终焉降临 冷却(45s)
     public double skillFinalityDamage = 20.0;
     public double skillFinalityDamagePerLevel = 0.6;

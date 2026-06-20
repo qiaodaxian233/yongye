@@ -6,6 +6,7 @@ import com.yongye.item.ArtifactType;
 import com.yongye.registry.ModAttachments;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -116,6 +117,10 @@ public final class HighHpCounterHandler {
                 return true;
             });
         });
+
+        // 玩家退出清理压制表,避免内存堆积
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+                SUPPRESS_UNTIL.remove(handler.player.getUuid()));
 
         Yongye.LOGGER.info("[亡途荒夜] 高血量反制系统已挂载");
     }

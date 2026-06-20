@@ -3,8 +3,11 @@ package com.yongye.system;
 import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import com.yongye.item.WeaponSkill;
+import com.yongye.registry.ModAttachments;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.mob.Monster;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -76,7 +79,7 @@ public final class WeaponSkillManager {
         DamageSource src = world.getDamageSources().playerAttack(player);
 
         Box box = player.getBoundingBox().expand(range);
-        for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, box, e -> e.isAlive() && e != player)) {
+        for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, box, e -> e.isAlive() && isHostileTarget(e))) {
             Vec3d to = le.getPos().subtract(eye).normalize();
             if (look.dotProduct(to) < 0.35) continue; // 仅前方扇形
             le.damage(src, (float) dmg);
@@ -98,13 +101,18 @@ public final class WeaponSkillManager {
         DamageSource src = world.getDamageSources().magic();
         Box box = player.getBoundingBox().expand(radius);
         double healed = 0;
-        for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, box, e -> e.isAlive() && e != player)) {
+        for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, box, e -> e.isAlive() && isHostileTarget(e))) {
             le.damage(src, (float) dmg);
             healed += dmg * cfg.skillDevourHealRatio;
             world.spawnParticles(ParticleTypes.PORTAL, le.getX(), le.getBodyY(0.6), le.getZ(),
                     10, 0.3, 0.5, 0.3, 0.4);
         }
-        if (healed > 0) player.heal((float) Math.min(healed, player.getMaxHealth()));
+        // 禁疗时不回血;单次治疗上限按最大生命百分比封顶
+        boolean healBlocked = player.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L) > player.getWorld().getTime();
+        if (healed > 0 && !healBlocked) {
+            double cap = player.getMaxHealth() * cfg.skillDevourHealMaxPct;
+            player.heal((float) Math.min(healed, cap));
+        }
         world.spawnParticles(ParticleTypes.REVERSE_PORTAL, player.getX(), player.getBodyY(0.6), player.getZ(),
                 40, 0.5, 0.8, 0.5, 0.3);
         world.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -117,7 +125,7 @@ public final class WeaponSkillManager {
         double radius = cfg.skillFinalityRadius;
         DamageSource src = world.getDamageSources().playerAttack(player);
         Box box = player.getBoundingBox().expand(radius);
-        for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, box, e -> e.isAlive() && e != player)) {
+        for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, box, e -> e.isAlive() && isHostileTarget(e))) {
             le.damage(src, (float) dmg);
             le.addVelocity(0, 0.8, 0);
             le.velocityModified = true;
@@ -133,7 +141,17 @@ public final class WeaponSkillManager {
         player.sendMessage(Text.literal(msg).formatted(color), true);
     }
 
+    /** 只对敌对生物(怪物/我方标记的 Boss/长门)生效,避免误伤玩家/村民/宠物/动物。 */
+    private static boolean isHostileTarget(LivingEntity e) {
+        return e instanceof Monster
+                || e.getAttachedOrElse(ModAttachments.IS_BOSS, false)
+                || e.getAttachedOrElse(ModAttachments.IS_PAIN, false);
+    }
+
     public static void init() {
+        // 玩家退出时清理冷却表,避免内存堆积
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+                COOLDOWNS.remove(handler.player.getUuid()));
         Yongye.LOGGER.info("[亡途荒夜] 武器主动技能系统已挂载");
     }
 }

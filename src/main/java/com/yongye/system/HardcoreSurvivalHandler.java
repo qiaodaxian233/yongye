@@ -85,7 +85,10 @@ public final class HardcoreSurvivalHandler {
                     boolean night = timeOfDay >= 13000 && timeOfDay <= 23000;
                     boolean nightfall = NightfallManager.getLevel() >= 1;
                     if ((night || nightfall) && world.getRandom().nextDouble() < cfg.hcAmbushChance) {
-                        ambushSpawn(world, p, cfg, true);
+                        // 玩家在地下时用其所在高度刷怪,否则用地表
+                        boolean ug = p.getY() < cfg.hcCaveYThreshold
+                                && world.getLightLevel(LightType.SKY, p.getBlockPos()) == 0;
+                        ambushSpawn(world, p, cfg, !ug);
                     }
                 }
             }

@@ -116,6 +116,15 @@ public final class PainBossHandler {
         if (activePain != null) return;                              // 已存在,不重复
         if (NightfallManager.getLevel() < cfg.painSpawnMinNightfall) return;
         if (server.getPlayerManager().getPlayerList().isEmpty()) return;
+
+        // 重启兜底:若已有持久长门在某玩家附近加载着,认领它,避免再刷一个
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            if (!(p.getWorld() instanceof ServerWorld w)) continue;
+            var found = w.getEntitiesByClass(MobEntity.class, p.getBoundingBox().expand(128),
+                    e -> e.isAlive() && e.getAttachedOrElse(ModAttachments.IS_PAIN, false));
+            if (!found.isEmpty()) { activePain = found.get(0).getUuid(); return; }
+        }
+
         if (server.getOverworld().getRandom().nextDouble() > cfg.painNaturalSpawnChance) return;
 
         // 随机挑一名玩家,在其附近降临
