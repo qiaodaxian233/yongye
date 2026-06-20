@@ -31,6 +31,20 @@ public final class ModAttachments {
                     .initializer(() -> false)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "mob_enhanced"));
 
+    /** IS_ELITE: 该怪物为精英怪。 */
+    public static final AttachmentType<Boolean> IS_ELITE =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_elite"));
+
+    /** IS_BOSS: 该实体为(翻倍)Boss。 */
+    public static final AttachmentType<Boolean> IS_BOSS =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_boss"));
+
     public static void init() {
         Yongye.LOGGER.info("[亡途荒夜] 数据附着已注册");
     }

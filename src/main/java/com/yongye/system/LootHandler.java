@@ -82,19 +82,36 @@ public final class LootHandler {
             if (!(entity instanceof Monster)) return;
             if (!(entity.getWorld() instanceof ServerWorld world)) return;
             if (cfg.lootRequirePlayerKill && !(damageSource.getAttacker() instanceof PlayerEntity)) return;
+            // Boss 掉落由 BossHandler 负责,避免重复
+            if (entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_BOSS, false)) return;
 
             Random r = entity.getRandom();
+            boolean elite = entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_ELITE, false);
 
-            // 品质 roll(单选)
-            double roll = r.nextDouble();
-            List<LootFactory> pool = pickPool(roll, cfg);
-            if (pool != null) {
-                LootFactory f = pool.get(r.nextInt(pool.size()));
-                drop(world, entity, f.make(r));
+            if (elite) {
+                // 精英专属:保底一本技能书 + 一件稀有以上战利品 + 概率材料
+                drop(world, entity, HealthSkillBookItem.create(1 + r.nextInt(3))); // V1~V3
+                List<LootFactory> hi = switch (r.nextInt(3)) {
+                    case 0 -> RARE;
+                    case 1 -> EPIC;
+                    default -> GODLY;
+                };
+                drop(world, entity, hi.get(r.nextInt(hi.size())).make(r));
+                if (r.nextDouble() < 0.5) drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL));
+                if (r.nextDouble() < 0.2) drop(world, entity, new ItemStack(ModItems.LIFE_CORE));
+            } else {
+                // 普通怪:按品质表单选
+                double roll = r.nextDouble();
+                List<LootFactory> pool = pickPool(roll, cfg);
+                if (pool != null) {
+                    LootFactory f = pool.get(r.nextInt(pool.size()));
+                    drop(world, entity, f.make(r));
+                }
             }
 
-            // 独立的"生命碎片"掉落(文档 15.1)
-            if (r.nextDouble() < cfg.lifeShardDropChance) {
+            // 独立的"生命碎片"掉落(文档 15.1),精英翻倍掉率
+            double shardChance = cfg.lifeShardDropChance * (elite ? 2.0 : 1.0);
+            if (r.nextDouble() < shardChance) {
                 drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, 1));
             }
         });

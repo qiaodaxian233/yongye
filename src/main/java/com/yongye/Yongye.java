@@ -6,6 +6,8 @@ import com.yongye.registry.ModItemGroups;
 import com.yongye.registry.ModItems;
 import com.yongye.registry.ModRecipes;
 import com.yongye.system.ArmorHealthHandler;
+import com.yongye.system.BossHandler;
+import com.yongye.system.EliteHandler;
 import com.yongye.system.LootHandler;
 import com.yongye.system.MobEnhancementHandler;
 import com.yongye.system.PlayerSkillManager;
@@ -40,6 +42,8 @@ public class Yongye implements ModInitializer {
 
         // 玩法系统
         MobEnhancementHandler.register();
+        BossHandler.register();
+        EliteHandler.register();
         ArmorHealthHandler.register();
         LootHandler.register();
 
