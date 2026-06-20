@@ -127,7 +127,7 @@ public final class PursuitHandler {
                                 : elite ? cfg.digMaxHardnessElite : cfg.digMaxHardnessNormal;
                         int last = LAST_DIG_AGE.getOrDefault(mob, -100000);
                         if (mob.age - last >= cfg.digCooldownTicks) {
-                            if (tryDig(world, mob, dir, maxHardness)) {
+                            if (ProgressionManager.canMobsDig(world) && tryDig(world, mob, dir, maxHardness)) {
                                 LAST_DIG_AGE.put(mob, mob.age);
                             }
                         }

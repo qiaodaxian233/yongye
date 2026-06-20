@@ -73,7 +73,7 @@ public final class HardcoreSurvivalHandler {
                     boolean underground = p.getY() < cfg.hcCaveYThreshold
                             && world.getLightLevel(LightType.SKY, pos) == 0;
                     if (underground) {
-                        if (world.getRandom().nextDouble() < cfg.hcCaveSpawnChance) {
+                        if (!ProgressionManager.isNewbie(world) && world.getRandom().nextDouble() < cfg.hcCaveSpawnChance) {
                             ambushSpawn(world, p, cfg, false);
                         }
                         if (world.getRandom().nextDouble() < cfg.hcCaveDebuffChance) {
@@ -93,7 +93,7 @@ public final class HardcoreSurvivalHandler {
                     long timeOfDay = world.getTimeOfDay() % 24000L;
                     boolean night = timeOfDay >= 13000 && timeOfDay <= 23000;
                     boolean nightfall = NightfallManager.getLevel() >= 1;
-                    if ((night || nightfall) && world.getRandom().nextDouble() < cfg.hcAmbushChance) {
+                    if (!ProgressionManager.isNewbie(world) && (night || nightfall) && world.getRandom().nextDouble() < cfg.hcAmbushChance) {
                         // 玩家在地下时用其所在高度刷怪,否则用地表
                         boolean ug = p.getY() < cfg.hcCaveYThreshold
                                 && world.getLightLevel(LightType.SKY, p.getBlockPos()) == 0;

@@ -180,6 +180,15 @@
 - **HIM 失明预警**:HIM 出现前玩家先失明 5 秒(PENDING 延迟生成)。
 - **神器合成配方**:为全部 10 种神器各加一个主题 shaped 配方(合成即 1 级,可用 artifact_upgrade 升级)。
 
+## 里程碑 36 — 时间进度系统(类「惊变」)
+- 新增 `ProgressionManager` + 配置(enableProgression 等),按游戏天数驱动:
+  - **第一天长白天**:首个白天放慢到 firstDayMinutes(24)分钟(仅主世界,总时间 0..12000)。
+  - **新手保护**:第一天白天不刷额外怪(洞穴/夜袭跳过)。
+  - **精英按天解锁**:第3天前无精英;第3~4天小概率(×0.3);第5天起 +65%(×1.65)。接入 EliteHandler 刷新判定。
+  - **每10天进化**:evolutionMultiplier(每阶段 +50%)乘入 MobEnhancement 缩放。
+  - **早期怪不挖方块**:PursuitHandler 挖掘按 mobDigStartDay(5)解锁。
+- 怪物随永夜/天数渐强逻辑保留(MobEnhancement),配合进化倍率叠加。
+
 ---
 
 > 后续待办、已知边界与可做方向见 **[HANDOVER.md](HANDOVER.md)** 第 6 节。

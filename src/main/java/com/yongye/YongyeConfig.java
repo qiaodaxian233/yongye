@@ -250,6 +250,19 @@ public class YongyeConfig {
     public double pursuitTeleportMinDist = 3.0; // 距玩家小于此距离不传送(已贴脸)
 
     // ============ 随机任务(文档第 9 章)============
+    // ===== 时间进度系统 =====
+    public boolean enableProgression = true;
+    public boolean firstDayLong = true;          // 第一天白天放慢
+    public double firstDayMinutes = 24.0;        // 第一天白天目标时长(分钟)
+    public boolean newbieProtectDay1 = true;     // 第一天白天新手保护(不刷额外怪)
+    public int eliteStartDay = 3;                // 第3天起才有精英
+    public int eliteBoostDay = 5;                // 第5天起精英概率大增
+    public double eliteEarlyMultiplier = 0.3;    // 第3~4天:精英概率×0.3(小概率)
+    public double eliteBoostMultiplier = 1.65;   // 第5天起:精英概率×1.65(+65%)
+    public int evolutionEveryDays = 10;          // 每10天进化一次
+    public double evolutionPerStage = 0.5;       // 每阶段怪物强度 +50%
+    public int mobDigStartDay = 5;               // 第5天起怪物才会挖方块
+
     public boolean enableQuests = true;
     /** 自动派发任务的间隔(tick),默认 6 分钟 */
     public int questIntervalTicks = 7200;

@@ -113,7 +113,7 @@ public final class EliteHandler {
                 ELITES.add(mob); // 重新加载时恢复追踪
                 return;
             }
-            if (mob.getRandom().nextDouble() >= cfg.eliteChance * NightfallManager.getEliteChanceMultiplier()) return;
+            if (mob.getRandom().nextDouble() >= cfg.eliteChance * NightfallManager.getEliteChanceMultiplier() * ProgressionManager.eliteChanceMultiplier(mob.getWorld())) return;
 
             makeElite(mob, cfg);
             ELITES.add(mob);
