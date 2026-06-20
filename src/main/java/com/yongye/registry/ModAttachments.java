@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.yongye.Yongye;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 
 /**
@@ -65,6 +66,13 @@ public final class ModAttachments {
             AttachmentRegistry.<Boolean>builder()
                     .initializer(() -> false)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_him"));
+
+    /** ACCESSORIES: 玩家饰品栏(4 格神器),以 NBT 存档。 */
+    public static final AttachmentType<NbtCompound> ACCESSORIES =
+            AttachmentRegistry.<NbtCompound>builder()
+                    .persistent(NbtCompound.CODEC)
+                    .initializer(NbtCompound::new)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "accessories"));
 
     /** NO_HEAL_UNTIL: 玩家禁疗截止的游戏时刻(world time)。 */
     public static final AttachmentType<Long> NO_HEAL_UNTIL =

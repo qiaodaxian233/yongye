@@ -54,6 +54,7 @@ public class Yongye implements ModInitializer {
 
         // 注册层
         ModComponents.init();
+        com.yongye.registry.ModScreens.init();
         ModAttachments.init();
         ModBlocks.init();
         ModItems.init();

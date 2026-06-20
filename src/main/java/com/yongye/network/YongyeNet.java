@@ -20,9 +20,17 @@ public final class YongyeNet {
     public static void register() {
         PayloadTypeRegistry.playS2C().register(StatsPayload.ID, StatsPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(SkillUsePayload.ID, SkillUsePayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(OpenAccessoryPayload.ID, OpenAccessoryPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(SkillUsePayload.ID, (payload, context) -> {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> WeaponSkillManager.use(p, payload.index()));
+        });
+        ServerPlayNetworking.registerGlobalReceiver(OpenAccessoryPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> p.openHandledScreen(new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
+                    (syncId, playerInv, pl) -> new com.yongye.screen.AccessoryScreenHandler(
+                            syncId, playerInv, com.yongye.system.AccessoryStorage.load(pl)),
+                    net.minecraft.text.Text.literal("饰品栏"))));
         });
         // 登录即推送一次,保证面板有数据
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sendStats(handler.player));

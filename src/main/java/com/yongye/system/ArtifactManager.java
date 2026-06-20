@@ -58,6 +58,12 @@ public final class ArtifactManager {
                 best = Math.max(best, ArtifactItem.getLevel(s));
             }
         }
+        // 饰品栏中的神器同样生效
+        for (ItemStack s : AccessoryStorage.stacks(player)) {
+            if (s.getItem() instanceof ArtifactItem ai && ai.getType() == type) {
+                best = Math.max(best, ArtifactItem.getLevel(s));
+            }
+        }
         return best;
     }
 

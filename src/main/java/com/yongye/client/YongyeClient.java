@@ -61,8 +61,14 @@ public class YongyeClient implements ClientModInitializer {
                         client.setScreen(new WeaponInfoScreen(screen, held));
                     }
                 }).dimensions(bx + 46, by, 44, 16).build());
+                // 「饰品」按钮:打开饰品栏(放神器)
+                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("饰品"),
+                        b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload()))
+                        .dimensions(bx, by - 18, 44, 16).build());
             }
         });
+        net.minecraft.client.gui.screen.ingame.HandledScreens.register(
+                com.yongye.registry.ModScreens.ACCESSORY, com.yongye.client.AccessoryScreen::new);
 
         // 装备强化:tooltip 显示品质 + 强化等级(任意装备通用,零 mixin)
         ItemTooltipCallback.EVENT.register((stack, ctx, type, lines) -> {
