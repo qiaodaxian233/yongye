@@ -23,6 +23,7 @@ import com.yongye.system.PursuitHandler;
 import com.yongye.system.QuestManager;
 import com.yongye.system.SkillEffectManager;
 import com.yongye.system.WeaponCombatHandler;
+import com.yongye.system.WeaponSkillManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -77,6 +78,7 @@ public class Yongye implements ModInitializer {
         HighHpCounterHandler.register();
         SkillEffectManager.register();
         WeaponCombatHandler.register();
+        WeaponSkillManager.init();
         com.yongye.network.YongyeNet.register();
         ModCommands.register();
 

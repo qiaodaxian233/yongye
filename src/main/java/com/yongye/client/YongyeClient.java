@@ -2,13 +2,16 @@ package com.yongye.client;
 
 import com.yongye.Yongye;
 import com.yongye.item.WeaponQuality;
+import com.yongye.network.SkillUsePayload;
 import com.yongye.network.StatsPayload;
 import com.yongye.registry.ModComponents;
 import com.yongye.system.EquipmentEnhancer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
@@ -16,9 +19,12 @@ import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * 客户端入口:
@@ -69,6 +75,23 @@ public class YongyeClient implements ClientModInitializer {
             }
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 客户端:精英皮肤 + 成长面板 + 装备介绍已注册");
+        // 武器主动技能按键(默认 R / G / V)→ 发包给服务端施放
+        KeyBinding[] skillKeys = new KeyBinding[]{
+                KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                        "key.yongye.skill1", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.yongye")),
+                KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                        "key.yongye.skill2", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.yongye")),
+                KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                        "key.yongye.skill3", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.yongye"))
+        };
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            for (int i = 0; i < skillKeys.length; i++) {
+                while (skillKeys[i].wasPressed()) {
+                    if (client.player != null) ClientPlayNetworking.send(new SkillUsePayload(i));
+                }
+            }
+        });
+
+        Yongye.LOGGER.info("[亡途荒夜] 客户端:精英皮肤 + 成长面板 + 装备介绍 + 技能按键已注册");
     }
 }

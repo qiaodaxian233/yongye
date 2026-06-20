@@ -30,6 +30,8 @@ public final class MobEnhancementHandler {
     private static final Identifier ID_SPEED = Identifier.of(Yongye.MOD_ID, "mob_speed");
     private static final Identifier ID_KB = Identifier.of(Yongye.MOD_ID, "mob_knockback");
     private static final Identifier ID_FOLLOW = Identifier.of(Yongye.MOD_ID, "mob_follow");
+    private static final Identifier ID_SCALE_HP = Identifier.of(Yongye.MOD_ID, "mob_scale_hp");
+    private static final Identifier ID_SCALE_ATK = Identifier.of(Yongye.MOD_ID, "mob_scale_atk");
 
     private static final List<RegistryEntry<net.minecraft.entity.effect.StatusEffect>> POTION_POOL = List.of(
             StatusEffects.SPEED,
@@ -61,6 +63,16 @@ public final class MobEnhancementHandler {
             addFlat(mob, EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, ID_KB, cfg.mobKnockbackResistanceAdd);
             addFlat(mob, EntityAttributes.GENERIC_FOLLOW_RANGE, ID_FOLLOW, cfg.mobFollowRangeAdd);
 
+            // 随进度递增:怪物血量/攻击随永夜等级、天数、附近玩家强度成长
+            if (cfg.enableMobScaling) {
+                double prog = progressionMultiplier(mob, cfg);
+                if (prog > 1.0) {
+                    addMultiplier(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_SCALE_HP, prog);
+                    double atkProg = 1.0 + (prog - 1.0) * cfg.mobScalingAttackRatio;
+                    addMultiplier(mob, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_SCALE_ATK, atkProg);
+                }
+            }
+
             // 加血后补满血量
             mob.setHealth(mob.getMaxHealth());
 
@@ -72,6 +84,22 @@ public final class MobEnhancementHandler {
             }
         });
         Yongye.LOGGER.info("[亡途荒夜] 怪物增强系统已挂载");
+    }
+
+    /** 进度倍率:基于永夜等级 + 游戏天数 + 附近玩家最大生命。 */
+    private static double progressionMultiplier(MobEntity mob, YongyeConfig cfg) {
+        double prog = 1.0;
+        prog += NightfallManager.getLevel() * cfg.mobScalingPerNightfall;
+
+        long day = mob.getWorld().getTimeOfDay() / 24000L;
+        prog += Math.min(day, cfg.mobScalingMaxDays) * cfg.mobScalingPerDay;
+
+        var nearest = mob.getWorld().getClosestPlayer(mob, 128.0);
+        if (nearest != null) {
+            double extra = (nearest.getMaxHealth() - 20.0) / 20.0; // 超出基础 20 的比例
+            if (extra > 0) prog += extra * cfg.mobScalingPlayerHealthFactor;
+        }
+        return Math.min(prog, cfg.mobScalingMaxMultiplier);
     }
 
     private static void addMultiplier(LivingEntity e,

@@ -3,6 +3,7 @@ package com.yongye.network;
 import com.yongye.item.SkillType;
 import com.yongye.registry.ModAttachments;
 import com.yongye.system.PlayerSkillManager;
+import com.yongye.system.WeaponSkillManager;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -18,6 +19,11 @@ public final class YongyeNet {
 
     public static void register() {
         PayloadTypeRegistry.playS2C().register(StatsPayload.ID, StatsPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(SkillUsePayload.ID, SkillUsePayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(SkillUsePayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> WeaponSkillManager.use(p, payload.index()));
+        });
         // 登录即推送一次,保证面板有数据
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sendStats(handler.player));
     }

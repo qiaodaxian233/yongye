@@ -131,6 +131,31 @@ public class YongyeConfig {
     public int enhanceCoreValue = 100;             // 生命核心 = +100 级
     public int enhanceBloodCoreValue = 1000;       // 灾变血核 = +1000 级
 
+    // ===== 主动武器技能(按品质解锁,按键触发) =====
+    public boolean enableWeaponSkills = true;
+    public int skillSlashCooldown = 160;       // 混沌斩 冷却(tick,8s)
+    public double skillSlashDamage = 8.0;
+    public double skillSlashDamagePerLevel = 0.4;
+    public double skillSlashRange = 6.0;
+    public int skillDevourCooldown = 300;      // 深渊吞噬 冷却(15s)
+    public double skillDevourDamage = 6.0;
+    public double skillDevourDamagePerLevel = 0.3;
+    public double skillDevourRadius = 7.0;
+    public double skillDevourHealRatio = 0.4;  // 伤害转治疗比例
+    public int skillFinalityCooldown = 900;    // 终焉降临 冷却(45s)
+    public double skillFinalityDamage = 20.0;
+    public double skillFinalityDamagePerLevel = 0.6;
+    public double skillFinalityRadius = 9.0;
+
+    // ===== 怪物随进度递增(血量/攻击跟着玩家变强) =====
+    public boolean enableMobScaling = true;
+    public double mobScalingPerNightfall = 0.6;       // 每级永夜 +60% 血
+    public double mobScalingPerDay = 0.04;            // 每个游戏日 +4% 血
+    public int mobScalingMaxDays = 100;               // 计入天数上限
+    public double mobScalingPlayerHealthFactor = 0.5; // 按附近玩家「超出20的最大生命」比例的 50% 给怪加血
+    public double mobScalingAttackRatio = 0.3;        // 攻击按血量缩放的 30% 同步提升
+    public double mobScalingMaxMultiplier = 60.0;     // 缩放倍率上限
+
     // ============ 随机掉落(文档 11.2 普通怪概率)============
     public double lootChanceCommon = 0.60;
     public double lootChanceUseful = 0.25;

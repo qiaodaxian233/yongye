@@ -2,6 +2,7 @@ package com.yongye.client;
 
 import com.yongye.YongyeConfig;
 import com.yongye.item.WeaponQuality;
+import com.yongye.item.WeaponSkill;
 import com.yongye.registry.ModComponents;
 import com.yongye.system.EquipmentEnhancer;
 import net.minecraft.client.MinecraftClient;
@@ -48,7 +49,7 @@ public class WeaponInfoScreen extends Screen {
         boolean weapon = EquipmentEnhancer.isWeapon(stack);
         YongyeConfig c = YongyeConfig.get();
 
-        int panelW = 320, panelH = 200;
+        int panelW = 320, panelH = 244;
         int x0 = (this.width - panelW) / 2;
         int y0 = (this.height - panelH) / 2;
 
@@ -106,6 +107,24 @@ public class WeaponInfoScreen extends Screen {
         line(ctx, rx, qy, "类型", weapon ? "武器" : "盔甲", Formatting.WHITE); qy += 14;
         line(ctx, rx, qy, "稀有度", q.grade, q.color); qy += 14;
         line(ctx, rx, qy, "强化", "+" + level, Formatting.AQUA); qy += 14;
+
+        // 神器技能区(仅武器)
+        if (weapon) {
+            int sy = y0 + 168;
+            ctx.drawTextWithShadow(this.textRenderer, Text.literal("✦ 神器技能").formatted(Formatting.LIGHT_PURPLE),
+                    x0 + 18, sy, 0xFFFF66FF);
+            sy += 14;
+            int[] cds = {c.skillSlashCooldown, c.skillDevourCooldown, c.skillFinalityCooldown};
+            WeaponSkill[] skills = WeaponSkill.values();
+            for (int i = 0; i < skills.length; i++) {
+                boolean unlocked = skills[i].isUnlocked(level);
+                Formatting col = unlocked ? Formatting.WHITE : Formatting.DARK_GRAY;
+                String head = (unlocked ? "✦ " : "✖ ") + skills[i].cn + "  CD" + (cds[i] / 20) + "s"
+                        + (unlocked ? "" : "  (需「" + skills[i].unlockTier.cn + "」)");
+                ctx.drawTextWithShadow(this.textRenderer, Text.literal(head).formatted(col), x0 + 18, sy, 0xFFFFFFFF);
+                sy += 12;
+            }
+        }
 
         // 距离下一品质
         int toNext = q.levelsToNext(level);

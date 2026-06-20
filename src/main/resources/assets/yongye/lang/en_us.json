@@ -47,5 +47,9 @@
   "item.yongye.artifact.nightfall_eye.desc": "Night vision during nightfall; reduces being locked-on",
   "item.yongye.artifact.glutton_heart.desc": "Heals on killing mobs",
   "item.yongye.artifact.world_anchor.desc": "Reduces nearby mobs' digging and climbing",
-  "item.yongye.artifact.in_bag": "Active while in your inventory; only the highest level of each counts"
+  "item.yongye.artifact.in_bag": "Active while in your inventory; only the highest level of each counts",
+  "key.categories.yongye": "Yongye",
+  "key.yongye.skill1": "Weapon Skill 1",
+  "key.yongye.skill2": "Weapon Skill 2",
+  "key.yongye.skill3": "Weapon Skill 3"
 }
