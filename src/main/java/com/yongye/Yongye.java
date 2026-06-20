@@ -9,6 +9,7 @@ import com.yongye.registry.ModRecipes;
 import com.yongye.system.ArmorHealthHandler;
 import com.yongye.system.ArtifactManager;
 import com.yongye.system.BossHandler;
+import com.yongye.system.BossAbilityHandler;
 import com.yongye.system.CatastropheCoreManager;
 import com.yongye.system.EliteHandler;
 import com.yongye.system.HighHpCounterHandler;
@@ -16,6 +17,7 @@ import com.yongye.system.LootHandler;
 import com.yongye.system.MobEnhancementHandler;
 import com.yongye.system.ModCommands;
 import com.yongye.system.NightfallManager;
+import com.yongye.system.PainBossHandler;
 import com.yongye.system.PlayerSkillManager;
 import com.yongye.system.PursuitHandler;
 import com.yongye.system.QuestManager;
@@ -57,6 +59,7 @@ public class Yongye implements ModInitializer {
         // 注意 ENTITY_LOAD 监听器注册顺序:基础增强 → Boss 标记 → 精英化
         MobEnhancementHandler.register();
         BossHandler.register();
+        BossAbilityHandler.register();
         EliteHandler.register();
         ArmorHealthHandler.register();
         LootHandler.register();
@@ -66,6 +69,7 @@ public class Yongye implements ModInitializer {
         PursuitHandler.register();
         QuestManager.register();
         CatastropheCoreManager.register();
+        PainBossHandler.register();
 
         // 玩法系统(Phase 4:神器 / 高血量反制 / 指令)
         ArtifactManager.register();

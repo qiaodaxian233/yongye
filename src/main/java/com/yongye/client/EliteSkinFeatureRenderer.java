@@ -38,30 +38,33 @@ public class EliteSkinFeatureRenderer<T extends Entity, M extends EntityModel<T>
                        T entity, float limbAngle, float limbDistance, float tickDelta,
                        float animationProgress, float headYaw, float headPitch) {
         if (!(entity instanceof LivingEntity living)) return;
-        if (!isElite(living)) return;
         Identifier tex = textureFor(living);
         if (tex == null) return;
 
         VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(tex));
-        // 用上下文模型(即原版同款模型)叠渲一层精英贴图;LEQUAL 深度测试下后绘者覆盖,无 z-fighting。
+        // 用上下文模型(即原版同款模型)叠渲一层贴图;LEQUAL 深度测试下后绘者覆盖,无 z-fighting。
         getContextModel().render(matrices, vc, light, OverlayTexture.DEFAULT_UV, 0xFFFFFFFF);
     }
 
-    /** 名字含「精英」即视为精英(自定义名会同步到客户端)。 */
-    private static boolean isElite(LivingEntity e) {
-        return e.hasCustomName() && e.getCustomName() != null
-                && e.getCustomName().getString().contains("精英");
-    }
-
-    /** 按怪种返回 mod 内精英贴图;没有对应贴图的种类返回 null(保持原版外观)。 */
+    /** 按自定义名返回应叠加的贴图;无匹配返回 null(保持原版外观)。 */
     private static Identifier textureFor(LivingEntity e) {
-        String name;
-        if (e instanceof AbstractSkeletonEntity) name = "elite_skeleton";
-        else if (e instanceof WitchEntity) name = "elite_witch";
-        else if (e instanceof ZombieEntity) name = "elite_zombie";
-        else if (e instanceof CreeperEntity) name = "elite_creeper";
-        else if (e instanceof SpiderEntity) name = "elite_spider";
-        else return null;
-        return Identifier.of(Yongye.MOD_ID, "textures/entity/" + name + ".png");
+        if (!e.hasCustomName() || e.getCustomName() == null) return null;
+        String n = e.getCustomName().getString();
+        // 长门(佩恩)Boss
+        if (n.contains("佩恩") || n.contains("长门")) {
+            return Identifier.of(Yongye.MOD_ID, "textures/entity/pain_boss.png");
+        }
+        // 精英怪:按怪种选图
+        if (n.contains("精英")) {
+            String name;
+            if (e instanceof AbstractSkeletonEntity) name = "elite_skeleton";
+            else if (e instanceof WitchEntity) name = "elite_witch";
+            else if (e instanceof ZombieEntity) name = "elite_zombie";
+            else if (e instanceof CreeperEntity) name = "elite_creeper";
+            else if (e instanceof SpiderEntity) name = "elite_spider";
+            else return null;
+            return Identifier.of(Yongye.MOD_ID, "textures/entity/" + name + ".png");
+        }
+        return null;
     }
 }

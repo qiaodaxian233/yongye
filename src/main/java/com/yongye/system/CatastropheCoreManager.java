@@ -168,6 +168,9 @@ public final class CatastropheCoreManager {
         if (world.getServer() != null) {
             world.getServer().getPlayerManager().broadcast(
                     Text.literal("【灾厄核心】一处核心被摧毁,黑暗稍退").formatted(Formatting.AQUA), false);
+            if (YongyeConfig.get().coreDestroyRedeems) {
+                NightfallManager.redeem(world.getServer());
+            }
         }
     }
 

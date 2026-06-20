@@ -112,6 +112,12 @@ public final class ModCommands {
                             }
                             return 1;
                         }))
+
+                        .then(CommandManager.literal("painboss").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            PainBossHandler.spawnPainBossNear(p);
+                            return 1;
+                        }))
                 ));
 
         Yongye.LOGGER.info("[亡途荒夜] 指令已注册");

@@ -53,6 +53,13 @@ public final class ModAttachments {
                     .initializer(() -> false)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_boss"));
 
+    /** IS_PAIN: 该实体为长门(佩恩)Boss。 */
+    public static final AttachmentType<Boolean> IS_PAIN =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_pain"));
+
     /** NO_HEAL_UNTIL: 玩家禁疗截止的游戏时刻(world time)。 */
     public static final AttachmentType<Long> NO_HEAL_UNTIL =
             AttachmentRegistry.<Long>builder()

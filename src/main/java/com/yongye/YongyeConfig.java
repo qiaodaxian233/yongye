@@ -87,6 +87,32 @@ public class YongyeConfig {
     /** 掉落奖励翻倍系数 */
     public double bossDropMultiplier = 2.0;
 
+    // —— Boss 专属机制(文档 7.1)——
+    public boolean enableBossAbilities = true;
+    public double bossAggroRange = 48.0;       // 锁定/能力作用范围
+    public double bossEnrageThreshold = 0.5;   // 血量低于此比例进入狂暴
+    public int bossSummonIntervalTicks = 200;  // 召唤间隔
+    public int bossSummonCount = 3;            // 每次召唤数量
+    public int bossSummonMaxNearby = 12;       // 周围援军上限
+    public int bossShockIntervalTicks = 120;   // 冲击波间隔
+    public double bossShockRadius = 6.0;       // 冲击波半径
+    public double bossShockDamage = 8.0;       // 冲击波伤害
+
+    /** 摧毁灾厄核心是否赎夜(降低一级永夜)。 */
+    public boolean coreDestroyRedeems = true;
+
+    // —— 长门(佩恩)Boss ——
+    public double painBossMaxHealth = 400.0;
+    public double painBossAttack = 12.0;
+    public double painBossArmor = 10.0;
+    public int painAbilityIntervalTicks = 120;   // 技能间隔
+    public double painPushRadius = 12.0;          // 神罗天征半径
+    public double painPushDamage = 8.0;
+    public double painPullRadius = 16.0;          // 万象牵引半径
+    public double painDevastationRadius = 8.0;    // 地爆天星爆心半径
+    public double painDevastationDamage = 16.0;
+    public double painRebirthThreshold = 0.3;     // 轮回天生触发血量比例
+
     // ============ 随机掉落(文档 11.2 普通怪概率)============
     public double lootChanceCommon = 0.60;
     public double lootChanceUseful = 0.25;
