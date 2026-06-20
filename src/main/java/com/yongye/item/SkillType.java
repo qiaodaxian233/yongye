@@ -9,6 +9,7 @@ package com.yongye.item;
  *  - THORNS 反伤强化:受击反弹伤害
  *  - RESISTANCE 抗性强化:抗火 + 削弱/清除负面状态
  *  - SATIETY 饱食度强化:持续补充饱食度与饱和度,等级越高越不会饿
+ *  - STEAL 抢夺强化:命中怪物时按等级概率夺取其手持物品,等级越高越稳
  */
 public enum SkillType {
     ATTACK("attack"),
@@ -17,7 +18,8 @@ public enum SkillType {
     EVASION("evasion"),
     THORNS("thorns"),
     RESISTANCE("resistance"),
-    SATIETY("satiety");
+    SATIETY("satiety"),
+    STEAL("steal");
 
     public final String id;
 

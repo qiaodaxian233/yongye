@@ -5,6 +5,16 @@ import com.yongye.YongyeConfig;
 import com.yongye.item.SkillType;
 import com.yongye.registry.ModAttachments;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -65,7 +75,30 @@ public final class SkillEffectManager {
                 applySatiety(p);
             }
         });
-        Yongye.LOGGER.info("[亡途荒夜] 技能书(护甲/恢复/闪避/反伤/抗性)系统已挂载");
+        // 抢夺:命中怪物按等级概率夺走其手持物品,给玩家(背包满则掉落)
+        AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (world.isClient || hand != Hand.MAIN_HAND) return ActionResult.PASS;
+            if (!(player instanceof ServerPlayerEntity sp)) return ActionResult.PASS;
+            if (!(entity instanceof MobEntity mob) || !mob.isAlive()) return ActionResult.PASS;
+            int lvl = getLearnedLevel(sp, SkillType.STEAL);
+            if (lvl <= 0) return ActionResult.PASS;
+            ItemStack loot = mob.getMainHandStack();
+            if (loot.isEmpty()) return ActionResult.PASS;
+            YongyeConfig cfg = YongyeConfig.get();
+            double chance = Math.min(cfg.skillStealMaxChance, lvl * cfg.skillStealChancePerLevel);
+            if (sp.getRandom().nextDouble() >= chance) return ActionResult.PASS;
+            ItemStack stolen = loot.copy();
+            mob.equipStack(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+            if (!sp.getInventory().insertStack(stolen) && !stolen.isEmpty()) {
+                sp.dropItem(stolen, false);
+            }
+            sp.sendMessage(Text.literal("抢夺成功!夺得 ").formatted(Formatting.GOLD).append(loot.getName()), true);
+            world.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
+                    SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.8f, 1.4f);
+            return ActionResult.PASS;
+        });
+
+        Yongye.LOGGER.info("[亡途荒夜] 技能书(护甲/恢复/闪避/反伤/抗性/饱食/抢夺)系统已挂载");
     }
 
     private static void applyAttributes(ServerPlayerEntity p) {
