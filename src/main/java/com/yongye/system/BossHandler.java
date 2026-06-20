@@ -5,7 +5,7 @@ import com.yongye.YongyeConfig;
 import com.yongye.item.HealthSkillBookItem;
 import com.yongye.registry.ModAttachments;
 import com.yongye.registry.ModItems;
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;

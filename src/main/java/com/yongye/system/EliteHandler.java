@@ -3,7 +3,7 @@ package com.yongye.system;
 import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import com.yongye.registry.ModAttachments;
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
