@@ -43,6 +43,13 @@ public final class ModItemGroups {
             entries.add(ModItems.RIFT_FRAGMENT);
             entries.add(ModItems.ABYSS_SOUL_CRYSTAL);
             entries.add(ModItems.ENDING_ESSENCE);
+
+            // 背包神器:每种放 残破(1)/远古(3)/终焉(6) 三档示例
+            for (com.yongye.item.ArtifactType t : com.yongye.item.ArtifactType.values()) {
+                entries.add(com.yongye.item.ArtifactItem.create(t, 1));
+                entries.add(com.yongye.item.ArtifactItem.create(t, 3));
+                entries.add(com.yongye.item.ArtifactItem.create(t, 6));
+            }
         });
 
         Yongye.LOGGER.info("[亡途荒夜] 物品组已注册");

@@ -1,5 +1,5 @@
 {
-  "itemGroup.yongye.general": "Yongye",
+  "itemGroup.yongye.general": "Yongye: Wasteland Night",
 
   "item.yongye.health_skill_book": "Health Skill Book",
   "item.yongye.life_shard": "Life Shard",
@@ -12,9 +12,33 @@
   "item.yongye.ending_essence": "Ending Essence",
 
   "item.yongye.health_skill_book.tooltip.level": "Level V%s",
-  "item.yongye.health_skill_book.tooltip.effect": "Learn to permanently gain %s max health",
-  "item.yongye.health_skill_book.tooltip.use": "Right-click to learn · combine same level in crafting table",
+  "item.yongye.health_skill_book.tooltip.effect": "Permanently grants %s max health when learned",
+  "item.yongye.health_skill_book.tooltip.use": "Right-click to learn / combine same level on a crafting table",
 
-  "message.yongye.learned_health": "Learned Health V%1$s. Total Health Boost V%2$s (+%3$s max health)",
-  "message.yongye.health_capped": "Health boost capped at V65535"
+  "message.yongye.learned_health": "Learned Health V%1$s. Total: V%2$s (+%3$s max health)",
+  "message.yongye.health_capped": "Health enhancement capped at V65535",
+
+  "item.yongye.artifact_life_idol": "Life Idol",
+  "item.yongye.artifact_iron_core": "Ironwall Core",
+  "item.yongye.artifact_bone_arrow_charm": "Bone Arrow Charm",
+  "item.yongye.artifact_voodoo_bottle": "Voodoo Phial",
+  "item.yongye.artifact_escapist_boots": "Escapist Boots",
+  "item.yongye.artifact_gravedigger_compass": "Gravedigger's Compass",
+  "item.yongye.artifact_undying_ember": "Undying Ember",
+  "item.yongye.artifact_nightfall_eye": "Eye of Nightfall",
+  "item.yongye.artifact_glutton_heart": "Glutton Heart",
+  "item.yongye.artifact_world_anchor": "World Anchor",
+
+  "item.yongye.artifact.life_idol.desc": "Greatly increases max health",
+  "item.yongye.artifact.iron_core.desc": "Reduces physical damage taken (approx: resistance)",
+  "item.yongye.artifact.bone_arrow_charm.desc": "Chance to negate/deflect arrows; counters elite skeletons",
+  "item.yongye.artifact.voodoo_bottle.desc": "Clears and weakens negative effects; counters elite witches",
+  "item.yongye.artifact.escapist_boots.desc": "Increases movement speed",
+  "item.yongye.artifact.gravedigger_compass.desc": "Points to nearby high-value targets (elite / boss)",
+  "item.yongye.artifact.undying_ember.desc": "Cheats death on fatal damage (has cooldown)",
+  "item.yongye.artifact.nightfall_eye.desc": "Night vision during nightfall; reduces being locked-on",
+  "item.yongye.artifact.glutton_heart.desc": "Heals on killing mobs",
+  "item.yongye.artifact.world_anchor.desc": "Reduces nearby mobs' digging and climbing",
+
+  "item.yongye.artifact.in_bag": "Active while in your inventory; only the highest level of each counts"
 }

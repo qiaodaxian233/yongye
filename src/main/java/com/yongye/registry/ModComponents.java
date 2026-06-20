@@ -24,6 +24,15 @@ public final class ModComponents {
                     .build()
     );
 
+    public static final ComponentType<Integer> ARTIFACT_LEVEL = Registry.register(
+            Registries.DATA_COMPONENT_TYPE,
+            Identifier.of(Yongye.MOD_ID, "artifact_level"),
+            ComponentType.<Integer>builder()
+                    .codec(Codec.INT)
+                    .packetCodec(PacketCodecs.INTEGER)
+                    .build()
+    );
+
     public static void init() {
         Yongye.LOGGER.info("[亡途荒夜] 数据组件已注册");
     }

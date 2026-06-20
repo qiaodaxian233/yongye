@@ -16,5 +16,29 @@
   "item.yongye.health_skill_book.tooltip.use": "右键学习 · 工作台同级合成升级",
 
   "message.yongye.learned_health": "你学习了血量强化 V%1$s，当前血量强化累计 V%2$s（+%3$s 最大生命）",
-  "message.yongye.health_capped": "血量强化已达上限 V65535"
+  "message.yongye.health_capped": "血量强化已达上限 V65535",
+
+  "item.yongye.artifact_life_idol": "生命神像",
+  "item.yongye.artifact_iron_core": "铁壁核心",
+  "item.yongye.artifact_bone_arrow_charm": "骨箭护符",
+  "item.yongye.artifact_voodoo_bottle": "巫毒净瓶",
+  "item.yongye.artifact_escapist_boots": "逃亡者之靴",
+  "item.yongye.artifact_gravedigger_compass": "掘墓人罗盘",
+  "item.yongye.artifact_undying_ember": "不灭余烬",
+  "item.yongye.artifact_nightfall_eye": "永夜之眼",
+  "item.yongye.artifact_glutton_heart": "饕餮心脏",
+  "item.yongye.artifact_world_anchor": "世界锚石",
+
+  "item.yongye.artifact.life_idol.desc": "大幅增加最大生命",
+  "item.yongye.artifact.iron_core.desc": "减少受到的物理伤害（近似:抗性）",
+  "item.yongye.artifact.bone_arrow_charm.desc": "概率免疫/弹开箭矢，克制精英骷髅",
+  "item.yongye.artifact.voodoo_bottle.desc": "清除与削弱负面状态，克制精英女巫",
+  "item.yongye.artifact.escapist_boots.desc": "提升移动速度",
+  "item.yongye.artifact.gravedigger_compass.desc": "指向附近高价值目标（精英 / Boss）",
+  "item.yongye.artifact.undying_ember.desc": "受致命伤时保命，有冷却",
+  "item.yongye.artifact.nightfall_eye.desc": "永夜中获得夜视并降低被锁定强度",
+  "item.yongye.artifact.glutton_heart.desc": "击杀怪物恢复生命",
+  "item.yongye.artifact.world_anchor.desc": "降低附近怪物的挖墙与爬墙能力",
+
+  "item.yongye.artifact.in_bag": "放入背包即生效 · 同类只取最高等级"
 }

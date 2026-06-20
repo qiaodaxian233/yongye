@@ -45,6 +45,21 @@ public final class ModAttachments {
                     .initializer(() -> false)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_boss"));
 
+    /** NO_HEAL_UNTIL: 玩家禁疗截止的游戏时刻(world time)。 */
+    public static final AttachmentType<Long> NO_HEAL_UNTIL =
+            AttachmentRegistry.<Long>builder()
+                    .persistent(Codec.LONG)
+                    .initializer(() -> 0L)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "no_heal_until"));
+
+    /** EMBER_READY_AT: 不灭余烬下一次可触发的游戏时刻。 */
+    public static final AttachmentType<Long> EMBER_READY_AT =
+            AttachmentRegistry.<Long>builder()
+                    .persistent(Codec.LONG)
+                    .initializer(() -> 0L)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "ember_ready_at"));
+
     public static void init() {
         Yongye.LOGGER.info("[亡途荒夜] 数据附着已注册");
     }

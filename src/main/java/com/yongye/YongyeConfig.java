@@ -91,6 +91,50 @@ public class YongyeConfig {
     /** 仅当怪物被玩家击杀才触发随机掉落 */
     public boolean lootRequirePlayerKill = true;
 
+    // ============ 永夜灾变(文档第 10 章)============
+    public boolean enableNightfall = true;
+    /** 永夜 I~V 对应的精英概率倍率(作用于 eliteChance) */
+    public double[] nightfallEliteChanceMultiplier = {1.0, 1.5, 2.0, 3.0, 5.0, 8.0};
+    /** 永夜 I~V 对应的怪物锁定半径(格) */
+    public double[] nightfallLockRadius = {0.0, 16.0, 24.0, 32.0, 40.0, 48.0};
+
+    // ============ 追杀 AI(文档第 8 章)============
+    public boolean enablePursuit = true;
+    /** 追杀逻辑作用半径(只处理玩家附近的怪) */
+    public double pursuitRadius = 32.0;
+    /** 挖墙冷却(tick) */
+    public int digCooldownTicks = 16;
+    /** 各档可破坏方块的最大硬度:普通 / 精英 / Boss */
+    public double digMaxHardnessNormal = 0.8;   // 泥土沙砾玻璃树叶
+    public double digMaxHardnessElite = 3.2;    // 圆石石头木板木门
+    public double digMaxHardnessBoss = 60.0;    // 含黑曜石
+    /** 爬墙竖直速度 */
+    public double climbSpeed = 0.22;
+
+    // ============ 随机任务(文档第 9 章)============
+    public boolean enableQuests = true;
+    /** 自动派发任务的间隔(tick),默认 6 分钟 */
+    public int questIntervalTicks = 7200;
+    /** 任务限时(tick),默认 3 分钟 */
+    public int questTimeLimitTicks = 3600;
+
+    // ============ 背包神器(文档第 14 章)============
+    public boolean enableArtifacts = true;
+    public int artifactMaxLevel = 6;
+
+    // ============ 高血量反制(文档第 17 章)============
+    public boolean enableHighHpCounter = true;
+    /** Boss 攻击附加的"最大生命百分比"伤害 */
+    public double bossPercentDamage = 0.02;
+    /** 精英攻击附加的最大生命百分比伤害 */
+    public double elitePercentDamage = 0.01;
+    /** Boss/精英攻击附加的真实(无视护甲)伤害 */
+    public double bossTrueDamage = 6.0;
+    public double eliteTrueDamage = 2.0;
+    /** 命中时施加禁疗的概率与时长(tick) */
+    public double healBlockChance = 0.25;
+    public int healBlockDurationTicks = 100;
+
     public static YongyeConfig get() {
         if (INSTANCE == null) load();
         return INSTANCE;

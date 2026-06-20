@@ -1,15 +1,21 @@
 package com.yongye.registry;
 
 import com.yongye.Yongye;
+import com.yongye.item.ArtifactItem;
+import com.yongye.item.ArtifactType;
 import com.yongye.item.HealthSkillBookItem;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 /**
  * 物品注册。
  * Phase 1: 血量强化技能书 + 超稀有材料系统(8 种材料)。
+ * Phase 4: 背包神器(10 种)。
  */
 public final class ModItems {
     private ModItems() {}
@@ -26,6 +32,23 @@ public final class ModItems {
     public static final Item RIFT_FRAGMENT         = register("rift_fragment", new Item(new Item.Settings()));
     public static final Item ABYSS_SOUL_CRYSTAL    = register("abyss_soul_crystal", new Item(new Item.Settings()));
     public static final Item ENDING_ESSENCE        = register("ending_essence", new Item(new Item.Settings()));
+
+    // —— 背包神器(文档第 14 章)——
+    private static final Map<ArtifactType, Item> ARTIFACTS = new EnumMap<>(ArtifactType.class);
+
+    static {
+        for (ArtifactType t : ArtifactType.values()) {
+            ARTIFACTS.put(t, register("artifact_" + t.id, new ArtifactItem(t, new Item.Settings().maxCount(16))));
+        }
+    }
+
+    public static Item getArtifact(ArtifactType type) {
+        return ARTIFACTS.get(type);
+    }
+
+    public static Map<ArtifactType, Item> artifacts() {
+        return ARTIFACTS;
+    }
 
     private static Item register(String name, Item item) {
         return Registry.register(Registries.ITEM, Identifier.of(Yongye.MOD_ID, name), item);
