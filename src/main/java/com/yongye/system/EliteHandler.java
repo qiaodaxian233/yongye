@@ -62,7 +62,7 @@ public final class EliteHandler {
     private static final Map<MobEntity, Integer> LAST_TELEPORT_AGE = new WeakHashMap<>();
 
     private static final List<RegistryEntry<StatusEffect>> ARROW_EFFECTS = List.of(
-            StatusEffects.POISON, StatusEffects.SLOWNESS, StatusEffects.WEAKNESS, StatusEffects.GLOWING);
+            StatusEffects.POISON, StatusEffects.SLOWNESS, StatusEffects.WEAKNESS, StatusEffects.NAUSEA);
 
     private static final List<RegistryEntry<StatusEffect>> WITCH_EFFECTS = List.of(
             StatusEffects.POISON, StatusEffects.SLOWNESS, StatusEffects.WEAKNESS, StatusEffects.INSTANT_DAMAGE,
@@ -119,9 +119,11 @@ public final class EliteHandler {
         addFlat(mob, EntityAttributes.GENERIC_FOLLOW_RANGE, ID_FOLLOW, cfg.eliteFollowRangeAdd);
         mob.setHealth(mob.getMaxHealth());
 
-        // 持续发光,便于玩家远远识别威胁
-        mob.addStatusEffect(new StatusEffectInstance(
-                StatusEffects.GLOWING, StatusEffectInstance.INFINITE, 0, true, false, false));
+        // 持续发光(默认关:实体描边会触发部分渲染mod崩溃;精英已有金色名牌识别)
+        if (cfg.eliteGlowing) {
+            mob.addStatusEffect(new StatusEffectInstance(
+                    StatusEffects.GLOWING, StatusEffectInstance.INFINITE, 0, true, false, false));
+        }
 
         // 专属名牌
         Text typeName = mob.getType().getName();

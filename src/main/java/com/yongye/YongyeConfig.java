@@ -59,6 +59,8 @@ public class YongyeConfig {
 
     // ============ 精英怪(文档第 6 章)============
     public boolean enableElite = true;
+    /** 精英怪持续发光(部分渲染mod如AcceleratedRendering处理实体描边有bug,默认关防崩) */
+    public boolean eliteGlowing = false;
     /** 怪物精英化的基础概率 */
     public double eliteChance = 0.04;
     /** 精英在"基础增强之上"再追加的属性倍率/数值 */
