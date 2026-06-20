@@ -6,6 +6,8 @@ import com.yongye.Yongye;
 import com.yongye.item.ArtifactItem;
 import com.yongye.item.ArtifactType;
 import com.yongye.item.HealthSkillBookItem;
+import com.yongye.item.SkillBookItem;
+import com.yongye.item.SkillType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -76,6 +78,24 @@ public final class ModCommands {
                                                 return 0;
                                             }
                                             p.giveItemStack(ArtifactItem.create(type, IntegerArgumentType.getInteger(ctx, "level")));
+                                            return 1;
+                                        }))))
+
+                        .then(CommandManager.literal("skillbook")
+                                .then(CommandManager.argument("type", StringArgumentType.word())
+                                        .then(CommandManager.argument("level", IntegerArgumentType.integer(1, 65535)).executes(ctx -> {
+                                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                            String tid = StringArgumentType.getString(ctx, "type");
+                                            SkillType type = null;
+                                            for (SkillType t : SkillType.values()) {
+                                                if (t.id.equals(tid)) { type = t; break; }
+                                            }
+                                            if (type == null) {
+                                                ctx.getSource().sendError(Text.literal("未知技能书: " + tid
+                                                        + "(可用: armor/regen/evasion/thorns/resistance)"));
+                                                return 0;
+                                            }
+                                            p.giveItemStack(SkillBookItem.create(type, IntegerArgumentType.getInteger(ctx, "level")));
                                             return 1;
                                         }))))
                 ));

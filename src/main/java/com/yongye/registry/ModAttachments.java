@@ -22,6 +22,14 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "learned_health"));
 
+    /** LEARNED_SKILLS: 其它技能书(护甲/恢复/闪避/反伤/抗性)的累计等级,键为类型 id。 */
+    public static final AttachmentType<java.util.Map<String, Integer>> LEARNED_SKILLS =
+            AttachmentRegistry.<java.util.Map<String, Integer>>builder()
+                    .persistent(Codec.unboundedMap(Codec.STRING, Codec.INT))
+                    .initializer(java.util.HashMap::new)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "learned_skills"));
+
     /**
      * MOB_ENHANCED: 标记某个怪物是否已被增强,避免反复 re-roll 随机药水。
      */

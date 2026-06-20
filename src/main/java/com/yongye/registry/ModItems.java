@@ -4,6 +4,8 @@ import com.yongye.Yongye;
 import com.yongye.item.ArtifactItem;
 import com.yongye.item.ArtifactType;
 import com.yongye.item.HealthSkillBookItem;
+import com.yongye.item.SkillBookItem;
+import com.yongye.item.SkillType;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
@@ -48,6 +50,23 @@ public final class ModItems {
 
     public static Map<ArtifactType, Item> artifacts() {
         return ARTIFACTS;
+    }
+
+    // —— 通用技能书(文档 13.4)——
+    private static final Map<SkillType, Item> SKILL_BOOKS = new EnumMap<>(SkillType.class);
+
+    static {
+        for (SkillType t : SkillType.values()) {
+            SKILL_BOOKS.put(t, register("skill_book_" + t.id, new SkillBookItem(t, new Item.Settings().maxCount(64))));
+        }
+    }
+
+    public static Item getSkillBook(SkillType type) {
+        return SKILL_BOOKS.get(type);
+    }
+
+    public static Map<SkillType, Item> skillBooks() {
+        return SKILL_BOOKS;
     }
 
     private static Item register(String name, Item item) {

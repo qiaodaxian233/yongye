@@ -34,6 +34,12 @@ public final class ModItemGroups {
             entries.add(HealthSkillBookItem.create(10));
             entries.add(HealthSkillBookItem.create(100));
             entries.add(HealthSkillBookItem.create(1000));
+            // 其它技能书:每种放 V1/V10/V100 三档示例
+            for (com.yongye.item.SkillType st : com.yongye.item.SkillType.values()) {
+                entries.add(com.yongye.item.SkillBookItem.create(st, 1));
+                entries.add(com.yongye.item.SkillBookItem.create(st, 10));
+                entries.add(com.yongye.item.SkillBookItem.create(st, 100));
+            }
             // 材料
             entries.add(ModItems.LIFE_SHARD);
             entries.add(ModItems.LIFE_CRYSTAL);

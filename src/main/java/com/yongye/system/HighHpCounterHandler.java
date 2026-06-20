@@ -42,11 +42,26 @@ public final class HighHpCounterHandler {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!(entity instanceof ServerPlayerEntity player)) return true;
 
+            // 闪避(技能书):概率完全闪避本次伤害
+            if (SkillEffectManager.rollEvasion(player)) {
+                return false;
+            }
+
             // 骨箭护符:概率免疫/弹开箭矢
             int bone = ArtifactManager.getActiveLevel(player, ArtifactType.BONE_ARROW_CHARM);
             if (bone > 0 && source.getSource() instanceof PersistentProjectileEntity) {
                 if (player.getRandom().nextDouble() < BONE_NEGATE[bone - 1]) {
                     return false;
+                }
+            }
+
+            // 反伤(技能书):把一定比例伤害反弹给攻击者
+            if (!applying) {
+                double tf = SkillEffectManager.thornsFactor(player);
+                if (tf > 0 && source.getAttacker() instanceof net.minecraft.entity.LivingEntity atk && atk != player) {
+                    applying = true;
+                    atk.damage(player.getDamageSources().thorns(player), (float) (amount * tf));
+                    applying = false;
                 }
             }
 

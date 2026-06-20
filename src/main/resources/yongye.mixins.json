@@ -4,7 +4,9 @@
   "package": "com.yongye.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
-  "client": [],
+  "client": [
+    "client.HudCompactMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

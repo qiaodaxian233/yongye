@@ -17,6 +17,7 @@ import com.yongye.system.NightfallManager;
 import com.yongye.system.PlayerSkillManager;
 import com.yongye.system.PursuitHandler;
 import com.yongye.system.QuestManager;
+import com.yongye.system.SkillEffectManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -65,6 +66,7 @@ public class Yongye implements ModInitializer {
         // 玩法系统(Phase 4:神器 / 高血量反制 / 指令)
         ArtifactManager.register();
         HighHpCounterHandler.register();
+        SkillEffectManager.register();
         ModCommands.register();
 
         // 玩家加入 / 重生时,根据持久化的累计等级重新应用血量强化

@@ -1,6 +1,5 @@
 {
   "itemGroup.yongye.general": "Yongye: Wasteland Night",
-
   "item.yongye.health_skill_book": "Health Skill Book",
   "item.yongye.life_shard": "Life Shard",
   "item.yongye.life_crystal": "Life Crystal",
@@ -10,14 +9,23 @@
   "item.yongye.rift_fragment": "Rift Fragment",
   "item.yongye.abyss_soul_crystal": "Abyss Soul Crystal",
   "item.yongye.ending_essence": "Ending Essence",
-
   "item.yongye.health_skill_book.tooltip.level": "Level V%s",
   "item.yongye.health_skill_book.tooltip.effect": "Permanently grants %s max health when learned",
   "item.yongye.health_skill_book.tooltip.use": "Right-click to learn / combine same level on a crafting table",
-
+  "item.yongye.skill_book.attack": "Attack Skill Book",
+  "item.yongye.skill_book.armor": "Armor Skill Book",
+  "item.yongye.skill_book.regen": "Regeneration Skill Book",
+  "item.yongye.skill_book.evasion": "Evasion Skill Book",
+  "item.yongye.skill_book.thorns": "Thorns Skill Book",
+  "item.yongye.skill_book.resistance": "Resistance Skill Book",
+  "item.yongye.skill_book.attack.desc": "Increases attack damage (+0.5 per level)",
+  "item.yongye.skill_book.armor.desc": "Increases armor and armor toughness (+0.5 armor / +0.25 toughness per level)",
+  "item.yongye.skill_book.regen.desc": "Continuous healing (heals level x0.1 per second; disabled while healing is blocked)",
+  "item.yongye.skill_book.evasion.desc": "Chance to fully dodge a hit (+1% per level, cap 50%)",
+  "item.yongye.skill_book.thorns.desc": "Reflects damage back to attackers (x0.05 per level, cap x3)",
+  "item.yongye.skill_book.resistance.desc": "Fire resistance + chance to clear negative effects (+1% clear chance per level, cap 80%)",
   "message.yongye.learned_health": "Learned Health V%1$s. Total: V%2$s (+%3$s max health)",
   "message.yongye.health_capped": "Health enhancement capped at V65535",
-
   "item.yongye.artifact_life_idol": "Life Idol",
   "item.yongye.artifact_iron_core": "Ironwall Core",
   "item.yongye.artifact_bone_arrow_charm": "Bone Arrow Charm",
@@ -28,7 +36,6 @@
   "item.yongye.artifact_nightfall_eye": "Eye of Nightfall",
   "item.yongye.artifact_glutton_heart": "Glutton Heart",
   "item.yongye.artifact_world_anchor": "World Anchor",
-
   "item.yongye.artifact.life_idol.desc": "Greatly increases max health",
   "item.yongye.artifact.iron_core.desc": "Reduces physical damage taken (approx: resistance)",
   "item.yongye.artifact.bone_arrow_charm.desc": "Chance to negate/deflect arrows; counters elite skeletons",
@@ -39,6 +46,5 @@
   "item.yongye.artifact.nightfall_eye.desc": "Night vision during nightfall; reduces being locked-on",
   "item.yongye.artifact.glutton_heart.desc": "Heals on killing mobs",
   "item.yongye.artifact.world_anchor.desc": "Reduces nearby mobs' digging and climbing",
-
   "item.yongye.artifact.in_bag": "Active while in your inventory; only the highest level of each counts"
 }
