@@ -9,7 +9,7 @@
   "key": {
     "G": "minecraft:glowstone_dust",
     "E": "minecraft:ender_eye",
-    "S": "minecraft:spider_eye"
+    "S": "yongye:endless_night_dust"
   },
   "result": {
     "id": "yongye:artifact_nightfall_eye",

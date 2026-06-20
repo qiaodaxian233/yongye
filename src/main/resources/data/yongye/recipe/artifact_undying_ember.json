@@ -9,7 +9,7 @@
   "key": {
     "B": "minecraft:blaze_powder",
     "F": "minecraft:fire_charge",
-    "T": "minecraft:totem_of_undying"
+    "T": "yongye:ending_essence"
   },
   "result": {
     "id": "yongye:artifact_undying_ember",

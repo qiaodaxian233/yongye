@@ -10,7 +10,7 @@
     "F": "minecraft:fermented_spider_eye",
     "B": "minecraft:glass_bottle",
     "S": "yongye:life_shard",
-    "L": "minecraft:milk_bucket"
+    "L": "yongye:abyss_soul_crystal"
   },
   "result": {
     "id": "yongye:artifact_voodoo_bottle",

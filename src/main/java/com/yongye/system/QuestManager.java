@@ -69,6 +69,16 @@ public final class QuestManager {
 
         // 击杀计数:猎杀精英(数精英)/ 屠戮(数任意敌对怪)
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+            // 守住据点:玩家死亡即判败
+            if (entity instanceof ServerPlayerEntity victim) {
+                Quest vq = ACTIVE.get(victim.getUuid());
+                if (vq != null && vq.type == Type.SURVIVE && !vq.done) {
+                    vq.done = true;
+                    if (vq.bar != null) vq.bar.clearPlayers();
+                    ACTIVE.remove(victim.getUuid());
+                    fail(victim);
+                }
+            }
             if (!(source.getAttacker() instanceof ServerPlayerEntity killer)) return;
             Quest q = ACTIVE.get(killer.getUuid());
             if (q == null || q.done) return;
@@ -199,7 +209,7 @@ public final class QuestManager {
 
         Text title = switch (type) {
             case HUNT_ELITE -> Text.literal("任务·猎杀精英 0/" + q.killNeed).formatted(Formatting.GOLD);
-            case SURVIVE -> Text.literal("任务·守住据点:在限时内存活(死亡不算失败)").formatted(Formatting.GREEN);
+            case SURVIVE -> Text.literal("任务·守住据点:在限时内存活(死亡判败!)").formatted(Formatting.GREEN);
             case FLEE -> Text.literal("任务·限时逃离:远离此地 " + (int) q.fleeDistance + " 格").formatted(Formatting.AQUA);
             case CLEAR_CORE -> Text.literal("任务·清除灾厄核心:摧毁附近的灾厄核心").formatted(Formatting.DARK_RED);
             case GATHER -> Text.literal("任务·搜集物资:限时内集齐 " + q.targetCount + "× ").formatted(Formatting.LIGHT_PURPLE)

@@ -9,7 +9,7 @@
   "key": {
     "O": "minecraft:obsidian",
     "E": "minecraft:ender_pearl",
-    "R": "minecraft:respawn_anchor"
+    "R": "yongye:rift_fragment"
   },
   "result": {
     "id": "yongye:artifact_world_anchor",

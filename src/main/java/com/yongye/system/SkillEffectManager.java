@@ -75,6 +75,16 @@ public final class SkillEffectManager {
                 applySatiety(p);
             }
         });
+        // 饱食:每 tick 钉住食物/饱和度/耗竭,避免秒间被原版缓慢扣减
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                if (getLearnedLevel(p, SkillType.SATIETY) <= 0) continue;
+                var hm = p.getHungerManager();
+                if (hm.getFoodLevel() < 20) hm.setFoodLevel(20);
+                if (hm.getExhaustion() > 0f) hm.setExhaustion(0f);
+                if (hm.getSaturationLevel() < 5f) hm.setSaturationLevel(5f);
+            }
+        });
         // 抢夺:命中怪物按等级概率夺走其手持物品,给玩家(背包满则掉落)
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (world.isClient || hand != Hand.MAIN_HAND) return ActionResult.PASS;
