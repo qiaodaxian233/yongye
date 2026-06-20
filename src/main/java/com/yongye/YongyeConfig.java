@@ -49,11 +49,11 @@ public class YongyeConfig {
     public double skillStealMaxChance = 0.9;         // 抢夺概率上限
 
     /** 属性技能书(攻击/护甲/恢复/闪避/反伤/抗性)掉落几率:普通怪 / 精英 / Boss。普通怪受永夜等级加成。 */
-    public double skillBookDropChanceNormal = 0.02;
-    public double skillBookDropChanceElite = 0.6;
+    public double skillBookDropChanceNormal = 0.008;
+    public double skillBookDropChanceElite = 0.3;
     public double skillBookDropChanceBoss = 1.0;
-    public int skillBookEarlyGameDays = 3;        // 前几个游戏日视为前期
-    public double skillBookEarlyGameChance = 0.2; // 前期技能书爆率压制系数
+    public int skillBookEarlyGameDays = 6;        // 前几个游戏日视为前期
+    public double skillBookEarlyGameChance = 0.1; // 前期技能书爆率压制系数
     /** 合成到该结果等级时需要"生命结晶" */
     public int lifeCrystalThreshold = 10;
     /** 需要"生命核心" */
@@ -199,13 +199,13 @@ public class YongyeConfig {
     public boolean hcMiningSlowAll = false;        // true=所有方块减速;false=只木头/石头/矿物
 
     // ============ 随机掉落(文档 11.2 普通怪概率)============
-    public double lootChanceCommon = 0.60;
-    public double lootChanceUseful = 0.25;
-    public double lootChanceRare = 0.10;
-    public double lootChanceEpic = 0.04;
-    public double lootChanceGodly = 0.01;
+    public double lootChanceCommon = 0.35;
+    public double lootChanceUseful = 0.15;
+    public double lootChanceRare = 0.06;
+    public double lootChanceEpic = 0.02;
+    public double lootChanceGodly = 0.008;
     /** 普通怪掉落"生命碎片"的概率(文档 15.1) */
-    public double lifeShardDropChance = 0.05;
+    public double lifeShardDropChance = 0.02;
     /** 仅当怪物被玩家击杀才触发随机掉落 */
     public boolean lootRequirePlayerKill = true;
 
@@ -250,11 +250,14 @@ public class YongyeConfig {
     /** 自动派发任务的间隔(tick),默认 6 分钟 */
     public int questIntervalTicks = 7200;
     /** 任务限时(tick),默认 3 分钟 */
-    public int questTimeLimitTicks = 3600;
+    public int questTimeLimitTicks = 1800;   // 限时缩短(原3600)
     /** 开局宽限期(tick),此前不派发任务,默认 5 分钟 */
     public int questStartGraceTicks = 6000;
     /** 派发猎杀精英任务所需的最低永夜等级(此前只派可达成的逃离/存活) */
     public int questHuntEliteMinNightfall = 2;
+    public int questHuntEliteCount = 3;       // 猎杀任务需击杀的精英数(随永夜+)
+    public int questSlayCount = 20;           // 屠戮任务需击杀的怪物数(随永夜+)
+    public double questFleeDistance = 120.0;  // 逃离任务所需距离(随永夜+)
 
     // ============ 背包神器(文档第 14 章)============
     public boolean enableArtifacts = true;

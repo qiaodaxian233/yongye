@@ -8,6 +8,7 @@ import com.yongye.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.player.PlayerEntity;
@@ -34,7 +35,7 @@ import java.util.UUID;
 public final class QuestManager {
     private QuestManager() {}
 
-    public enum Type { HUNT_ELITE, SURVIVE, FLEE, CLEAR_CORE, GATHER }
+    public enum Type { HUNT_ELITE, SURVIVE, FLEE, CLEAR_CORE, GATHER, SLAY }
 
     private static class Quest {
         Type type;
@@ -46,15 +47,18 @@ public final class QuestManager {
         ServerBossBar bar;
         Item targetItem;
         int targetCount;
+        int killNeed;
+        int kills;
+        double fleeDistance;
     }
 
     private record Need(Item item, int count) {}
     private static final Need[] GATHER_POOL = {
-            new Need(Items.IRON_INGOT, 8), new Need(Items.GOLD_INGOT, 6), new Need(Items.DIAMOND, 3),
-            new Need(Items.COAL, 16), new Need(Items.BONE, 12), new Need(Items.ROTTEN_FLESH, 16),
-            new Need(Items.GUNPOWDER, 8), new Need(Items.STRING, 12), new Need(Items.ENDER_PEARL, 2),
-            new Need(Items.REDSTONE, 16), new Need(Items.SLIME_BALL, 4), new Need(Items.LEATHER, 6),
-            new Need(ModItems.LIFE_SHARD, 3),
+            new Need(Items.IRON_INGOT, 16), new Need(Items.GOLD_INGOT, 12), new Need(Items.DIAMOND, 6),
+            new Need(Items.COAL, 32), new Need(Items.BONE, 24), new Need(Items.ROTTEN_FLESH, 32),
+            new Need(Items.GUNPOWDER, 16), new Need(Items.STRING, 24), new Need(Items.ENDER_PEARL, 4),
+            new Need(Items.REDSTONE, 32), new Need(Items.SLIME_BALL, 8), new Need(Items.LEATHER, 12),
+            new Need(ModItems.LIFE_SHARD, 6),
     };
 
     private static final Map<UUID, Quest> ACTIVE = new HashMap<>();
@@ -63,13 +67,18 @@ public final class QuestManager {
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(QuestManager::tick);
 
-        // 猎杀精英:玩家击杀精英怪即完成
+        // 击杀计数:猎杀精英(数精英)/ 屠戮(数任意敌对怪)
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-            if (!entity.getAttachedOrElse(ModAttachments.IS_ELITE, false)) return;
             if (!(source.getAttacker() instanceof ServerPlayerEntity killer)) return;
             Quest q = ACTIVE.get(killer.getUuid());
-            if (q != null && q.type == Type.HUNT_ELITE && !q.done) {
-                complete(killer);
+            if (q == null || q.done) return;
+            boolean elite = entity.getAttachedOrElse(ModAttachments.IS_ELITE, false);
+            if (q.type == Type.HUNT_ELITE && elite) {
+                q.kills++;
+                if (q.kills >= q.killNeed) complete(killer); else refreshKillBar(q);
+            } else if (q.type == Type.SLAY && entity instanceof Monster) {
+                q.kills++;
+                if (q.kills >= q.killNeed) complete(killer); else refreshKillBar(q);
             }
         });
 
@@ -118,7 +127,7 @@ public final class QuestManager {
         if (q.done) { if (q.bar != null) q.bar.clearPlayers(); return true; }
 
         // 成功判定
-        if (q.type == Type.FLEE && q.origin != null && p.getPos().distanceTo(q.origin) >= 50.0) {
+        if (q.type == Type.FLEE && q.origin != null && p.getPos().distanceTo(q.origin) >= q.fleeDistance) {
             complete(p);
             if (q.bar != null) q.bar.clearPlayers();
             return true;
@@ -172,19 +181,24 @@ public final class QuestManager {
         if (type == Type.CLEAR_CORE) {
             q.corePos = CatastropheCoreManager.spawnCoreNear(player);
         }
+        int nf = NightfallManager.getLevel();
         if (type == Type.GATHER) {
             Need need = GATHER_POOL[rnd.nextInt(GATHER_POOL.length)];
             q.targetItem = need.item();
-            q.targetCount = need.count();
+            q.targetCount = (int) Math.ceil(need.count() * (1 + nf * 0.4));
         }
+        if (type == Type.HUNT_ELITE) q.killNeed = cfg.questHuntEliteCount + nf / 2;
+        if (type == Type.SLAY) q.killNeed = cfg.questSlayCount + nf * 5;
+        q.fleeDistance = cfg.questFleeDistance * (1 + nf * 0.2);
 
         Text title = switch (type) {
-            case HUNT_ELITE -> Text.literal("任务·猎杀:击杀一只精英怪").formatted(Formatting.GOLD);
+            case HUNT_ELITE -> Text.literal("任务·猎杀精英 0/" + q.killNeed).formatted(Formatting.GOLD);
             case SURVIVE -> Text.literal("任务·守住据点:在限时内存活(死亡不算失败)").formatted(Formatting.GREEN);
-            case FLEE -> Text.literal("任务·限时逃离:远离此地 50 格").formatted(Formatting.AQUA);
+            case FLEE -> Text.literal("任务·限时逃离:远离此地 " + (int) q.fleeDistance + " 格").formatted(Formatting.AQUA);
             case CLEAR_CORE -> Text.literal("任务·清除灾厄核心:摧毁附近的灾厄核心").formatted(Formatting.DARK_RED);
             case GATHER -> Text.literal("任务·搜集物资:限时内集齐 " + q.targetCount + "× ").formatted(Formatting.LIGHT_PURPLE)
                     .append(q.targetItem.getName());
+            case SLAY -> Text.literal("任务·屠戮怪物 0/" + q.killNeed).formatted(Formatting.RED);
         };
         BossBar.Color color = switch (type) {
             case HUNT_ELITE -> BossBar.Color.YELLOW;
@@ -192,6 +206,7 @@ public final class QuestManager {
             case FLEE -> BossBar.Color.BLUE;
             case CLEAR_CORE -> BossBar.Color.RED;
             case GATHER -> BossBar.Color.PURPLE;
+            case SLAY -> BossBar.Color.RED;
         };
         q.bar = new ServerBossBar(title, color, BossBar.Style.PROGRESS);
         q.bar.addPlayer(player);
@@ -223,14 +238,27 @@ public final class QuestManager {
         }
     }
 
+    private static void refreshKillBar(Quest q) {
+        if (q.bar == null) return;
+        boolean hunt = q.type == Type.HUNT_ELITE;
+        q.bar.setName(Text.literal((hunt ? "任务·猎杀精英 " : "任务·屠戮怪物 ") + q.kills + "/" + q.killNeed)
+                .formatted(hunt ? Formatting.GOLD : Formatting.RED));
+    }
+
     private static void reward(ServerPlayerEntity player) {
         if (!(player.getWorld() instanceof ServerWorld world)) return;
         var r = player.getRandom();
-        drop(world, player, HealthSkillBookItem.create(2 + r.nextInt(4)));   // V2~V5
-        drop(world, player, new ItemStack(ModItems.LIFE_CRYSTAL, 1 + r.nextInt(2)));
-        drop(world, player, new ItemStack(Items.GOLDEN_APPLE, 2));
-        drop(world, player, new ItemStack(Items.DIAMOND, 1 + r.nextInt(3)));
-        if (r.nextDouble() < 0.3) drop(world, player, new ItemStack(ModItems.LIFE_CORE));
+        int nf = NightfallManager.getLevel();
+        // 保底一本血量书,等级随永夜走高
+        drop(world, player, HealthSkillBookItem.create(3 + nf * 2 + r.nextInt(3)));
+        // 高价值按概率(永夜越高越易、越值),不再保底堆钻石/金苹果
+        if (r.nextDouble() < 0.40 + nf * 0.10) drop(world, player, new ItemStack(ModItems.LIFE_CRYSTAL, 1 + r.nextInt(2)));
+        if (r.nextDouble() < 0.20 + nf * 0.08) drop(world, player, new ItemStack(ModItems.LIFE_CORE));
+        if (r.nextDouble() < 0.08 + nf * 0.05) {
+            Item[] mats = { ModItems.ENDING_ESSENCE, ModItems.ABYSS_SOUL_CRYSTAL, ModItems.RIFT_FRAGMENT, ModItems.CATASTROPHE_BLOOD_CORE };
+            drop(world, player, new ItemStack(mats[r.nextInt(mats.length)]));
+        }
+        if (r.nextDouble() < 0.15) drop(world, player, new ItemStack(Items.ENCHANTED_GOLDEN_APPLE));
     }
 
     private static void drop(ServerWorld world, PlayerEntity player, ItemStack stack) {

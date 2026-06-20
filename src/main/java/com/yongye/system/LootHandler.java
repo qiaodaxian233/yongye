@@ -111,8 +111,8 @@ public final class LootHandler {
                     default -> GODLY;
                 };
                 drop(world, entity, hi.get(r.nextInt(hi.size())).make(r));
-                if (r.nextDouble() < 0.5) drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL));
-                if (r.nextDouble() < 0.2) drop(world, entity, new ItemStack(ModItems.LIFE_CORE));
+                if (r.nextDouble() < 0.25) drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL));
+                if (r.nextDouble() < 0.08) drop(world, entity, new ItemStack(ModItems.LIFE_CORE));
             } else {
                 // 普通怪:按品质表单选
                 double roll = r.nextDouble();
