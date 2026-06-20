@@ -21,7 +21,7 @@ public final class ModCommands {
     private ModCommands() {}
 
     public static void register() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, access, env) ->
+        CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> {
                 dispatcher.register(CommandManager.literal("yongye")
                         .requires(s -> s.hasPermissionLevel(2))
 
@@ -185,7 +185,24 @@ public final class ModCommands {
                                             Text.literal("已强化至 +" + lvl + " 【" + q.cn + "】").formatted(q.color), false);
                                     return 1;
                                 })))
-                ));
+                );
+
+                dispatcher.register(CommandManager.literal("talent")
+                        .executes(ctx -> TalentManager.overview(ctx.getSource().getPlayerOrThrow()))
+                        .then(CommandManager.literal("list")
+                                .executes(ctx -> TalentManager.list(ctx.getSource().getPlayerOrThrow())))
+                        .then(CommandManager.literal("reset")
+                                .executes(ctx -> TalentManager.reset(ctx.getSource().getPlayerOrThrow())))
+                        .then(CommandManager.literal("learn")
+                                .then(CommandManager.argument("id", StringArgumentType.word())
+                                        .executes(ctx -> TalentManager.learn(ctx.getSource().getPlayerOrThrow(),
+                                                StringArgumentType.getString(ctx, "id")))))
+                        .then(CommandManager.literal("info")
+                                .then(CommandManager.argument("id", StringArgumentType.word())
+                                        .executes(ctx -> TalentManager.info(ctx.getSource().getPlayerOrThrow(),
+                                                StringArgumentType.getString(ctx, "id")))))
+                );
+        });
 
         Yongye.LOGGER.info("[亡途荒夜] 指令已注册");
     }

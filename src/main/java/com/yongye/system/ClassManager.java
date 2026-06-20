@@ -140,6 +140,8 @@ public final class ClassManager {
         if (active.contains(PlayerClass.ASSASSIN)) {
             p.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 400, 0, true, false, false));
         }
+        // 天赋:仅对当前生效职业应用其天赋修饰 / 增益
+        TalentManager.applyTalents(p, active);
     }
 
     public static void register() {

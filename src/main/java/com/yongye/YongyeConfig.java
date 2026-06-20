@@ -256,6 +256,11 @@ public class YongyeConfig {
     public int classLevel2 = 100;            // 第二职业所需等级
     public double classBookDropChance = 0.15; // 精英掉落职业书概率
 
+    // ===== 天赋树系统 =====
+    public boolean enableTalents = true;
+    public int talentStartLevel = 50;        // 从该等级起,每升 1 级发放天赋点
+    public int talentPointsPerLevel = 1;     // 每级发放的天赋点数
+
     // ===== 时间进度系统 =====
     public boolean enableProgression = true;
     public boolean firstDayLong = true;          // 第一天白天放慢

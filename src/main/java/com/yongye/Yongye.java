@@ -65,6 +65,7 @@ public class Yongye implements ModInitializer {
         // 注意 ENTITY_LOAD 监听器注册顺序:基础增强 → Boss 标记 → 精英化
         com.yongye.system.ProgressionManager.register();
         com.yongye.system.ClassManager.register();
+        com.yongye.system.TalentManager.register();
         MobEnhancementHandler.register();
         BossHandler.register();
         BossAbilityHandler.register();

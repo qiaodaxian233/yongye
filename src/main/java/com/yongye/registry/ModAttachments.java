@@ -112,6 +112,30 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "ember_ready_at"));
 
+    /** TALENT_POINTS: 可用天赋点(随等级发放,死亡保留)。 */
+    public static final AttachmentType<Integer> TALENT_POINTS =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .initializer(() -> 0)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "talent_points"));
+
+    /** TALENT_CLAIMED_LEVEL: 已据此发放过天赋点的最高等级(掉级后不重复发放)。 */
+    public static final AttachmentType<Integer> TALENT_CLAIMED_LEVEL =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .initializer(() -> 0)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "talent_claimed_level"));
+
+    /** TALENTS: 已点天赋节点 → 等级(rank),键为节点 id。 */
+    public static final AttachmentType<java.util.Map<String, Integer>> TALENTS =
+            AttachmentRegistry.<java.util.Map<String, Integer>>builder()
+                    .persistent(Codec.unboundedMap(Codec.STRING, Codec.INT))
+                    .initializer(java.util.HashMap::new)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "talents"));
+
     public static void init() {
         Yongye.LOGGER.info("[亡途荒夜] 数据附着已注册");
     }
