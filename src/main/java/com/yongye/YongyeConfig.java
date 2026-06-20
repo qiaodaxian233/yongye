@@ -57,7 +57,7 @@ public class YongyeConfig {
     /** 怪物精英化的基础概率 */
     public double eliteChance = 0.04;
     /** 精英在"基础增强之上"再追加的属性倍率/数值 */
-    public double eliteHealthMultiplier = 5.0;
+    public double eliteHealthMultiplier = 3.0;
     public double eliteAttackMultiplier = 2.0;
     public double eliteSpeedMultiplier = 1.3;
     public double eliteKnockbackResistanceAdd = 0.6;
@@ -66,8 +66,10 @@ public class YongyeConfig {
     public int eliteSkeletonArrowsPerSecond = 5;
     public int eliteWitchPotionsPerSecond = 5;
     /** 精英瞬移:与目标水平距离超过该值且冷却结束时触发(格);冷却(tick) */
-    public double eliteTeleportTriggerDistance = 24.0;
+    public double eliteTeleportTriggerDistance = 16.0;
     public int eliteTeleportCooldownTicks = 100;
+    /** 精英主动感知玩家的半径(没目标时锁定此范围内最近玩家) */
+    public double eliteSenseRadius = 48.0;
     /** 精英女巫支援:每隔多少 tick 治疗/增益一次附近怪物 */
     public int eliteWitchSupportIntervalTicks = 60;
 
@@ -117,6 +119,10 @@ public class YongyeConfig {
     public int questIntervalTicks = 7200;
     /** 任务限时(tick),默认 3 分钟 */
     public int questTimeLimitTicks = 3600;
+    /** 开局宽限期(tick),此前不派发任务,默认 5 分钟 */
+    public int questStartGraceTicks = 6000;
+    /** 派发猎杀精英任务所需的最低永夜等级(此前只派可达成的逃离/存活) */
+    public int questHuntEliteMinNightfall = 2;
 
     // ============ 背包神器(文档第 14 章)============
     public boolean enableArtifacts = true;

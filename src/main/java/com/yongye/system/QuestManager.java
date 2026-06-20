@@ -65,49 +65,69 @@ public final class QuestManager {
         YongyeConfig cfg = YongyeConfig.get();
         if (!cfg.enableQuests) return;
 
-        // 定期派发
+        // 定期派发(开局宽限期内不派)
         if (++assignCounter >= cfg.questIntervalTicks) {
             assignCounter = 0;
-            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                if (!ACTIVE.containsKey(p.getUuid())) {
-                    assign(p, Type.values()[p.getRandom().nextInt(Type.values().length)]);
+            if (server.getTicks() >= cfg.questStartGraceTicks) {
+                for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                    if (!ACTIVE.containsKey(p.getUuid())) {
+                        assign(p, pickType(p));
+                    }
                 }
             }
         }
 
-        // 推进现有任务
+        // 推进现有任务(逐条 try/catch:单个任务出错也不拖垮服务端)
         ACTIVE.entrySet().removeIf(e -> {
-            UUID id = e.getKey();
-            Quest q = e.getValue();
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
-            if (p == null) { if (q.bar != null) q.bar.clearPlayers(); return true; }
-
-            int left = q.endTick - server.getTicks();
-            if (q.bar != null) q.bar.setPercent(Math.max(0f, Math.min(1f, (float) left / q.totalTicks)));
-
-            if (q.done) { if (q.bar != null) q.bar.clearPlayers(); return true; }
-
-            // 成功判定
-            if (q.type == Type.FLEE && q.origin != null
-                    && p.getPos().distanceTo(q.origin) >= 50.0) {
-                complete(p);
-                if (q.bar != null) q.bar.clearPlayers();
+            try {
+                return tickQuest(server, e.getKey(), e.getValue());
+            } catch (Exception ex) {
+                Yongye.LOGGER.error("[亡途荒夜] 任务处理异常,已移除该任务", ex);
+                Quest q = e.getValue();
+                if (q != null && q.bar != null) q.bar.clearPlayers();
                 return true;
             }
-            if (q.type == Type.SURVIVE && left <= 0) {
-                complete(p);
-                if (q.bar != null) q.bar.clearPlayers();
-                return true;
-            }
-
-            // 超时失败
-            if (left <= 0 && !q.done) {
-                fail(p);
-                if (q.bar != null) q.bar.clearPlayers();
-                return true;
-            }
-            return false;
         });
+    }
+
+    /** 返回 true 表示该任务结束需移除。 */
+    private static boolean tickQuest(MinecraftServer server, UUID id, Quest q) {
+        ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
+        if (p == null) { if (q.bar != null) q.bar.clearPlayers(); return true; }
+
+        int left = q.endTick - server.getTicks();
+        if (q.bar != null) q.bar.setPercent(Math.max(0f, Math.min(1f, (float) left / q.totalTicks)));
+
+        if (q.done) { if (q.bar != null) q.bar.clearPlayers(); return true; }
+
+        // 成功判定
+        if (q.type == Type.FLEE && q.origin != null && p.getPos().distanceTo(q.origin) >= 50.0) {
+            complete(p);
+            if (q.bar != null) q.bar.clearPlayers();
+            return true;
+        }
+        if (q.type == Type.SURVIVE && left <= 0) {
+            complete(p);
+            if (q.bar != null) q.bar.clearPlayers();
+            return true;
+        }
+
+        // 超时失败
+        if (left <= 0) {
+            fail(p);
+            if (q.bar != null) q.bar.clearPlayers();
+            return true;
+        }
+        return false;
+    }
+
+    /** 循序渐进:前期(永夜不足)只派可达成的逃离/存活;永夜到一定等级才派猎杀精英。 */
+    private static Type pickType(ServerPlayerEntity p) {
+        var rnd = p.getRandom();
+        if (NightfallManager.getLevel() >= YongyeConfig.get().questHuntEliteMinNightfall) {
+            return Type.values()[rnd.nextInt(Type.values().length)];
+        }
+        return rnd.nextBoolean() ? Type.FLEE : Type.SURVIVE;
     }
 
     public static void assign(ServerPlayerEntity player, Type type) {

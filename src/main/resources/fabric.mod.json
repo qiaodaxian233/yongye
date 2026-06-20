@@ -13,7 +13,8 @@
   "icon": "assets/yongye/icon.png",
   "environment": "*",
   "entrypoints": {
-    "main": ["com.yongye.Yongye"]
+    "main": ["com.yongye.Yongye"],
+    "client": ["com.yongye.client.YongyeClient"]
   },
   "mixins": [
     "yongye.mixins.json"

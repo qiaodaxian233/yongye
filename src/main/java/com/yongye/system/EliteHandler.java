@@ -130,6 +130,16 @@ public final class EliteHandler {
     private static void tickElite(ServerWorld sw, MobEntity e, YongyeConfig cfg) {
         LivingEntity target = e.getTarget();
 
+        // 精英主动感知:没有目标(或目标已死)时,锁定感知半径内最近的玩家
+        if (target == null || !target.isAlive()) {
+            net.minecraft.entity.player.PlayerEntity nearest =
+                    sw.getClosestPlayer(e.getX(), e.getY(), e.getZ(), cfg.eliteSenseRadius, true);
+            if (nearest != null) {
+                e.setTarget(nearest);
+                target = nearest;
+            }
+        }
+
         // —— 远程技能 ——
         if (target != null && target.isAlive()) {
             if (e instanceof AbstractSkeletonEntity) {
@@ -142,13 +152,15 @@ public final class EliteHandler {
             }
         }
 
-        // —— 瞬移 —— 每秒检测一次
+        // —— 瞬移 —— 每秒检测一次:目标太远 或 被墙卡住 都会瞬移到目标附近
         if (target != null && e.age % 20 == 0) {
             double dx = target.getX() - e.getX();
             double dz = target.getZ() - e.getZ();
             double horiz = Math.sqrt(dx * dx + dz * dz);
             int last = LAST_TELEPORT_AGE.getOrDefault(e, -100000);
-            if (horiz > cfg.eliteTeleportTriggerDistance && (e.age - last) >= cfg.eliteTeleportCooldownTicks) {
+            boolean farAway = horiz > cfg.eliteTeleportTriggerDistance;
+            boolean stuck = e.horizontalCollision && horiz > 5.0;
+            if ((farAway || stuck) && (e.age - last) >= cfg.eliteTeleportCooldownTicks) {
                 teleportNear(sw, e, target);
                 LAST_TELEPORT_AGE.put(e, e.age);
             }

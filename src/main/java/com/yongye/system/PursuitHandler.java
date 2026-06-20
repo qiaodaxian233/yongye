@@ -35,7 +35,7 @@ public final class PursuitHandler {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             YongyeConfig cfg = YongyeConfig.get();
             if (!cfg.enablePursuit) return;
-            if (++tickCounter < 4) return; // 每 4 tick 跑一次,降开销
+            if (++tickCounter < 2) return; // 每 2 tick 跑一次,兼顾响应与开销
             tickCounter = 0;
 
             int nf = NightfallManager.getLevel();
@@ -68,24 +68,37 @@ public final class PursuitHandler {
                     boolean chasingThisPlayer = mob.getTarget() == player;
                     if (!chasingThisPlayer) continue;
 
+                    // 朝玩家的水平主方向
+                    double dx = player.getX() - mob.getX();
+                    double dz = player.getZ() - mob.getZ();
+                    Direction dir = Math.abs(dx) >= Math.abs(dz)
+                            ? (dx >= 0 ? Direction.EAST : Direction.WEST)
+                            : (dz >= 0 ? Direction.SOUTH : Direction.NORTH);
+                    BlockPos base = mob.getBlockPos();
+                    boolean wallAhead = !world.getBlockState(base.offset(dir)).isAir()
+                            || !world.getBlockState(base.up().offset(dir)).isAir();
+
                     // —— 挖墙 ——
-                    if (!anchor && mob.horizontalCollision) {
+                    if (!anchor && wallAhead) {
                         double maxHardness = boss ? cfg.digMaxHardnessBoss
                                 : elite ? cfg.digMaxHardnessElite : cfg.digMaxHardnessNormal;
                         int last = LAST_DIG_AGE.getOrDefault(mob, -100000);
                         if (mob.age - last >= cfg.digCooldownTicks) {
-                            if (tryDig(world, mob, player, maxHardness)) {
+                            if (tryDig(world, mob, dir, maxHardness)) {
                                 LAST_DIG_AGE.put(mob, mob.age);
                             }
                         }
                     }
 
-                    // —— 爬墙 ——
-                    if (!anchor && (elite || boss || nf >= 3) && mob.horizontalCollision
+                    // —— 爬墙 —— 正前方有墙且玩家更高时,持续向上推(蜘蛛之外的怪也能爬)
+                    if (!anchor && (elite || boss || nf >= 3) && wallAhead
                             && player.getY() > mob.getY() + 0.6) {
                         Vec3d v = mob.getVelocity();
-                        mob.setVelocity(v.x, cfg.climbSpeed, v.z);
+                        double pushX = dir.getOffsetX() * 0.12;
+                        double pushZ = dir.getOffsetZ() * 0.12;
+                        mob.setVelocity(v.x * 0.5 + pushX, cfg.climbSpeed, v.z * 0.5 + pushZ);
                         mob.velocityModified = true;
+                        mob.fallDistance = 0.0f;
                     }
                 }
             }
@@ -94,13 +107,7 @@ public final class PursuitHandler {
         Yongye.LOGGER.info("[亡途荒夜] 追杀系统已挂载");
     }
 
-    private static boolean tryDig(ServerWorld world, MobEntity mob, ServerPlayerEntity player, double maxHardness) {
-        double dx = player.getX() - mob.getX();
-        double dz = player.getZ() - mob.getZ();
-        Direction dir = Math.abs(dx) >= Math.abs(dz)
-                ? (dx >= 0 ? Direction.EAST : Direction.WEST)
-                : (dz >= 0 ? Direction.SOUTH : Direction.NORTH);
-
+    private static boolean tryDig(ServerWorld world, MobEntity mob, Direction dir, double maxHardness) {
         BlockPos base = mob.getBlockPos();
         BlockPos[] candidates = { base.offset(dir), base.up().offset(dir) };
         for (BlockPos pos : candidates) {
