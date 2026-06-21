@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "RAR",
+    "AXA",
+    "RAR"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:rotten_flesh"
+    },
+    "A": {
+      "item": "minecraft:golden_apple"
+    },
+    "X": {
+      "item": "yongye:life_core"
+    }
+  },
+  "result": {
+    "id": "yongye:artifact_glutton_heart",
+    "count": 1,
+    "components": {
+      "yongye:artifact_level": 3
+    }
+  }
+}

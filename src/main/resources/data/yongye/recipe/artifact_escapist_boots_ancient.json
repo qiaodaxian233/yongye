@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "F F",
+    "RXR",
+    "SLS"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:feather"
+    },
+    "R": {
+      "item": "minecraft:rabbit_foot"
+    },
+    "S": {
+      "item": "minecraft:sugar"
+    },
+    "L": {
+      "item": "yongye:life_shard"
+    },
+    "X": {
+      "item": "yongye:life_core"
+    }
+  },
+  "result": {
+    "id": "yongye:artifact_escapist_boots",
+    "count": 1,
+    "components": {
+      "yongye:artifact_level": 3
+    }
+  }
+}

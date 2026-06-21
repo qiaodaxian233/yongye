@@ -91,6 +91,7 @@ public final class ClassManager {
         }
         p.sendMessage(Text.literal("你选择了本命职业【" + c.cn + "】,出生即生效!").formatted(Formatting.GOLD), false);
         com.yongye.network.YongyeNet.sendStats(p);   // 同步职业到客户端(背包显示用)
+        com.yongye.network.YongyeNet.sendTalents(p); // 同步天赋状态(天赋面板即时显示该职业,不用重进)
         return true;
     }
 
@@ -114,6 +115,8 @@ public final class ClassManager {
         p.setAttached(ModAttachments.LEARNED_CLASSES, learned);
         applyClasses(p);
         p.sendMessage(Text.literal("习得职业【" + type.cn + "】!").formatted(Formatting.GOLD), false);
+        com.yongye.network.YongyeNet.sendStats(p);   // 刷新背包职业显示
+        com.yongye.network.YongyeNet.sendTalents(p); // 刷新天赋面板(新职业的天赋行即时出现)
         return true;
     }
 

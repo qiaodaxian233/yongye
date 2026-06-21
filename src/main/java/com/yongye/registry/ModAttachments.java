@@ -83,11 +83,12 @@ public final class ModAttachments {
                     .initializer(() -> false)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_him"));
 
-    /** ACCESSORIES: 玩家饰品栏(4 格神器),以 NBT 存档。 */
+    /** ACCESSORIES: 玩家饰品栏(神器),以 NBT 存档。死亡保留(与其它成长一致,否则死一次神器全没)。 */
     public static final AttachmentType<NbtCompound> ACCESSORIES =
             AttachmentRegistry.<NbtCompound>builder()
                     .persistent(NbtCompound.CODEC)
                     .initializer(NbtCompound::new)
+                    .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "accessories"));
 
     /** NO_HEAL_UNTIL: 玩家禁疗截止的游戏时刻(world time)。 */

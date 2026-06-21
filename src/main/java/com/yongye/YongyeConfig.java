@@ -136,6 +136,7 @@ public class YongyeConfig {
     public double enhanceHealthPerLevel = 1.0;     // 盔甲每级 +最大生命
     public int enhanceDurabilityPerLevel = 8;      // 每级 +最大耐久
     public double enhanceCritBonusMultiplier = 0.75; // 暴击额外伤害 = 强化攻击加成 × 此值
+    public double enhanceHybridDamageFraction = 0.5; // 攻防双修武器(如镇魂)的攻击成长 = 武器攻击/级 × 此值(攻击加得少些)
     public int enhanceShardValue = 1;              // 生命碎片 = +1 级
     public int enhanceCrystalValue = 10;           // 生命结晶 = +10 级
     public int enhanceCoreValue = 100;             // 生命核心 = +100 级
@@ -222,6 +223,10 @@ public class YongyeConfig {
     public double[] nightfallEliteChanceMultiplier = {1.0, 1.5, 2.0, 3.0, 5.0, 8.0};
     /** 永夜 I~V 对应的怪物锁定半径(格) */
     public double[] nightfallLockRadius = {0.0, 16.0, 24.0, 32.0, 40.0, 48.0};
+    /** 永夜等级上限(V5 不再是终点;失败可继续升,默认 99 近似"无尽") */
+    public int nightfallMaxLevel = 99;
+    /** 永夜超过 V5 后,每多一级给怪物叠加的最大生命倍率(线性、无额外封顶):V6=+50%、V7=+100%… */
+    public double nightfallBeyondHpPerLevel = 0.5;
 
     // —— 灾厄核心(文档 9.3 / 第 14、15 章)——
     public boolean enableCatastropheCore = true;

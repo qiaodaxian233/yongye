@@ -90,11 +90,17 @@ public class YongyeClient implements ClientModInitializer {
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal(classLabel),
                         b -> client.setScreen(new StatsScreen(screen)))
-                        .dimensions(bx, by - 36, 90, 16).build());
+                        .dimensions(bx, by - 36, 44, 16).build());
+                // 「强化」按钮:打开武器强化窗口(放装备+材料,按数量一键升级)
+                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("强化"),
+                        b -> ClientPlayNetworking.send(new com.yongye.network.OpenEnhancePayload()))
+                        .dimensions(bx + 46, by - 36, 44, 16).build());
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(
                 com.yongye.registry.ModScreens.ACCESSORY, com.yongye.client.AccessoryScreen::new);
+        net.minecraft.client.gui.screen.ingame.HandledScreens.register(
+                com.yongye.registry.ModScreens.ENHANCE, com.yongye.client.EnhanceScreen::new);
 
         // 装备强化:tooltip 显示品质 + 强化等级(任意装备通用,零 mixin)
         ItemTooltipCallback.EVENT.register((stack, ctx, type, lines) -> {

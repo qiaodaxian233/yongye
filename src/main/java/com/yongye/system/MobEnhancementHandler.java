@@ -32,6 +32,7 @@ public final class MobEnhancementHandler {
     private static final Identifier ID_FOLLOW = Identifier.of(Yongye.MOD_ID, "mob_follow");
     private static final Identifier ID_SCALE_HP = Identifier.of(Yongye.MOD_ID, "mob_scale_hp");
     private static final Identifier ID_SCALE_ATK = Identifier.of(Yongye.MOD_ID, "mob_scale_atk");
+    private static final Identifier ID_NIGHTFALL_HP = Identifier.of(Yongye.MOD_ID, "mob_nightfall_hp");
 
     private static final List<RegistryEntry<net.minecraft.entity.effect.StatusEffect>> POTION_POOL = List.of(
             StatusEffects.SPEED,
@@ -72,6 +73,13 @@ public final class MobEnhancementHandler {
                     double atkProg = 1.0 + (prog - 1.0) * cfg.mobScalingAttackRatio;
                     addMultiplier(mob, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_SCALE_ATK, atkProg);
                 }
+            }
+
+            // 永夜 V5(灭世)之后:每多一级线性增怪血(仅血量、独立于上面的封顶上限)——失败越多世界越凶
+            int nf = NightfallManager.getLevel();
+            if (cfg.enableNightfall && nf > 5) {
+                double abyssHp = 1.0 + (nf - 5) * cfg.nightfallBeyondHpPerLevel;
+                addMultiplier(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_NIGHTFALL_HP, abyssHp);
             }
 
             // 加血后补满血量

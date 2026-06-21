@@ -36,7 +36,11 @@ public final class NightfallManager {
 
     public static int getLevel() { return level; }
 
-    public static String getLevelName() { return NAMES[Math.max(0, Math.min(NAMES.length - 1, level))]; }
+    public static String getLevelName() {
+        if (level < NAMES.length) return NAMES[Math.max(0, level)];
+        // 超过 V5(灭世)后:深渊层,层数 = level-5
+        return "永夜 · 深渊 " + (level - 5) + " 层";
+    }
 
     public static double getEliteChanceMultiplier() {
         double[] arr = YongyeConfig.get().nightfallEliteChanceMultiplier;
@@ -77,7 +81,7 @@ public final class NightfallManager {
     }
 
     public static void setLevel(MinecraftServer server, int newLevel) {
-        int clamped = Math.max(0, Math.min(5, newLevel));
+        int clamped = Math.max(0, Math.min(YongyeConfig.get().nightfallMaxLevel, newLevel));
         if (clamped == level) return;
         level = clamped;
         save();
@@ -106,7 +110,7 @@ public final class NightfallManager {
         try {
             if (savePath != null && Files.exists(savePath)) {
                 State s = GSON.fromJson(Files.readString(savePath), State.class);
-                if (s != null) level = Math.max(0, Math.min(5, s.level));
+                if (s != null) level = Math.max(0, Math.min(YongyeConfig.get().nightfallMaxLevel, s.level));
             }
         } catch (IOException | RuntimeException e) {
             Yongye.LOGGER.error("[亡途荒夜] 读取永夜状态失败", e);

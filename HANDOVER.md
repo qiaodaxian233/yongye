@@ -39,17 +39,21 @@
 
 ---
 
-## 0.5 当前状态(截至 **m54 / HEAD `ee88491`** · 本段最新,优先看)
+## 0.5 当前状态(截至 **m55 + m56**:本地已就绪、**两批都待 push** · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
 - **m53** 磐盾握持姿势立体化:`models/item/tank_shield.json` 加 `display` 块(手持改盾牌姿势放大约 1.6×举臂,GUI 平展)。纯 JSON。**display 数值是起点,需实机截图微调**。
 - **m54** `#5` 坦克真·%减伤(mixin):`mixin/TankDefenseMixin` 注入 `LivingEntity#modifyAppliedDamage` 的 RETURN,对生效坦克按 `tankTrueDamageReduction`(默认 0.15)削减承伤,`require=0` 兜底,已注册 `yongye.mixins.json`。`#6` 武僧全用途耐久:在 m45 攻击磨损外,加 `PlayerBlockBreakEvents.AFTER` 让武僧挖掘也额外 `setDamage(+1)`(纯事件)。
+- **m55** ① **解除原版 1024 属性上限**:accessor mixin `mixin/ClampedEntityAttributeAccessor` 暴露 `ClampedEntityAttribute.maxValue`,`Yongye.raiseAttributeCaps` 把 max_health/attack_damage/armor/toughness 抬到 100 万(攻速不动)。② **镇魂攻防双修**:`EquipmentEnhancer` 新增 `Kind.HYBRID`(攻击+护甲兼具),强化时攻击按 `enhanceHybridDamageFraction`(0.5)打折、护甲/韧性/生命照盔甲涨;修了"镇魂强化不加攻击"(旧 `kindOf` 先判护甲把它误判成盔甲)。③ **武器强化窗口**:背包「强化」按钮→`EnhanceScreenHandler`(装备槽+材料槽+升级按钮),升级级数=材料数量×单值,一组碎片一键+64 级;新增 `client/EnhanceScreen`、`ModScreens.ENHANCE`、`OpenEnhancePayload`/`EnhanceApplyPayload`(照饰品栏抄)。④ 顺带修 m52 天赋同步漏调:`ClassManager.chooseStartingClass`/`learn` 补 `sendTalents`(选职后天赋面板即时显示职业,不用重进)。新增 81 个 Java 文件(+5)。
+- **m56** ① **神器远古/终焉可见合成表**:升阶配方是特殊配方不进 JEI、基础表只产残破(默认 1 级),故远古/终焉像"没有"。给 10 个神器各加直接 shaped 表(远古 3 级中心换生命核心 / 终焉 6 级 4 角换终焉神髓+保留招牌中心),结果用 `components.artifact_level` 直接带级(ARTIFACT_LEVEL 是 Codec.INT)。共 20 张,已校验无配方冲突。② **永夜 V5 解封顶**:`nightfallMaxLevel`(默认 99)替代 5 封顶;V5 之后 `MobEnhancementHandler` 按 `(lvl-5)×nightfallBeyondHpPerLevel`(0.5)线性叠怪物最大生命(仅血、独立封顶);名字对 >5 出"永夜·深渊 N 层"。纯 JSON + 服务端 Java,无新 mixin。
 
 **⚠️ 待验证(让用户 build + 跑游戏确认)**:
-1. **`#5` mixin 最关键**——`modifyAppliedDamage` 的 1.21.1 映射名未经编译验证,`require=0` 保证不崩但可能没挂上。**让用户启动看日志**:若 `TankDefenseMixin` 注入器报"找不到目标",拿日志来改方法名;没报错则实测坦克挨打伤害是否按比例降。
-2. 天赋 GUI / 掉武器 / 盾姿势 / `#6` 均未实机验证过,本轮刚 push。
-3. 盾握持 display 数值需按实机截图微调。
+1. **m55 唯一硬待验证 = `ClampedEntityAttributeAccessor` 的字段名 `maxValue`**:accessor 字段名由 IDEA 的 fabric mixin 注解处理器在【编译期】校验,名字不符直接编译失败报 "Unable to locate field maxValue"——拿日志/报错来改真实映射名即可,不会运行崩。build 通过即说明名字对。
+2. **m54 `#5` mixin**——`modifyAppliedDamage` 的 1.21.1 映射名仍未经编译验证,`require=0` 保证不崩但可能没挂上。**让用户启动看日志**:若 `TankDefenseMixin` 注入器报"找不到目标",拿日志来改方法名;没报错则实测坦克挨打伤害是否按比例降。
+3. m55 跑游戏确认:① 血量能超 1024(学高级血量书);② 镇魂强化后攻击有涨(打折后的)、护甲/韧性/生命也涨;③ 背包「强化」按钮开窗口、放装备+碎片点升级、按数量加等级;④ 选本命职业后天赋面板立刻显示职业(不用重进)。
+4. **m56 神器合成表**:result 里 `"components":{"yongye:artifact_level":N}` 的 JSON 语法沙箱测不了——若 1.21.1 略有出入,该表会在数据包加载时报错(不崩),拿日志来修;通过则远古/终焉应能在合成表/JEI 里看到并合成、产出对应等级。**m56 永夜**:`/yongye nightfall <6+>` 或失败升到 V5 以上,确认怪血随等级线性涨、深渊层名正常。
+5. 天赋 GUI / 掉武器 / 盾姿势 / `#6` 均未实机验证过。盾握持 display 数值需按实机截图微调。
 
 **接下来用户清单里没做的**:`#8` 美术占位替换(**需用户提供素材或指明物品,Claude 无法凭空画好像素图**)、**调试菜单**(拟 `/yongye debug`→S2C 开 `DebugScreen`,按钮里用 `client.player.networkHandler.sendCommand("yongye xxx")` 复用现有命令,安全低风险)、整体数值平衡、真弧形盾面(需自定义 Java 物品渲染器,高风险,留另议)、天赋树连线美化。
 

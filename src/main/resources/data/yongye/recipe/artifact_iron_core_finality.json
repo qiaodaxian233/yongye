@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "ZIZ",
+    "ISI",
+    "ZIZ"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_block"
+    },
+    "S": {
+      "item": "minecraft:shield"
+    },
+    "Z": {
+      "item": "yongye:ending_essence"
+    }
+  },
+  "result": {
+    "id": "yongye:artifact_iron_core",
+    "count": 1,
+    "components": {
+      "yongye:artifact_level": 6
+    }
+  }
+}

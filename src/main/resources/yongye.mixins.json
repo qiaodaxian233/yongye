@@ -4,6 +4,7 @@
   "package": "com.yongye.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ClampedEntityAttributeAccessor",
     "MiningSpeedMixin",
     "TankDefenseMixin"
   ],

@@ -29,7 +29,7 @@ public final class EquipmentEnhancer {
     private static final Identifier TOUGH_ID = Identifier.of(Yongye.MOD_ID, "enhance_toughness");
     private static final Identifier HP_ID = Identifier.of(Yongye.MOD_ID, "enhance_health");
 
-    public enum Kind { WEAPON, ARMOR, NONE }
+    public enum Kind { WEAPON, ARMOR, HYBRID, NONE }
 
     public static Kind kindOf(Item item) {
         AttributeModifiersComponent def = new ItemStack(item)
@@ -39,6 +39,7 @@ public final class EquipmentEnhancer {
             if (e.attribute().equals(EntityAttributes.GENERIC_ARMOR)) hasArmor = true;
             if (e.attribute().equals(EntityAttributes.GENERIC_ATTACK_DAMAGE)) hasDmg = true;
         }
+        if (hasDmg && hasArmor) return Kind.HYBRID; // 攻击+护甲兼具(如坦克武器镇魂):攻防双修强化,攻击打折
         if (hasArmor) return Kind.ARMOR;
         if (hasDmg) return Kind.WEAPON;
         if (item instanceof net.minecraft.item.ArmorItem) return Kind.ARMOR; // 兜底:属性组件没暴露 generic.armor 的盔甲
@@ -50,7 +51,9 @@ public final class EquipmentEnhancer {
     }
 
     public static boolean isWeapon(ItemStack stack) {
-        return !stack.isEmpty() && kindOf(stack.getItem()) == Kind.WEAPON;
+        if (stack.isEmpty()) return false;
+        Kind k = kindOf(stack.getItem());
+        return k == Kind.WEAPON || k == Kind.HYBRID; // hybrid(攻防双修)也算武器,可暴击、走武器结算
     }
 
     public static int getLevel(ItemStack stack) {
@@ -67,7 +70,10 @@ public final class EquipmentEnhancer {
         int lvl = getLevel(stack);
         if (lvl <= 0) return 0f;
         YongyeConfig c = YongyeConfig.get();
-        return (float) (lvl * c.enhanceDamagePerLevel * c.enhanceCritBonusMultiplier);
+        // hybrid 武器攻击成长被打折,暴击额外伤害同比例缩减
+        double dmgPerLvl = c.enhanceDamagePerLevel
+                * (kindOf(stack.getItem()) == Kind.HYBRID ? c.enhanceHybridDamageFraction : 1.0);
+        return (float) (lvl * dmgPerLvl * c.enhanceCritBonusMultiplier);
     }
 
     public static int materialValue(Item item) {
@@ -112,6 +118,29 @@ public final class EquipmentEnhancer {
                             new EntityAttributeModifier(SPD_ID, q.attackSpeed,
                                     EntityAttributeModifier.Operation.ADD_VALUE),
                             AttributeModifierSlot.MAINHAND);
+                }
+            } else if (kind == Kind.HYBRID) {
+                // 攻防双修(如坦克武器镇魂):攻击按 enhanceHybridDamageFraction 打折,
+                // 护甲/韧性/生命照盔甲成长一起涨;全部挂主手槽(武器在手才生效)。
+                AttributeModifierSlot M = AttributeModifierSlot.MAINHAND;
+                result = result
+                        .with(EntityAttributes.GENERIC_ATTACK_DAMAGE,
+                                new EntityAttributeModifier(DMG_ID,
+                                        level * c.enhanceDamagePerLevel * c.enhanceHybridDamageFraction,
+                                        EntityAttributeModifier.Operation.ADD_VALUE), M)
+                        .with(EntityAttributes.GENERIC_ARMOR,
+                                new EntityAttributeModifier(ARMOR_ID, level * c.enhanceArmorPerLevel,
+                                        EntityAttributeModifier.Operation.ADD_VALUE), M)
+                        .with(EntityAttributes.GENERIC_ARMOR_TOUGHNESS,
+                                new EntityAttributeModifier(TOUGH_ID, level * c.enhanceToughnessPerLevel,
+                                        EntityAttributeModifier.Operation.ADD_VALUE), M)
+                        .with(EntityAttributes.GENERIC_MAX_HEALTH,
+                                new EntityAttributeModifier(HP_ID, level * c.enhanceHealthPerLevel,
+                                        EntityAttributeModifier.Operation.ADD_VALUE), M);
+                if (q.attackSpeed > 0) {
+                    result = result.with(EntityAttributes.GENERIC_ATTACK_SPEED,
+                            new EntityAttributeModifier(SPD_ID, q.attackSpeed,
+                                    EntityAttributeModifier.Operation.ADD_VALUE), M);
                 }
             } else if (kind == Kind.ARMOR) {
                 AttributeModifierSlot slot = armorSlotOf(result);

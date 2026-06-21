@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "ZAZ",
+    "SHS",
+    "ZAZ"
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:golden_apple"
+    },
+    "S": {
+      "item": "yongye:catastrophe_blood_core"
+    },
+    "H": {
+      "item": "minecraft:totem_of_undying"
+    },
+    "Z": {
+      "item": "yongye:ending_essence"
+    }
+  },
+  "result": {
+    "id": "yongye:artifact_life_idol",
+    "count": 1,
+    "components": {
+      "yongye:artifact_level": 6
+    }
+  }
+}

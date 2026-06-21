@@ -58,6 +58,21 @@ public final class YongyeNet {
                 if (c != null) com.yongye.system.ClassManager.chooseStartingClass(p, c);
             });
         });
+        // 武器强化窗口:打开 + 应用升级
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.OpenEnhancePayload.ID, com.yongye.network.OpenEnhancePayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.EnhanceApplyPayload.ID, com.yongye.network.EnhanceApplyPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenEnhancePayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> p.openHandledScreen(new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
+                    (syncId, playerInv, pl) -> new com.yongye.screen.EnhanceScreenHandler(syncId, playerInv),
+                    net.minecraft.text.Text.literal("武器强化"))));
+        });
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.EnhanceApplyPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> {
+                if (p.currentScreenHandler instanceof com.yongye.screen.EnhanceScreenHandler h) h.applyUpgrade(p);
+            });
+        });
         // 登录:未选过本命职业则弹出选职界面;老玩家(已有职业)只补标记
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity pl = handler.player;

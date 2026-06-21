@@ -52,6 +52,9 @@ public class Yongye implements ModInitializer {
         // 配置
         YongyeConfig.load();
 
+        // 解除原版属性 1024 硬上限(否则血量书/装备强化堆到一千多就失效)
+        raiseAttributeCaps();
+
         // 注册层
         ModComponents.init();
         com.yongye.registry.ModScreens.init();
@@ -102,5 +105,22 @@ public class Yongye implements ModInitializer {
         });
 
         LOGGER.info("[亡途荒夜] 初始化完成。活到天亮就是胜利。");
+    }
+
+    /** 把某个属性的硬上限抬到 max(原版默认夹在 1024,会让高血量/高强化失效)。 */
+    private static void raiseCap(net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> entry, double max) {
+        if (entry.value() instanceof net.minecraft.entity.attribute.ClampedEntityAttribute c) {
+            ((com.yongye.mixin.ClampedEntityAttributeAccessor) (Object) c).yongye$setMaxValue(max);
+        }
+    }
+
+    /** 解除核心属性的 1024 硬上限。攻速 1024 已够用,不动。 */
+    private static void raiseAttributeCaps() {
+        double cap = 1_000_000.0; // 上限抬到一百万,远超玩法需求
+        raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH, cap);
+        raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE, cap);
+        raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ARMOR, cap);
+        raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ARMOR_TOUGHNESS, cap);
+        LOGGER.info("[亡途荒夜] 已抬高属性上限(原版默认夹在 1024)");
     }
 }
