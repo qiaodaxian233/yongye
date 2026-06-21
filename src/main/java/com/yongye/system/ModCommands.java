@@ -1,6 +1,8 @@
 package com.yongye.system;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.yongye.Yongye;
 import com.yongye.item.ArtifactItem;
@@ -189,6 +191,59 @@ public final class ModCommands {
                             ctx.getSource().sendFeedback(() -> Text.literal("已获得【磐盾】").formatted(Formatting.GOLD), false);
                             return 1;
                         }))
+
+                        // 掉落率实时热调(改完下一只怪即生效,并写盘持久化)
+                        .then(CommandManager.literal("loot")
+                                .then(CommandManager.literal("show").executes(ctx -> {
+                                    com.yongye.YongyeConfig c = com.yongye.YongyeConfig.get();
+                                    ctx.getSource().sendFeedback(() -> Text.literal(
+                                            "掉落配置  随机掉落=" + c.enableRandomLoot
+                                            + "  碎片=" + c.lifeShardDropChance
+                                            + "  结晶(普通)=" + c.lifeCrystalDropChance
+                                            + "  核心(精英)=" + c.lifeCoreDropChance
+                                            + "  血核(精英)=" + c.bloodCoreDropChanceElite).formatted(Formatting.AQUA), false);
+                                    return 1;
+                                }))
+                                .then(CommandManager.literal("shard")
+                                        .then(CommandManager.argument("v", DoubleArgumentType.doubleArg(0.0, 1.0)).executes(ctx -> {
+                                            double v = DoubleArgumentType.getDouble(ctx, "v");
+                                            com.yongye.YongyeConfig.get().lifeShardDropChance = v;
+                                            com.yongye.YongyeConfig.save();
+                                            ctx.getSource().sendFeedback(() -> Text.literal("生命碎片掉率=" + v + "(普通怪;已即时生效并保存)").formatted(Formatting.GREEN), false);
+                                            return 1;
+                                        })))
+                                .then(CommandManager.literal("crystal")
+                                        .then(CommandManager.argument("v", DoubleArgumentType.doubleArg(0.0, 1.0)).executes(ctx -> {
+                                            double v = DoubleArgumentType.getDouble(ctx, "v");
+                                            com.yongye.YongyeConfig.get().lifeCrystalDropChance = v;
+                                            com.yongye.YongyeConfig.save();
+                                            ctx.getSource().sendFeedback(() -> Text.literal("生命结晶掉率=" + v + "(普通怪;精英自动翻倍;已生效并保存)").formatted(Formatting.GREEN), false);
+                                            return 1;
+                                        })))
+                                .then(CommandManager.literal("core")
+                                        .then(CommandManager.argument("v", DoubleArgumentType.doubleArg(0.0, 1.0)).executes(ctx -> {
+                                            double v = DoubleArgumentType.getDouble(ctx, "v");
+                                            com.yongye.YongyeConfig.get().lifeCoreDropChance = v;
+                                            com.yongye.YongyeConfig.save();
+                                            ctx.getSource().sendFeedback(() -> Text.literal("生命核心掉率=" + v + "(仅精英;已生效并保存)").formatted(Formatting.GREEN), false);
+                                            return 1;
+                                        })))
+                                .then(CommandManager.literal("bloodcore")
+                                        .then(CommandManager.argument("v", DoubleArgumentType.doubleArg(0.0, 1.0)).executes(ctx -> {
+                                            double v = DoubleArgumentType.getDouble(ctx, "v");
+                                            com.yongye.YongyeConfig.get().bloodCoreDropChanceElite = v;
+                                            com.yongye.YongyeConfig.save();
+                                            ctx.getSource().sendFeedback(() -> Text.literal("灾厄血核掉率=" + v + "(仅精英;已生效并保存)").formatted(Formatting.GREEN), false);
+                                            return 1;
+                                        })))
+                                .then(CommandManager.literal("enable")
+                                        .then(CommandManager.argument("v", BoolArgumentType.bool()).executes(ctx -> {
+                                            boolean v = BoolArgumentType.getBool(ctx, "v");
+                                            com.yongye.YongyeConfig.get().enableRandomLoot = v;
+                                            com.yongye.YongyeConfig.save();
+                                            ctx.getSource().sendFeedback(() -> Text.literal("随机掉落系统=" + v + "(已生效并保存)").formatted(Formatting.GREEN), false);
+                                            return 1;
+                                        }))))
 
                         .then(CommandManager.literal("enhance")
                                 .then(CommandManager.argument("level", IntegerArgumentType.integer(0)).executes(ctx -> {
