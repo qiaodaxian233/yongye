@@ -113,6 +113,15 @@ public class YongyeClient implements ClientModInitializer {
             }
         });
 
+        // 职业大招按键(默认 X)→ 发包施放本命职业主动技能
+        KeyBinding ultimateKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.yongye.ultimate", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_X, "key.categories.yongye"));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (ultimateKey.wasPressed()) {
+                if (client.player != null) ClientPlayNetworking.send(new com.yongye.network.ClassUltimatePayload());
+            }
+        });
+
         Yongye.LOGGER.info("[亡途荒夜] 客户端:精英皮肤 + 成长面板 + 装备介绍 + 技能按键已注册");
     }
 }

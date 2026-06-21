@@ -277,8 +277,8 @@ public class YongyeConfig {
     public double assassinDodgeChance = 0.20;
     public int assassinUncombatTicks = 100;           // 脱战多少 tick 后获得加速
     public int assassinSprintAmplifier = 1;
-    public double assassinCritChance = 0.25;          // 刺客职业暴击概率(持影刺再+15%)
-    public double assassinCritBonusFraction = 0.6;    // 暴击追加伤害 = 攻击力 × 此值
+    public double assassinCritChance = 0.20;          // 刺客职业暴击概率(持影刺再+15%)
+    public double assassinCritBonusFraction = 0.5;    // 暴击追加伤害 = 攻击力 × 此值
     // 术士
     public double warlockAoeHpCost = 6.0;             // 潜行攻击消耗的生命
     public double warlockAoeRadius = 4.0;
@@ -297,6 +297,28 @@ public class YongyeConfig {
     // ===== 开局选职(m43)=====
     public boolean enableStartingClassSelect = true;   // 新玩家出生弹出选职界面
     public boolean startingClassGiveWeapon = false;    // 选职是否附赠该职业专属武器(默认关,保持高难度)
+
+    // ===== 职业大招(m47,主动技能,默认 X 键)=====
+    public boolean enableClassUltimate = true;
+    public long ultimateCooldownTicks = 600;          // 大招冷却(默认30秒)
+    // 战士 旋风斩
+    public double ultWarriorRadius = 5.0;
+    public double ultWarriorDamage = 12.0;
+    // 坦克 不动如山
+    public int ultTankDurationTicks = 200;
+    public double ultTankRadius = 12.0;
+    // 刺客 影遁
+    public int ultAssassinDurationTicks = 120;
+    // 术士 灭世
+    public double ultWarlockHpCost = 6.0;
+    public double ultWarlockRadius = 6.0;
+    public double ultWarlockDamage = 16.0;
+    // 武僧 百裂拳
+    public double ultMonkRadius = 4.0;
+    public double ultMonkDamage = 8.0;
+    // 剑客 万剑归一
+    public double ultSwordsmanRange = 6.0;
+    public double ultSwordsmanDamage = 14.0;
 
     // ===== 时间进度系统 =====
     public boolean enableProgression = true;
