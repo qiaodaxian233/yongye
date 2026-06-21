@@ -8,6 +8,7 @@ import com.yongye.registry.ModAttachments;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -56,6 +57,19 @@ public final class ClassSkillHandler {
     }
 
     public static void register() {
+        // 武僧:挖掘/破坏方块也额外损耗 1 点耐久(与攻击磨损一起 = 武器耐久×2 全用途;纯事件不依赖 mixin)
+        PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
+            if (world.isClient || !(player instanceof ServerPlayerEntity p)) return;
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.monkWeaponDurabilityPenalty || !ClassManager.isActive(p, PlayerClass.MONK)) return;
+            ItemStack main = p.getMainHandStack();
+            if (!main.isEmpty() && main.isDamageable()
+                    && !ClassWeaponItem.held(p, PlayerClass.MONK)
+                    && main.getDamage() < main.getMaxDamage()) {
+                main.setDamage(main.getDamage() + 1);
+            }
+        });
+
         // ===== 近战命中触发 =====
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (world.isClient || hand != Hand.MAIN_HAND) return ActionResult.PASS;

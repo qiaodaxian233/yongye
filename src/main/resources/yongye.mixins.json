@@ -4,7 +4,8 @@
   "package": "com.yongye.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "MiningSpeedMixin"
+    "MiningSpeedMixin",
+    "TankDefenseMixin"
   ],
   "client": [
     "client.HudCompactMixin"
