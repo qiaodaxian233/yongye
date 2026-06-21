@@ -41,6 +41,16 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.system.ClassUltimateManager.use(p));
         });
+        // 天赋界面:S2C 同步状态 + C2S 加点请求
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.TalentSyncPayload.ID, com.yongye.network.TalentSyncPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.TalentLearnPayload.ID, com.yongye.network.TalentLearnPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.TalentLearnPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> {
+                com.yongye.system.TalentManager.learn(p, payload.nodeId());
+                sendTalents(p); // 加点后立即回传最新状态,界面即时刷新
+            });
+        });
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ChooseClassPayload.ID, (payload, context) -> {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> {
@@ -61,6 +71,16 @@ public final class YongyeNet {
         });
         // 登录即推送一次,保证面板有数据
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sendStats(handler.player));
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sendTalents(handler.player));
+    }
+
+    /** 同步玩家天赋状态(点数 + 已习得职业 + 各节点等级)到客户端,供天赋界面渲染。 */
+    public static void sendTalents(ServerPlayerEntity player) {
+        int points = player.getAttachedOrElse(ModAttachments.TALENT_POINTS, 0);
+        java.util.List<String> classes = com.yongye.system.ClassManager.learnedList(player);
+        Map<String, Integer> learned = player.getAttachedOrElse(ModAttachments.TALENTS, Map.of());
+        ServerPlayNetworking.send(player, new com.yongye.network.TalentSyncPayload(
+                points, new java.util.ArrayList<>(classes), new java.util.HashMap<>(learned)));
     }
 
     public static void sendStats(ServerPlayerEntity player) {

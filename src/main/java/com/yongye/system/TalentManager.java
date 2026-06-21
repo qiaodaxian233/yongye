@@ -66,6 +66,18 @@ public final class TalentManager {
 
     private static final Map<PlayerClass, List<Node>> TREES = buildTrees();
 
+    /** 供天赋界面渲染用的只读节点视图(TalentManager 是通用代码,客户端可直接调用)。 */
+    public record NodeView(String id, String cn, String desc, int maxRank, String prereq, boolean isSkill) {}
+
+    /** 取某职业的天赋树(展示用)。 */
+    public static List<NodeView> treeView(PlayerClass c) {
+        List<NodeView> out = new java.util.ArrayList<>();
+        for (Node n : TREES.getOrDefault(c, List.of())) {
+            out.add(new NodeView(n.id(), n.cn(), n.desc(), n.maxRank(), n.prereq(), n.buff() != null));
+        }
+        return out;
+    }
+
     private static Map<PlayerClass, List<Node>> buildTrees() {
         Map<PlayerClass, List<Node>> m = new LinkedHashMap<>();
         m.put(PlayerClass.TANK, List.of(
@@ -154,7 +166,8 @@ public final class TalentManager {
         if (gain > 0) {
             int pts = p.getAttachedOrElse(ModAttachments.TALENT_POINTS, 0) + gain;
             p.setAttached(ModAttachments.TALENT_POINTS, pts);
-            msg(p, "获得 " + gain + " 天赋点(共 " + pts + ")  输入 /talent 加点", Formatting.AQUA);
+            msg(p, "获得 " + gain + " 天赋点(共 " + pts + ")  打开背包点【天赋】或 /talent 加点", Formatting.AQUA);
+            com.yongye.network.YongyeNet.sendTalents(p); // 同步给客户端天赋界面
         }
     }
 

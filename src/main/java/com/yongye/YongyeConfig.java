@@ -212,6 +212,7 @@ public class YongyeConfig {
     public double lifeCrystalDropChance = 0.20;  // 生命结晶:普通怪 20%(精英翻倍)
     public double lifeCoreDropChance = 0.50;     // 生命核心:仅精英(普通怪绝不掉)
     public double bloodCoreDropChanceElite = 0.10; // 灾厄血核:仅精英,小概率
+    public double classWeaponDropChanceElite = 0.04; // 精英掉落职业专属武器(随机职业)的几率
     /** 仅当怪物被玩家击杀才触发随机掉落 */
     public boolean lootRequirePlayerKill = true;
 

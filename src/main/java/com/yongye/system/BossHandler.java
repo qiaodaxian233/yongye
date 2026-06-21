@@ -97,6 +97,11 @@ public final class BossHandler {
         dropMany(world, boss, scale(2, m), rr -> new ItemStack(Items.NETHERITE_INGOT));
         dropMany(world, boss, scale(2, m), rr -> new ItemStack(Items.ENCHANTED_GOLDEN_APPLE));
         dropMany(world, boss, scale(1, m), rr -> new ItemStack(Items.TOTEM_OF_UNDYING));
+        // Boss 掉落随机职业专属武器(EPIC):默认 1 把,随 Boss 倍率放大
+        dropMany(world, boss, scale(1, m), rr -> {
+            com.yongye.item.PlayerClass[] cls = com.yongye.item.PlayerClass.values();
+            return new ItemStack(ModItems.getClassWeapon(cls[rr.nextInt(cls.length)]));
+        });
         // 小概率掉落终极材料
         if (r.nextDouble() < 0.25 * m) {
             drop(world, boss, new ItemStack(ModItems.ENDING_ESSENCE));

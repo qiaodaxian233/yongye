@@ -118,6 +118,11 @@ public final class LootHandler {
                     com.yongye.item.PlayerClass[] cls = com.yongye.item.PlayerClass.values();
                     drop(world, entity, new ItemStack(ModItems.getClassBook(cls[r.nextInt(cls.length)])));
                 }
+                // 精英小概率掉落职业专属武器(随机职业,EPIC)
+                if (r.nextDouble() < cfg.classWeaponDropChanceElite) {
+                    com.yongye.item.PlayerClass[] cls = com.yongye.item.PlayerClass.values();
+                    drop(world, entity, new ItemStack(ModItems.getClassWeapon(cls[r.nextInt(cls.length)])));
+                }
             } else {
                 // 普通怪:按品质表单选
                 double roll = r.nextDouble();

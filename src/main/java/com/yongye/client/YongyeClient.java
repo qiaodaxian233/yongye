@@ -47,6 +47,10 @@ public class YongyeClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(StatsPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.update(payload.health(), payload.levels(), payload.className())));
 
+        // 接收服务端天赋状态(供天赋界面渲染)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.TalentSyncPayload.ID, (payload, context) ->
+                context.client().execute(() -> ClientTalents.update(payload.points(), payload.classes(), payload.learned())));
+
         // 开局选职:收到 S2C 后置位,待进入世界且无其它界面时再弹出(避免被登录过场覆盖)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenClassSelectPayload.ID, (payload, context) ->
                 context.client().execute(() -> pendingClassSelect = true));
@@ -77,6 +81,10 @@ public class YongyeClient implements ClientModInitializer {
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("饰品"),
                         b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload()))
                         .dimensions(bx, by - 18, 44, 16).build());
+                // 「天赋」按钮:打开天赋界面
+                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("天赋"),
+                        b -> client.setScreen(new TalentScreen(screen)))
+                        .dimensions(bx + 46, by - 18, 44, 16).build());
                 // 当前本命职业显示(点开成长面板)
                 com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
