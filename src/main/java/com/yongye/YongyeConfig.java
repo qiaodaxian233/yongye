@@ -290,6 +290,10 @@ public class YongyeConfig {
     public double swordsmanWaveDamage = 5.0;
     public double swordsmanParryReflect = 6.0;
 
+    // ===== 开局选职(m43)=====
+    public boolean enableStartingClassSelect = true;   // 新玩家出生弹出选职界面
+    public boolean startingClassGiveWeapon = false;    // 选职是否附赠该职业专属武器(默认关,保持高难度)
+
     // ===== 时间进度系统 =====
     public boolean enableProgression = true;
     public boolean firstDayLong = true;          // 第一天白天放慢

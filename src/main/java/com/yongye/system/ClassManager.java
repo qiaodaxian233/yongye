@@ -63,14 +63,34 @@ public final class ClassManager {
         return new ArrayList<>(p.getAttachedOrElse(ModAttachments.LEARNED_CLASSES, List.of()));
     }
 
-    /** 纯查询:该职业是否已习得且当前等级达标(无副作用,供技能系统判定)。 */
+    /** 纯查询:该职业是否已习得且当前生效(无副作用,供技能系统判定)。
+     *  第一(本命)职业 0 级即生效;第二职业需达到 classLevel2。 */
     public static boolean isActive(ServerPlayerEntity p, PlayerClass c) {
         List<String> learned = learnedList(p);
         int idx = learned.indexOf(c.id);
         if (idx < 0) return false;
-        YongyeConfig cfg = YongyeConfig.get();
-        int need = idx == 0 ? cfg.classLevel1 : cfg.classLevel2;
-        return p.experienceLevel >= need;
+        if (idx == 0) return true;
+        return p.experienceLevel >= YongyeConfig.get().classLevel2;
+    }
+
+    /** 开局选职:把所选职业作为第一(本命)职业授予,出生即生效;可选附赠专属武器。
+     *  已选过 / 已有职业则不再授予(防重复与防刷)。 */
+    public static boolean chooseStartingClass(ServerPlayerEntity p, PlayerClass c) {
+        if (p.getAttachedOrElse(ModAttachments.STARTING_CLASS_CHOSEN, false)) return false;
+        List<String> learned = learnedList(p);
+        if (!learned.isEmpty()) {           // 老玩家已有职业:只补标记,不再弹窗
+            p.setAttached(ModAttachments.STARTING_CLASS_CHOSEN, true);
+            return false;
+        }
+        learned.add(c.id);
+        p.setAttached(ModAttachments.LEARNED_CLASSES, learned);
+        p.setAttached(ModAttachments.STARTING_CLASS_CHOSEN, true);
+        applyClasses(p);
+        if (YongyeConfig.get().startingClassGiveWeapon) {
+            p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getClassWeapon(c)));
+        }
+        p.sendMessage(Text.literal("你选择了本命职业【" + c.cn + "】,出生即生效!").formatted(Formatting.GOLD), false);
+        return true;
     }
 
     public static boolean learn(ServerPlayerEntity p, PlayerClass type) {
@@ -101,15 +121,11 @@ public final class ClassManager {
         List<String> learned = learnedList(p);
         int lvl = p.experienceLevel;
         boolean changed = false;
+        // 本命职业(index 0)永久;仅第二职业在等级跌破 classLevel2 时失去
         while (learned.size() >= 2 && lvl < cfg.classLevel2) {
             PlayerClass lost = PlayerClass.byId(learned.remove(learned.size() - 1));
             changed = true;
-            p.sendMessage(Text.literal("等级跌破 " + cfg.classLevel2 + ",失去职业【" + (lost != null ? lost.cn : "?") + "】").formatted(Formatting.DARK_RED), false);
-        }
-        while (!learned.isEmpty() && lvl < cfg.classLevel1) {
-            PlayerClass lost = PlayerClass.byId(learned.remove(learned.size() - 1));
-            changed = true;
-            p.sendMessage(Text.literal("等级跌破 " + cfg.classLevel1 + ",失去职业【" + (lost != null ? lost.cn : "?") + "】").formatted(Formatting.DARK_RED), false);
+            p.sendMessage(Text.literal("等级跌破 " + cfg.classLevel2 + ",失去第二职业【" + (lost != null ? lost.cn : "?") + "】").formatted(Formatting.DARK_RED), false);
         }
         if (changed) p.setAttached(ModAttachments.LEARNED_CLASSES, learned);
         List<PlayerClass> active = new ArrayList<>();

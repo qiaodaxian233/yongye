@@ -136,6 +136,14 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "talents"));
 
+    /** STARTING_CLASS_CHOSEN: 是否已完成开局选职(死亡保留,避免重复弹窗)。 */
+    public static final AttachmentType<Boolean> STARTING_CLASS_CHOSEN =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "starting_class_chosen"));
+
     public static void init() {
         Yongye.LOGGER.info("[亡途荒夜] 数据附着已注册");
     }

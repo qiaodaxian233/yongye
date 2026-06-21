@@ -34,6 +34,8 @@ import org.lwjgl.glfw.GLFW;
 @Environment(EnvType.CLIENT)
 public class YongyeClient implements ClientModInitializer {
 
+    private static boolean pendingClassSelect = false;
+
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public void onInitializeClient() {
@@ -44,6 +46,16 @@ public class YongyeClient implements ClientModInitializer {
         // 接收服务端成长数据
         ClientPlayNetworking.registerGlobalReceiver(StatsPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.update(payload.health(), payload.levels())));
+
+        // 开局选职:收到 S2C 后置位,待进入世界且无其它界面时再弹出(避免被登录过场覆盖)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenClassSelectPayload.ID, (payload, context) ->
+                context.client().execute(() -> pendingClassSelect = true));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (pendingClassSelect && client.player != null && client.currentScreen == null) {
+                pendingClassSelect = false;
+                client.setScreen(new ClassSelectScreen());
+            }
+        });
 
         // 背包界面加「成长」按钮 → 打开成长面板
         ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {

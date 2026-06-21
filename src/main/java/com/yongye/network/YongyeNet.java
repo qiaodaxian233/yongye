@@ -32,6 +32,27 @@ public final class YongyeNet {
                             syncId, playerInv, com.yongye.system.AccessoryStorage.load(pl)),
                     net.minecraft.text.Text.literal("饰品栏"))));
         });
+        // 开局选职
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.OpenClassSelectPayload.ID, com.yongye.network.OpenClassSelectPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.ChooseClassPayload.ID, com.yongye.network.ChooseClassPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ChooseClassPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> {
+                com.yongye.item.PlayerClass c = com.yongye.item.PlayerClass.byId(payload.classId());
+                if (c != null) com.yongye.system.ClassManager.chooseStartingClass(p, c);
+            });
+        });
+        // 登录:未选过本命职业则弹出选职界面;老玩家(已有职业)只补标记
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayerEntity pl = handler.player;
+            if (!com.yongye.YongyeConfig.get().enableStartingClassSelect) return;
+            if (pl.getAttachedOrElse(ModAttachments.STARTING_CLASS_CHOSEN, false)) return;
+            if (!com.yongye.system.ClassManager.learnedList(pl).isEmpty()) {
+                pl.setAttached(ModAttachments.STARTING_CLASS_CHOSEN, true);
+                return;
+            }
+            ServerPlayNetworking.send(pl, new com.yongye.network.OpenClassSelectPayload());
+        });
         // 登录即推送一次,保证面板有数据
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sendStats(handler.player));
     }
