@@ -70,5 +70,11 @@
   "item.yongye.class_book_monk": "Class Book: Monk",
   "item.yongye.class_book.monk.desc": "Monk class",
   "item.yongye.class_book_assassin": "Class Book: Assassin",
-  "item.yongye.class_book.assassin.desc": "Assassin class"
+  "item.yongye.class_book.assassin.desc": "Assassin class",
+  "item.yongye.class_weapon_warrior": "Class Weapon: Juque Greatblade",
+  "item.yongye.class_weapon_tank": "Class Weapon: Soulwarden Maul",
+  "item.yongye.class_weapon_assassin": "Class Weapon: Shadowfang",
+  "item.yongye.class_weapon_warlock": "Class Weapon: Souldevourer Staff",
+  "item.yongye.class_weapon_monk": "Class Weapon: Onifist Gauntlet",
+  "item.yongye.class_weapon_swordsman": "Class Weapon: Glimmerblade"
 }

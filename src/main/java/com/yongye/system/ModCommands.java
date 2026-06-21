@@ -169,6 +169,20 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        .then(CommandManager.literal("classweapon")
+                                .then(CommandManager.argument("type", StringArgumentType.word()).executes(ctx -> {
+                                    ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                    String tid = StringArgumentType.getString(ctx, "type");
+                                    com.yongye.item.PlayerClass cls = com.yongye.item.PlayerClass.byId(tid);
+                                    if (cls == null) {
+                                        ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin)"));
+                                        return 0;
+                                    }
+                                    p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getClassWeapon(cls)));
+                                    ctx.getSource().sendFeedback(() -> Text.literal("已获得【" + cls.cn + "专属武器】").formatted(Formatting.GOLD), false);
+                                    return 1;
+                                })))
+
                         .then(CommandManager.literal("enhance")
                                 .then(CommandManager.argument("level", IntegerArgumentType.integer(0)).executes(ctx -> {
                                     ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();

@@ -5,6 +5,7 @@ import com.yongye.item.ArtifactItem;
 import com.yongye.item.ChaosBladeItem;
 import com.yongye.item.ArtifactType;
 import com.yongye.item.ClassBookItem;
+import com.yongye.item.ClassWeaponItem;
 import com.yongye.item.PlayerClass;
 import com.yongye.item.HealthSkillBookItem;
 import com.yongye.item.SkillBookItem;
@@ -95,6 +96,24 @@ public final class ModItems {
 
     public static Map<SkillType, Item> skillBooks() {
         return SKILL_BOOKS;
+    }
+
+    // —— 职业专属武器(m42:精英/Boss 稀有掉落或创造获取)——
+    private static final Map<PlayerClass, Item> CLASS_WEAPONS = new EnumMap<>(PlayerClass.class);
+    static {
+        for (PlayerClass c : PlayerClass.values()) {
+            CLASS_WEAPONS.put(c, register("class_weapon_" + c.id,
+                    new ClassWeaponItem(c, new Item.Settings()
+                            .maxDamage(2000)
+                            .rarity(Rarity.EPIC)
+                            .attributeModifiers(ClassWeaponItem.baseAttributes(c)))));
+        }
+    }
+    public static Item getClassWeapon(PlayerClass c) {
+        return CLASS_WEAPONS.get(c);
+    }
+    public static Map<PlayerClass, Item> classWeapons() {
+        return CLASS_WEAPONS;
     }
 
     private static Item register(String name, Item item) {

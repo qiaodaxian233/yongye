@@ -34,6 +34,10 @@ public final class ModItemGroups {
             for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
                 entries.add(ModItems.getClassBook(c));
             }
+            // 职业专属武器
+            for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
+                entries.add(ModItems.getClassWeapon(c));
+            }
             entries.add(HealthSkillBookItem.create(1));
             entries.add(HealthSkillBookItem.create(5));
             entries.add(HealthSkillBookItem.create(10));

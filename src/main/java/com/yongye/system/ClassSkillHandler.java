@@ -3,6 +3,7 @@ package com.yongye.system;
 import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import com.yongye.item.PlayerClass;
+import com.yongye.item.ClassWeaponItem;
 import com.yongye.registry.ModAttachments;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -70,11 +71,13 @@ public final class ClassSkillHandler {
 
             // 战士:吸血 + 斩杀
             if (charged && ClassManager.isActive(p, PlayerClass.WARRIOR)) {
+                boolean wep = ClassWeaponItem.held(p, PlayerClass.WARRIOR);
                 double atk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-                float heal = (float) (atk * Math.max(0.0, cfg.warriorLifestealFraction));
+                float heal = (float) (atk * Math.max(0.0, cfg.warriorLifestealFraction) * (wep ? 2.0 : 1.0));
                 if (heal > 0) p.heal(heal);
+                double thr = wep ? Math.max(cfg.warriorExecuteThreshold, 0.35) : cfg.warriorExecuteThreshold;
                 if (!(target instanceof PlayerEntity) && !isBossLike(target)
-                        && target.getHealth() / target.getMaxHealth() <= cfg.warriorExecuteThreshold) {
+                        && target.getHealth() / target.getMaxHealth() <= thr) {
                     float exec = (float) (target.getMaxHealth() * Math.max(0.0, cfg.warriorExecuteBonusFraction));
                     bonusHit(target, atkSrc, exec, world);
                     feedback(world, target, ParticleTypes.DAMAGE_INDICATOR, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 1.4f);
@@ -89,14 +92,16 @@ public final class ClassSkillHandler {
                 if (fh > 1e-4 && th > 1e-4) {
                     double dot = (face.x * toAtk.x + face.z * toAtk.z) / (fh * th);
                     if (dot < -0.2) {
-                        bonusHit(target, atkSrc, (float) cfg.assassinBackstabBonus, world);
+                        double mult = ClassWeaponItem.held(p, PlayerClass.ASSASSIN) ? 2.0 : 1.0;
+                        bonusHit(target, atkSrc, (float) (cfg.assassinBackstabBonus * mult), world);
                         feedback(world, target, ParticleTypes.CRIT, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 1.5f);
                     }
                 }
             }
 
-            // 武僧:空手连击(连续命中同一目标叠加伤害)+ 缴械
-            if (charged && empty && ClassManager.isActive(p, PlayerClass.MONK)) {
+            // 武僧:空手连击(连续命中同一目标叠加伤害)+ 缴械;手持鬼神拳套视为空手且更狠
+            boolean monkWep = ClassWeaponItem.held(p, PlayerClass.MONK);
+            if (charged && (empty || monkWep) && ClassManager.isActive(p, PlayerClass.MONK)) {
                 long now = world.getTime();
                 UUID u = p.getUuid();
                 int cnt = (comboTarget.getOrDefault(u, -1) == target.getId()
@@ -104,9 +109,11 @@ public final class ClassSkillHandler {
                 comboCount.put(u, cnt);
                 comboTarget.put(u, target.getId());
                 comboUntil.put(u, now + cfg.monkComboWindowTicks);
-                int stacks = Math.min(cnt - 1, cfg.monkComboMaxStacks);
+                int maxStacks = cfg.monkComboMaxStacks + (monkWep ? 3 : 0);
+                int stacks = Math.min(cnt - 1, maxStacks);
                 if (stacks > 0) {
-                    bonusHit(target, atkSrc, (float) (stacks * cfg.monkComboBonusPerHit), world);
+                    double per = cfg.monkComboBonusPerHit * (monkWep ? 1.5 : 1.0);
+                    bonusHit(target, atkSrc, (float) (stacks * per), world);
                     feedback(world, target, ParticleTypes.SWEEP_ATTACK, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, 1.0f + 0.05f * stacks);
                 }
                 if (target instanceof HostileEntity && !target.getMainHandStack().isEmpty()
@@ -118,30 +125,37 @@ public final class ClassSkillHandler {
                 }
             }
 
-            // 术士:潜行近战 → 牺牲生命,范围魔法伤害
+            // 术士:潜行近战 → 牺牲生命,范围魔法伤害;手持噬魂杖更强更省血
             if (charged && p.isSneaking() && ClassManager.isActive(p, PlayerClass.WARLOCK)) {
-                if (p.getHealth() > cfg.warlockAoeHpCost + 1.0f) {
-                    p.setHealth(Math.max(1.0f, p.getHealth() - (float) cfg.warlockAoeHpCost));
+                boolean wep = ClassWeaponItem.held(p, PlayerClass.WARLOCK);
+                double cost = Math.max(0.0, cfg.warlockAoeHpCost - (wep ? 2.0 : 0.0));
+                if (p.getHealth() > cost + 1.0f) {
+                    if (cost > 0) p.setHealth(Math.max(1.0f, p.getHealth() - (float) cost));
                     DamageSource magic = world.getDamageSources().magic();
-                    Box area = target.getBoundingBox().expand(cfg.warlockAoeRadius);
+                    double radius = cfg.warlockAoeRadius + (wep ? 2.0 : 0.0);
+                    float dmg = (float) (cfg.warlockAoeDamage * (wep ? 1.5 : 1.0));
+                    Box area = target.getBoundingBox().expand(radius);
                     for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, area,
                             e -> e.isAlive() && e != p && !(e instanceof PlayerEntity))) {
-                        le.damage(magic, (float) cfg.warlockAoeDamage);
+                        le.damage(magic, dmg);
                         le.timeUntilRegen = 0;
                     }
                     feedback(world, target, ParticleTypes.SOUL_FIRE_FLAME, SoundEvents.ENTITY_WITHER_SHOOT, 1.0f);
                 }
             }
 
-            // 剑客:持剑命中 → 前方剑气波
-            if (charged && ClassManager.isActive(p, PlayerClass.SWORDSMAN) && EquipmentEnhancer.isWeapon(p.getMainHandStack())) {
+            // 剑客:持剑命中 → 前方剑气波;专属武器流光也触发,且更广更痛
+            boolean swWep = ClassWeaponItem.held(p, PlayerClass.SWORDSMAN);
+            if (charged && ClassManager.isActive(p, PlayerClass.SWORDSMAN)
+                    && (swWep || EquipmentEnhancer.isWeapon(p.getMainHandStack()))) {
                 DamageSource src = world.getDamageSources().playerAttack(p);
                 Vec3d dir = p.getRotationVector();
-                Box wave = p.getBoundingBox().expand(cfg.swordsmanWaveRange)
-                        .offset(dir.x * cfg.swordsmanWaveRange, 0, dir.z * cfg.swordsmanWaveRange);
+                double range = cfg.swordsmanWaveRange + (swWep ? 2.0 : 0.0);
+                float dmg = (float) (cfg.swordsmanWaveDamage * (swWep ? 1.5 : 1.0));
+                Box wave = p.getBoundingBox().expand(range).offset(dir.x * range, 0, dir.z * range);
                 for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, wave,
                         e -> e.isAlive() && e != p && e != target && !(e instanceof PlayerEntity))) {
-                    le.damage(src, (float) cfg.swordsmanWaveDamage);
+                    le.damage(src, dmg);
                     le.timeUntilRegen = 0;
                 }
                 if (world instanceof ServerWorld sw) {
@@ -166,7 +180,8 @@ public final class ClassSkillHandler {
             if (p.isBlocking() && ClassManager.isActive(p, PlayerClass.SWORDSMAN)
                     && source.getAttacker() instanceof LivingEntity attacker
                     && attacker.distanceTo(p) <= 5.0) {
-                attacker.damage(p.getWorld().getDamageSources().playerAttack(p), (float) cfg.swordsmanParryReflect);
+                double rmult = ClassWeaponItem.held(p, PlayerClass.SWORDSMAN) ? 1.5 : 1.0;
+                attacker.damage(p.getWorld().getDamageSources().playerAttack(p), (float) (cfg.swordsmanParryReflect * rmult));
                 attacker.timeUntilRegen = 0;
                 if (p.getWorld() instanceof ServerWorld sw) {
                     sw.playSound(null, p.getX(), p.getY(), p.getZ(),
@@ -176,8 +191,9 @@ public final class ClassSkillHandler {
                 return false;
             }
 
-            // 刺客:概率闪避(完全免疫这次伤害)
-            if (ClassManager.isActive(p, PlayerClass.ASSASSIN) && p.getRandom().nextDouble() < cfg.assassinDodgeChance) {
+            // 刺客:概率闪避(完全免疫这次伤害);手持影刺几率更高
+            double dodge = cfg.assassinDodgeChance + (ClassWeaponItem.held(p, PlayerClass.ASSASSIN) ? 0.12 : 0.0);
+            if (ClassManager.isActive(p, PlayerClass.ASSASSIN) && p.getRandom().nextDouble() < dodge) {
                 if (p.getWorld() instanceof ServerWorld sw) {
                     sw.spawnParticles(ParticleTypes.CLOUD, p.getX(), p.getBodyY(0.5), p.getZ(), 8, 0.3, 0.3, 0.3, 0.02);
                     sw.playSound(null, p.getX(), p.getY(), p.getZ(),
@@ -195,14 +211,16 @@ public final class ClassSkillHandler {
             if (!cfg.enableClassSkills) return;
             boolean slow = server.getTicks() % Math.max(1, cfg.tankTauntIntervalTicks) == 0;
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                // 坦克护盾(吸收)每秒续命
+                // 坦克护盾(吸收)每秒续命;手持镇魂等级+1
                 if (server.getTicks() % 20 == 0 && ClassManager.isActive(p, PlayerClass.TANK)) {
+                    int amp = Math.max(0, cfg.tankShieldAmplifier) + (ClassWeaponItem.held(p, PlayerClass.TANK) ? 1 : 0);
                     p.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 60,
-                            Math.max(0, cfg.tankShieldAmplifier), true, false, false));
+                            amp, true, false, false));
                 }
-                // 坦克嘲讽:周期性把附近怪物的目标拉到自己身上
+                // 坦克嘲讽:周期性把附近怪物的目标拉到自己身上;手持镇魂半径×1.5
                 if (slow && ClassManager.isActive(p, PlayerClass.TANK) && p.getWorld() instanceof ServerWorld sw) {
-                    Box box = p.getBoundingBox().expand(cfg.tankTauntRadius);
+                    double r = cfg.tankTauntRadius * (ClassWeaponItem.held(p, PlayerClass.TANK) ? 1.5 : 1.0);
+                    Box box = p.getBoundingBox().expand(r);
                     for (HostileEntity mob : sw.getEntitiesByClass(HostileEntity.class, box,
                             e -> e.isAlive() && e.getTarget() != p)) {
                         mob.setTarget(p);

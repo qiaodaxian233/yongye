@@ -70,5 +70,11 @@
   "item.yongye.class_book_monk": "职业书·武僧",
   "item.yongye.class_book.monk.desc": "开局30血、护甲高、交互距离远、空手击杀叠加拳击伤害",
   "item.yongye.class_book_assassin": "职业书·刺客",
-  "item.yongye.class_book.assassin.desc": "移速高、暴击强、护甲低、夜视"
+  "item.yongye.class_book.assassin.desc": "移速高、暴击强、护甲低、夜视",
+  "item.yongye.class_weapon_warrior": "职业武器·巨阙",
+  "item.yongye.class_weapon_tank": "职业武器·镇魂",
+  "item.yongye.class_weapon_assassin": "职业武器·影刺",
+  "item.yongye.class_weapon_warlock": "职业武器·噬魂杖",
+  "item.yongye.class_weapon_monk": "职业武器·鬼神拳套",
+  "item.yongye.class_weapon_swordsman": "职业武器·流光"
 }
