@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "MRM",
+    "RBR",
+    "MRM"
+  ],
+  "key": {
+    "R": "yongye:life_crystal",
+    "M": "yongye:life_shard",
+    "B": "minecraft:mace"
+  },
+  "result": {
+    "id": "yongye:class_weapon_tank",
+    "count": 1
+  }
+}
