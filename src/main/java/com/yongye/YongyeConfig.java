@@ -277,6 +277,8 @@ public class YongyeConfig {
     public double assassinDodgeChance = 0.20;
     public int assassinUncombatTicks = 100;           // 脱战多少 tick 后获得加速
     public int assassinSprintAmplifier = 1;
+    public double assassinCritChance = 0.25;          // 刺客职业暴击概率(持影刺再+15%)
+    public double assassinCritBonusFraction = 0.6;    // 暴击追加伤害 = 攻击力 × 此值
     // 术士
     public double warlockAoeHpCost = 6.0;             // 潜行攻击消耗的生命
     public double warlockAoeRadius = 4.0;
@@ -286,6 +288,7 @@ public class YongyeConfig {
     public double monkComboBonusPerHit = 1.0;
     public int monkComboMaxStacks = 5;
     public double monkDisarmChance = 0.15;
+    public boolean monkWeaponDurabilityPenalty = true; // 武僧持武器攻击额外耗耐久(等效×2)
     // 剑客
     public double swordsmanWaveRange = 4.0;
     public double swordsmanWaveDamage = 5.0;

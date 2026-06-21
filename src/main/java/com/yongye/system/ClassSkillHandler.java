@@ -99,6 +99,28 @@ public final class ClassSkillHandler {
                 }
             }
 
+            // 刺客:职业暴击(概率追加伤害,持影刺概率更高)——对应设定「更容易出现暴击」
+            if (charged && ClassManager.isActive(p, PlayerClass.ASSASSIN)) {
+                double cc = cfg.assassinCritChance + (ClassWeaponItem.held(p, PlayerClass.ASSASSIN) ? 0.15 : 0.0);
+                if (p.getRandom().nextDouble() < cc) {
+                    double atk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+                    float bonus = (float) (atk * Math.max(0.0, cfg.assassinCritBonusFraction));
+                    if (bonus > 0) {
+                        bonusHit(target, atkSrc, bonus, world);
+                        feedback(world, target, ParticleTypes.CRIT, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 1.3f);
+                    }
+                }
+            }
+
+            // 武僧:持(非拳套)武器攻击 → 额外损耗 1 点耐久(等效耐久×2,逼你用拳)——对应设定「武器耐久翻倍」
+            if (cfg.monkWeaponDurabilityPenalty && ClassManager.isActive(p, PlayerClass.MONK)
+                    && !empty && !ClassWeaponItem.held(p, PlayerClass.MONK)) {
+                ItemStack main = p.getMainHandStack();
+                if (main.isDamageable() && main.getDamage() < main.getMaxDamage()) {
+                    main.setDamage(main.getDamage() + 1);
+                }
+            }
+
             // 武僧:空手连击(连续命中同一目标叠加伤害)+ 缴械;手持鬼神拳套视为空手且更狠
             boolean monkWep = ClassWeaponItem.held(p, PlayerClass.MONK);
             if (charged && (empty || monkWep) && ClassManager.isActive(p, PlayerClass.MONK)) {
