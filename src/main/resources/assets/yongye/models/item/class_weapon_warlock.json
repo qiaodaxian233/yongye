@@ -1,3 +1,6 @@
 {
-  "parent": "minecraft:item/blaze_rod"
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "yongye:item/class_weapon_warlock"
+  }
 }
