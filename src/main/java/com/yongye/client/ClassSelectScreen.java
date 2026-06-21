@@ -17,7 +17,7 @@ import net.minecraft.util.Identifier;
  */
 public class ClassSelectScreen extends Screen {
 
-    private static final int CW = 96, CH = 132, GAP_X = 14, GAP_Y = 18, COLS = 3;
+    private static final int CW = 106, CH = 132, GAP_X = 12, GAP_Y = 18, COLS = 3;
     private final PlayerClass[] classes = PlayerClass.values();
 
     public ClassSelectScreen() {
