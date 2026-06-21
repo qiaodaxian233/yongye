@@ -259,7 +259,7 @@ public final class ClassSkillHandler {
 
     private static void feedback(net.minecraft.world.World world, LivingEntity target,
                                  net.minecraft.particle.ParticleEffect particle,
-                                 net.minecraft.registry.entry.RegistryEntry<net.minecraft.sound.SoundEvent> sound, float pitch) {
+                                 net.minecraft.sound.SoundEvent sound, float pitch) {
         if (world instanceof ServerWorld sw) {
             sw.spawnParticles(particle, target.getX(), target.getBodyY(0.6), target.getZ(), 10, 0.3, 0.3, 0.3, 0.3);
             sw.playSound(null, target.getX(), target.getY(), target.getZ(), sound, SoundCategory.PLAYERS, 0.8f, pitch);

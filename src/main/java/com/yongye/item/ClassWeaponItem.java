@@ -11,6 +11,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.Text;
+import net.minecraft.text.MutableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
@@ -106,7 +107,7 @@ public class ClassWeaponItem extends Item {
         tooltip.add(synergy(playerClass).formatted(Formatting.WHITE));
     }
 
-    private static Text flavor(PlayerClass c) {
+    private static MutableText flavor(PlayerClass c) {
         return Text.literal(switch (c) {
             case WARRIOR -> "巨阙 —— 重劈裂阵,愈战愈勇。";
             case TANK -> "镇魂 —— 以血肉筑墙,挡在众人之前。";
@@ -117,7 +118,7 @@ public class ClassWeaponItem extends Item {
         });
     }
 
-    private static Text synergy(PlayerClass c) {
+    private static MutableText synergy(PlayerClass c) {
         return Text.literal(switch (c) {
             case WARRIOR -> "  斩杀阈值提升、吸血翻倍";
             case TANK -> "  护盾+1级、嘲讽范围扩大";
