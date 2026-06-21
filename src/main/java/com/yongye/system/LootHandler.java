@@ -112,7 +112,7 @@ public final class LootHandler {
                 };
                 drop(world, entity, hi.get(r.nextInt(hi.size())).make(r));
                 if (r.nextDouble() < 0.25) drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL));
-                if (r.nextDouble() < 0.08) drop(world, entity, new ItemStack(ModItems.LIFE_CORE));
+                // (生命核心及血核改由下方统一规则按"仅精英"产出)
                 // 精英概率掉落职业书(随机职业)
                 if (r.nextDouble() < cfg.classBookDropChance) {
                     com.yongye.item.PlayerClass[] cls = com.yongye.item.PlayerClass.values();
@@ -138,15 +138,21 @@ public final class LootHandler {
                 }
             }
 
-            // 强化材料掉落:碎片(必掉)/ 结晶(常掉)/ 核心(稀有);精英结晶、核心翻倍
-            if (r.nextDouble() < cfg.lifeShardDropChance) {
-                drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, 1));
-            }
+            // 强化材料掉落(规则:生命核心及以上仅精英会爆,普通怪只出碎片/结晶)
+            // 普通怪:必爆 1 个生命碎片;精英:1~2 个
+            drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, elite ? 1 + r.nextInt(2) : 1));
+            // 生命结晶:普通怪 20%(精英翻倍)
             if (r.nextDouble() < cfg.lifeCrystalDropChance * (elite ? 2.0 : 1.0)) {
                 drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL, 1));
             }
-            if (r.nextDouble() < cfg.lifeCoreDropChance * (elite ? 2.0 : 1.0)) {
-                drop(world, entity, new ItemStack(ModItems.LIFE_CORE, 1));
+            // 生命核心 + 灾厄血核:仅精英
+            if (elite) {
+                if (r.nextDouble() < cfg.lifeCoreDropChance) {
+                    drop(world, entity, new ItemStack(ModItems.LIFE_CORE, 1));
+                }
+                if (r.nextDouble() < cfg.bloodCoreDropChanceElite) {
+                    drop(world, entity, new ItemStack(ModItems.CATASTROPHE_BLOOD_CORE, 1));
+                }
             }
         });
         Yongye.LOGGER.info("[亡途荒夜] 随机掉落系统已挂载");
