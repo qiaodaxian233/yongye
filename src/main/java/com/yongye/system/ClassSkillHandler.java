@@ -176,6 +176,15 @@ public final class ClassSkillHandler {
 
             lastCombat.put(p.getUuid(), p.getWorld().getTime());
 
+            // 坦克:持磐盾格挡被近战命中 → 反震(不否决,叠在原版格挡减伤之上)
+            if (p.isBlocking() && ClassManager.isActive(p, PlayerClass.TANK)
+                    && p.getOffHandStack().getItem() instanceof com.yongye.item.TankShieldItem
+                    && source.getAttacker() instanceof LivingEntity tankAtk
+                    && tankAtk.distanceTo(p) <= 5.0) {
+                tankAtk.damage(p.getWorld().getDamageSources().playerAttack(p), (float) cfg.tankShieldReflect);
+                tankAtk.timeUntilRegen = 0;
+            }
+
             // 剑客:举盾格挡时被近战命中 → 否决并反伤
             if (p.isBlocking() && ClassManager.isActive(p, PlayerClass.SWORDSMAN)
                     && source.getAttacker() instanceof LivingEntity attacker
@@ -211,9 +220,11 @@ public final class ClassSkillHandler {
             if (!cfg.enableClassSkills) return;
             boolean slow = server.getTicks() % Math.max(1, cfg.tankTauntIntervalTicks) == 0;
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                // 坦克护盾(吸收)每秒续命;手持镇魂等级+1
+                // 坦克护盾(吸收)每秒续命;手持镇魂 +1 级,副手磐盾再 +1 级
                 if (server.getTicks() % 20 == 0 && ClassManager.isActive(p, PlayerClass.TANK)) {
-                    int amp = Math.max(0, cfg.tankShieldAmplifier) + (ClassWeaponItem.held(p, PlayerClass.TANK) ? 1 : 0);
+                    int amp = Math.max(0, cfg.tankShieldAmplifier)
+                            + (ClassWeaponItem.held(p, PlayerClass.TANK) ? 1 : 0)
+                            + (p.getOffHandStack().getItem() instanceof com.yongye.item.TankShieldItem ? 1 : 0);
                     p.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 60,
                             amp, true, false, false));
                 }

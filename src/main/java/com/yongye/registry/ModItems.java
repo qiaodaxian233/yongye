@@ -6,6 +6,7 @@ import com.yongye.item.ChaosBladeItem;
 import com.yongye.item.ArtifactType;
 import com.yongye.item.ClassBookItem;
 import com.yongye.item.ClassWeaponItem;
+import com.yongye.item.TankShieldItem;
 import com.yongye.item.PlayerClass;
 import com.yongye.item.HealthSkillBookItem;
 import com.yongye.item.SkillBookItem;
@@ -115,6 +116,13 @@ public final class ModItems {
     public static Map<PlayerClass, Item> classWeapons() {
         return CLASS_WEAPONS;
     }
+
+    // —— 坦克专属盾·磐盾(m44)——
+    public static final Item TANK_SHIELD = register("tank_shield",
+            new TankShieldItem(new Item.Settings()
+                    .maxDamage(1500)
+                    .rarity(Rarity.EPIC)
+                    .attributeModifiers(TankShieldItem.offhandAttributes())));
 
     private static Item register(String name, Item item) {
         return Registry.register(Registries.ITEM, Identifier.of(Yongye.MOD_ID, name), item);

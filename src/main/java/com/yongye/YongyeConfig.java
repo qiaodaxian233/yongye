@@ -271,6 +271,7 @@ public class YongyeConfig {
     public double tankTauntRadius = 12.0;
     public int tankTauntIntervalTicks = 40;
     public int tankShieldAmplifier = 1;               // 吸收等级(0=吸收I=4心)
+    public double tankShieldReflect = 4.0;            // 持磐盾格挡时的反震伤害
     // 刺客
     public double assassinBackstabBonus = 4.0;
     public double assassinDodgeChance = 0.20;

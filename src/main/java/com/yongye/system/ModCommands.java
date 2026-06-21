@@ -183,6 +183,13 @@ public final class ModCommands {
                                     return 1;
                                 })))
 
+                        .then(CommandManager.literal("tankshield").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.TANK_SHIELD));
+                            ctx.getSource().sendFeedback(() -> Text.literal("已获得【磐盾】").formatted(Formatting.GOLD), false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("enhance")
                                 .then(CommandManager.argument("level", IntegerArgumentType.integer(0)).executes(ctx -> {
                                     ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
