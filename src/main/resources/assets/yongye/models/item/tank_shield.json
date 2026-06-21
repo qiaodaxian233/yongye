@@ -2,5 +2,42 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "yongye:item/tank_shield"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, 90, -8],
+      "translation": [3.5, 7.5, -1.5],
+      "scale": [1.6, 1.6, 1.6]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, 90, -8],
+      "translation": [3.5, 7.5, -1.5],
+      "scale": [1.6, 1.6, 1.6]
+    },
+    "firstperson_righthand": {
+      "rotation": [5, 90, 0],
+      "translation": [-2, 6, 2],
+      "scale": [1.7, 1.7, 1.7]
+    },
+    "firstperson_lefthand": {
+      "rotation": [5, 90, 0],
+      "translation": [-2, 6, 2],
+      "scale": [1.7, 1.7, 1.7]
+    },
+    "gui": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    },
+    "ground": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 2, 0],
+      "scale": [0.5, 0.5, 0.5]
+    },
+    "fixed": {
+      "rotation": [0, 180, 0],
+      "translation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    }
   }
 }
