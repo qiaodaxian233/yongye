@@ -71,6 +71,8 @@ public final class YongyeNet {
         for (int i = 0; i < types.length; i++) {
             levels[i] = learned.getOrDefault(types[i].id, 0);
         }
-        ServerPlayNetworking.send(player, new StatsPayload(health, levels));
+        java.util.List<String> cls = com.yongye.system.ClassManager.learnedList(player);
+        String className = cls.isEmpty() ? "" : cls.get(0);
+        ServerPlayNetworking.send(player, new StatsPayload(health, levels, className));
     }
 }

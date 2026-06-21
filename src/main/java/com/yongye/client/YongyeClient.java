@@ -45,7 +45,7 @@ public class YongyeClient implements ClientModInitializer {
 
         // 接收服务端成长数据
         ClientPlayNetworking.registerGlobalReceiver(StatsPayload.ID, (payload, context) ->
-                context.client().execute(() -> ClientStats.update(payload.health(), payload.levels())));
+                context.client().execute(() -> ClientStats.update(payload.health(), payload.levels(), payload.className())));
 
         // 开局选职:收到 S2C 后置位,待进入世界且无其它界面时再弹出(避免被登录过场覆盖)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenClassSelectPayload.ID, (payload, context) ->
@@ -77,6 +77,12 @@ public class YongyeClient implements ClientModInitializer {
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("饰品"),
                         b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload()))
                         .dimensions(bx, by - 18, 44, 16).build());
+                // 当前本命职业显示(点开成长面板)
+                com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
+                String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
+                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal(classLabel),
+                        b -> client.setScreen(new StatsScreen(screen)))
+                        .dimensions(bx, by - 36, 90, 16).build());
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(

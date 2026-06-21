@@ -11,7 +11,7 @@ import net.minecraft.util.Identifier;
  *  health: 血量强化累计等级。
  *  levels: 属性技能等级,按 SkillType.values() 顺序(攻击/护甲/恢复/闪避/反伤/抗性)。
  */
-public record StatsPayload(int health, int[] levels) implements CustomPayload {
+public record StatsPayload(int health, int[] levels, String className) implements CustomPayload {
 
     public static final CustomPayload.Id<StatsPayload> ID =
             new CustomPayload.Id<>(Identifier.of(Yongye.MOD_ID, "stats"));
@@ -20,8 +20,9 @@ public record StatsPayload(int health, int[] levels) implements CustomPayload {
             (value, buf) -> {
                 buf.writeVarInt(value.health);
                 buf.writeIntArray(value.levels);
+                buf.writeString(value.className);
             },
-            buf -> new StatsPayload(buf.readVarInt(), buf.readIntArray())
+            buf -> new StatsPayload(buf.readVarInt(), buf.readIntArray(), buf.readString())
     );
 
     @Override

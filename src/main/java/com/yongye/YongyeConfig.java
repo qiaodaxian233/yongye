@@ -296,7 +296,7 @@ public class YongyeConfig {
 
     // ===== 开局选职(m43)=====
     public boolean enableStartingClassSelect = true;   // 新玩家出生弹出选职界面
-    public boolean startingClassGiveWeapon = false;    // 选职是否附赠该职业专属武器(默认关,保持高难度)
+    public boolean startingClassGiveWeapon = true;     // 选职附赠该职业专属武器(默认开)
 
     // ===== 职业大招(m47,主动技能,默认 X 键)=====
     public boolean enableClassUltimate = true;

@@ -90,6 +90,7 @@ public final class ClassManager {
             p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getClassWeapon(c)));
         }
         p.sendMessage(Text.literal("你选择了本命职业【" + c.cn + "】,出生即生效!").formatted(Formatting.GOLD), false);
+        com.yongye.network.YongyeNet.sendStats(p);   // 同步职业到客户端(背包显示用)
         return true;
     }
 
