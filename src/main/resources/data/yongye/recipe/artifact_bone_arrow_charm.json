@@ -7,9 +7,15 @@
     "ABA"
   ],
   "key": {
-    "A": "minecraft:arrow",
-    "B": "minecraft:bone",
-    "S": "minecraft:bow"
+    "A": {
+      "item": "minecraft:arrow"
+    },
+    "B": {
+      "item": "minecraft:bone"
+    },
+    "S": {
+      "item": "minecraft:bow"
+    }
   },
   "result": {
     "id": "yongye:artifact_bone_arrow_charm",

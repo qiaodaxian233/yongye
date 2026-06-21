@@ -7,9 +7,15 @@
     "MRM"
   ],
   "key": {
-    "R": "yongye:life_crystal",
-    "M": "yongye:life_shard",
-    "B": "minecraft:mace"
+    "R": {
+      "item": "yongye:life_crystal"
+    },
+    "M": {
+      "item": "yongye:life_shard"
+    },
+    "B": {
+      "item": "minecraft:mace"
+    }
   },
   "result": {
     "id": "yongye:class_weapon_tank",

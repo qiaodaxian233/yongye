@@ -7,9 +7,15 @@
     "RAR"
   ],
   "key": {
-    "R": "minecraft:rotten_flesh",
-    "A": "minecraft:golden_apple",
-    "C": "yongye:life_crystal"
+    "R": {
+      "item": "minecraft:rotten_flesh"
+    },
+    "A": {
+      "item": "minecraft:golden_apple"
+    },
+    "C": {
+      "item": "yongye:life_crystal"
+    }
   },
   "result": {
     "id": "yongye:artifact_glutton_heart",

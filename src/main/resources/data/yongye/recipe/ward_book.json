@@ -7,9 +7,15 @@
     " C "
   ],
   "key": {
-    "L": "yongye:life_core",
-    "C": "yongye:catastrophe_blood_core",
-    "B": "minecraft:book"
+    "L": {
+      "item": "yongye:life_core"
+    },
+    "C": {
+      "item": "yongye:catastrophe_blood_core"
+    },
+    "B": {
+      "item": "minecraft:book"
+    }
   },
   "result": {
     "id": "yongye:ward_book",

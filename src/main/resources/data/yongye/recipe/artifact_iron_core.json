@@ -7,8 +7,12 @@
     "III"
   ],
   "key": {
-    "I": "minecraft:iron_block",
-    "S": "minecraft:shield"
+    "I": {
+      "item": "minecraft:iron_block"
+    },
+    "S": {
+      "item": "minecraft:shield"
+    }
   },
   "result": {
     "id": "yongye:artifact_iron_core",

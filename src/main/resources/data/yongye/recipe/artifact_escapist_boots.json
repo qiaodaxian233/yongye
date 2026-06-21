@@ -7,11 +7,21 @@
     "SLS"
   ],
   "key": {
-    "F": "minecraft:feather",
-    "R": "minecraft:rabbit_foot",
-    "B": "minecraft:leather_boots",
-    "S": "minecraft:sugar",
-    "L": "yongye:life_shard"
+    "F": {
+      "item": "minecraft:feather"
+    },
+    "R": {
+      "item": "minecraft:rabbit_foot"
+    },
+    "B": {
+      "item": "minecraft:leather_boots"
+    },
+    "S": {
+      "item": "minecraft:sugar"
+    },
+    "L": {
+      "item": "yongye:life_shard"
+    }
   },
   "result": {
     "id": "yongye:artifact_escapist_boots",

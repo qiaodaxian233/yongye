@@ -7,9 +7,15 @@
     "MRM"
   ],
   "key": {
-    "R": "yongye:catastrophe_blood_core",
-    "M": "yongye:life_core",
-    "B": "minecraft:shield"
+    "R": {
+      "item": "yongye:catastrophe_blood_core"
+    },
+    "M": {
+      "item": "yongye:life_core"
+    },
+    "B": {
+      "item": "minecraft:shield"
+    }
   },
   "result": {
     "id": "yongye:tank_shield",

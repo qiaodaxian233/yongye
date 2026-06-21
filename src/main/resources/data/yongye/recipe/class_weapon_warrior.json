@@ -7,9 +7,15 @@
     "MRM"
   ],
   "key": {
-    "R": "yongye:life_core",
-    "M": "yongye:life_shard",
-    "B": "minecraft:netherite_sword"
+    "R": {
+      "item": "yongye:life_core"
+    },
+    "M": {
+      "item": "yongye:life_shard"
+    },
+    "B": {
+      "item": "minecraft:netherite_sword"
+    }
   },
   "result": {
     "id": "yongye:class_weapon_warrior",

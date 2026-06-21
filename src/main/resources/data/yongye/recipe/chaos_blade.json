@@ -7,12 +7,27 @@
     "RCR"
   ],
   "key": {
-    "D": "yongye:endless_night_dust",
-    "E": "yongye:ending_essence",
-    "A": "yongye:abyss_soul_crystal",
-    "S": "minecraft:netherite_sword",
-    "R": "yongye:rift_fragment",
-    "C": "yongye:catastrophe_blood_core"
+    "D": {
+      "item": "yongye:endless_night_dust"
+    },
+    "E": {
+      "item": "yongye:ending_essence"
+    },
+    "A": {
+      "item": "yongye:abyss_soul_crystal"
+    },
+    "S": {
+      "item": "minecraft:netherite_sword"
+    },
+    "R": {
+      "item": "yongye:rift_fragment"
+    },
+    "C": {
+      "item": "yongye:catastrophe_blood_core"
+    }
   },
-  "result": { "id": "yongye:chaos_blade", "count": 1 }
+  "result": {
+    "id": "yongye:chaos_blade",
+    "count": 1
+  }
 }

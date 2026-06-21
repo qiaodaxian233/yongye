@@ -7,9 +7,15 @@
     "MRM"
   ],
   "key": {
-    "R": "yongye:life_core",
-    "M": "yongye:life_crystal",
-    "B": "minecraft:netherite_ingot"
+    "R": {
+      "item": "yongye:life_core"
+    },
+    "M": {
+      "item": "yongye:life_crystal"
+    },
+    "B": {
+      "item": "minecraft:netherite_ingot"
+    }
   },
   "result": {
     "id": "yongye:class_weapon_monk",

@@ -7,10 +7,18 @@
     "GAG"
   ],
   "key": {
-    "G": "minecraft:gold_ingot",
-    "A": "minecraft:golden_apple",
-    "S": "yongye:catastrophe_blood_core",
-    "H": "minecraft:totem_of_undying"
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "A": {
+      "item": "minecraft:golden_apple"
+    },
+    "S": {
+      "item": "yongye:catastrophe_blood_core"
+    },
+    "H": {
+      "item": "minecraft:totem_of_undying"
+    }
   },
   "result": {
     "id": "yongye:artifact_life_idol",

@@ -7,9 +7,15 @@
     "RBR"
   ],
   "key": {
-    "R": "minecraft:rotten_flesh",
-    "B": "minecraft:bone",
-    "C": "minecraft:compass"
+    "R": {
+      "item": "minecraft:rotten_flesh"
+    },
+    "B": {
+      "item": "minecraft:bone"
+    },
+    "C": {
+      "item": "minecraft:compass"
+    }
   },
   "result": {
     "id": "yongye:artifact_gravedigger_compass",

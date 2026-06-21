@@ -7,9 +7,15 @@
     "MRM"
   ],
   "key": {
-    "R": "yongye:abyss_soul_crystal",
-    "M": "yongye:life_shard",
-    "B": "minecraft:blaze_rod"
+    "R": {
+      "item": "yongye:abyss_soul_crystal"
+    },
+    "M": {
+      "item": "yongye:life_shard"
+    },
+    "B": {
+      "item": "minecraft:blaze_rod"
+    }
   },
   "result": {
     "id": "yongye:class_weapon_warlock",

@@ -7,10 +7,18 @@
     "FBF"
   ],
   "key": {
-    "F": "minecraft:fermented_spider_eye",
-    "B": "minecraft:glass_bottle",
-    "S": "yongye:life_shard",
-    "L": "yongye:abyss_soul_crystal"
+    "F": {
+      "item": "minecraft:fermented_spider_eye"
+    },
+    "B": {
+      "item": "minecraft:glass_bottle"
+    },
+    "S": {
+      "item": "yongye:life_shard"
+    },
+    "L": {
+      "item": "yongye:abyss_soul_crystal"
+    }
   },
   "result": {
     "id": "yongye:artifact_voodoo_bottle",

@@ -7,9 +7,15 @@
     "OEO"
   ],
   "key": {
-    "O": "minecraft:obsidian",
-    "E": "minecraft:ender_pearl",
-    "R": "yongye:rift_fragment"
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "E": {
+      "item": "minecraft:ender_pearl"
+    },
+    "R": {
+      "item": "yongye:rift_fragment"
+    }
   },
   "result": {
     "id": "yongye:artifact_world_anchor",

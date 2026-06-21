@@ -7,9 +7,15 @@
     "BFB"
   ],
   "key": {
-    "B": "minecraft:blaze_powder",
-    "F": "minecraft:fire_charge",
-    "T": "yongye:ending_essence"
+    "B": {
+      "item": "minecraft:blaze_powder"
+    },
+    "F": {
+      "item": "minecraft:fire_charge"
+    },
+    "T": {
+      "item": "yongye:ending_essence"
+    }
   },
   "result": {
     "id": "yongye:artifact_undying_ember",

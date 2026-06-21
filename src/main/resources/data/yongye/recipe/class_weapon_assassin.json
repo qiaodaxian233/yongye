@@ -7,9 +7,15 @@
     "MRM"
   ],
   "key": {
-    "R": "yongye:rift_fragment",
-    "M": "yongye:life_shard",
-    "B": "minecraft:iron_sword"
+    "R": {
+      "item": "yongye:rift_fragment"
+    },
+    "M": {
+      "item": "yongye:life_shard"
+    },
+    "B": {
+      "item": "minecraft:iron_sword"
+    }
   },
   "result": {
     "id": "yongye:class_weapon_assassin",

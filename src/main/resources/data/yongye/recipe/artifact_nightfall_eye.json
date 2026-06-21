@@ -7,9 +7,15 @@
     "GEG"
   ],
   "key": {
-    "G": "minecraft:glowstone_dust",
-    "E": "minecraft:ender_eye",
-    "S": "yongye:endless_night_dust"
+    "G": {
+      "item": "minecraft:glowstone_dust"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
+    },
+    "S": {
+      "item": "yongye:endless_night_dust"
+    }
   },
   "result": {
     "id": "yongye:artifact_nightfall_eye",
