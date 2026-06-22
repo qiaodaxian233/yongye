@@ -55,7 +55,7 @@ public class DropRateConfigScreen extends Screen {
         }
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.currentScreen instanceof DropRateConfigScreen s) {
-            s.rebuildWidgets(); // 重建:用新缓存预填输入框
+            s.clearAndInit(); // 重建:用新缓存预填输入框
         }
     }
 

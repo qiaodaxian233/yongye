@@ -207,7 +207,7 @@ public class DebugScreen extends Screen {
             int tx = x0 + i * (tabW + tabGap);
             ButtonWidget tab = ButtonWidget.builder(Text.literal(PAGES[i].tab()), b -> {
                 this.page = idx;
-                this.rebuildWidgets();  // 标准入口:清空并重跑 init() 重建为新页(width/height 已就绪)
+                this.clearAndInit();  // 1.21.1 标准:清空子控件并重跑 init() 重建为新页
             }).dimensions(tx, tabY, tabW, tabH).build();
             tab.active = (i != page);   // 当前页签置灰=高亮"正处于此页"
             addDrawableChild(tab);

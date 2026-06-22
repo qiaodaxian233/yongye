@@ -650,3 +650,8 @@
 - **导出配置**:新 `/yongye config export` 命令——`save()` 后打印 `config/yongye.json` 绝对路径到聊天 + 日志(`YongyeConfig.configPath()`);调试菜单「配置」页维护组加「导出配置(路径)」按钮。用户据路径找到文件发作者即可设默认。
 - 新增 3 文件(RequestConfigPayload / ConfigValuesPayload / DropRateConfigScreen,100);改 YongyeConfig(+configPath/+getFieldString)、YongyeNet、YongyeClient、DebugScreen、ModCommands。
 - **[待验证]**:`TextFieldWidget(TextRenderer,x,y,w,h,Text)` 6 参构造 + setText/getText/setMaxLength(vanilla 稳定控件,低风险);其余复用已验证范式(unit 包 / ClientPlayNetworking.send / 反射 config)。
+
+---
+
+## 里程碑 87 — 修编译错误:rebuildWidgets → clearAndInit
+m85/m86 用了 `Screen.rebuildWidgets()`,但 1.21.1 无此方法(build 报"找不到符号")。1.21.1 正确的清空重建入口是 `clearAndInit()`(protected,清子控件后重跑 init)。改 DebugScreen(切页)+ DropRateConfigScreen(onValues 刷新)两处。其余 m86 代码(TextFieldWidget 6 参构造、爆率编辑器网络包/反射)本次 build 未报错=已编译通过。
