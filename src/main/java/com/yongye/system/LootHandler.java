@@ -135,8 +135,9 @@ public final class LootHandler {
                         drop(world, entity, loot);
                     }
                 }
-                // 普通怪小概率掉一本属性技能书(V1),永夜等级越高几率越大;前期再乘压制系数
-                double sbChance = cfg.skillBookDropChanceNormal * (1.0 + NightfallManager.getLevel() * 0.5);
+                // 普通怪小概率掉一本属性技能书(V1),永夜等级越高几率越大(封顶防深渊层失控);前期再乘压制系数
+                double nfMult = Math.min(1.0 + NightfallManager.getLevel() * 0.5, cfg.skillBookNightfallMaxMult);
+                double sbChance = cfg.skillBookDropChanceNormal * nfMult;
                 if (isEarlyGame(world, cfg)) sbChance *= cfg.skillBookEarlyGameChance;
                 if (r.nextDouble() < sbChance) {
                     drop(world, entity, randomSkillBook(r, 1, 1));
@@ -144,8 +145,10 @@ public final class LootHandler {
             }
 
             // 强化材料掉落(规则:生命核心及以上仅精英会爆,普通怪只出碎片/结晶)
-            // 普通怪:必爆 1 个生命碎片;精英:1~2 个
-            drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, elite ? 1 + r.nextInt(2) : 1));
+            // 生命碎片:按 lifeShardDropChance 概率掉(普通 1 个;精英 1~2 个)
+            if (r.nextDouble() < cfg.lifeShardDropChance) {
+                drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, elite ? 1 + r.nextInt(2) : 1));
+            }
             // 生命结晶:普通怪 20%(精英翻倍)
             if (r.nextDouble() < cfg.lifeCrystalDropChance * (elite ? 2.0 : 1.0)) {
                 drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL, 1));

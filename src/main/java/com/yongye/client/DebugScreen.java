@@ -110,12 +110,12 @@ public class DebugScreen extends Screen {
                 new Btn("重置配置", "yongye config reset"),
         });
 
-        // —— 调参 / 配置 ——(技能书爆率 + 佩恩数值;任意字段用 /yongye config set <字段> <值>,查全部用 config list)
+        // —— 调参 / 配置 ——(常用预设;任意字段用 /yongye config set <字段> <值>,查全部用 config list)
         y = section(x0, y, "调参 / 配置(更多用 config set)", new Btn[]{
-                new Btn("技书爆率·精英↑", "yongye config set skillBookDropChanceElite 1.0"),
-                new Btn("技书爆率·普通↑", "yongye config set skillBookDropChanceNormal 0.5"),
-                new Btn("佩恩血 20000", "yongye config set painBossMaxHealth 20000"),
-                new Btn("佩恩攻 2000", "yongye config set painBossAttack 2000"),
+                new Btn("技书·精英0.15", "yongye config set skillBookDropChanceElite 0.15"),
+                new Btn("技书·普通0.008", "yongye config set skillBookDropChanceNormal 0.008"),
+                new Btn("碎片爆率0.3", "yongye config set lifeShardDropChance 0.3"),
+                new Btn("永夜增血/级2", "yongye config set nightfallBeyondHpPerLevel 2"),
         });
 
         // 关闭按钮(底部居中;y 已是最后一组之后的位置)

@@ -463,3 +463,14 @@
 - **③ 通用配置命令**:`/yongye config set <字段> <值>`、`get <字段>`、`list`。**反射读写 `YongyeConfig` 任意 public 实例字段**(boolean/int/long/double/String;数组只读),改完 `YongyeConfig.save()` 写盘,大多即时生效(部分需重进世界)。这是"所有功能进调试可设"的通用入口——任意配置都能游戏内改,不用编辑 json。
 - **④ 调试菜单"调参/配置"组**:技能书爆率(精英 `skillBookDropChanceElite` / 普通 `skillBookDropChanceNormal`,本就有字段)+ 佩恩血/攻 快捷按钮(点即 `config set`);更多字段用命令。
 - 89 个 Java 文件,无新增文件。`config set` 用反射(`getField`/`setX`),无新依赖。
+
+---
+
+## 里程碑 69 — 深渊层血量过低修复 + 技能书/碎片爆率压制
+应玩家反馈(永夜 92 层怪血仅 ~2000、技能书与碎片爆率过高):
+- **诊断**:① 三个血量倍率(基础 ×3、缩放 ×60 封顶、超 V5 增血)全是 `ADD_MULTIPLIED_BASE`(**相加**),僵尸 20×(1+2+59+43.5)=**2110**;缩放 `prog` 在 92×0.8 早撞 `mobScalingMaxMultiplier=60` 顶,只剩超 V5 项还涨却被加法稀释。② 技能书普通怪爆率 `0.008×(1+永夜×0.5)` **无封顶**,92 层 =37.6%。③ 碎片掉落**无条件必掉**(根本没用 `lifeShardDropChance`)。
+- **修复①**:超 V5 增血改 `addMultiplierTotal`(`ADD_MULTIPLIED_TOTAL`,在基础×缩放之上**再乘**)。92 层(perLevel 0.5)→ 20×62×44.5 ≈ **55180**(26×);`nightfallBeyondHpPerLevel=2` → ≈ **217000**。
+- **修复②**:技能书永夜倍率封顶 `min(1+nf×0.5, skillBookNightfallMaxMult=3)`;精英默认 0.3→**0.15**。
+- **修复③**:碎片接上 `lifeShardDropChance` 概率判定;默认 1.0→**0.3**。
+- 调试菜单"调参"组按钮改为合理预设(技书·精英0.15 / 普通0.008、碎片0.3、永夜增血/级2)。
+- **注意**:默认值改动只影响新配置;既有存档 `config.json` 里的旧值(碎片 1.0、上次点按钮设的高技能书爆率)需 `config set` 才更新。逻辑改动(血量乘法、碎片接概率、技能书封顶 + 新字段默认)重建即生效。89 个 Java 文件,无新增文件。

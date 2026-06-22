@@ -75,11 +75,12 @@ public final class MobEnhancementHandler {
                 }
             }
 
-            // 永夜 V5(灭世)之后:每多一级线性增怪血(仅血量、独立于上面的封顶上限)——失败越多世界越凶
+            // 永夜 V5(灭世)之后:每多一级线性增怪血。改用「乘法叠加」——在基础×缩放之上再乘,
+            // 让深渊层血量真正暴涨(原先是加法叠加,被前面的倍率稀释,92 层也才 ~2000)。失败越多世界越凶。
             int nf = NightfallManager.getLevel();
             if (cfg.enableNightfall && nf > 5) {
                 double abyssHp = 1.0 + (nf - 5) * cfg.nightfallBeyondHpPerLevel;
-                addMultiplier(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_NIGHTFALL_HP, abyssHp);
+                addMultiplierTotal(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_NIGHTFALL_HP, abyssHp);
             }
 
             // 加血后补满血量
@@ -120,6 +121,18 @@ public final class MobEnhancementHandler {
         inst.removeModifier(id);
         inst.addPersistentModifier(new EntityAttributeModifier(
                 id, multiplier - 1.0, EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+    }
+
+    /** 乘法叠加(ADD_MULTIPLIED_TOTAL):在「基础+其它倍率」之上再乘,用于让永夜深渊层血量真正复利上涨而非被加法稀释。 */
+    private static void addMultiplierTotal(LivingEntity e,
+                                           RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attr,
+                                           Identifier id, double multiplier) {
+        if (multiplier == 1.0) return;
+        EntityAttributeInstance inst = e.getAttributeInstance(attr);
+        if (inst == null) return;
+        inst.removeModifier(id);
+        inst.addPersistentModifier(new EntityAttributeModifier(
+                id, multiplier - 1.0, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
     private static void addFlat(LivingEntity e,

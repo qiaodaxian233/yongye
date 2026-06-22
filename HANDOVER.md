@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m68**:m65 本地 **build 通过 ✅**,m66-68 已 push **待实机验证** · 本段最新,优先看)
+## 0.5 当前状态(截至 **m69**:m65 本地 **build 通过 ✅**,m66-69 已 push **待实机验证** · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -59,6 +59,7 @@
 - **m66** **材料兑换按钮**(应需求)。背包加「兑换」按钮 → `ExchangeScreen`(三行 10→1 + 全部兑换,实时显示数量)→ C2S `ExchangePayload(tier,all)` → 服务端 `MaterialExchange` 扫背包扣料/给料。10 碎片→结晶→核心→血核,固定 10:1(与材料强化等值)。配置 `enableMaterialExchange`。新增 3 文件,88 个 Java 文件。无待验证点。
 - **m67** **开局赠礼:下界合金背包**(应需求)。`StartingKitHandler`(JOIN 事件)每人首次进入发一个背包,持久标记 `GOT_STARTING_KIT` 防重发/防刷。**软依赖**:按 id `Registries.ITEM.get`(配置 `startingBackpackItem` 默认 `sophisticatedbackpacks:netherite_backpack`),未装该 mod 静默跳过不打标记(补发友好),不硬依赖不崩。老玩家下次登录补发。配置 `giveStartingBackpack`。
 - **m68** **佩恩强化 + 通用配置命令 + 调参菜单**(应需求)。① 佩恩血 20000 / 攻 2000;② 佩恩生成复用 `MobEnhancementHandler.progressionMultiplier`(改 public)按永夜+天数缩放;③ **`/yongye config set/get/list`** 反射读写 YongyeConfig 任意 public 字段(boolean/int/long/double/String)+ `save()` 写盘——"所有功能游戏内可设"的通用入口;④ DebugScreen 加"调参/配置"组(技能书爆率 skillBookDropChanceElite/Normal + 佩恩血攻,点即 config set)。无新增文件。
+- **m69** **深渊层血量过低修复 + 爆率压制**(应反馈)。诊断 92 层怪血仅 ~2000:三段血量倍率全 ADD_MULTIPLIED_BASE 相加 + 缩放撞 60 顶。修:① 超 V5 增血改 `addMultiplierTotal`(ADD_MULTIPLIED_TOTAL 乘法叠加),92 层 ≈55k(perLevel 0.5)。② 技能书永夜倍率封顶 `skillBookNightfallMaxMult=3`,精英默认→0.15。③ 碎片接上 `lifeShardDropChance`(原无条件必掉),默认 1.0→0.3。调参按钮改合理预设。**默认值改动不影响既有 config.json,需 config set**。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 

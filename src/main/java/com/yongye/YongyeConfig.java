@@ -50,10 +50,12 @@ public class YongyeConfig {
 
     /** 属性技能书(攻击/护甲/恢复/闪避/反伤/抗性)掉落几率:普通怪 / 精英 / Boss。普通怪受永夜等级加成。 */
     public double skillBookDropChanceNormal = 0.008;
-    public double skillBookDropChanceElite = 0.3;
+    public double skillBookDropChanceElite = 0.15;
     public double skillBookDropChanceBoss = 1.0;
     public int skillBookEarlyGameDays = 6;        // 前几个游戏日视为前期
     public double skillBookEarlyGameChance = 0.1; // 前期技能书爆率压制系数
+    /** 技能书"永夜越高越易爆"的倍率封顶(防止深渊层爆率失控):普通怪爆率 = skillBookDropChanceNormal × min(1+永夜×0.5, 此值) */
+    public double skillBookNightfallMaxMult = 3.0;
     /** 合成到该结果等级时需要"生命结晶" */
     public int lifeCrystalThreshold = 10;
     /** 需要"生命核心" */
@@ -233,7 +235,7 @@ public class YongyeConfig {
     public double lootChanceEpic = 0.02;
     public double lootChanceGodly = 0.008;
     /** 普通怪掉落"生命碎片"的概率(文档 15.1) */
-    public double lifeShardDropChance = 1.0;     // 生命碎片:普通怪必掉
+    public double lifeShardDropChance = 0.3;     // 生命碎片:普通/精英怪按此概率掉(原 1.0 必掉过高)
     public double lifeCrystalDropChance = 0.20;  // 生命结晶:普通怪 20%(精英翻倍)
     public double lifeCoreDropChance = 0.50;     // 生命核心:仅精英(普通怪绝不掉)
     public double bloodCoreDropChanceElite = 0.10; // 灾厄血核:仅精英,小概率
