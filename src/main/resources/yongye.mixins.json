@@ -9,7 +9,8 @@
     "TankDefenseMixin"
   ],
   "client": [
-    "client.HudCompactMixin"
+    "client.HudCompactMixin",
+    "client.TitleScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

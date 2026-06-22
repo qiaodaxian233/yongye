@@ -565,3 +565,13 @@
 - **流星雨真下落**(`NightfallWeatherHandler`):原来只在地面凭空炸。新增在途流星列表 + `Meteor` 内部类:`spawnMeteor` 在落点上方 45~60 格 + 水平偏移 24 处生成(斜线),`tickMeteors`(register 顶端每 tick 调用,始终执行保证清理)推进位置 + 喷 FLAME/LAVA/LARGE_SMOKE 火尾,~1~1.6s 落地调现有 `impact()`(爆炸+范围伤害)。上限 64 颗护栏。METEOR 分支改 `impact`→`spawnMeteor`。纯服务端粒子,无 mixin。
 - 95 个 Java 文件(无新增 Java,仅改 NightfallWeatherHandler)+ 2 贴图。粒子 API 全原版稳定;贴图为资源覆盖,无编译影响。
 - 备注:血月红色屏幕叠层(HUD,需小 S2C)未做——用户选了换月亮贴图;要的话可加。
+
+---
+
+## 里程碑 79 — 主菜单「永夜」暗黑化(标题 + splash + 压暗)
+应需求:主菜单标题改「永夜」、splash 换永夜主题、背景暗黑风。
+- **splash 文字**:新增 `assets/minecraft/texts/splashes.txt`(30 条永夜主题,资源包覆盖原版),替掉黄色 "Hard to label!"。零风险。
+- **标题 + 背景**:新增客户端 `TitleScreenMixin`(注册进 mixins.json `client`)。在 `TitleScreen.render` 的 **TAIL 纯叠加绘制**(不取消原版 logo/全景图/按钮的原生渲染,兼容性最稳):① 全屏 `fill(0x66000000)` 压暗(暗黑氛围);② 顶部 86px 深色横幅 `fill(0xD2120006)` 遮住原版 MINECRAFT logo;③ 矩阵放大 4.5× 画「永夜」血红大字 + 副标题 "ETERNAL NIGHT · 活下去"。原版 logo 是像素图集塞不进中文,故标题用文字重画。
+- **[待编译验证:`TitleScreen.render(DrawContext,int,int,float)` 签名 + `DrawContext.getMatrices()`/`MatrixStack.scale/translate` + `DrawContext.drawText(...,boolean)` 在 1.21.1]**——TitleScreen 渲染属版本敏感区,以本地 build 为准。
+- 96 个 Java 文件(+1 TitleScreenMixin)+ splash 文本。
+- 备注:背景目前是"压暗"非"换图";要整张末日全景图需用户提供 6 面立方体贴图(`panorama_0..5.png`)或单张背景图(再接 mixin)。按钮暗黑主题未做(需替换全局 widget 贴图,会影响所有界面)。横幅高度 86 是估值,某些 GUI 缩放下若露出原 logo/压到按钮,调该值即可。
