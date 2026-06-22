@@ -101,6 +101,8 @@ public class YongyeConfig {
     public double bossKnockbackResistanceAdd = 0.4;
     /** 掉落奖励翻倍系数 */
     public double bossDropMultiplier = 2.0;
+    /** 掠夺者队长强化为 Boss 的最低游戏天数(避免开局就遇到 Boss 级队长;真·Boss 凋灵/监守者等不受此限) */
+    public int bossRaidCaptainMinDay = 8;
 
     // ============ 普通怪 BOSS 版(m60:第 N 天起,普通怪低概率"BOSS化")============
     public boolean enableMobBoss = true;

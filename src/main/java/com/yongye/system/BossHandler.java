@@ -60,6 +60,14 @@ public final class BossHandler {
             if (!(entity instanceof MobEntity mob) || !isBoss(mob)) return;
             if (mob.getAttachedOrElse(ModAttachments.IS_BOSS, false)) return;
 
+            // 掠夺者队长(巡逻队长)加天数门控:早于设定天数不强化为 Boss
+            // ——掠夺者巡逻队在主世界自然刷新、不受永夜/天数限制,会导致开局就遇到 Boss 级队长。
+            // 真·Boss(凋灵/监守者/远古守卫/末影龙)不在此限,仍始终强化。
+            if (mob instanceof RaiderEntity
+                    && ProgressionManager.gameDay(world) < cfg.bossRaidCaptainMinDay) {
+                return;
+            }
+
             mob.setAttached(ModAttachments.IS_BOSS, true);
 
             addMultiplier(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_HEALTH, cfg.bossHealthMultiplier);

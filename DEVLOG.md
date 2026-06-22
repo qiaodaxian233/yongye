@@ -605,3 +605,12 @@
 - **永夜限视野"一闪一闪"→固定**:根因——`StatusEffects.DARKNESS`(监守者黑暗)**客户端自带呼吸式脉动**,续期改不掉,天生就闪。改方案:① `NightfallVisionHandler` 默认**不再施加** DARKNESS(gate 新配置 `nightfallDarknessEffect`,默认 false;想要原版脉动可开);② 改用**客户端恒定暗角**:`NightfallSyncPayload` 加 `vision` 字段(服务端按 enableNightfallDarkness+minLevel+等级算强度下发),`YongyeClient` 新 HudRenderCallback 按 vision 画**纯静态边缘压暗**(12 段平方衰减 fill,无任何时间变量→亮度固定绝不闪),vision 越大越暗越收窄(封顶防全黑)。
 - 配置 +1(nightfallDarknessEffect);NightfallSyncPayload 记录 +1 字段(2参→3参,构造/codec/读取已同步)。无新增文件(97)。
 - **[待验证]**:暗角观感(强度/收窄是否合适,可调 reachX/Y 与 edgeAlpha);按钮在不同 GUI 缩放下是否都落在面板左侧不出屏(bx=guiLeft-58,极小窗口需留意)。均为纯 fill/Screen API,无新接口风险。
+
+---
+
+## 里程碑 83 — 掠夺者队长 Boss 化加天数门控
+应需求(实机:刚开局就遇到「掠夺者 Boss」——掠夺者巡逻队长被 BossHandler 当原版 Boss 强化,而巡逻队自然刷新不受门控)。
+- `BossHandler` ENTITY_LOAD:对 `RaiderEntity`(经 isBoss 判定即巡逻队长)加 `ProgressionManager.gameDay(world) < bossRaidCaptainMinDay` 门控,早于设定天数直接 return 不打 IS_BOSS。真·Boss(凋灵/监守者/远古守卫/末影龙)不受影响,仍始终强化。
+- 配置 +1:`bossRaidCaptainMinDay = 8`(默认第 8 天起队长才 Boss 化)。
+- 注:早于该天数的队长 = 原版(既不 Boss 也不被 MobEnhancement 增强,因 isBoss 仍返回 true 会被其跳过)——符合"开局别遇 Boss 队长"诉求。
+- 无新增文件(97)。纯天数判定,无新接口,重建即生效。

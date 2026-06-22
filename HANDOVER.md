@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m82**:m65 本地 **build 通过 ✅**,m66-82 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis · 本段最新,优先看)
+## 0.5 当前状态(截至 **m83**:m65 本地 **build 通过 ✅**,m66-83 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -73,6 +73,7 @@
 - **m80** **主菜单大字重做**(应需求·m79 成品不好看)。根因:m79 横幅半透明 `0xD2120006`(82%),原 MINECRAFT logo 透出来显乱。修(仅改 `TitleScreenMixin` 方法体,无新文件/无新接口):① 横幅改**不透明** `0xFF0A0306` 盖死原 logo;② 下方 3 段递减透明 fill 渐变 + `0xFF8B0000` 血红下边线;③「永夜」放大 5×,四向偏移暗红 `0xFF4A0000` 辉光描边 + 亮血红 `0xFFE01515` 主体;④ 压暗加深 `0x88000000`;⑤ 副标题字距拉开。待验证项同 m79(未引入新接口)。文件数不变(96)。
 - **m81** **核心提示增强 + 修僵尸跳**(应需求)。① **修僵尸一跳一跳**:`PursuitHandler.wallAhead` 旧用 `!isAir()` 把草/花/雪层等无碰撞植被当墙 → 走草地每 tick 触发 m70 起跳翻越。改用新 helper `hasCollision`(碰撞箱非空)判墙。② **核心刷新提示**:`CatastropheCoreManager.spawnCore` 给 `coreSpawnNotifyRadius`(120)内玩家发 Title/Subtitle/Fade 包(屏幕中央「灾厄核心降临」+坐标)+ `playSoundToPlayer(ENTITY_WITHER_SPAWN)`(开关 coreSpawnTitle)。③ **HUD 方向箭头**:新 S2C `CoreLocatorPayload(has,x,y,z)`,每 2s `sendLocators` 下发 `coreLocatorRange`(220)内最近核心;客户端新 HudRenderCallback 用 yaw+坐标逐帧算方位,`RotationAxis.POSITIVE_Z` 旋转「▲」+距离(开关 enableCoreLocator)。配置+4,+1 文件(97 · CoreLocatorPayload)。**[待验证:Title三包构造 / RotationAxis.rotationDegrees+MatrixStack.multiply(Quaternionf);箭头方向镜像则 bearingDeg 取负]**。
 - **m82** **按钮移左侧 + 结晶降爆 + 暗角固定**(应需求)。① **按钮竖排到背包左缘外**(`YongyeClient` AFTER_INIT):guiLeft-58 起竖排 7 个(成长/装备/饰品/天赋/强化/兑换/职业),不再挡合成格。② **生命结晶降爆**:删 `LootHandler` 精英分支写死的 25% 额外结晶(重复)+ `lifeCrystalDropChance` 0.20→**0.05**(存量 config 需 set)。③ **永夜限视野改"固定不闪"**:根因 `StatusEffects.DARKNESS` 客户端自带脉动。默认关掉该效果(gate `nightfallDarknessEffect`=false),改用**客户端恒定暗角**——`NightfallSyncPayload` 加 `vision` 字段(服务端按配置算),`YongyeClient` 新 HudRenderCallback 画纯静态边缘压暗(无时间变量→不闪)。配置+1,NightfallSyncPayload 2参→3参。无新文件(97)。**[待验证:暗角观感/按钮极小窗口不出屏;纯 fill/Screen API 无新接口]**。
+- **m83** **掠夺者队长 Boss 化加天数门控**(应需求·刚开局就遇 Boss 队长)。`BossHandler` ENTITY_LOAD 对 `RaiderEntity`(巡逻队长)加 `gameDay < bossRaidCaptainMinDay`(默认 8)门控,早于该天数不打 IS_BOSS;真·Boss(凋灵/监守者/远古守卫/末影龙)不受限仍始终强化。配置+1。无新文件(97)。重建即生效。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 
