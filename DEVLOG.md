@@ -420,3 +420,11 @@
 - 删除根目录的 `minecraft.7z.001/.002`(raw 压缩包不进 build,资产已正确落位,留着是 18MB 死重)。
 - 体积:`assets/minecraft` 约 37MB,build 出的 jar 会相应变大(用户要整套,属预期)。
 - 无 Java 改动、无 mixin。若日后想做成"可在资源包菜单里开关"的内置包(而非强制默认),再转 `registerBuiltinResourcePack` + `DEFAULT_ENABLED`。
+
+---
+
+## 里程碑 64 — 材质包只留怪物皮肤(去掉方块等非怪物贴图)
+应需求"只留怪物皮肤,方块皮肤不要":从 m63 并入的整套包里删除所有非怪物视觉资产——`textures/{block,item,environment,painting,particle,models}` + `models/`(方块模型) + `blockstates/` + `lang/` + `texts/`,共 168 个文件。
+- 保留:`textures/entity/`(217 怪物/实体皮肤)+ `sounds/`(784 音效,上轮要过,未动)。
+- 注:items / lang(改名)等也一并去掉(按"只留怪物皮肤"从严理解);若其实想保留物品贴图或怪物改名文案,说一声加回。
+- 音效是体积大头(没要求删),jar 仍较大,属预期。无 Java 改动。
