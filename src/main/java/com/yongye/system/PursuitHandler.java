@@ -74,8 +74,8 @@ public final class PursuitHandler {
                     boolean elite = mob.getAttachedOrElse(ModAttachments.IS_ELITE, false);
                     boolean boss = mob.getAttachedOrElse(ModAttachments.IS_BOSS, false);
 
-                    // —— 嵌墙兜底:怪整只卡在实心方块里(会憋闷)→ 直接传送到该玩家附近,不要求它在追你 ——
-                    if (!anchor && cfg.pursuitTeleportStuck && isStuckInWall(world, mob)) {
+                    // —— 嵌墙兜底:怪整只卡在实心方块里 → 传送(默认关:pursuitTeleportWallStuck=false,改为靠挖墙脱困)——
+                    if (!anchor && cfg.pursuitTeleportWallStuck && isStuckInWall(world, mob)) {
                         if (teleportsThisTick < cfg.pursuitMaxTeleportsPerTick
                                 && teleportNear(world, mob, player, cfg)) {
                             teleportsThisTick++;
@@ -115,7 +115,7 @@ public final class PursuitHandler {
                         double minSq = cfg.pursuitTeleportMinDist * cfg.pursuitTeleportMinDist;
 
                         if (distSq > minSq && (riding || (inFluid && distSq > 16)
-                                || (stuckLong && wallAhead))) {
+                                || (cfg.pursuitTeleportWallStuck && stuckLong && wallAhead))) {
                             if (teleportsThisTick < cfg.pursuitMaxTeleportsPerTick
                                     && teleportNear(world, mob, player, cfg)) {
                                 teleportsThisTick++;
@@ -137,6 +137,14 @@ public final class PursuitHandler {
                                 LAST_DIG_AGE.put(mob, mob.age);
                             }
                         }
+                    }
+
+                    // —— 起跳翻越 —— 撞 1~2 格低墙且在地面:给一次起跳冲量,帮怪翻过去(配合挖墙/搭塔,替代瞬移)
+                    if (!anchor && cfg.pursuitJumpWalls && wallAhead && mob.isOnGround()
+                            && world.getBlockState(base.up(2).offset(dir)).isAir()) {
+                        Vec3d jv = mob.getVelocity();
+                        mob.setVelocity(jv.x + dir.getOffsetX() * 0.1, 0.42, jv.z + dir.getOffsetZ() * 0.1);
+                        mob.velocityModified = true;
                     }
 
                     // —— 搭方块爬塔 —— 反制玩家用单格高塔躲在怪够不着的正上方:

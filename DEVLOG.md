@@ -474,3 +474,18 @@
 - **修复③**:碎片接上 `lifeShardDropChance` 概率判定;默认 1.0→**0.3**。
 - 调试菜单"调参"组按钮改为合理预设(技书·精英0.15 / 普通0.008、碎片0.3、永夜增血/级2)。
 - **注意**:默认值改动只影响新配置;既有存档 `config.json` 里的旧值(碎片 1.0、上次点按钮设的高技能书爆率)需 `config set` 才更新。逻辑改动(血量乘法、碎片接概率、技能书封顶 + 新字段默认)重建即生效。89 个 Java 文件,无新增文件。
+
+---
+
+## 里程碑 70 — 平衡大改:爆率压制 / 深渊倍增 / 精英装备格挡 / 永夜尸潮 / 追杀微调
+应需求一次性 8 项:
+- **① 技能书爆率 → 千分之一**:`skillBookDropChanceNormal/Elite` 默认 →0.001;精英原"保底必掉血量书"改为按 `skillBookDropChanceElite` 概率掉(不再无条件)。
+- **② 碎片 → 10%**:`lifeShardDropChance` 默认 →0.10(注:掉落逻辑 m69 已接上该概率)。
+- **③ 精英高级材料等比减半**:生命核心 `lifeCoreDropChance` →0.05、灾变血核 `bloodCoreDropChanceElite` →0.025、新增**终焉神髓** `endingEssenceDropChanceElite` →0.0125(精英掉落链补一档)。
+- **④ 永夜尸潮**(新 `NightfallHordeHandler`):永夜 ≥1 在每个玩家周围维持高密度敌对怪,出生即锁定玩家蜂拥追杀。目标量 = min(`nightfallHordeBase`×永夜等级, `nightfallHordeMax`)——**V1=100、V2 翻倍=200**,封顶 200 护 TPS;`nightfallHordeBatch` 平滑补刷;世界锚石范围内不刷。成分=僵尸/尸壳/蜘蛛(显式构造)。
+- **⑤ 超 V5 血量+攻击倍增 2/4/6/8/10**:`nightfallBeyondHpPerLevel` 默认 →2.0,公式改 `(nf-5)×step` 并用 `ADD_MULTIPLIED_TOTAL` 乘法叠在基础×缩放之上,**HP 与攻击都乘**(新增 `ID_NIGHTFALL_ATK`)。V6 ×2、V7 ×4…V92 ×174。
+- **⑥ 第 5 天起精英持武器 + 盾牌 + 格挡**:`makeElite` 中 gameDay≥`eliteEquipStartDay`(5)时,主手为空则给随机铁/钻剑斧、副手给盾牌(均不掉落);新增 `ALLOW_DAMAGE` 处理器:持盾精英按 `eliteBlockChance`(0.30)**完全格挡一次"来自实体的攻击"**(环境/穿透伤害不挡),带盾击音效 + 暴击粒子。
+- **⑦ 追杀寻路改**:墙后卡住**不再瞬移**(`pursuitTeleportWallStuck` 默认 false,嵌墙兜底与墙后卡死兜底都改靠挖墙脱困;水/船卡住仍由 `pursuitTeleportStuck` 传送);新增**起跳翻越** `pursuitJumpWalls`(撞 1~2 格低墙且在地面给一次起跳冲量,配合挖墙/搭塔)。
+- 90 个 Java 文件(+1 NightfallHordeHandler)。
+- **注意**:默认值改动只影响新配置;既有 `config.json` 的旧值(技能书/碎片/核心/血核/beyond 步长)需 `/yongye config reset`(一次到位全套新默认)或逐项 `config set` 才更新;新增字段(尸潮/精英装备/终焉神髓/追杀开关)不在旧 json 中,会自动取新默认、重建即生效。
+- **性能提醒**:尸潮 100~200 只寻路怪对 TPS 压力大,卡顿可调 `nightfallHordeMax / nightfallHordeBatch / nightfallHordeIntervalTicks`。

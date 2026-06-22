@@ -33,6 +33,7 @@ public final class MobEnhancementHandler {
     private static final Identifier ID_SCALE_HP = Identifier.of(Yongye.MOD_ID, "mob_scale_hp");
     private static final Identifier ID_SCALE_ATK = Identifier.of(Yongye.MOD_ID, "mob_scale_atk");
     private static final Identifier ID_NIGHTFALL_HP = Identifier.of(Yongye.MOD_ID, "mob_nightfall_hp");
+    private static final Identifier ID_NIGHTFALL_ATK = Identifier.of(Yongye.MOD_ID, "mob_nightfall_atk");
 
     private static final List<RegistryEntry<net.minecraft.entity.effect.StatusEffect>> POTION_POOL = List.of(
             StatusEffects.SPEED,
@@ -75,12 +76,16 @@ public final class MobEnhancementHandler {
                 }
             }
 
-            // 永夜 V5(灭世)之后:每多一级线性增怪血。改用「乘法叠加」——在基础×缩放之上再乘,
-            // 让深渊层血量真正暴涨(原先是加法叠加,被前面的倍率稀释,92 层也才 ~2000)。失败越多世界越凶。
+            // 永夜 V5(灭世)之后:每多一级,血量与攻击都「乘法翻倍」——倍率 = step×(nf-5),
+            // step 默认 2 → V6 ×2、V7 ×4、V8 ×6、V9 ×8、V10 ×10…(2/4/6/8/10 以此类推)。
+            // 用 ADD_MULTIPLIED_TOTAL 叠在基础×缩放之上,深渊层真正暴涨。失败越多世界越凶。
             int nf = NightfallManager.getLevel();
             if (cfg.enableNightfall && nf > 5) {
-                double abyssHp = 1.0 + (nf - 5) * cfg.nightfallBeyondHpPerLevel;
-                addMultiplierTotal(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_NIGHTFALL_HP, abyssHp);
+                double abyssMult = (nf - 5) * cfg.nightfallBeyondHpPerLevel;
+                if (abyssMult > 1.0) {
+                    addMultiplierTotal(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_NIGHTFALL_HP, abyssMult);
+                    addMultiplierTotal(mob, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_NIGHTFALL_ATK, abyssMult);
+                }
             }
 
             // 加血后补满血量

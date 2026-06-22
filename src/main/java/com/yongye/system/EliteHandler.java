@@ -77,6 +77,23 @@ public final class EliteHandler {
             StatusEffects.STRENGTH, StatusEffects.SPEED, StatusEffects.RESISTANCE, StatusEffects.REGENERATION);
 
     public static void register() {
+        // —— 精英格挡:第 N 天起,持盾精英按概率完全格挡一次「来自实体的攻击」(近战/弹射);环境/穿透伤害不挡 ——
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.eliteUseEquipment || cfg.eliteBlockChance <= 0) return true;
+            if (!(entity instanceof MobEntity mob)) return true;
+            if (!mob.getAttachedOrElse(ModAttachments.IS_ELITE, false)) return true;
+            if (!mob.getOffHandStack().isOf(Items.SHIELD)) return true;
+            if (source.getAttacker() == null) return true;
+            if (mob.getRandom().nextDouble() >= cfg.eliteBlockChance) return true;
+            if (mob.getWorld() instanceof ServerWorld sw) {
+                sw.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
+                        SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.HOSTILE, 1.0f, 1.0f);
+                sw.spawnParticles(ParticleTypes.CRIT, mob.getX(), mob.getY() + 1.2, mob.getZ(), 8, 0.3, 0.3, 0.3, 0.1);
+            }
+            return false; // 格挡成功:本次伤害无效
+        });
+
         // —— 精英缴械:命中玩家时概率夺走主手武器,精英死亡掉落(击杀夺回)——
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             YongyeConfig cfg = YongyeConfig.get();
@@ -171,6 +188,17 @@ public final class EliteHandler {
         addFlat(mob, EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, ID_KB, cfg.eliteKnockbackResistanceAdd);
         addFlat(mob, EntityAttributes.GENERIC_FOLLOW_RANGE, ID_FOLLOW, cfg.eliteFollowRangeAdd);
         mob.setHealth(mob.getMaxHealth());
+
+        // 第 N 天起:精英持武器(主手为空才给,不覆盖骷髅的弓)+ 盾牌(副手,用于格挡)
+        if (cfg.eliteUseEquipment && ProgressionManager.gameDay(mob.getWorld()) >= cfg.eliteEquipStartDay) {
+            if (mob.getMainHandStack().isEmpty()) {
+                net.minecraft.item.Item[] weapons = { Items.IRON_SWORD, Items.DIAMOND_SWORD, Items.IRON_AXE, Items.DIAMOND_AXE };
+                mob.equipStack(EquipmentSlot.MAINHAND, new ItemStack(weapons[mob.getRandom().nextInt(weapons.length)]));
+                mob.setEquipmentDropChance(EquipmentSlot.MAINHAND, 0.0f);
+            }
+            mob.equipStack(EquipmentSlot.OFFHAND, new ItemStack(Items.SHIELD));
+            mob.setEquipmentDropChance(EquipmentSlot.OFFHAND, 0.0f);
+        }
 
         // 持续发光(默认关:实体描边会触发部分渲染mod崩溃;精英已有金色名牌识别)
         if (cfg.eliteGlowing) {

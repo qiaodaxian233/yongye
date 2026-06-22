@@ -99,8 +99,10 @@ public final class LootHandler {
             boolean elite = entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_ELITE, false);
 
             if (elite) {
-                // 精英专属:保底一本血量书 + 一件稀有以上战利品 + 概率材料
-                drop(world, entity, HealthSkillBookItem.create(1 + r.nextInt(3))); // V1~V3
+                // 精英:技能书改为按概率掉(skillBookDropChanceElite,默认已调极低)+ 一件稀有以上战利品 + 概率材料
+                if (r.nextDouble() < cfg.skillBookDropChanceElite) {
+                    drop(world, entity, HealthSkillBookItem.create(1 + r.nextInt(3))); // V1~V3
+                }
                 // 概率掉一本属性技能书(V1~V3)
                 if (r.nextDouble() < cfg.skillBookDropChanceElite) {
                     drop(world, entity, randomSkillBook(r, 1, 3));
@@ -160,6 +162,9 @@ public final class LootHandler {
                 }
                 if (r.nextDouble() < cfg.bloodCoreDropChanceElite) {
                     drop(world, entity, new ItemStack(ModItems.CATASTROPHE_BLOOD_CORE, 1));
+                }
+                if (r.nextDouble() < cfg.endingEssenceDropChanceElite) {
+                    drop(world, entity, new ItemStack(ModItems.ENDING_ESSENCE, 1));
                 }
             }
         });

@@ -49,8 +49,8 @@ public class YongyeConfig {
     public double skillStealMaxChance = 0.9;         // 抢夺概率上限
 
     /** 属性技能书(攻击/护甲/恢复/闪避/反伤/抗性)掉落几率:普通怪 / 精英 / Boss。普通怪受永夜等级加成。 */
-    public double skillBookDropChanceNormal = 0.008;
-    public double skillBookDropChanceElite = 0.15;
+    public double skillBookDropChanceNormal = 0.001;
+    public double skillBookDropChanceElite = 0.001;
     public double skillBookDropChanceBoss = 1.0;
     public int skillBookEarlyGameDays = 6;        // 前几个游戏日视为前期
     public double skillBookEarlyGameChance = 0.1; // 前期技能书爆率压制系数
@@ -235,10 +235,10 @@ public class YongyeConfig {
     public double lootChanceEpic = 0.02;
     public double lootChanceGodly = 0.008;
     /** 普通怪掉落"生命碎片"的概率(文档 15.1) */
-    public double lifeShardDropChance = 0.3;     // 生命碎片:普通/精英怪按此概率掉(原 1.0 必掉过高)
+    public double lifeShardDropChance = 0.10;     // 生命碎片:普通/精英怪按此概率掉(原 1.0 必掉过高)
     public double lifeCrystalDropChance = 0.20;  // 生命结晶:普通怪 20%(精英翻倍)
-    public double lifeCoreDropChance = 0.50;     // 生命核心:仅精英(普通怪绝不掉)
-    public double bloodCoreDropChanceElite = 0.10; // 灾厄血核:仅精英,小概率
+    public double lifeCoreDropChance = 0.05;     // 生命核心:仅精英(普通怪绝不掉)
+    public double bloodCoreDropChanceElite = 0.025; // 灾厄血核:仅精英,小概率
     public double classWeaponDropChanceElite = 0.04; // 精英掉落职业专属武器(随机职业)的几率
     /** 仅当怪物被玩家击杀才触发随机掉落 */
     public boolean lootRequirePlayerKill = true;
@@ -252,7 +252,7 @@ public class YongyeConfig {
     /** 永夜等级上限(V5 不再是终点;失败可继续升,默认 99 近似"无尽") */
     public int nightfallMaxLevel = 99;
     /** 永夜超过 V5 后,每多一级给怪物叠加的最大生命倍率(线性、无额外封顶):V6=+50%、V7=+100%… */
-    public double nightfallBeyondHpPerLevel = 0.5;
+    public double nightfallBeyondHpPerLevel = 2.0;
 
     // —— 灾厄核心(文档 9.3 / 第 14、15 章)——
     public boolean enableCatastropheCore = true;
@@ -412,6 +412,29 @@ public class YongyeConfig {
     /** 命中时施加禁疗的概率与时长(tick) */
     public double healBlockChance = 0.25;
     public int healBlockDurationTicks = 100;
+
+    // ============ m70:精英装备格挡 / 永夜尸潮 / 追杀微调 / 终焉神髓掉率 ============
+    /** 精英专属:终焉神髓掉率(生命核心链最高一档) */
+    public double endingEssenceDropChanceElite = 0.0125;
+
+    // 精英装备:第 N 天起精英持武器 + 盾牌,可格挡
+    public boolean eliteUseEquipment = true;
+    public int eliteEquipStartDay = 5;
+    public double eliteBlockChance = 0.30;        // 持盾精英完全格挡一次攻击的概率
+
+    // 永夜尸潮:永夜 ≥1 在玩家周围维持高密度刷怪,蜂拥追杀
+    public boolean enableNightfallHorde = true;
+    public int nightfallHordeBase = 100;          // 永夜 I 目标怪量;V2=翻倍(线性 base×等级),封顶 max
+    public int nightfallHordeMax = 200;           // 目标怪量上限(护 TPS,可调)
+    public int nightfallHordeIntervalTicks = 40;  // 每隔多久补一批
+    public int nightfallHordeBatch = 10;          // 每批最多新刷数(平滑爬升,避免瞬刷卡顿)
+    public double nightfallHordeRadius = 24.0;     // 在玩家周围多大范围刷/统计
+    public double nightfallHordeMinDistance = 8.0; // 刷怪点距玩家最小距离
+
+    /** 追杀:墙后卡住是否传送(默认关——改为挖墙 + 起跳翻越,不再瞬移) */
+    public boolean pursuitTeleportWallStuck = false;
+    /** 追杀:撞低墙时给一次起跳冲量帮助翻越 */
+    public boolean pursuitJumpWalls = true;
 
     public static YongyeConfig get() {
         if (INSTANCE == null) load();
