@@ -56,6 +56,7 @@ public final class PainBossHandler {
         long devastationAt;
         Vec3d devastationCenter;
         double devastationDamage;
+        int phase = 1;
         PainState(int now) { this.nextAbility = now + 80; }
     }
 
@@ -183,6 +184,22 @@ public final class PainBossHandler {
         PlayerEntity tgt = world.getClosestPlayer(pain.getX(), pain.getY(), pain.getZ(), 48, false);
         if (tgt instanceof LivingEntity living) pain.setTarget(living);
         if (pain.getTarget() != null && pain.getTarget().isAlive()) painLastTargetTick = now;
+
+        // 阶段化(m73):按血量分 3 阶段,进阶时狂暴(力量/速度叠加)并立即施法
+        if (cfg.enablePainPhases) {
+            double pct = pain.getHealth() / pain.getMaxHealth();
+            int newPhase = pct > 0.66 ? 1 : (pct > 0.33 ? 2 : 3);
+            if (newPhase > st.phase) {
+                st.phase = newPhase;
+                int amp = newPhase - 1; // 阶段2→I,阶段3→II
+                pain.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, StatusEffectInstance.INFINITE, amp, true, false, true));
+                pain.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, StatusEffectInstance.INFINITE, amp, true, false, true));
+                pain.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 200, 0, true, false, true));
+                world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, pain.getX(), pain.getY() + 1.0, pain.getZ(), 80, 0.8, 1.2, 0.8, 0.05);
+                broadcast(world, "【佩恩】进入第 " + newPhase + " 阶段——痛苦加深!");
+                st.nextAbility = now; // 进阶即刻施法
+            }
+        }
 
         // 轮回天生:残血一次性满血复活
         if (!st.rebirthUsed && pain.getHealth() < pain.getMaxHealth() * cfg.painRebirthThreshold) {

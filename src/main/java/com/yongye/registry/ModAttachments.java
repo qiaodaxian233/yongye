@@ -175,6 +175,25 @@ public final class ModAttachments {
                     .initializer(() -> false)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "stole_gear"));
 
+    /** ELITE_AFFIX: 精英词缀位掩码(1爆裂/2分裂/4嗜血/8剧毒光环/16召唤)。 */
+    public static final AttachmentType<Integer> ELITE_AFFIX =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .initializer(() -> 0)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "elite_affix"));
+
+    /** BEST_NIGHTFALL: 玩家曾达到的最高永夜层数(排行用,终身最佳)。 */
+    public static final AttachmentType<Integer> BEST_NIGHTFALL =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "best_nightfall"));
+
+    /** BEST_DAY: 玩家曾达到的最高游戏天数(排行用,终身最佳)。 */
+    public static final AttachmentType<Integer> BEST_DAY =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "best_day"));
+
     public static void init() {
         Yongye.LOGGER.info("[永夜] 数据附着已注册");
     }

@@ -454,6 +454,14 @@ public class YongyeConfig {
     public boolean eliteStealArmor = true;
     public double eliteStealArmorChance = 0.25;
 
+    // ============ m73:精英词缀 / 佩恩阶段化 / 存活排行 ============
+    public boolean enableEliteAffix = true;
+    public double eliteAffixChance = 0.5;        // 精英带词缀概率(命中则随机 1~2 个)
+    public double eliteLifestealRatio = 0.5;     // 嗜血词缀:按造成伤害的比例回血
+    public double eliteAffixExplodeDamage = 12.0;// 爆裂词缀:死亡时 4 格内 AoE 伤害(不破坏地形)
+    public boolean enablePainPhases = true;      // 佩恩按血量分 3 阶段,逐阶段狂暴
+    public boolean enableSurvivalRank = true;    // 记录最高永夜层数 / 最高天数,/yongye top 排行
+
     public static YongyeConfig get() {
         if (INSTANCE == null) load();
         return INSTANCE;

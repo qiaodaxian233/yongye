@@ -94,13 +94,44 @@ public final class EliteHandler {
             return false; // 格挡成功:本次伤害无效
         });
 
+        // —— 词缀·死亡效果(m73):爆裂 AoE(不破坏地形)/ 分裂出 2 只小怪 ——
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+            if (!(entity instanceof MobEntity mob)) return;
+            int affix = mob.getAttachedOrElse(ModAttachments.ELITE_AFFIX, 0);
+            if (affix == 0) return;
+            if (!(mob.getWorld() instanceof ServerWorld sw)) return;
+            YongyeConfig cfg = YongyeConfig.get();
+            if ((affix & AF_EXPLODE) != 0) {
+                for (LivingEntity le : sw.getEntitiesByClass(LivingEntity.class,
+                        mob.getBoundingBox().expand(4.0), l -> l != mob && l.isAlive())) {
+                    le.damage(sw.getDamageSources().magic(), (float) cfg.eliteAffixExplodeDamage);
+                }
+                sw.spawnParticles(ParticleTypes.EXPLOSION, mob.getX(), mob.getY() + 1, mob.getZ(), 6, 1, 1, 1, 0.1);
+                sw.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
+                        SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.HOSTILE, 1.0f, 1.0f);
+            }
+            if ((affix & AF_SPLIT) != 0) {
+                for (int i = 0; i < 2; i++) {
+                    net.minecraft.entity.mob.ZombieEntity z =
+                            new net.minecraft.entity.mob.ZombieEntity(net.minecraft.entity.EntityType.ZOMBIE, sw);
+                    z.refreshPositionAndAngles(mob.getX() + (sw.getRandom().nextDouble() - 0.5) * 2,
+                            mob.getY(), mob.getZ() + (sw.getRandom().nextDouble() - 0.5) * 2, 0, 0);
+                    sw.spawnEntity(z);
+                }
+            }
+        });
+
         // —— 精英缴械:命中玩家时概率夺走主手武器 + 随机一件穿戴的护甲,精英死亡掉落(击杀夺回)——
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             YongyeConfig cfg = YongyeConfig.get();
-            if (!cfg.eliteCanDisarm || cfg.eliteDisarmChance <= 0) return true;
             if (!(entity instanceof ServerPlayerEntity player)) return true;
             if (!(source.getAttacker() instanceof MobEntity attacker)) return true;
             if (!attacker.getAttachedOrElse(ModAttachments.IS_ELITE, false)) return true;
+            // 嗜血词缀:命中玩家按比例回血(独立于缴械开关)
+            if ((attacker.getAttachedOrElse(ModAttachments.ELITE_AFFIX, 0) & AF_LIFESTEAL) != 0) {
+                attacker.heal((float) (amount * cfg.eliteLifestealRatio));
+            }
+            if (!cfg.eliteCanDisarm || cfg.eliteDisarmChance <= 0) return true;
             if (attacker.getAttachedOrElse(ModAttachments.STOLE_GEAR, false)) return true; // 一只怪只行窃一次,防累计丢失
             long now = player.getWorld().getTime();
             if (now < player.getAttachedOrElse(ModAttachments.DISARM_COOLDOWN_UNTIL, 0L)) return true;
@@ -235,10 +266,39 @@ public final class EliteHandler {
                     StatusEffects.GLOWING, StatusEffectInstance.INFINITE, 0, true, false, false));
         }
 
+        // 词缀(m73):按概率随机带 1~2 个,影响名牌与行为
+        int affix = 0;
+        if (cfg.enableEliteAffix && mob.getRandom().nextDouble() < cfg.eliteAffixChance) {
+            affix = rollAffixes(mob.getRandom());
+            mob.setAttached(ModAttachments.ELITE_AFFIX, affix);
+        }
         // 专属名牌
         Text typeName = mob.getType().getName();
-        mob.setCustomName(Text.literal("✦ 精英·").formatted(Formatting.GOLD).append(typeName));
+        net.minecraft.text.MutableText name = Text.literal("✦ 精英·").formatted(Formatting.GOLD).append(typeName);
+        if (affix != 0) name.append(Text.literal(" " + affixNames(affix)).formatted(Formatting.RED));
+        mob.setCustomName(name);
         mob.setCustomNameVisible(true);
+    }
+
+    // ===== m73 精英词缀 =====
+    static final int AF_EXPLODE = 1, AF_SPLIT = 2, AF_LIFESTEAL = 4, AF_POISON = 8, AF_SUMMON = 16;
+
+    private static int rollAffixes(net.minecraft.util.math.random.Random r) {
+        int[] all = { AF_EXPLODE, AF_SPLIT, AF_LIFESTEAL, AF_POISON, AF_SUMMON };
+        int count = 1 + r.nextInt(2);
+        int mask = 0;
+        for (int i = 0; i < count; i++) mask |= all[r.nextInt(all.length)];
+        return mask;
+    }
+
+    private static String affixNames(int a) {
+        StringBuilder sb = new StringBuilder("【");
+        if ((a & AF_EXPLODE) != 0) sb.append("爆裂");
+        if ((a & AF_SPLIT) != 0) sb.append("分裂");
+        if ((a & AF_LIFESTEAL) != 0) sb.append("嗜血");
+        if ((a & AF_POISON) != 0) sb.append("剧毒");
+        if ((a & AF_SUMMON) != 0) sb.append("召唤");
+        return sb.append("】").toString();
     }
 
     private static void tickElite(ServerWorld sw, MobEntity e, YongyeConfig cfg) {
@@ -246,6 +306,26 @@ public final class EliteHandler {
         // 自动广播给附近玩家;不走发光描边,无 m21 那类渲染mod崩溃风险)。与金色名牌一样常显,作精英标识。
         if (cfg.eliteAuraEffect && e.age % Math.max(1, cfg.eliteAuraIntervalTicks) == 0) {
             spawnAura(sw, e);
+        }
+
+        // 词缀行为(m73):剧毒光环 / 召唤援军(按 age 错峰,避免每 tick 触发)
+        int affix = e.getAttachedOrElse(ModAttachments.ELITE_AFFIX, 0);
+        if (affix != 0) {
+            if ((affix & AF_POISON) != 0 && e.age % 40 == 0) {
+                for (net.minecraft.server.network.ServerPlayerEntity p : sw.getEntitiesByClass(
+                        net.minecraft.server.network.ServerPlayerEntity.class,
+                        e.getBoundingBox().expand(4.0), pl -> pl.isAlive())) {
+                    p.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 80, 0));
+                }
+            }
+            if ((affix & AF_SUMMON) != 0 && e.age % 120 == 0 && e.getTarget() != null) {
+                net.minecraft.entity.mob.ZombieEntity add =
+                        new net.minecraft.entity.mob.ZombieEntity(net.minecraft.entity.EntityType.ZOMBIE, sw);
+                add.refreshPositionAndAngles(e.getX() + (sw.getRandom().nextDouble() - 0.5) * 3,
+                        e.getY(), e.getZ() + (sw.getRandom().nextDouble() - 0.5) * 3, 0, 0);
+                sw.spawnEntity(add);
+                add.setTarget(e.getTarget());
+            }
         }
 
         LivingEntity target = e.getTarget();

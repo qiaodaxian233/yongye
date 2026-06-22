@@ -509,3 +509,12 @@
 - **⑤ 精英抢护甲**:缴械除武器外,按 `eliteStealArmorChance`(0.25)抢一件穿戴护甲并穿到精英身上(死亡掉落归还);`STOLE_GEAR` 标记防一只怪累计抢多人装备;被夺武器强化等级记入 `LOST_WEAPON_ENHANCE`。
 - **⑥ 武器找回** `/yongye recover`:把 `LOST_WEAPON_ENHANCE` 的 2/3(`weaponRecoverKeepFraction`)转移到手持武器(损失 1/3),清记录。
 - 90 个 Java 文件,无新增文件。新增附着 `LOST_WEAPON_ENHANCE`(int)/`STOLE_GEAR`(bool)。
+
+---
+
+## 里程碑 73 — 精英词缀 / 佩恩阶段化 / 存活排行(推荐功能 ①⑤⑥)
+- **① 精英词缀**:`enableEliteAffix`,按 `eliteAffixChance`(0.5)随机带 1~2 个,名牌红字显示。爆裂=死亡 4 格 AoE(magic 伤害,不破坏地形)+ 粒子音效;分裂=死亡刷 2 只僵尸;嗜血=命中玩家按 `eliteLifestealRatio` 回血;剧毒=光环每 40t 给 4 格内玩家中毒;召唤=每 120t(有目标时)刷 1 援军。位掩码存 `ELITE_AFFIX` 附着;行为分布于 makeElite(分配/命名)、tickElite(光环/召唤,按 age 错峰)、缴械钩子(嗜血)、`AFTER_DEATH`(爆裂/分裂)。
+- **⑤ 佩恩阶段化**:`enablePainPhases`,血量 >66% / 33~66% / <33% 分 3 阶段;进阶即叠加力量+速度(amp 随阶段)、抗性、粒子、广播,并立即施法(`nextAbility=now`)。PainState 加 `phase`。
+- **⑥ 存活排行**:`SurvivalRankHandler` 每 5s 记录在线玩家终身最高永夜层 / 最高天数(`BEST_NIGHTFALL`/`BEST_DAY` 附着,死亡保留);`/yongye top` 列在线排行(按永夜层→天数)。
+- 91 个 Java 文件(+1 SurvivalRankHandler)。新增附着 ELITE_AFFIX/BEST_NIGHTFALL/BEST_DAY。
+- 推荐功能 **②永夜天象 / ③据点防御 / ⑦材料商人** 留待后续(分别需:服务端天象事件设计、新方块+材质+配方、交易 API)。

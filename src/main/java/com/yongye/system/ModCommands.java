@@ -193,6 +193,33 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        .then(CommandManager.literal("top").executes(ctx -> {
+                            java.util.List<ServerPlayerEntity> list =
+                                    new java.util.ArrayList<>(ctx.getSource().getServer().getPlayerManager().getPlayerList());
+                            list.sort((a, b) -> {
+                                int na = a.getAttachedOrElse(com.yongye.registry.ModAttachments.BEST_NIGHTFALL, 0);
+                                int nb = b.getAttachedOrElse(com.yongye.registry.ModAttachments.BEST_NIGHTFALL, 0);
+                                if (na != nb) return Integer.compare(nb, na);
+                                return Integer.compare(b.getAttachedOrElse(com.yongye.registry.ModAttachments.BEST_DAY, 0),
+                                        a.getAttachedOrElse(com.yongye.registry.ModAttachments.BEST_DAY, 0));
+                            });
+                            final java.util.List<ServerPlayerEntity> fl = list;
+                            ctx.getSource().sendFeedback(() -> {
+                                net.minecraft.text.MutableText t =
+                                        Text.literal("=== 永夜·存活排行(在线)===").formatted(Formatting.GOLD);
+                                int rank = 1;
+                                for (ServerPlayerEntity pp : fl) {
+                                    t.append(Text.literal("\n" + rank + ". " + pp.getGameProfile().getName()
+                                            + " — 永夜 " + pp.getAttachedOrElse(com.yongye.registry.ModAttachments.BEST_NIGHTFALL, 0)
+                                            + " 层 / 第 " + pp.getAttachedOrElse(com.yongye.registry.ModAttachments.BEST_DAY, 0) + " 天")
+                                            .formatted(Formatting.GRAY));
+                                    if (++rank > 10) break;
+                                }
+                                return t;
+                            }, false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("recover").executes(ctx -> {
                             ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
                             int lost = p.getAttachedOrElse(com.yongye.registry.ModAttachments.LOST_WEAPON_ENHANCE, 0);
