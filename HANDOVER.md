@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m71**:m65 本地 **build 通过 ✅**,m66-71 已 push **待实机验证** · 本段最新,优先看)
+## 0.5 当前状态(截至 **m72**:m65 本地 **build 通过 ✅**,m66-72 已 push **待实机验证**;m72 有 1 处待验证 UnbreakableComponent · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -62,6 +62,7 @@
 - **m69** **深渊层血量过低修复 + 爆率压制**(应反馈)。诊断 92 层怪血仅 ~2000:三段血量倍率全 ADD_MULTIPLIED_BASE 相加 + 缩放撞 60 顶。修:① 超 V5 增血改 `addMultiplierTotal`(ADD_MULTIPLIED_TOTAL 乘法叠加),92 层 ≈55k(perLevel 0.5)。② 技能书永夜倍率封顶 `skillBookNightfallMaxMult=3`,精英默认→0.15。③ 碎片接上 `lifeShardDropChance`(原无条件必掉),默认 1.0→0.3。调参按钮改合理预设。**默认值改动不影响既有 config.json,需 config set**。
 - **m70** **平衡大改 8 项**(应需求)。① 技能书爆率→0.001(精英保底书也改概率);② 碎片→0.10;③ 精英材料 核心0.05/血核0.025/+终焉神髓0.0125;④ **永夜尸潮** NightfallHordeHandler(永夜≥1 维持 min(base×等级,max) 只怪蜂拥,V1=100/V2=200,封顶护TPS);⑤ 超V5 血量+攻击 `(nf-5)×step` 乘法叠加(step=2 → 2/4/6/8/10,V92×174;+ID_NIGHTFALL_ATK);⑥ 第5天起精英持武器+盾牌,持盾 ALLOW_DAMAGE 按 eliteBlockChance 完全格挡;⑦ 追杀 `pursuitTeleportWallStuck=false`(墙后不瞬移改挖墙)+ `pursuitJumpWalls` 起跳翻越。+1 文件(90)。**旧 config.json 数值需 config reset / set 才更新**。尸潮有 TPS 压力。
 - **m71** **追杀瞬移回归 + 任务奖励调低**(应需求)。① `pursuitTeleportWallStuck` 默认改回 **true**:墙后卡住先试 `teleportNear`(有落点才传),否则挖墙+起跳——三者组合。② QuestManager.reward 永夜加成封顶 `min(nf,5)`,血量书降到 V2~V9,材料概率大幅下调(原 92 层保底 ~V187 太高)。无新增文件。旧 json 的 pursuitTeleportWallStuck 需 config set true。
+- **m72** **技能按攻击力 + 佩恩失目标传送 + 抢装备/找回**(应需求)。① 武器技能 +玩家攻击×比例;② 佩恩技能按佩恩攻击×比例;③ 佩恩60s无目标 maybeRelocatePain 传到随机玩家;④ 强化装备设 UNBREAKABLE【待验证 UnbreakableComponent】;⑤ 精英也抢护甲(穿身上,死亡掉落归还),STOLE_GEAR 防累计,记 LOST_WEAPON_ENHANCE;⑥ `/yongye recover` 把丢失武器强化 2/3 转手持武器。新增附着 LOST_WEAPON_ENHANCE/STOLE_GEAR。无新增文件。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 

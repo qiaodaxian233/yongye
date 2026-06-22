@@ -436,6 +436,24 @@ public class YongyeConfig {
     /** 追杀:撞低墙时给一次起跳冲量帮助翻越 */
     public boolean pursuitJumpWalls = true;
 
+    // ============ m72:技能按攻击力计算 / 佩恩失目标传送 / 被夺武器找回 ============
+    // 武器主动技能:额外按「玩家攻击力 × 比例」计入伤害(武器越强技能越强)
+    public double skillSlashAttackRatio = 1.5;
+    public double skillDevourAttackRatio = 1.0;
+    public double skillFinalityAttackRatio = 2.5;
+    // 佩恩技能:伤害按「佩恩攻击力 × 比例」计算(攻击随时间线缩放,技能随之变强)
+    public double painPushAttackRatio = 0.30;
+    public double painPullAttackRatio = 0.15;
+    public double painDevastationAttackRatio = 0.50;
+    // 佩恩长时间找不到玩家 → 传送到随机玩家身边追杀
+    public boolean painLostTeleport = true;
+    public int painLostTeleportTicks = 1200;     // 1 分钟无目标即传送
+    // 被夺武器找回:强化转移到新武器时保留的比例(损失 1/3 → 保留 2/3)
+    public double weaponRecoverKeepFraction = 0.6667;
+    // 精英缴械:是否也抢玩家身上穿的盔甲(抢到直接穿身上,击杀掉落归还)
+    public boolean eliteStealArmor = true;
+    public double eliteStealArmorChance = 0.25;
+
     public static YongyeConfig get() {
         if (INSTANCE == null) load();
         return INSTANCE;

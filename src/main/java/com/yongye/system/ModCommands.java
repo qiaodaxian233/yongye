@@ -193,6 +193,29 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        .then(CommandManager.literal("recover").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            int lost = p.getAttachedOrElse(com.yongye.registry.ModAttachments.LOST_WEAPON_ENHANCE, 0);
+                            if (lost <= 0) {
+                                ctx.getSource().sendFeedback(() -> Text.literal("没有可找回的强化(被夺且未夺回的武器才会记录其强化等级)").formatted(Formatting.GRAY), false);
+                                return 0;
+                            }
+                            net.minecraft.item.ItemStack held = p.getMainHandStack();
+                            if (held.isEmpty() || !com.yongye.system.EquipmentEnhancer.isWeapon(held)) {
+                                ctx.getSource().sendFeedback(() -> Text.literal("请手持一把武器作为转移目标").formatted(Formatting.RED), false);
+                                return 0;
+                            }
+                            int keep = (int) Math.floor(lost * com.yongye.YongyeConfig.get().weaponRecoverKeepFraction);
+                            int newLevel = com.yongye.system.EquipmentEnhancer.getLevel(held) + keep;
+                            p.setStackInHand(net.minecraft.util.Hand.MAIN_HAND,
+                                    com.yongye.system.EquipmentEnhancer.withLevel(held, newLevel));
+                            p.setAttached(com.yongye.registry.ModAttachments.LOST_WEAPON_ENHANCE, 0);
+                            final int kept = keep, lostF = lost;
+                            ctx.getSource().sendFeedback(() -> Text.literal(
+                                    "已将丢失武器 " + lostF + " 级强化的 2/3(+" + kept + " 级)转移到当前武器").formatted(Formatting.AQUA), false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("classbook")
                                 .then(CommandManager.argument("type", StringArgumentType.word()).executes(ctx -> {
                                     ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();

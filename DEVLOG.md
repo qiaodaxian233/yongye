@@ -497,3 +497,15 @@
 - **① 追杀组合判定**:`pursuitTeleportWallStuck` 默认 false→**true**。墙后卡住时三者结合——**能在玩家身边找到安全落点(`teleportNear` 成功)就瞬移过去;找不到(返回 false)则挖墙脱困 + 撞低墙起跳翻越**。挖/跳即时进行,卡住 ~3s 仍无进展且有墙时才尝试瞬移(且仅在有合法落点时成功);嵌墙兜底同理。
 - **② 任务奖励调低**:原 reward 随永夜**无封顶暴涨**(92 层保底 ~V187 血量书 + 几乎必出结晶/核心/顶级材料,与"技能书千分之一"严重冲突)。改:永夜加成封顶 `min(nf,5)`;保底血量书降到 **V2~V9**;生命结晶 20~35%×1、生命核心 8~18%、顶级材料 3~8%、金苹果 8%(均大幅下调)。
 - 90 个 Java 文件,无新增文件。**注**:`pursuitTeleportWallStuck` 是 m70 既有字段,旧 config.json 若存为 false 需 `config set pursuitTeleportWallStuck true`(或 reset);任务奖励是纯逻辑,重建即生效。
+
+---
+
+## 里程碑 72 — 技能按攻击力 / 佩恩失目标传送 / 抢装备与找回
+应需求:
+- **① 武器技能按攻击力**:混沌斩/深渊吞噬/终焉降临伤害额外 `+ 玩家攻击力 × skillXAttackRatio`(1.5/1.0/2.5),武器越强技能越强。
+- **② 佩恩技能按攻击力**:神罗天征/万象牵引/地爆天星伤害改按 `佩恩攻击力 × painXAttackRatio`(0.30/0.15/0.50);攻击随时间线缩放,技能随之变强(地爆天星伤害在登记爆心时算好存入 PainState)。
+- **③ 佩恩失目标传送**:`painLostTeleportTicks`(默认 1200=60s)无目标 → `maybeRelocatePain` 把佩恩传到同世界随机玩家身边并锁定追杀(在某玩家 160 格内找到加载着的佩恩才能传)。
+- **④ 强化装备无法破坏**:`EquipmentEnhancer.withLevel` 对 level>0 设 `UNBREAKABLE`,保护投入、被夺也不被打坏。**[待编译验证:`UnbreakableComponent` 构造]**
+- **⑤ 精英抢护甲**:缴械除武器外,按 `eliteStealArmorChance`(0.25)抢一件穿戴护甲并穿到精英身上(死亡掉落归还);`STOLE_GEAR` 标记防一只怪累计抢多人装备;被夺武器强化等级记入 `LOST_WEAPON_ENHANCE`。
+- **⑥ 武器找回** `/yongye recover`:把 `LOST_WEAPON_ENHANCE` 的 2/3(`weaponRecoverKeepFraction`)转移到手持武器(损失 1/3),清记录。
+- 90 个 Java 文件,无新增文件。新增附着 `LOST_WEAPON_ENHANCE`(int)/`STOLE_GEAR`(bool)。

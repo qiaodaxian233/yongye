@@ -72,7 +72,7 @@ public final class WeaponSkillManager {
 
     /** 混沌斩:面朝方向锥形范围伤害 + 击退。 */
     private static void chaosSlash(ServerWorld world, ServerPlayerEntity player, int level, YongyeConfig cfg) {
-        double dmg = cfg.skillSlashDamage + level * cfg.skillSlashDamagePerLevel;
+        double dmg = cfg.skillSlashDamage + level * cfg.skillSlashDamagePerLevel + player.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.skillSlashAttackRatio;
         double range = cfg.skillSlashRange;
         Vec3d look = player.getRotationVector().normalize();
         Vec3d eye = player.getEyePos();
@@ -96,7 +96,7 @@ public final class WeaponSkillManager {
 
     /** 深渊吞噬:半径内敌人受伤,按比例治疗自己。 */
     private static void abyssDevour(ServerWorld world, ServerPlayerEntity player, int level, YongyeConfig cfg) {
-        double dmg = cfg.skillDevourDamage + level * cfg.skillDevourDamagePerLevel;
+        double dmg = cfg.skillDevourDamage + level * cfg.skillDevourDamagePerLevel + player.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.skillDevourAttackRatio;
         double radius = cfg.skillDevourRadius;
         DamageSource src = world.getDamageSources().magic();
         Box box = player.getBoundingBox().expand(radius);
@@ -121,7 +121,7 @@ public final class WeaponSkillManager {
 
     /** 终焉降临:大范围毁灭性打击 + 上抛。 */
     private static void finality(ServerWorld world, ServerPlayerEntity player, int level, YongyeConfig cfg) {
-        double dmg = cfg.skillFinalityDamage + level * cfg.skillFinalityDamagePerLevel;
+        double dmg = cfg.skillFinalityDamage + level * cfg.skillFinalityDamagePerLevel + player.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.skillFinalityAttackRatio;
         double radius = cfg.skillFinalityRadius;
         DamageSource src = world.getDamageSources().playerAttack(player);
         Box box = player.getBoundingBox().expand(radius);

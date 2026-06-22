@@ -55,6 +55,7 @@ public final class PainBossHandler {
         boolean rebirthUsed;
         long devastationAt;
         Vec3d devastationCenter;
+        double devastationDamage;
         PainState(int now) { this.nextAbility = now + 80; }
     }
 
@@ -64,11 +65,14 @@ public final class PainBossHandler {
     /** 当前存活的长门(全局唯一);null 表示不存在。 */
     private static UUID activePain = null;
     private static int naturalCheckTick = 0;
+    private static long painLastTargetTick = 0; // 佩恩最近一次拥有目标的游戏刻;长时间无目标则传送
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             // 终局自然降临检定(独立计时,不受下面的 10 tick 节流影响)
             maybeNaturalSpawn(server);
+            // 长时间找不到玩家 → 传送到随机玩家身边追杀
+            maybeRelocatePain(server, server.getTicks());
 
             if (++tick < 10) return;
             tick = 0;
@@ -137,12 +141,48 @@ public final class PainBossHandler {
         if (pain != null) activePain = pain.getUuid();
     }
 
+    /** 佩恩长时间(painLostTeleportTicks)没有目标 → 传送到同世界一名随机玩家身边继续追杀。 */
+    private static void maybeRelocatePain(MinecraftServer server, int now) {
+        YongyeConfig cfg = YongyeConfig.get();
+        if (!cfg.painLostTeleport || activePain == null) return;
+        if (now - painLastTargetTick < cfg.painLostTeleportTicks) return;
+        var players = server.getPlayerManager().getPlayerList();
+        if (players.isEmpty()) return;
+        for (ServerPlayerEntity p : players) {
+            if (!(p.getWorld() instanceof ServerWorld w)) continue;
+            var found = w.getEntitiesByClass(MobEntity.class, p.getBoundingBox().expand(160),
+                    e -> e.isAlive() && e.getAttachedOrElse(ModAttachments.IS_PAIN, false));
+            if (found.isEmpty()) continue;
+            java.util.List<ServerPlayerEntity> same = new java.util.ArrayList<>();
+            for (ServerPlayerEntity q : players) if (q.getWorld() == w) same.add(q);
+            if (same.isEmpty()) return;
+            relocatePain(w, found.get(0), same.get(w.getRandom().nextInt(same.size())));
+            painLastTargetTick = now;
+            return;
+        }
+    }
+
+    private static void relocatePain(ServerWorld world, MobEntity pain, ServerPlayerEntity target) {
+        var r = world.getRandom();
+        int x = target.getBlockX() + (r.nextInt(11) - 5);
+        int z = target.getBlockZ() + (r.nextInt(11) - 5);
+        int y = world.getTopY(Heightmap.Type.WORLD_SURFACE, x, z);
+        pain.refreshPositionAndAngles(x + 0.5, y, z + 0.5, r.nextFloat() * 360, 0);
+        pain.setTarget(target);
+        playBgmNear(world, pain);
+        if (world.getServer() != null) {
+            world.getServer().getPlayerManager().broadcast(
+                    Text.literal("【佩恩】六道之痛已锁定新的猎物……").formatted(Formatting.DARK_RED), false);
+        }
+    }
+
     private static void tickPain(ServerWorld world, MobEntity pain, int now) {
         YongyeConfig cfg = YongyeConfig.get();
         PainState st = STATES.computeIfAbsent(pain.getUuid(), k -> new PainState(now));
 
         PlayerEntity tgt = world.getClosestPlayer(pain.getX(), pain.getY(), pain.getZ(), 48, false);
         if (tgt instanceof LivingEntity living) pain.setTarget(living);
+        if (pain.getTarget() != null && pain.getTarget().isAlive()) painLastTargetTick = now;
 
         // 轮回天生:残血一次性满血复活
         if (!st.rebirthUsed && pain.getHealth() < pain.getMaxHealth() * cfg.painRebirthThreshold) {
@@ -155,7 +195,7 @@ public final class PainBossHandler {
 
         // 地爆天星延迟爆发
         if (st.devastationAt > 0 && now >= st.devastationAt) {
-            detonate(world, st.devastationCenter, cfg);
+            detonate(world, st.devastationCenter, st.devastationDamage, cfg);
             st.devastationAt = 0;
             st.devastationCenter = null;
         }
@@ -178,7 +218,7 @@ public final class PainBossHandler {
         world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, pain.getX(), pain.getY() + 0.5, pain.getZ(), 1, 0, 0, 0, 0);
         Box area = new Box(pain.getBlockPos()).expand(cfg.painPushRadius);
         for (PlayerEntity p : world.getEntitiesByClass(PlayerEntity.class, area, e -> e.isAlive())) {
-            p.damage(world.getDamageSources().magic(), (float) cfg.painPushDamage);
+            p.damage(world.getDamageSources().magic(), (float) (pain.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.painPushAttackRatio));
             double dx = p.getX() - pain.getX();
             double dz = p.getZ() - pain.getZ();
             p.takeKnockback(2.6, -dx, -dz);
@@ -197,7 +237,7 @@ public final class PainBossHandler {
             Vec3d dir = new Vec3d(pain.getX() - p.getX(), 0.2, pain.getZ() - p.getZ()).normalize();
             p.setVelocity(dir.x * 1.5, 0.25, dir.z * 1.5);
             p.velocityModified = true;
-            p.damage(world.getDamageSources().magic(), 3.0f);
+            p.damage(world.getDamageSources().magic(), (float) (pain.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.painPullAttackRatio));
         }
     }
 
@@ -209,6 +249,7 @@ public final class PainBossHandler {
         Vec3d center = new Vec3d(tgt.getX(), tgt.getY() + 10, tgt.getZ());
         st.devastationCenter = center;
         st.devastationAt = now + 70;
+        st.devastationDamage = pain.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.painDevastationAttackRatio;
         // 周围实体被拉升(漂浮)
         Box area = new Box(tgt.getBlockPos()).expand(cfg.painDevastationRadius + 2);
         for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, area,
@@ -218,13 +259,13 @@ public final class PainBossHandler {
         world.spawnParticles(ParticleTypes.REVERSE_PORTAL, center.x, center.y, center.z, 80, 1.0, 1.0, 1.0, 0.1);
     }
 
-    private static void detonate(ServerWorld world, Vec3d center, YongyeConfig cfg) {
+    private static void detonate(ServerWorld world, Vec3d center, double damage, YongyeConfig cfg) {
         if (center == null) return;
         world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z, 3, 1, 1, 1, 0);
         Box area = Box.of(center, cfg.painDevastationRadius * 2, cfg.painDevastationRadius * 2, cfg.painDevastationRadius * 2);
         for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, area,
                 e -> e.isAlive() && !e.getAttachedOrElse(ModAttachments.IS_PAIN, false))) {
-            le.damage(world.getDamageSources().magic(), (float) cfg.painDevastationDamage);
+            le.damage(world.getDamageSources().magic(), (float) damage);
             le.addVelocity(0, -1.0, 0);
             le.velocityModified = true;
         }
@@ -263,6 +304,7 @@ public final class PainBossHandler {
         }
 
         world.spawnEntity(pain);
+        if (world.getServer() != null) painLastTargetTick = world.getServer().getTicks();
         playBgmNear(world, pain);
         if (world.getServer() != null) {
             world.getServer().getPlayerManager().broadcast(

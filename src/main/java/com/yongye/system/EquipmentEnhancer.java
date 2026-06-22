@@ -95,6 +95,10 @@ public final class EquipmentEnhancer {
         out.setCount(1);
         if (level < 0) level = 0;
         out.set(ModComponents.ENHANCE_LEVEL, level);
+        // 强化过的装备无法因耐久损坏(保护玩家投入;被夺/夺回也不会被打坏)
+        if (level > 0) {
+            out.set(DataComponentTypes.UNBREAKABLE, new net.minecraft.component.type.UnbreakableComponent(false));
+        }
 
         Item item = out.getItem();
         Kind kind = kindOf(item);

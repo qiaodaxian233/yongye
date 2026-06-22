@@ -160,6 +160,21 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_starting_kit"));
 
+    /** LOST_WEAPON_ENHANCE: 被夺且未找回的武器强化等级(供 /yongye recover 转移到新武器,损失 1/3)。 */
+    public static final AttachmentType<Integer> LOST_WEAPON_ENHANCE =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .initializer(() -> 0)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "lost_weapon_enhance"));
+
+    /** STOLE_GEAR: 该怪是否已抢过装备(防止一只怪累计抢走多名玩家的装备造成丢失)。 */
+    public static final AttachmentType<Boolean> STOLE_GEAR =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "stole_gear"));
+
     public static void init() {
         Yongye.LOGGER.info("[永夜] 数据附着已注册");
     }
