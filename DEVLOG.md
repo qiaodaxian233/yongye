@@ -555,3 +555,13 @@
 - **新增 `HealthRateTracker`(客户端)**:逐 tick 把 `player.getHealth()` 写入 21 槽(≈1s)带 tick 戳的环形缓冲,扫描窗口内最旧样本算「最近一秒净血量变化 / 秒」(正=回血、负=掉血,<0.1 归零)。挂在 `YongyeClient` 已有的 `END_CLIENT_TICK` 回调里;离开世界 `reset()` 防陈旧样本。纯客户端、零网络。
 - **`HudCompactMixin` 重写绘制**:① 血量改读实时 `getHealth()`/`getMaxHealth()`/`getAbsorptionAmount()`(回血时数字平滑上涨);② 整排横向布局 = 红心+血量(白字) · 护甲图标+护甲(蓝白) · 速率(绿/红「+X.X/s」,静止不显示);③ 半透明深色底衬 `fill(...,0x90000000)` 提升可读性。阈值 `YONGYE_HEALTH_THRESHOLD`(60)以下仍走原版。`renderArmor` 取消逻辑不变。
 - 95 个 Java 文件(+1 HealthRateTracker)。用到的 `getHealth/getMaxHealth/getAbsorptionAmount/getArmor`(本 mixin 已用)、`DrawContext.fill`(项目多处用,带 ARGB 透明度)、`drawGuiTexture/drawTextWithShadow`(原版本就用)均项目/原版稳定 API,改的是既有 mixin 方法体(签名不动),无新待验证点。
+
+---
+
+## 里程碑 78 — 天象视觉:血月红月贴图 + 酸雨绿雨贴图 + 流星雨真·下落
+应需求(上轮"血月能换图吗/酸雨能改雨色吗/流星雨怎么实现"):用户用 GPT 生成红月 + 绿雨贴图,走**资源包永久换贴图**路;流星雨补真下落动画。
+- **血月红月**(贴图):用户红月相图(1774×887,2:1,RGB)→ 重采样 1024×512(每月相格 256×256,整数边界防串色)+ 按 `max(R,G,B)` 生成 alpha(黑角透明/红晕半透成光晕/月盘不透),存 `assets/minecraft/textures/environment/moon_phases.png`。**注意:永久红月**(所有夜晚都红,非仅血月事件);要"仅血月时红"需天空渲染 mixin。**[待实机验证:月亮渲染 blend 下 alpha 观感]**
+- **酸雨绿雨**(贴图):用户绿雨图(512×2048,RGBA)直接存 `assets/minecraft/textures/environment/rain.png`(雨平铺采样,尺寸宽容)。**注意:永久绿雨**(所有雨都绿);要"仅酸雨时绿"需 WorldRenderer 天气渲染 mixin。
+- **流星雨真下落**(`NightfallWeatherHandler`):原来只在地面凭空炸。新增在途流星列表 + `Meteor` 内部类:`spawnMeteor` 在落点上方 45~60 格 + 水平偏移 24 处生成(斜线),`tickMeteors`(register 顶端每 tick 调用,始终执行保证清理)推进位置 + 喷 FLAME/LAVA/LARGE_SMOKE 火尾,~1~1.6s 落地调现有 `impact()`(爆炸+范围伤害)。上限 64 颗护栏。METEOR 分支改 `impact`→`spawnMeteor`。纯服务端粒子,无 mixin。
+- 95 个 Java 文件(无新增 Java,仅改 NightfallWeatherHandler)+ 2 贴图。粒子 API 全原版稳定;贴图为资源覆盖,无编译影响。
+- 备注:血月红色屏幕叠层(HUD,需小 S2C)未做——用户选了换月亮贴图;要的话可加。

@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m77**:m65 本地 **build 通过 ✅**,m66-77 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback · 本段最新,优先看)
+## 0.5 当前状态(截至 **m78**:m65 本地 **build 通过 ✅**,m66-78 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha观感 · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -68,6 +68,7 @@
 - **m75** **永夜 HUD**(应需求)。S2C `NightfallSyncPayload`(level+name),setLevel 变更 + JOIN 下发(YongyeNet.sendNightfall);客户端 YongyeClient 存 nightfallLevel/Name,`HudRenderCallback` 在 level≥1 时把阶段名(getLevelName)居中画屏幕顶部(y=4)。**[待验证 HudRenderCallback 签名]**。+1 文件(93)。
 - **m76** **永夜剥视**(应需求)。NightfallVisionHandler:永夜≥nightfallDarknessMinLevel(1)时每 2s 续 100t DARKNESS,视野吞噬式压缩(沉浸)。纯服务端,无 mixin。+1 文件(94)。(非渲染距离雾;真距离雾需客户端 fog mixin。)
 - **m77** **血量 HUD 重做**(应需求·回血不实时/看不见回血/难看)。根因:`HudCompactMixin` 画血量用原版动画形参 `health`(心跳延迟、阶梯跳变)。**新增 `HealthRateTracker`(客户端)**:逐 tick 采 `getHealth()` 入 21 槽带 tick 戳环形缓冲,算「最近一秒净血量变化/秒」;挂 YongyeClient 已有 END_CLIENT_TICK;离世界 reset。**`HudCompactMixin` 重写**:血量改实时 `getHealth/getMaxHealth/getAbsorptionAmount`、整排布局(红心+血量白字·护甲蓝白·速率绿/红「+X.X/s」静止隐藏)、半透明底衬 `fill(0x90000000)`。阈值 60 以下走原版。改既有 mixin 方法体(签名不动),无新待验证点。+1 文件(95)。
+- **m78** **天象视觉**(应需求)。① **血月红月贴图**:用户 GPT 生成红月相图 → 重采样 1024×512(整数格防串色)+ `max(R,G,B)` alpha(黑角透/红晕半透/月盘不透)→ `assets/minecraft/textures/environment/moon_phases.png`。**永久红月**(非仅血月事件;要条件化需天空渲染 mixin)。**[待验证:月亮 blend 下 alpha 观感]** ② **酸雨绿雨贴图**:用户绿雨图 → `environment/rain.png`。**永久绿雨**(要条件化需天气渲染 mixin)。③ **流星雨真下落**(`NightfallWeatherHandler`):新增 `Meteor` 内部类 + 在途列表,`spawnMeteor` 落点上方 45~60 格偏移生成(斜线),`tickMeteors`(register 顶端每 tick,始终执行)推进+喷 FLAME/LAVA/LARGE_SMOKE 火尾,~1.5s 落地调 `impact()`。上限 64。纯服务端粒子,无 mixin。无新增 Java(95)+2 贴图。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 
@@ -82,6 +83,7 @@
 8. **m60 怪物BOSS版 + 搭塔**:`/yongye mobboss`(或调试菜单「BOSS化附近」)→ 看顶部红血条 + 怪变大 + Boss 能力(减伤/狂暴/召援/冲击波),击杀看翻倍掉落。搭塔:造个单格高柱站上去等怪追来,看它原地垒圆石爬上来(`mobPillarUp` 可关)。**先确认 build:若报 `GENERIC_SCALE` 找不到 → 改成 `SCALE`**。怪物BOSS可能偏频/掉落偏厚,按手感调 `mobBossChance` / `mobBossStartDay` / `bossDropMultiplier`。
 9. **m61 HIM 音效+闪现**:夜里/洞穴待着触发(或临时把 `himChance` 调到 1.0、`himCheckIntervalTicks` 调到 100 快速测)→ 看 HIM 紫粒子闪现到面前 + 听自定义突脸音效。音效 14.3s 远长于 HIM 停留(1.75s),嫌拖就裁短 mp3 重转或调大 `himDurationTicks`;`himBlindnessTicks` 控制"突然"程度(小=突,大=慢压迫)。
 10. **m77 血量 HUD**:堆到 >60 血(走紧凑显示)→ 看血量旁有半透明底衬、整排「红心+血量 / 护甲 / 速率」;回血时血量数字应**平滑实时上涨**(不再阶梯跳),并出现绿色「+X.X/s」;受伤/中毒/酸雨掉血时出现红色「-X.X/s」;静止时速率段消失。低于 60 血仍是原版红心(可下调 `YONGYE_HEALTH_THRESHOLD` 让紧凑显示更早生效)。
+11. **m78 天象视觉**:① 夜里抬头看月亮是否为**红血月**(贴图永久生效,所有夜晚都红;若月亮显黑方块/边缘异常说明 alpha/blend 不对,反馈我调)。② 下雨(或酸雨)看雨是否**绿色**(永久,所有雨都绿)。③ `/yongye nightfall 4`+ 撑到流星雨事件(或调 `weatherTriggerChance` 加速)→ 看流星**从高空带火尾斜插下来**砸地爆炸,而非凭空地面炸。**永久红月/绿雨是换贴图的代价**;要"仅血月时红/仅酸雨时绿"需客户端渲染 mixin(版本敏感,另议)。血月红色屏幕叠层未做(选了换月亮贴图),要可加。
 
 **接下来用户清单里没做的**:`#8` 美术占位替换(**需用户提供素材或指明物品,Claude 无法凭空画好像素图**)、整体数值平衡、真弧形盾面(需自定义 Java 物品渲染器,高风险,留另议)、天赋树连线美化。(**调试菜单已于 m58 落地。**)
 
