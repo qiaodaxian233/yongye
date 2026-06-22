@@ -462,6 +462,19 @@ public class YongyeConfig {
     public boolean enablePainPhases = true;      // 佩恩按血量分 3 阶段,逐阶段狂暴
     public boolean enableSurvivalRank = true;    // 记录最高永夜层数 / 最高天数,/yongye top 排行
 
+    // ============ m74:永夜天象(血月/酸雨/流星雨,按永夜等级解锁)============
+    public boolean enableNightfallWeather = true;
+    public int weatherCheckIntervalTicks = 600;    // 每 30s 检定一次是否降下天象
+    public double weatherTriggerChance = 0.20;      // 检定命中概率
+    public int weatherEventDurationTicks = 1200;    // 单次天象持续 60s
+    public int bloodMoonMinNightfall = 2;           // 血月解锁永夜层
+    public int acidRainMinNightfall = 3;            // 酸雨解锁永夜层
+    public int meteorMinNightfall = 4;              // 流星雨解锁永夜层
+    public double acidRainDamage = 2.0;             // 酸雨:露天玩家每秒受伤
+    public double meteorDamage = 12.0;              // 流星雨:落点 AoE 伤害
+    public double meteorRadius = 24.0;              // 流星落点距玩家范围
+    public double meteorImpactRadius = 3.0;         // 单颗流星杀伤半径
+
     public static YongyeConfig get() {
         if (INSTANCE == null) load();
         return INSTANCE;

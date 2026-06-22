@@ -518,3 +518,14 @@
 - **⑥ 存活排行**:`SurvivalRankHandler` 每 5s 记录在线玩家终身最高永夜层 / 最高天数(`BEST_NIGHTFALL`/`BEST_DAY` 附着,死亡保留);`/yongye top` 列在线排行(按永夜层→天数)。
 - 91 个 Java 文件(+1 SurvivalRankHandler)。新增附着 ELITE_AFFIX/BEST_NIGHTFALL/BEST_DAY。
 - 推荐功能 **②永夜天象 / ③据点防御 / ⑦材料商人** 留待后续(分别需:服务端天象事件设计、新方块+材质+配方、交易 API)。
+
+---
+
+## 里程碑 74 — 永夜天象(推荐功能 ②;血月/酸雨/流星雨)
+- 新增 `NightfallWeatherHandler`:永夜 ≥1 时每 `weatherCheckIntervalTicks`(30s)按 `weatherTriggerChance`(0.2)检定,无进行中天象则随机降下一种(持续 `weatherEventDurationTicks` 60s),按永夜等级解锁:
+  - **血月**(≥`bloodMoonMinNightfall` 2):每 40t 给玩家 48 格内所有敌对怪叠加 力量II+速度I,怪群狂暴。
+  - **酸雨**(≥3):`setWeather` 强制下雨;每 20t 对露天(`isSkyVisible` 头顶可见天)玩家造成 `acidRainDamage`;结束时恢复晴天。
+  - **流星雨**(≥4):每 15t 在每名玩家 `meteorRadius` 内随机落点,爆炸/火焰粒子 + 爆炸音 + 落点 `meteorImpactRadius` 内 `meteorDamage` 的 magic AoE(不破坏地形)。
+  - 起止全服广播。纯服务端——血月红天/浓雾等客户端渲染未做(用广播 + 玩法效果替代)。
+- 92 个 Java 文件(+1 NightfallWeatherHandler)。setWeather/isSkyVisible/spawnParticles 均原版稳定 API。
+- 推荐功能 ③据点防御(新方块)/ ⑦商人(交易API)按用户要求**不做**。
