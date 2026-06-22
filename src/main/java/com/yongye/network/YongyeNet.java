@@ -122,11 +122,15 @@ public final class YongyeNet {
         ServerPlayNetworking.send(player, new StatsPayload(health, levels, className));
     }
 
-    /** 下发当前永夜等级 + 阶段名给指定玩家(HUD 显示用)。 */
+    /** 下发当前永夜等级 + 阶段名 + 视野压缩强度给指定玩家(HUD / 暗角显示用)。 */
     public static void sendNightfall(ServerPlayerEntity player) {
+        com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
+        int level = com.yongye.system.NightfallManager.getLevel();
+        // 视野压缩强度:开启且达到最低层才 >0;随等级递增并封顶,客户端据此画恒定暗角(不闪)
+        int vision = (cfg.enableNightfallDarkness && level >= cfg.nightfallDarknessMinLevel)
+                ? Math.min(level, 6) : 0;
         ServerPlayNetworking.send(player, new com.yongye.network.NightfallSyncPayload(
-                com.yongye.system.NightfallManager.getLevel(),
-                com.yongye.system.NightfallManager.getLevelName()));
+                level, com.yongye.system.NightfallManager.getLevelName(), vision));
     }
 
     /** 下发"最近灾厄核心位置"给玩家(HUD 方向箭头用);has=false 表示范围内无核心。 */

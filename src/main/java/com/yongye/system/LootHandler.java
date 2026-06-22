@@ -113,7 +113,7 @@ public final class LootHandler {
                     default -> GODLY;
                 };
                 drop(world, entity, hi.get(r.nextInt(hi.size())).make(r));
-                if (r.nextDouble() < 0.25) drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL));
+                // (生命结晶改由下方统一规则按 lifeCrystalDropChance 产出,精英自动翻倍;此处不再额外写死掉落)
                 // (生命核心及血核改由下方统一规则按"仅精英"产出)
                 // 精英概率掉落职业书(随机职业)
                 if (r.nextDouble() < cfg.classBookDropChance) {
@@ -151,7 +151,7 @@ public final class LootHandler {
             if (r.nextDouble() < cfg.lifeShardDropChance) {
                 drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, elite ? 1 + r.nextInt(2) : 1));
             }
-            // 生命结晶:普通怪 20%(精英翻倍)
+            // 生命结晶:普通怪按 lifeCrystalDropChance(精英翻倍)
             if (r.nextDouble() < cfg.lifeCrystalDropChance * (elite ? 2.0 : 1.0)) {
                 drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL, 1));
             }

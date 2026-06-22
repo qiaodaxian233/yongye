@@ -35,9 +35,10 @@ import org.lwjgl.glfw.GLFW;
 public class YongyeClient implements ClientModInitializer {
 
     private static boolean pendingClassSelect = false;
-    /** 永夜 HUD 状态(由 NightfallSyncPayload 更新):等级 + 阶段名 */
+    /** 永夜 HUD 状态(由 NightfallSyncPayload 更新):等级 + 阶段名 + 视野压缩强度 */
     public static int nightfallLevel = 0;
     public static String nightfallName = "";
+    public static int nightfallVision = 0;
     /** 灾厄核心定位器状态(由 CoreLocatorPayload 更新):是否有目标 + 世界坐标 */
     public static boolean coreHasTarget = false;
     public static double coreTX = 0, coreTY = 0, coreTZ = 0;
@@ -68,7 +69,11 @@ public class YongyeClient implements ClientModInitializer {
 
         // 永夜同步:更新 HUD 状态
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.NightfallSyncPayload.ID, (payload, context) ->
-                context.client().execute(() -> { nightfallLevel = payload.level(); nightfallName = payload.name(); }));
+                context.client().execute(() -> {
+                    nightfallLevel = payload.level();
+                    nightfallName = payload.name();
+                    nightfallVision = payload.vision();
+                }));
 
         // 灾厄核心定位器同步:更新方向箭头目标
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.CoreLocatorPayload.ID, (payload, context) ->
@@ -76,6 +81,33 @@ public class YongyeClient implements ClientModInitializer {
                     coreHasTarget = payload.has();
                     coreTX = payload.x(); coreTY = payload.y(); coreTZ = payload.z();
                 }));
+
+        // 永夜暗角:恒定亮度的边缘压暗,替代会"一闪一闪"的原版黑暗效果。
+        // 纯静态绘制(不含任何时间/帧变量)→ 亮度固定、绝不闪;vision 越大越暗越收窄。
+        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
+            if (nightfallVision <= 0) return;
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player == null || mc.options.hudHidden) return;
+            int w = mc.getWindow().getScaledWidth();
+            int h = mc.getWindow().getScaledHeight();
+            int v = Math.min(nightfallVision, 6);
+            int reachX = (int) (w * (0.08 + 0.025 * v));   // 暗角从左右边缘向内延伸的深度
+            int reachY = (int) (h * (0.08 + 0.025 * v));   // 上下同理
+            int edgeAlpha = Math.min(0x40 + v * 0x12, 0xC0); // 最外圈不透明度(封顶防全黑)
+            int steps = 12;
+            for (int i = 0; i < steps; i++) {
+                float f = 1f - (float) i / steps;          // 1=最外圈 → 0=内圈
+                int a = (int) (edgeAlpha * f * f);         // 平方衰减:边缘骤暗、向中心平滑透明
+                if (a <= 2) continue;
+                int col = (a << 24);                        // 纯黑 + alpha
+                int x1 = reachX * i / steps, x2 = reachX * (i + 1) / steps;
+                int y1 = reachY * i / steps, y2 = reachY * (i + 1) / steps;
+                ctx.fill(x1, 0, x2, h, col);                // 左缘
+                ctx.fill(w - x2, 0, w - x1, h, col);        // 右缘
+                ctx.fill(0, y1, w, y2, col);                // 上缘
+                ctx.fill(0, h - y2, w, h - y1, col);        // 下缘
+            }
+        });
 
         // 永夜 HUD:开启永夜(等级≥1)时,在屏幕中上显示当前阶段
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
@@ -138,44 +170,51 @@ public class YongyeClient implements ClientModInitializer {
             }
         });
 
-        // 背包界面加「成长」按钮 → 打开成长面板
+        // 背包界面:把功能按钮竖排放在背包面板**左侧的空白竖条**(用户指定位置)
         ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
             if (screen instanceof InventoryScreen) {
-                int bx = scaledWidth / 2 - 88;
-                int by = scaledHeight / 2 - 100;
+                // 原版背包面板:宽 176、高 166,居中。左缘 = 屏宽/2 - 88,上缘 = 屏高/2 - 83。
+                int guiLeft = scaledWidth / 2 - 88;
+                int guiTop = scaledHeight / 2 - 83;
+                int bw = 54, bh = 16, pitch = 19;       // 按钮宽/高/行距
+                int bx = guiLeft - bw - 4;               // 放在面板左侧,留 4px 缝
+                int by = guiTop + 5;                     // 从面板顶部略下开始竖排
+                int row = 0;
+
+                // 成长
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("成长"),
                         b -> client.setScreen(new StatsScreen(screen)))
-                        .dimensions(bx, by, 44, 16).build());
-                // 「装备」按钮:查看手持武器/盔甲的品质介绍
+                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                // 装备:查看手持武器/盔甲的品质介绍
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("装备"), b -> {
                     if (client.player == null) return;
                     ItemStack held = client.player.getMainHandStack();
                     if (!held.isEmpty() && EquipmentEnhancer.isEnhanceable(held.getItem())) {
                         client.setScreen(new WeaponInfoScreen(screen, held));
                     }
-                }).dimensions(bx + 46, by, 44, 16).build());
-                // 「饰品」按钮:打开饰品栏(放神器)
+                }).dimensions(bx, by + pitch * row++, bw, bh).build());
+                // 饰品:打开饰品栏(放神器)
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("饰品"),
                         b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload()))
-                        .dimensions(bx, by - 18, 44, 16).build());
-                // 「天赋」按钮:打开天赋界面
+                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                // 天赋:打开天赋界面
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("天赋"),
                         b -> client.setScreen(new TalentScreen(screen)))
-                        .dimensions(bx + 46, by - 18, 44, 16).build());
-                // 当前本命职业显示(点开成长面板)
+                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                // 强化:打开武器强化窗口
+                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("强化"),
+                        b -> ClientPlayNetworking.send(new com.yongye.network.OpenEnhancePayload()))
+                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                // 兑换:打开材料兑换界面(10 碎片→结晶→核心→血核)
+                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("兑换"),
+                        b -> client.setScreen(new ExchangeScreen(screen)))
+                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                // 当前本命职业(点开成长面板)
                 com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal(classLabel),
                         b -> client.setScreen(new StatsScreen(screen)))
-                        .dimensions(bx, by - 36, 44, 16).build());
-                // 「强化」按钮:打开武器强化窗口(放装备+材料,按数量一键升级)
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("强化"),
-                        b -> ClientPlayNetworking.send(new com.yongye.network.OpenEnhancePayload()))
-                        .dimensions(bx + 46, by - 36, 44, 16).build());
-                // 「兑换」按钮:打开材料兑换界面(10 碎片→结晶→核心→血核)
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("兑换"),
-                        b -> client.setScreen(new ExchangeScreen(screen)))
-                        .dimensions(bx, by - 54, 44, 16).build());
+                        .dimensions(bx, by + pitch * row++, bw, bh).build());
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(

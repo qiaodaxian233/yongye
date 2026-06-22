@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m81**:m65 本地 **build 通过 ✅**,m66-81 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis · 本段最新,优先看)
+## 0.5 当前状态(截至 **m82**:m65 本地 **build 通过 ✅**,m66-82 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -72,6 +72,7 @@
 - **m79** **主菜单永夜暗黑化**(应需求)。① splash:`assets/minecraft/texts/splashes.txt`(30 条永夜主题,资源包覆盖)替黄字。② 客户端 `TitleScreenMixin`(注册 mixins.json client):`TitleScreen.render` **TAIL 纯叠加**(不取消原版渲染)→ 全屏压暗 `fill(0x66000000)` + 顶部 86px 横幅 `fill(0xD2120006)` 遮原 logo + 矩阵放大 4.5× 画「永夜」血红大字 + 副标题。原 logo 像素图集塞不进中文故文字重画。**[待验证:TitleScreen.render 签名 + DrawContext.getMatrices/scale/drawText]** +1 文件(96)+splash。背景"换图"需用户提供全景图(6面)或单图;按钮暗黑未做(全局 widget 贴图)。
 - **m80** **主菜单大字重做**(应需求·m79 成品不好看)。根因:m79 横幅半透明 `0xD2120006`(82%),原 MINECRAFT logo 透出来显乱。修(仅改 `TitleScreenMixin` 方法体,无新文件/无新接口):① 横幅改**不透明** `0xFF0A0306` 盖死原 logo;② 下方 3 段递减透明 fill 渐变 + `0xFF8B0000` 血红下边线;③「永夜」放大 5×,四向偏移暗红 `0xFF4A0000` 辉光描边 + 亮血红 `0xFFE01515` 主体;④ 压暗加深 `0x88000000`;⑤ 副标题字距拉开。待验证项同 m79(未引入新接口)。文件数不变(96)。
 - **m81** **核心提示增强 + 修僵尸跳**(应需求)。① **修僵尸一跳一跳**:`PursuitHandler.wallAhead` 旧用 `!isAir()` 把草/花/雪层等无碰撞植被当墙 → 走草地每 tick 触发 m70 起跳翻越。改用新 helper `hasCollision`(碰撞箱非空)判墙。② **核心刷新提示**:`CatastropheCoreManager.spawnCore` 给 `coreSpawnNotifyRadius`(120)内玩家发 Title/Subtitle/Fade 包(屏幕中央「灾厄核心降临」+坐标)+ `playSoundToPlayer(ENTITY_WITHER_SPAWN)`(开关 coreSpawnTitle)。③ **HUD 方向箭头**:新 S2C `CoreLocatorPayload(has,x,y,z)`,每 2s `sendLocators` 下发 `coreLocatorRange`(220)内最近核心;客户端新 HudRenderCallback 用 yaw+坐标逐帧算方位,`RotationAxis.POSITIVE_Z` 旋转「▲」+距离(开关 enableCoreLocator)。配置+4,+1 文件(97 · CoreLocatorPayload)。**[待验证:Title三包构造 / RotationAxis.rotationDegrees+MatrixStack.multiply(Quaternionf);箭头方向镜像则 bearingDeg 取负]**。
+- **m82** **按钮移左侧 + 结晶降爆 + 暗角固定**(应需求)。① **按钮竖排到背包左缘外**(`YongyeClient` AFTER_INIT):guiLeft-58 起竖排 7 个(成长/装备/饰品/天赋/强化/兑换/职业),不再挡合成格。② **生命结晶降爆**:删 `LootHandler` 精英分支写死的 25% 额外结晶(重复)+ `lifeCrystalDropChance` 0.20→**0.05**(存量 config 需 set)。③ **永夜限视野改"固定不闪"**:根因 `StatusEffects.DARKNESS` 客户端自带脉动。默认关掉该效果(gate `nightfallDarknessEffect`=false),改用**客户端恒定暗角**——`NightfallSyncPayload` 加 `vision` 字段(服务端按配置算),`YongyeClient` 新 HudRenderCallback 画纯静态边缘压暗(无时间变量→不闪)。配置+1,NightfallSyncPayload 2参→3参。无新文件(97)。**[待验证:暗角观感/按钮极小窗口不出屏;纯 fill/Screen API 无新接口]**。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 
@@ -89,6 +90,7 @@
 11. **m78 天象视觉**:① 夜里抬头看月亮是否为**红血月**(贴图永久生效,所有夜晚都红;若月亮显黑方块/边缘异常说明 alpha/blend 不对,反馈我调)。② 下雨(或酸雨)看雨是否**绿色**(永久,所有雨都绿)。③ `/yongye nightfall 4`+ 撑到流星雨事件(或调 `weatherTriggerChance` 加速)→ 看流星**从高空带火尾斜插下来**砸地爆炸,而非凭空地面炸。**永久红月/绿雨是换贴图的代价**;要"仅血月时红/仅酸雨时绿"需客户端渲染 mixin(版本敏感,另议)。血月红色屏幕叠层未做(选了换月亮贴图),要可加。
 12. **m79-80 主菜单暗黑化**:回主菜单看 ① 黄色 splash 是否变成永夜主题中文(随机一条);② 顶部是否为「永夜」血红大字(带暗红辉光描边)+ 副标题、原 MINECRAFT logo 被**不透明**深色横幅 + 血红下边线**完全遮住**(m80 修了 m79 logo 透出来的穿帮);③ 整体背景压暗。**若 build 报 TitleScreen/getMatrices/drawText 相关错** → TitleScreen 渲染是版本敏感区,把报错贴我即调。若「永夜」大字位置偏/仍露出原 logo/压住按钮 → 调 `TitleScreenMixin` 里 `bannerH`(80)或 translate 的 y(16)。背景"整张换图"需另提供全景图。
 13. **m81 核心提示 + 僵尸跳修复**:① **僵尸跳**——生存模式在草地/花丛引怪追你,怪应**正常跑动不再原地蹦**(撞真墙才跳/挖)。② **核心提示**——`/yongye` 召核心或自然刷新时,附近(120格)应弹**屏幕中央「灾厄核心降临」标题**+坐标副标题+凋灵降临音效。③ **方向箭头**——屏幕中上出现旋转「▲」+「灾厄核心 N 格」,转视角时箭头平滑指向核心。**若 build 报 Title*S2CPacket / RotationAxis / MatrixStack.multiply 相关错** → 把报错贴我即调。**箭头方向若左右镜像** → 把 `YongyeClient` 里 `bearingDeg` 取负(我也可直接改)。箭头与 boss 血条重叠 → 调 `cy`(30)。开关:`coreSpawnTitle` / `enableCoreLocator`。
+14. **m82 按钮左移 / 结晶降爆 / 暗角固定**:① **按钮**——开背包看 7 个功能按钮是否竖排在**面板左侧空白竖条**(不再挡合成格);小窗口/不同 GUI 缩放下若出屏或重叠,调 `bx`(guiLeft-58)或 `bw`(54)。② **结晶**——刷怪掉的生命结晶应明显变少(普通5%/精英10%);**存量存档要 `/yongye config set lifeCrystalDropChance 0.05`** 才生效(删写死那条重建即生效)。③ **暗角**——永夜(≥1)时屏幕边缘应是**恒定压暗、绝不闪**;太暗/太窄调 `YongyeClient` 暗角的 `reachX/Y` 或 `edgeAlpha`。想要回原版脉动黑暗:`/yongye config set nightfallDarknessEffect true`。
 
 **接下来用户清单里没做的**:`#8` 美术占位替换(**需用户提供素材或指明物品,Claude 无法凭空画好像素图**)、整体数值平衡、真弧形盾面(需自定义 Java 物品渲染器,高风险,留另议)、天赋树连线美化。(**调试菜单已于 m58 落地。**)
 

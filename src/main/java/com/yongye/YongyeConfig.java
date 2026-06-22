@@ -236,7 +236,7 @@ public class YongyeConfig {
     public double lootChanceGodly = 0.008;
     /** 普通怪掉落"生命碎片"的概率(文档 15.1) */
     public double lifeShardDropChance = 0.10;     // 生命碎片:普通/精英怪按此概率掉(原 1.0 必掉过高)
-    public double lifeCrystalDropChance = 0.20;  // 生命结晶:普通怪 20%(精英翻倍)
+    public double lifeCrystalDropChance = 0.05;  // 生命结晶:普通怪 5%(精英翻倍=10%);结晶是进阶材料,故远低于碎片
     public double lifeCoreDropChance = 0.05;     // 生命核心:仅精英(普通怪绝不掉)
     public double bloodCoreDropChanceElite = 0.025; // 灾厄血核:仅精英,小概率
     public double classWeaponDropChanceElite = 0.04; // 精英掉落职业专属武器(随机职业)的几率
@@ -482,7 +482,10 @@ public class YongyeConfig {
 
     // ============ m76:永夜剥夺视线(沉浸感)============
     public boolean enableNightfallDarkness = true;
-    public int nightfallDarknessMinLevel = 1;   // 永夜达到该层即施加「黑暗」,视野被吞噬式压缩
+    public int nightfallDarknessMinLevel = 1;   // 永夜达到该层即压缩视野(客户端恒定暗角,不闪)
+    // 旧的原版「黑暗」效果(StatusEffects.DARKNESS)自带呼吸式脉动会"一闪一闪",默认关闭;
+    // 改用客户端恒定暗角(vignette)实现"固定不闪"的视野压缩。想要原版脉动黑暗可设 true。
+    public boolean nightfallDarknessEffect = false;
 
     public static YongyeConfig get() {
         if (INSTANCE == null) load();

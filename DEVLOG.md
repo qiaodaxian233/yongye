@@ -595,3 +595,13 @@
 - **核心提示·HUD 方向箭头**(像 boss 指示):新增 S2C `CoreLocatorPayload(has,x,y,z)`;`CatastropheCoreManager` 每 2s `sendLocators` 给各玩家下发 `coreLocatorRange`(220)内最近核心坐标(无则 has=false);客户端 `YongyeClient` 存坐标 + 新 `HudRenderCallback`:用玩家当前 yaw + 核心坐标逐帧算相对方位角,`RotationAxis.POSITIVE_Z.rotationDegrees` 旋转「▲」指向核心 + 下方「灾厄核心 N 格」距离。开关 `enableCoreLocator`。
 - 配置 +4(coreSpawnTitle/coreSpawnNotifyRadius/enableCoreLocator/coreLocatorRange)。+1 文件(CoreLocatorPayload,97)。
 - **[待编译验证]**:① TitleS2CPacket/SubtitleS2CPacket/TitleFadeS2CPacket(已查 yarn 1.21 确存在于 net.minecraft.network.packet.s2c.play,构造 (Text)/(Text)/(int,int,int))② 客户端 `RotationAxis.POSITIVE_Z.rotationDegrees` + `MatrixStack.multiply(Quaternionf)`(箭头旋转)。playSoundToPlayer/HudRenderCallback/getCollisionShape 均项目已用或稳定。箭头旋转方向若实机感觉镜像,把 bearingDeg 取负即可。
+
+---
+
+## 里程碑 82 — 按钮移左侧 + 结晶爆率再降 + 永夜暗角改"固定不闪"
+应需求(截图标注左侧竖条 + "结晶还高" + "限视野一直闪"):
+- **按钮移到背包左侧竖条**(`YongyeClient` AFTER_INIT):原来是面板上方 2 列网格(挡合成格)。改为面板**左缘外**(guiLeft-bw-4)竖排 7 个:成长/装备/饰品/天赋/强化/兑换/本命职业,bw=54、行距 19,从 guiTop+5 起;落在用户画框的空白竖条里。
+- **生命结晶爆率再降**(`LootHandler`+`YongyeConfig`):① 删掉精英分支里**写死的 25% 额外结晶**(与下方统一规则重复,是精英结晶过多主因);② `lifeCrystalDropChance` 0.20→**0.05**(普通5%/精英10%)。**存量 config.json 需 `config set lifeCrystalDropChance 0.05`**;删写死那条重建即生效。
+- **永夜限视野"一闪一闪"→固定**:根因——`StatusEffects.DARKNESS`(监守者黑暗)**客户端自带呼吸式脉动**,续期改不掉,天生就闪。改方案:① `NightfallVisionHandler` 默认**不再施加** DARKNESS(gate 新配置 `nightfallDarknessEffect`,默认 false;想要原版脉动可开);② 改用**客户端恒定暗角**:`NightfallSyncPayload` 加 `vision` 字段(服务端按 enableNightfallDarkness+minLevel+等级算强度下发),`YongyeClient` 新 HudRenderCallback 按 vision 画**纯静态边缘压暗**(12 段平方衰减 fill,无任何时间变量→亮度固定绝不闪),vision 越大越暗越收窄(封顶防全黑)。
+- 配置 +1(nightfallDarknessEffect);NightfallSyncPayload 记录 +1 字段(2参→3参,构造/codec/读取已同步)。无新增文件(97)。
+- **[待验证]**:暗角观感(强度/收窄是否合适,可调 reachX/Y 与 edgeAlpha);按钮在不同 GUI 缩放下是否都落在面板左侧不出屏(bx=guiLeft-58,极小窗口需留意)。均为纯 fill/Screen API,无新接口风险。
