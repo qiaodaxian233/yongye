@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m63**:m55-57 已 **build 通过 ✅**,m58-62 已 push **待实机验证**,m63(整套材质/音效包并入 assets/minecraft)已加待 push · 本段最新,优先看)
+## 0.5 当前状态(截至 **m64**:m55-57 已 **build 通过 ✅**,m58-63 已 push **待实机验证**,m64(材质包只留怪物皮肤+音效)已加待 push · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -54,6 +54,7 @@
 - **m61** **HIM 突脸:自定义音效 + 传送闪现**(应需求)。用户上传 `突脸惊吓.mp3` → ffmpeg 转 `him_jumpscare.ogg`(14.3s),复用既有音效管线:`sounds.json` + `ModSounds.HIM_JUMPSCARE`,HIM 登场换播此音效(原 ENTITY_ENDERMAN_STARE)。登场加 `ParticleTypes.PORTAL` 紫色闪现粒子(`himTeleportFlash`)。失明铺垫 100t→可配 `himBlindnessTicks`(默认 20t≈1s,更突然)。**注意**:音效 14.3s 远长于 HIM 停留 1.75s,会放完;要贴合就裁短 mp3。全程复用已 build API,无待验证点。
 - **m62** **精英+ 额外经验**(应需求·升级慢)。新增 `BonusXpHandler`(AFTER_DEATH),按档 `ExperienceOrbEntity.spawn` 掉经验:长门500>怪物BOSS150>原版Boss200>精英25(取最高适用,先判 IS_MOB_BOSS)。配置 `enableBonusXp`+`xpBonus*`。无 mixin/依赖/待验证。**同批未完**:材质包应用/默认皮肤/音效——`minecraft.zip` 未真正上传(uploads 空),待用户重传(预定 m63)。
 - **m63** **整套材质/音效资源包并入**(应需求·切换默认皮肤+音效)。用户把资源包做成 7z 分卷直接提交进仓库(`e0699af`),本里程碑解开(341贴图+784音效+models/lang/splash)整套并入 `src/main/resources/assets/minecraft/`——mod jar 资源盖过原版默认,装 mod 即自动应用(怪物皮肤/方块/物品/音效),无需手动挂包;音效靠同路径 ogg 覆盖(无 sounds.json)。删掉根目录 raw `.7z` 分卷。`assets/minecraft` 约 37MB,jar 随之变大(预期)。无 Java 改动。想要可菜单开关再转 `registerBuiltinResourcePack`+`DEFAULT_ENABLED`。
+- **m64** **材质包只留怪物皮肤**(应需求·方块皮肤不要)。从 m63 整套包删掉非怪物视觉资产(textures 的 block/item/environment/painting/particle/models + models/ + blockstates/ + lang/ + texts/,共 168 文件),只留 textures/entity(217 怪物皮肤)+ sounds(784 音效)。items/lang 也按"只留怪物皮肤"一并去掉,想要可加回。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 
