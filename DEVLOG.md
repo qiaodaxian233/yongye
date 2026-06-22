@@ -575,3 +575,13 @@
 - **[待编译验证:`TitleScreen.render(DrawContext,int,int,float)` 签名 + `DrawContext.getMatrices()`/`MatrixStack.scale/translate` + `DrawContext.drawText(...,boolean)` 在 1.21.1]**——TitleScreen 渲染属版本敏感区,以本地 build 为准。
 - 96 个 Java 文件(+1 TitleScreenMixin)+ splash 文本。
 - 备注:背景目前是"压暗"非"换图";要整张末日全景图需用户提供 6 面立方体贴图(`panorama_0..5.png`)或单张背景图(再接 mixin)。按钮暗黑主题未做(需替换全局 widget 贴图,会影响所有界面)。横幅高度 86 是估值,某些 GUI 缩放下若露出原 logo/压到按钮,调该值即可。
+
+---
+
+## 里程碑 80 — 主菜单永夜大字重做(修原 logo 穿帮 + 加辉光)
+应需求(上轮成品截图\"不好看,原 MINECRAFT logo 透在永夜后面\"):
+- **根因**:m79 顶部横幅用半透明 `0xD2120006`(82% 不透明),原版 logo 从底下透出来,显得乱。
+- **修法**(仅改 `TitleScreenMixin` 绘制方法体,无新文件/无新 API):① 横幅改**完全不透明** `0xFF0A0306` 彻底盖死原 logo;② 横幅下方加 3 段递减透明 fill 做**渐变过渡**(避免硬边)+ 一条 `0xFF8B0000` **血红下边线**(把边缘变成有意设计);③「永夜」大字放大 5×,先画四向偏移的暗红 `0xFF4A0000` **辉光描边**再叠亮血红 `0xFFE01515` 主体,更醒目;④ 全屏压暗加深到 `0x88000000`;⑤ 副标题改字距拉开的 \"E T E R N A L   N I G H T\"。
+- 待验证项同 m79(TitleScreen 渲染签名/矩阵/drawText 属版本敏感区,以本地 build 为准)——本轮未引入新接口。
+- 96 个 Java 文件(无增减,仅改 TitleScreenMixin 方法体)。
+- 仍未做:背景换整张末日图(需用户提供全景/背景图)、按钮全局暗黑主题、"仅事件时"红月/绿雨(需渲染 mixin)。
