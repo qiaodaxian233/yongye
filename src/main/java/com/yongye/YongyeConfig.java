@@ -393,6 +393,11 @@ public class YongyeConfig {
     // ============ 材料兑换(m66:背包按钮,10 碎片→结晶→核心→血核,等值兑换)============
     public boolean enableMaterialExchange = true;
 
+    // ============ 开局赠礼(m67:每人首次进入发一个背包)============
+    public boolean giveStartingBackpack = true;
+    /** 开局赠送的物品 id。默认 Sophisticated Backpacks 的下界合金背包;软依赖:未装该 mod 则自动跳过。 */
+    public String startingBackpackItem = "sophisticatedbackpacks:netherite_backpack";
+
     // ============ 高血量反制(文档第 17 章)============
     public boolean enableHighHpCounter = true;
     /** Boss 攻击附加的"最大生命百分比"伤害 */

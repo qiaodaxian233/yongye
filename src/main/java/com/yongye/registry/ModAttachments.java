@@ -152,6 +152,14 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "starting_class_chosen"));
 
+    /** GOT_STARTING_KIT: 是否已领取开局赠礼(下界合金背包),每人只发一次(死亡保留,避免刷取)。 */
+    public static final AttachmentType<Boolean> GOT_STARTING_KIT =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_starting_kit"));
+
     public static void init() {
         Yongye.LOGGER.info("[永夜] 数据附着已注册");
     }

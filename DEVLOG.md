@@ -444,3 +444,12 @@
 - **链路**:背包新增「兑换」按钮 → 客户端 `ExchangeScreen`(三行:碎片→结晶 / 结晶→核心 / 核心→血核,各含"兑换 10→1"与"全部兑换",并**实时显示背包内各材料数量**)→ C2S `ExchangePayload(tier, all)` → 服务端 `MaterialExchange` 扫背包数料、`decrement` 扣料、`offerOrDrop` 给产物、发聊天反馈(材料不足时红字提示)。
 - 纯事件 + 网络,无 mixin。复用现成范式:`SkillUsePayload` 的带字段 codec、`OpenAccessory/Enhance` 的 C2S 接线、背包按钮 `ScreenEvents.AFTER_INIT`、`offerOrDrop`。配置 `enableMaterialExchange`。
 - 88 个 Java 文件(+3:ExchangePayload / MaterialExchange / ExchangeScreen)。无待验证点(API 全为项目已 build 同款)。
+
+---
+
+## 里程碑 67 — 开局赠礼:每人首次进入发一个下界合金背包
+应需求:所有人开局获得一个下界合金背包(Sophisticated Backpacks)。
+- 新增 `StartingKitHandler`:`ServerPlayConnectionEvents.JOIN` 时,若未领过(持久标记 `GOT_STARTING_KIT`,死亡保留防刷)则 `giveItemStack` 发一个并打标记,**每人仅一次**。
+- **软依赖**:背包是独立 mod,**不硬依赖**——按字符串 id(配置 `startingBackpackItem`,默认 `sophisticatedbackpacks:netherite_backpack`)在 `Registries.ITEM` 查;查不到(未装该 mod / id 错)**静默跳过且不打标记**(玩家日后装上该 mod、下次登录可补发),不崩。
+- 老玩家(尚无标记)下次登录也会补发一个 → "所有人"最终都拿到一个。配置 `giveStartingBackpack` 开关。
+- 89 个 Java 文件(+1 StartingKitHandler)。无待验证点。
