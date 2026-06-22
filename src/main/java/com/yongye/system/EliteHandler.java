@@ -38,8 +38,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -200,16 +200,31 @@ public final class EliteHandler {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (ELITES.isEmpty()) return;
             YongyeConfig cfg = YongyeConfig.get();
-            Iterator<MobEntity> it = ELITES.iterator();
-            while (it.hasNext()) {
-                MobEntity e = it.next();
+            // 关键修复(m88):必须遍历"快照",不能直接迭代 ELITES 本体。
+            // 原因:带「召唤」词缀的精英会在 tickElite 内调 sw.spawnEntity 召唤僵尸,
+            //   而 spawnEntity 同步触发 ServerEntityEvents.ENTITY_LOAD → 该回调对刚生成的
+            //   怪掷精英概率,命中即 ELITES.add(...)。这就是"遍历途中结构性修改集合",
+            //   直接迭代下一次 next() 必抛 ConcurrentModificationException,打崩服务器 tick
+            //   (双人在线时召唤怪更易命中精英化,故复现稳定)。这是单线程重入,与多线程、
+            //   与 WeakHashMap 的 GC 回收均无关(GC 清理弱键不改 modCount)。
+            // 解法:拷一份快照来遍历,死亡精英延后统一删除,对任何重入修改免疫——
+            //   召唤出的怪照常能进 ELITES,只是本 tick 不处理、下一 tick 才纳入,互不干扰。
+            List<MobEntity> snapshot = new ArrayList<>(ELITES);
+            List<MobEntity> toRemove = null; // 待删的死亡精英;为空则保持 null,省去分配
+            for (MobEntity e : snapshot) {
                 if (e == null || !e.isAlive() || e.isRemoved()) {
-                    it.remove();
-                    LAST_TELEPORT_AGE.remove(e);
+                    if (toRemove == null) toRemove = new ArrayList<>();
+                    toRemove.add(e);
                     continue;
                 }
                 if (!(e.getWorld() instanceof ServerWorld sw)) continue;
                 tickElite(sw, e, cfg);
+            }
+            if (toRemove != null) {
+                for (MobEntity dead : toRemove) {
+                    ELITES.remove(dead);
+                    LAST_TELEPORT_AGE.remove(dead);
+                }
             }
         });
 

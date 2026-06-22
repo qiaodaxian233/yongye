@@ -34,12 +34,12 @@
 ## 0. 一分钟速览
 
 - 这是一个 **极难灾变生存** 玩法 mod：白天搜刮、夜晚逃命，任务失败会推高「永夜」等级，怪物锁定/挖墙/爬墙追杀；玩家靠 **装备血量 + 8 种技能书 + 10 种背包神器 + 饰品栏 + 职业 + 随机掉落** 反向变强,并按游戏天数推进难度(类「惊变」)。
-- 代码量:**76 个 Java 文件 / 约 8300 行 / 245 项可调配置 / DEVLOG 54 个里程碑**。
+- 代码量:**100 个 Java 文件 / 约 1.1 万行 / 324 项可调配置 / DEVLOG 88 个里程碑**。
 - **项目完成度(估)≈ 99%**:核心玩法、成长线、世界节奏、Boss、HUD、饰品栏、时间进度、职业系统、天赋树(命令版+GUI版)、职业专属技能/武器/盾、开局选职业(卡图版)、职业大招、坦克真减伤、武僧全用途耐久惩罚均已落地;余下主要是整体数值平衡(配置全开放待实测)、若干美术占位替换、调试菜单、真弧形盾面渲染。
 
 ---
 
-## 0.5 当前状态(截至 **m87**:m65 本地 **build 通过 ✅**,m66-87 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis · 本段最新,优先看)
+## 0.5 当前状态(截至 **m88**:m65 本地 **build 通过 ✅**,m66-88 已 push **待实机验证**;待验证接口 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis / m86 TextFieldWidget六参构造 · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -74,6 +74,11 @@
 - **m81** **核心提示增强 + 修僵尸跳**(应需求)。① **修僵尸一跳一跳**:`PursuitHandler.wallAhead` 旧用 `!isAir()` 把草/花/雪层等无碰撞植被当墙 → 走草地每 tick 触发 m70 起跳翻越。改用新 helper `hasCollision`(碰撞箱非空)判墙。② **核心刷新提示**:`CatastropheCoreManager.spawnCore` 给 `coreSpawnNotifyRadius`(120)内玩家发 Title/Subtitle/Fade 包(屏幕中央「灾厄核心降临」+坐标)+ `playSoundToPlayer(ENTITY_WITHER_SPAWN)`(开关 coreSpawnTitle)。③ **HUD 方向箭头**:新 S2C `CoreLocatorPayload(has,x,y,z)`,每 2s `sendLocators` 下发 `coreLocatorRange`(220)内最近核心;客户端新 HudRenderCallback 用 yaw+坐标逐帧算方位,`RotationAxis.POSITIVE_Z` 旋转「▲」+距离(开关 enableCoreLocator)。配置+4,+1 文件(97 · CoreLocatorPayload)。**[待验证:Title三包构造 / RotationAxis.rotationDegrees+MatrixStack.multiply(Quaternionf);箭头方向镜像则 bearingDeg 取负]**。
 - **m82** **按钮移左侧 + 结晶降爆 + 暗角固定**(应需求)。① **按钮竖排到背包左缘外**(`YongyeClient` AFTER_INIT):guiLeft-58 起竖排 7 个(成长/装备/饰品/天赋/强化/兑换/职业),不再挡合成格。② **生命结晶降爆**:删 `LootHandler` 精英分支写死的 25% 额外结晶(重复)+ `lifeCrystalDropChance` 0.20→**0.05**(存量 config 需 set)。③ **永夜限视野改"固定不闪"**:根因 `StatusEffects.DARKNESS` 客户端自带脉动。默认关掉该效果(gate `nightfallDarknessEffect`=false),改用**客户端恒定暗角**——`NightfallSyncPayload` 加 `vision` 字段(服务端按配置算),`YongyeClient` 新 HudRenderCallback 画纯静态边缘压暗(无时间变量→不闪)。配置+1,NightfallSyncPayload 2参→3参。无新文件(97)。**[待验证:暗角观感/按钮极小窗口不出屏;纯 fill/Screen API 无新接口]**。
 - **m83** **掠夺者队长 Boss 化加天数门控**(应需求·刚开局就遇 Boss 队长)。`BossHandler` ENTITY_LOAD 对 `RaiderEntity`(巡逻队长)加 `gameDay < bossRaidCaptainMinDay`(默认 8)门控,早于该天数不打 IS_BOSS;真·Boss(凋灵/监守者/远古守卫/末影龙)不受限仍始终强化。配置+1。无新文件(97)。重建即生效。
+- **m84** **调试菜单加「Boss 门控」组**:`DebugScreen` 加 3 按钮走 `config set bossRaidCaptainMinDay`(第8天/第15天/关闭 9999),免敲命令。无新文件(97)、无新接口,重建即生效。
+- **m85** **调试菜单重做为「分页全命令」**:`DebugScreen` 重写为顶部分类页签 + 分页(8 页:永夜/道具/神器/职业/刷怪/掉率/配置/天赋),覆盖 ModCommands 全部子命令;命令串与 config 字段名已逐条核对。仅改 DebugScreen 单文件,新增用法 `rebuildWidgets()`+`ButtonWidget.active`(均 1.21.1 稳定)。无新文件(97)。
+- **m86** **爆率编辑器(直接输入)+ 导出配置**:新 `DropRateConfigScreen` 把 14 个爆率/经验字段做成文本框,改完点应用对每项 `config set` 即时写盘;预填当前值靠新 C2S `RequestConfigPayload` / S2C `ConfigValuesPayload`(`YongyeConfig.getFieldString` 反射读)。另加 `/yongye config export` 打印 `config/yongye.json` 路径供发作者设默认。新增 3 文件(100)。**[待验证:`TextFieldWidget` 六参构造(TextRenderer,x,y,w,h,Text)+ setText/getText/setMaxLength;其余复用已验证范式(unit 包 / ClientPlayNetworking.send / 反射 config)]**。
+- **m87** **修编译错误:`rebuildWidgets`→`clearAndInit`**:m85/m86 用的 `Screen.rebuildWidgets()` 在 1.21.1 不存在(build 报"找不到符号"),改为正确的 `clearAndInit()`(DebugScreen 切页 + DropRateConfigScreen 刷新两处)。**注:DEVLOG 未单独盖 m87 自身"build 通过"章**,m87 能否编过以本地 `./gradlew build` 为准。
+- **m88** **修精英 tick 重入崩溃(CME)**:由实机崩溃报告定位(双人在线)。`END_SERVER_TICK` 直接迭代 `ELITES` 时,带「召唤」词缀的精英 `spawnEntity`→同步 `ENTITY_LOAD`→`ELITES.add` 在遍历途中改集合→`ConcurrentModificationException` 打崩服务器 tick。修法:tick 改**遍历快照 + 死亡延后删**(`EliteHandler` 单文件),对任何重入免疫;同类 `MobBossHandler` 已查为安全。**仅用 `java.util` 集合,无新接口、无版本敏感点**;无新文件(100)。详见 DEVLOG m88。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 

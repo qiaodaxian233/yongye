@@ -655,3 +655,13 @@
 
 ## 里程碑 87 — 修编译错误:rebuildWidgets → clearAndInit
 m85/m86 用了 `Screen.rebuildWidgets()`,但 1.21.1 无此方法(build 报"找不到符号")。1.21.1 正确的清空重建入口是 `clearAndInit()`(protected,清子控件后重跑 init)。改 DebugScreen(切页)+ DropRateConfigScreen(onValues 刷新)两处。其余 m86 代码(TextFieldWidget 6 参构造、爆率编辑器网络包/反射)本次 build 未报错=已编译通过。
+
+---
+
+## 里程碑 88 — 修精英 tick 重入崩溃(ConcurrentModificationException)
+由用户实机崩溃报告定位(双人在线,server crash)。崩溃栈:`ConcurrentModificationException` → `WeakHashMap$KeyIterator.next` → `EliteHandler.lambda$register$5(EliteHandler.java:205)` ← `ServerTickEvents`(每 tick 服务端回调)。
+- **根因(单线程重入,非多线程、非 GC)**:`END_SERVER_TICK` 回调直接迭代 `ELITES`(`Collections.newSetFromMap(WeakHashMap)`);循环内对带「召唤」词缀(`AF_SUMMON`)的精英调 `tickElite`→`sw.spawnEntity(僵尸)`,而 `spawnEntity` **同步触发** `ServerEntityEvents.ENTITY_LOAD`→该回调对刚生成的 `Monster` 掷精英概率,命中即 `ELITES.add(...)`——遍历途中结构性改集合,下一次 `it.next()` 抛 CME 打崩 tick。双人在线召唤怪更易命中精英化,故复现稳定。(GC 清理 WeakHashMap 弱键不改 modCount,JDK 专门处理过,与 GC 无关;射箭/扔药生成的是投射物,被 `instanceof Monster` 过滤,只有「召唤」这条路触发。)
+- **修法(`EliteHandler` 单文件)**:tick 回调改为**遍历快照** `new ArrayList<>(ELITES)` + 死亡精英**延后统一删**(循环结束后再 `ELITES.remove`/`LAST_TELEPORT_AGE.remove`)。对任何「循环内又生成怪 / 回填同集合」的重入都免疫,不只是堵召唤——召唤出的怪照常进 `ELITES`,只是本 tick 不处理、下一 tick 才纳入。移除原 `Iterator` 用法(连带删 `import java.util.Iterator`),补 `import java.util.ArrayList`。
+- **同类排查**:`MobBossHandler`(同设计:追踪集合 + 每 tick 更新血条)tick 循环只刷血条 + `it.remove()` 清死亡,**循环内不生成实体也不回填 `BARS`,安全**。其余 tick 处理器均无「遍历追踪集合 + 循环内生怪 / 回填同集合」组合,不暴露此 bug。
+- **静态自检**:`Iterator` 无残留、`ArrayList`/`List` import 到位、花括号 60/60、圆括号 501/501 配平。**仅用 `java.util` 集合 + 现成 `ELITES`/`LAST_TELEPORT_AGE`,未碰任何 Fabric/Mojang 接口或 yarn 映射,无版本敏感点**。无新增文件(100)。
+- **[待验证]**:本地 `./gradlew build` 跑通(按守则,结论以实测为准);实机——凑出带【召唤】词缀的精英锁定玩家、撑过多次召唤(原必崩),确认不再抛 CME、tick 正常、召唤的僵尸也正常(部分会自变精英)。
