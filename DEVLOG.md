@@ -614,3 +614,10 @@
 - 配置 +1:`bossRaidCaptainMinDay = 8`(默认第 8 天起队长才 Boss 化)。
 - 注:早于该天数的队长 = 原版(既不 Boss 也不被 MobEnhancement 增强,因 isBoss 仍返回 true 会被其跳过)——符合"开局别遇 Boss 队长"诉求。
 - 无新增文件(97)。纯天数判定,无新接口,重建即生效。
+
+---
+
+## 里程碑 84 — 调试菜单加「Boss 门控」组
+应需求(把 m83 的队长门控做进调试菜单,免敲命令)。
+- `DebugScreen` 新增分组「Boss 门控」3 按钮(走 `config set bossRaidCaptainMinDay`):队长Boss·第8天 / 第15天 / 关闭(9999)。分组计数 8→9(垂直居中估算同步)。
+- 无新增文件/无新接口,纯按钮+现有 config set 命令。重建即生效。

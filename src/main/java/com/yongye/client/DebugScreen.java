@@ -49,7 +49,7 @@ public class DebugScreen extends Screen {
         headerYs.clear();
 
         // 整个网格垂直居中:先估算总高度,再定起点 y(6 个分组,每组 = 标题 + 1 行按钮 + 组间距)
-        int groups = 8;
+        int groups = 9;
         int blockH = HEADER_H + BTN_H + GAP_Y;
         int totalH = 24 /*顶部标题*/ + groups * blockH + 28 /*底部关闭按钮区*/;
         int startY = Math.max(30, (this.height - totalH) / 2 + 24);
@@ -116,6 +116,13 @@ public class DebugScreen extends Screen {
                 new Btn("技书·普通0.008", "yongye config set skillBookDropChanceNormal 0.008"),
                 new Btn("碎片爆率0.3", "yongye config set lifeShardDropChance 0.3"),
                 new Btn("永夜增血/级2", "yongye config set nightfallBeyondHpPerLevel 2"),
+        });
+
+        // —— Boss 门控 ——(掠夺者队长是否被强化成 Boss:开局别遇 Boss 队长就设较高天数 / 关闭)
+        y = section(x0, y, "Boss 门控", new Btn[]{
+                new Btn("队长Boss·第8天", "yongye config set bossRaidCaptainMinDay 8"),
+                new Btn("队长Boss·第15天", "yongye config set bossRaidCaptainMinDay 15"),
+                new Btn("队长Boss·关闭", "yongye config set bossRaidCaptainMinDay 9999"),
         });
 
         // 关闭按钮(底部居中;y 已是最后一组之后的位置)

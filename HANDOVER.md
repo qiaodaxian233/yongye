@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m83**:m65 本地 **build 通过 ✅**,m66-83 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis · 本段最新,优先看)
+## 0.5 当前状态(截至 **m84**:m65 本地 **build 通过 ✅**,m66-84 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
