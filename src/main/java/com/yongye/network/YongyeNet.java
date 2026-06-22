@@ -75,6 +75,12 @@ public final class YongyeNet {
                 if (p.currentScreenHandler instanceof com.yongye.screen.EnhanceScreenHandler h) h.applyUpgrade(p);
             });
         });
+        // 材料兑换(背包按钮:10 碎片→结晶→核心→血核,服务端扫背包扣料)
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.ExchangePayload.ID, com.yongye.network.ExchangePayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ExchangePayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.MaterialExchange.exchange(p, payload.tier(), payload.all()));
+        });
         // 登录:未选过本命职业则弹出选职界面;老玩家(已有职业)只补标记
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity pl = handler.player;

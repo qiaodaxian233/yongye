@@ -435,3 +435,12 @@
 应需求把 mod 显示名改为「永夜」(本就是 mod_id `yongye` 的本名/拼音)。全局把字符串 `亡途荒夜` → `永夜`:`fabric.mod.json` 的 name(纯"永夜")、所有日志前缀 `[永夜]`、调试菜单标题、lang(物品组名 + 按键分类名)、注释、文档。
 - **内部 id / 包名 `com.yongye` / 资源命名空间 `assets/yongye` / 配置文件 / 存档键一律未动**——这些动了会毁存档、资源与配置;且 `yongye` 本就是"永夜"的拼音,与新显示名天然一致。
 - 无 Java 逻辑改动;fabric.mod.json 与 lang JSON 校验合法,85 文件括号配平。
+
+---
+
+## 里程碑 66 — 材料兑换按钮(10 碎片→结晶→核心→血核)
+应需求:背包加兑换按钮,10:1 升级材料,扣背包物品。
+- **比例固定 10:1**,与四材料的强化值等值(碎片+1 / 结晶+10 / 核心+100 / 血核+1000),兑换前后**等值不溢出**,故 10 是唯一合理比例,不做成可配。
+- **链路**:背包新增「兑换」按钮 → 客户端 `ExchangeScreen`(三行:碎片→结晶 / 结晶→核心 / 核心→血核,各含"兑换 10→1"与"全部兑换",并**实时显示背包内各材料数量**)→ C2S `ExchangePayload(tier, all)` → 服务端 `MaterialExchange` 扫背包数料、`decrement` 扣料、`offerOrDrop` 给产物、发聊天反馈(材料不足时红字提示)。
+- 纯事件 + 网络,无 mixin。复用现成范式:`SkillUsePayload` 的带字段 codec、`OpenAccessory/Enhance` 的 C2S 接线、背包按钮 `ScreenEvents.AFTER_INIT`、`offerOrDrop`。配置 `enableMaterialExchange`。
+- 88 个 Java 文件(+3:ExchangePayload / MaterialExchange / ExchangeScreen)。无待验证点(API 全为项目已 build 同款)。

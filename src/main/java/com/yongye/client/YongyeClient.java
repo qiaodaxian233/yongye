@@ -100,6 +100,10 @@ public class YongyeClient implements ClientModInitializer {
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("强化"),
                         b -> ClientPlayNetworking.send(new com.yongye.network.OpenEnhancePayload()))
                         .dimensions(bx + 46, by - 36, 44, 16).build());
+                // 「兑换」按钮:打开材料兑换界面(10 碎片→结晶→核心→血核)
+                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("兑换"),
+                        b -> client.setScreen(new ExchangeScreen(screen)))
+                        .dimensions(bx, by - 54, 44, 16).build());
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(

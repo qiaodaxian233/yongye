@@ -390,6 +390,9 @@ public class YongyeConfig {
     public boolean enableArtifacts = true;
     public int artifactMaxLevel = 6;
 
+    // ============ 材料兑换(m66:背包按钮,10 碎片→结晶→核心→血核,等值兑换)============
+    public boolean enableMaterialExchange = true;
+
     // ============ 高血量反制(文档第 17 章)============
     public boolean enableHighHpCounter = true;
     /** Boss 攻击附加的"最大生命百分比"伤害 */
