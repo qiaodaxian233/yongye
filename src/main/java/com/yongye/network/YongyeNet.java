@@ -46,6 +46,7 @@ public final class YongyeNet {
         // 天赋界面:S2C 同步状态 + C2S 加点请求
         PayloadTypeRegistry.playS2C().register(com.yongye.network.TalentSyncPayload.ID, com.yongye.network.TalentSyncPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.NightfallSyncPayload.ID, com.yongye.network.NightfallSyncPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.CoreLocatorPayload.ID, com.yongye.network.CoreLocatorPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(com.yongye.network.TalentLearnPayload.ID, com.yongye.network.TalentLearnPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.TalentLearnPayload.ID, (payload, context) -> {
             ServerPlayerEntity p = context.player();
@@ -126,5 +127,10 @@ public final class YongyeNet {
         ServerPlayNetworking.send(player, new com.yongye.network.NightfallSyncPayload(
                 com.yongye.system.NightfallManager.getLevel(),
                 com.yongye.system.NightfallManager.getLevelName()));
+    }
+
+    /** 下发"最近灾厄核心位置"给玩家(HUD 方向箭头用);has=false 表示范围内无核心。 */
+    public static void sendCoreLocator(ServerPlayerEntity player, boolean has, double x, double y, double z) {
+        ServerPlayNetworking.send(player, new com.yongye.network.CoreLocatorPayload(has, x, y, z));
     }
 }

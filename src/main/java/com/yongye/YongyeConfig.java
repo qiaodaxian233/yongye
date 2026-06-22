@@ -264,6 +264,11 @@ public class YongyeConfig {
     public int coreMobSpawnRadius = 28;           // 玩家进入此半径,核心开始刷怪
     public int coreMobMaxNearby = 6;              // 核心周围怪上限
     public double coreMobSpawnChance = 0.5;       // 每次判定的刷怪几率
+    // —— 刷新提示增强(m81)——
+    public boolean coreSpawnTitle = true;         // 刷新时给附近玩家 音效 + 屏幕中央标题(不止聊天)
+    public int coreSpawnNotifyRadius = 120;       // 标题/音效通知半径(此范围内玩家收到)
+    public boolean enableCoreLocator = true;      // HUD 方向箭头:指向最近的灾厄核心(像 boss 指示)
+    public int coreLocatorRange = 220;            // 箭头只在核心位于此范围内时显示
 
     // ============ 追杀 AI(文档第 8 章)============
     public boolean enablePursuit = true;

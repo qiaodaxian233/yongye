@@ -585,3 +585,13 @@
 - 待验证项同 m79(TitleScreen 渲染签名/矩阵/drawText 属版本敏感区,以本地 build 为准)——本轮未引入新接口。
 - 96 个 Java 文件(无增减,仅改 TitleScreenMixin 方法体)。
 - 仍未做:背景换整张末日图(需用户提供全景/背景图)、按钮全局暗黑主题、"仅事件时"红月/绿雨(需渲染 mixin)。
+
+---
+
+## 里程碑 81 — 灾厄核心提示增强 + 修僵尸一跳一跳
+应需求:① 核心刷新除聊天外加 音效+屏幕中央标题+HUD 方向箭头;② 修"僵尸一跳一跳"。
+- **修僵尸跳(`PursuitHandler`)**:根因——`wallAhead` 用 `!isAir()` 判墙,把草/花/雪层/麦子等**无碰撞植被**也当成墙,怪走在草地上每 tick 触发 m70 的"起跳翻越"→ 原地一跳一跳。改为新 helper `hasCollision`(`getCollisionShape(world,pos).isEmpty()` 判真实碰撞箱),植被不再误判为墙。仅改判定,挖墙/爬墙/搭塔逻辑不变。
+- **核心提示·音效+标题**(`CatastropheCoreManager.spawnCore`):刷新时除原暗红聊天外,给 `coreSpawnNotifyRadius`(120)内玩家发 `TitleFadeS2CPacket(10,60,20)`+`TitleS2CPacket("灾厄核心降临")`+`SubtitleS2CPacket(坐标)` + `playSoundToPlayer(ENTITY_WITHER_SPAWN)`。开关 `coreSpawnTitle`。
+- **核心提示·HUD 方向箭头**(像 boss 指示):新增 S2C `CoreLocatorPayload(has,x,y,z)`;`CatastropheCoreManager` 每 2s `sendLocators` 给各玩家下发 `coreLocatorRange`(220)内最近核心坐标(无则 has=false);客户端 `YongyeClient` 存坐标 + 新 `HudRenderCallback`:用玩家当前 yaw + 核心坐标逐帧算相对方位角,`RotationAxis.POSITIVE_Z.rotationDegrees` 旋转「▲」指向核心 + 下方「灾厄核心 N 格」距离。开关 `enableCoreLocator`。
+- 配置 +4(coreSpawnTitle/coreSpawnNotifyRadius/enableCoreLocator/coreLocatorRange)。+1 文件(CoreLocatorPayload,97)。
+- **[待编译验证]**:① TitleS2CPacket/SubtitleS2CPacket/TitleFadeS2CPacket(已查 yarn 1.21 确存在于 net.minecraft.network.packet.s2c.play,构造 (Text)/(Text)/(int,int,int))② 客户端 `RotationAxis.POSITIVE_Z.rotationDegrees` + `MatrixStack.multiply(Quaternionf)`(箭头旋转)。playSoundToPlayer/HudRenderCallback/getCollisionShape 均项目已用或稳定。箭头旋转方向若实机感觉镜像,把 bearingDeg 取负即可。

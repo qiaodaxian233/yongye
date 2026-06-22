@@ -17,6 +17,11 @@ import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
+import net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket;
+import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -69,6 +74,7 @@ public final class CatastropheCoreManager {
             if (world == null) return;
             tickCores(world);
             maybeNaturalSpawn(server, world);
+            sendLocators(server, world);
         });
         Yongye.LOGGER.info("[永夜] 灾厄核心系统已挂载");
     }
@@ -146,9 +152,59 @@ public final class CatastropheCoreManager {
         world.setBlockState(pos, ModBlocks.CATASTROPHE_CORE.getDefaultState());
         cores.add(pos.asLong());
         if (announce && world.getServer() != null) {
+            YongyeConfig cfg = YongyeConfig.get();
+            // ① 全服暗红聊天(带坐标),保持原行为
             world.getServer().getPlayerManager().broadcast(
                     Text.literal("【灾厄核心】黑暗在 " + pos.getX() + ", " + pos.getZ() + " 凝聚……前去摧毁它")
                             .formatted(Formatting.DARK_RED), false);
+
+            // ② 提示增强:给通知半径内玩家 音效 + 屏幕中央标题(比一行会滚走的聊天更醒目)
+            if (cfg.coreSpawnTitle) {
+                Text titleText = Text.literal("灾厄核心降临").formatted(Formatting.DARK_RED, Formatting.BOLD);
+                Text subText = Text.literal("一处核心在 " + pos.getX() + ", " + pos.getZ() + " 凝聚——前去摧毁")
+                        .formatted(Formatting.RED);
+                double rSq = (double) cfg.coreSpawnNotifyRadius * cfg.coreSpawnNotifyRadius;
+                for (ServerPlayerEntity sp : world.getServer().getPlayerManager().getPlayerList()) {
+                    if (sp.getWorld() != world) continue;
+                    if (sp.squaredDistanceTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > rSq) continue;
+                    // 标题动画:淡入 10t、停留 60t、淡出 20t;先发动画参数再发标题/副标题
+                    sp.networkHandler.sendPacket(new TitleFadeS2CPacket(10, 60, 20));
+                    sp.networkHandler.sendPacket(new TitleS2CPacket(titleText));
+                    sp.networkHandler.sendPacket(new SubtitleS2CPacket(subText));
+                    // 低沉来袭音效(用原版凋灵降临声,带"重大事件"感)
+                    sp.playSoundToPlayer(SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.HOSTILE, 0.6f, 0.7f);
+                }
+            }
+        }
+    }
+
+    /**
+     * 给每个玩家下发"距离最近的灾厄核心位置"(在 coreLocatorRange 内),供客户端 HUD 画方向箭头。
+     * 关掉功能时下发 has=false,客户端随即清掉箭头。
+     */
+    private static void sendLocators(MinecraftServer server, ServerWorld world) {
+        YongyeConfig cfg = YongyeConfig.get();
+        boolean on = cfg.enableCoreLocator;
+        double rangeSq = (double) cfg.coreLocatorRange * cfg.coreLocatorRange;
+        for (ServerPlayerEntity sp : server.getPlayerManager().getPlayerList()) {
+            if (sp.getWorld() != world) {
+                com.yongye.network.YongyeNet.sendCoreLocator(sp, false, 0, 0, 0);
+                continue;
+            }
+            BlockPos best = null;
+            double bestSq = Double.MAX_VALUE;
+            if (on) {
+                for (long key : cores) {
+                    BlockPos p = BlockPos.fromLong(key);
+                    double d = sp.squaredDistanceTo(p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5);
+                    if (d < bestSq) { bestSq = d; best = p; }
+                }
+            }
+            if (best != null && bestSq <= rangeSq) {
+                com.yongye.network.YongyeNet.sendCoreLocator(sp, true, best.getX() + 0.5, best.getY() + 0.5, best.getZ() + 0.5);
+            } else {
+                com.yongye.network.YongyeNet.sendCoreLocator(sp, false, 0, 0, 0);
+            }
         }
     }
 

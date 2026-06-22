@@ -38,6 +38,9 @@ public class YongyeClient implements ClientModInitializer {
     /** 永夜 HUD 状态(由 NightfallSyncPayload 更新):等级 + 阶段名 */
     public static int nightfallLevel = 0;
     public static String nightfallName = "";
+    /** 灾厄核心定位器状态(由 CoreLocatorPayload 更新):是否有目标 + 世界坐标 */
+    public static boolean coreHasTarget = false;
+    public static double coreTX = 0, coreTY = 0, coreTZ = 0;
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -67,6 +70,13 @@ public class YongyeClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.NightfallSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> { nightfallLevel = payload.level(); nightfallName = payload.name(); }));
 
+        // 灾厄核心定位器同步:更新方向箭头目标
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.CoreLocatorPayload.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    coreHasTarget = payload.has();
+                    coreTX = payload.x(); coreTY = payload.y(); coreTZ = payload.z();
+                }));
+
         // 永夜 HUD:开启永夜(等级≥1)时,在屏幕中上显示当前阶段
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             if (nightfallLevel < 1 || nightfallName.isEmpty()) return;
@@ -77,6 +87,47 @@ public class YongyeClient implements ClientModInitializer {
             int w = mc.textRenderer.getWidth(t);
             int x = (mc.getWindow().getScaledWidth() - w) / 2;
             ctx.drawTextWithShadow(mc.textRenderer, t, x, 4, 0xFFFF5555);
+        });
+
+        // 灾厄核心方向箭头 HUD:有目标核心时,在屏幕中上画一个指向它的旋转箭头 + 距离(像 boss 指示)。
+        // 箭头朝向用"玩家当前视角 + 同步来的核心坐标"逐帧计算,所以转视角时箭头平滑旋转。
+        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
+            if (!coreHasTarget) return;
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player == null || mc.options.hudHidden) return;
+
+            double dx = coreTX - mc.player.getX();
+            double dz = coreTZ - mc.player.getZ();
+            double dist = Math.sqrt(dx * dx + dz * dz);
+
+            // 玩家水平朝向单位向量(MC yaw:0=+Z/南,90=-X/西)
+            float yawRad = (float) Math.toRadians(mc.player.getYaw());
+            double fx = -Math.sin(yawRad);
+            double fz = Math.cos(yawRad);
+            // 相对方位角:0=正前,+向右,-向左
+            double dot = fx * dx + fz * dz;
+            double cross = fx * dz - fz * dx;
+            double bearingDeg = Math.toDegrees(Math.atan2(cross, dot));
+
+            int cx = mc.getWindow().getScaledWidth() / 2;
+            int cy = 30; // 在永夜阶段名(y=4)下方;若与 boss 血条重叠可调
+
+            // 旋转箭头(▲ 默认指上=正前;按方位角绕 Z 旋转)
+            net.minecraft.text.Text arrow = net.minecraft.text.Text.literal("▲")
+                    .formatted(net.minecraft.util.Formatting.BOLD);
+            int aw = mc.textRenderer.getWidth(arrow);
+            ctx.getMatrices().push();
+            ctx.getMatrices().translate(cx, cy, 0);
+            ctx.getMatrices().multiply(
+                    net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees((float) bearingDeg));
+            ctx.drawText(mc.textRenderer, arrow, -aw / 2, -4, 0xFFFF3030, false);
+            ctx.getMatrices().pop();
+
+            // 距离文字(不旋转,箭头下方)
+            net.minecraft.text.Text dt = net.minecraft.text.Text.literal("灾厄核心 " + (int) dist + " 格")
+                    .formatted(net.minecraft.util.Formatting.GOLD);
+            int dw = mc.textRenderer.getWidth(dt);
+            ctx.drawTextWithShadow(mc.textRenderer, dt, cx - dw / 2, cy + 8, 0xFFFFAA33);
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             // 每 tick 刷新血量速率采样(供血量 HUD 显示实时回血/掉血)

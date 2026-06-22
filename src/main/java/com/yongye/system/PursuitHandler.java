@@ -101,8 +101,11 @@ public final class PursuitHandler {
                             ? (dx >= 0 ? Direction.EAST : Direction.WEST)
                             : (dz >= 0 ? Direction.SOUTH : Direction.NORTH);
                     BlockPos base = mob.getBlockPos();
-                    boolean wallAhead = !world.getBlockState(base.offset(dir)).isAir()
-                            || !world.getBlockState(base.up().offset(dir)).isAir();
+                    // 前方是否有"墙":必须是真有碰撞箱的实心块才算。
+                    // 旧实现只判 !isAir(),把草/花/雪层/麦子等无碰撞植被也当成墙,
+                    // 导致怪走在草地上每 tick 都触发起跳翻越 → 原地一跳一跳(回归 bug)。
+                    boolean wallAhead = hasCollision(world, base.offset(dir))
+                            || hasCollision(world, base.up().offset(dir));
 
                     // —— 卡住兜底:船卡/水/岩浆/挖不动的墙后,传送到玩家身边 ——
                     if (!anchor && cfg.pursuitTeleportStuck) {
@@ -176,6 +179,15 @@ public final class PursuitHandler {
         });
 
         Yongye.LOGGER.info("[永夜] 追杀系统已挂载");
+    }
+
+    /**
+     * 该位置是否有"真实碰撞箱"的方块(能挡住怪)。
+     * 用碰撞箱(getCollisionShape 非空)而非 !isAir 判断:草/花/雪层/麦子等装饰植被碰撞箱为空,
+     * 不会被误判成墙——这是修"怪在草地上一跳一跳"的关键。
+     */
+    private static boolean hasCollision(ServerWorld world, BlockPos pos) {
+        return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
     }
 
     /** 在玩家附近(相近高度)找一个可站立的安全点把怪传过去。成功返回 true。 */
