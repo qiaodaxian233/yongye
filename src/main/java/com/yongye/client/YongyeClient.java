@@ -79,6 +79,8 @@ public class YongyeClient implements ClientModInitializer {
             ctx.drawTextWithShadow(mc.textRenderer, t, x, 4, 0xFFFF5555);
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            // 每 tick 刷新血量速率采样(供血量 HUD 显示实时回血/掉血)
+            HealthRateTracker.tick();
             if (pendingClassSelect && client.player != null && client.currentScreen == null) {
                 pendingClassSelect = false;
                 client.setScreen(new ClassSelectScreen());

@@ -546,3 +546,12 @@
 - 续期 40t < 时长 100t,始终有富余,不触发到期淡出 → 稳定持续而非周期闪烁;不显示图标/粒子,保持沉浸。纯服务端施加,客户端自动渲染黑暗叠层,无需 mixin。配置 `enableNightfallDarkness`。
 - 94 个 Java 文件(+1 NightfallVisionHandler)。
 - 备注:这是"吞噬式黑暗"(视野收拢),并非真正的渲染距离雾;若想要"只能看见 N 格"的距离雾,需客户端 fog mixin(版本敏感,另议)。
+
+---
+
+## 里程碑 77 — 血量 HUD 重做(实时血量 + 回血速率 + 底衬)
+应需求:血量 HUD 的回血不实时、看不见回了多少血、数字难看。
+- **根因**:`HudCompactMixin.renderHealthBar` 画血量用的是原版传入的动画形参 `health`(带受伤抖动 + 回血心跳延迟,阶梯跳变、不实时);且只有小字无底衬,亮背景下看不清;无任何回血速率提示。
+- **新增 `HealthRateTracker`(客户端)**:逐 tick 把 `player.getHealth()` 写入 21 槽(≈1s)带 tick 戳的环形缓冲,扫描窗口内最旧样本算「最近一秒净血量变化 / 秒」(正=回血、负=掉血,<0.1 归零)。挂在 `YongyeClient` 已有的 `END_CLIENT_TICK` 回调里;离开世界 `reset()` 防陈旧样本。纯客户端、零网络。
+- **`HudCompactMixin` 重写绘制**:① 血量改读实时 `getHealth()`/`getMaxHealth()`/`getAbsorptionAmount()`(回血时数字平滑上涨);② 整排横向布局 = 红心+血量(白字) · 护甲图标+护甲(蓝白) · 速率(绿/红「+X.X/s」,静止不显示);③ 半透明深色底衬 `fill(...,0x90000000)` 提升可读性。阈值 `YONGYE_HEALTH_THRESHOLD`(60)以下仍走原版。`renderArmor` 取消逻辑不变。
+- 95 个 Java 文件(+1 HealthRateTracker)。用到的 `getHealth/getMaxHealth/getAbsorptionAmount/getArmor`(本 mixin 已用)、`DrawContext.fill`(项目多处用,带 ARGB 透明度)、`drawGuiTexture/drawTextWithShadow`(原版本就用)均项目/原版稳定 API,改的是既有 mixin 方法体(签名不动),无新待验证点。

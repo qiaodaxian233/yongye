@@ -1,11 +1,15 @@
 package com.yongye.mixin.client;
 
+import com.yongye.client.HealthRateTracker;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+
+import java.util.Locale;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -30,22 +34,84 @@ public class HudCompactMixin {
                                       CallbackInfo ci) {
         if (maxHealth + absorption <= YONGYE_HEALTH_THRESHOLD) return;
         MinecraftClient mc = MinecraftClient.getInstance();
+        TextRenderer tr = mc.textRenderer;
+
+        // 关键:血量一律读「客户端实时值」,不用原版传入的动画形参(health/lastHealth)。
+        // 原版形参带受伤抖动 + 回血心跳延迟,会让数字阶梯跳变、看不出实时回血;
+        // getHealth() 是当前帧真实生命,回血时数字会平滑地往上走。
+        float curHp = player.getHealth();
+        float maxHp = player.getMaxHealth();
+        float absorb = player.getAbsorptionAmount();
+        int armor = player.getArmor();
+        float rate = HealthRateTracker.getRatePerSec();
+
+        // 各段文本
+        String hpText = yongye$num(curHp)
+                + (absorb >= 0.5f ? "+" + yongye$num(absorb) : "")
+                + " / " + yongye$num(maxHp);
+        String armorText = armor > 0 ? String.valueOf(armor) : null;
+        String rateText = (Math.abs(rate) >= 0.1f) ? yongye$rate(rate) : null;
+
+        // 布局:屏幕底部、血条原位(主物品栏左缘上方),整排横向排开
         int left = context.getScaledWindowWidth() / 2 - 91;
         int top = context.getScaledWindowHeight() - 39;
+        final int ICON = 9;   // 图标边长
+        final int GAP = 3;    // 图标与其文字间距
+        final int SEG = 8;    // 段与段之间距
 
-        // 血量(紧凑)
-        context.drawGuiTexture(YONGYE_HEART, left, top, 9, 9);
-        String hs = " " + health + (absorption > 0 ? "+" + absorption : "") + " / " + (int) maxHealth;
-        context.drawTextWithShadow(mc.textRenderer, Text.literal(hs), left + 11, top + 1, 0xFFFF5555);
+        // 先量总宽,好画底衬
+        int wHp = tr.getWidth(hpText);
+        int total = ICON + GAP + wHp;
+        int wArmor = 0;
+        if (armorText != null) {
+            wArmor = tr.getWidth(armorText);
+            total += SEG + ICON + GAP + wArmor;
+        }
+        int wRate = 0;
+        if (rateText != null) {
+            wRate = tr.getWidth(rateText);
+            total += SEG + wRate;
+        }
 
-        // 护甲(同一排,画在血量右侧)
-        int armor = player.getArmor();
-        if (armor > 0) {
-            int ax = left + 11 + mc.textRenderer.getWidth(hs) + 10;
-            context.drawGuiTexture(YONGYE_ARMOR, ax, top, 9, 9);
-            context.drawTextWithShadow(mc.textRenderer, Text.literal(" " + armor), ax + 11, top + 1, 0xFFFFFFFF);
+        // 半透明深色底衬(提升亮背景下可读性)
+        final int PADX = 3, PADY = 2;
+        context.fill(left - PADX, top - PADY, left + total + PADX, top + ICON + PADY, 0x90000000);
+
+        // 心形 + 血量(白字最清晰,语义靠红心图标传达)
+        int cx = left;
+        context.drawGuiTexture(YONGYE_HEART, cx, top, ICON, ICON);
+        cx += ICON + GAP;
+        context.drawTextWithShadow(tr, Text.literal(hpText), cx, top + 1, 0xFFFFFFFF);
+        cx += wHp;
+
+        // 护甲(同排,蓝白字)
+        if (armorText != null) {
+            cx += SEG;
+            context.drawGuiTexture(YONGYE_ARMOR, cx, top, ICON, ICON);
+            cx += ICON + GAP;
+            context.drawTextWithShadow(tr, Text.literal(armorText), cx, top + 1, 0xFFB0C4FF);
+            cx += wArmor;
+        }
+
+        // 回血/掉血速率(绿=回血,红=掉血;静止时不显示)
+        if (rateText != null) {
+            cx += SEG;
+            int col = rate > 0 ? 0xFF55FF55 : 0xFFFF6666;
+            context.drawTextWithShadow(tr, Text.literal(rateText), cx, top + 1, col);
         }
         ci.cancel();
+    }
+
+    /** 血量数字格式化:取整(高血量下小数是噪音,实时回血由「速率」段体现)。 */
+    private static String yongye$num(float v) {
+        return String.valueOf(Math.round(v));
+    }
+
+    /** 速率格式化:小幅保留 1 位小数、大幅取整,带正负号与 /s 后缀。 */
+    private static String yongye$rate(float r) {
+        float a = Math.abs(r);
+        String n = (a < 10f) ? String.format(Locale.ROOT, "%.1f", a) : String.valueOf(Math.round(a));
+        return (r > 0 ? "+" : "-") + n + "/s";
     }
 
     @Inject(method = "renderArmor", at = @At("HEAD"), cancellable = true)
