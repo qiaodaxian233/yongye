@@ -475,6 +475,10 @@ public class YongyeConfig {
     public double meteorRadius = 24.0;              // 流星落点距玩家范围
     public double meteorImpactRadius = 3.0;         // 单颗流星杀伤半径
 
+    // ============ m76:永夜剥夺视线(沉浸感)============
+    public boolean enableNightfallDarkness = true;
+    public int nightfallDarknessMinLevel = 1;   // 永夜达到该层即施加「黑暗」,视野被吞噬式压缩
+
     public static YongyeConfig get() {
         if (INSTANCE == null) load();
         return INSTANCE;

@@ -537,3 +537,12 @@
 - **同步**:新增 S2C `NightfallSyncPayload(int level, String name)`;`NightfallManager.setLevel` 变更后向全体玩家下发,`ServerPlayConnectionEvents.JOIN` 时也下发(`YongyeNet.sendNightfall`)。阶段名复用现成的 `NightfallManager.getLevelName()`(永夜 I·暗潮 … V·灭世 / 深渊 N 层)。
 - **客户端**:`YongyeClient` 存 `nightfallLevel/nightfallName`,收到包即更新;`HudRenderCallback` 在 `level≥1` 时把阶段名(深红加粗)居中绘制在屏幕顶部(y=4,boss 血条上方);`hudHidden`(F1)时不画。
 - 93 个 Java 文件(+1 NightfallSyncPayload)。**[待编译验证:`HudRenderCallback` 在 1.21.1 的 `(DrawContext, RenderTickCounter)` 签名]**,其余为项目现成 S2C/JOIN 范式。
+
+---
+
+## 里程碑 76 — 永夜剥视(沉浸感:黑暗压缩视野)
+应需求:永夜开启即剥夺视线、视野变短,增强沉浸感。
+- 新增 `NightfallVisionHandler`:永夜 ≥ `nightfallDarknessMinLevel`(默认 1)时,每 2 秒给非创造/旁观玩家续一次 100t 的「黑暗」(`StatusEffects.DARKNESS`)。屏幕外圈黑暗向内吞噬,有效视野骤缩——"永夜里看不清远处"的恐怖感。
+- 续期 40t < 时长 100t,始终有富余,不触发到期淡出 → 稳定持续而非周期闪烁;不显示图标/粒子,保持沉浸。纯服务端施加,客户端自动渲染黑暗叠层,无需 mixin。配置 `enableNightfallDarkness`。
+- 94 个 Java 文件(+1 NightfallVisionHandler)。
+- 备注:这是"吞噬式黑暗"(视野收拢),并非真正的渲染距离雾;若想要"只能看见 N 格"的距离雾,需客户端 fog mixin(版本敏感,另议)。

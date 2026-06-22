@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m75**:m65 本地 **build 通过 ✅**,m66-75 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback · 本段最新,优先看)
+## 0.5 当前状态(截至 **m76**:m65 本地 **build 通过 ✅**,m66-76 已 push **待实机验证**;待验证 m72 UnbreakableComponent / m75 HudRenderCallback · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -66,6 +66,7 @@
 - **m73** **精英词缀 / 佩恩阶段化 / 存活排行**(推荐①⑤⑥)。① 精英随机 1~2 词缀(爆裂/分裂/嗜血/剧毒/召唤,ELITE_AFFIX 位掩码,行为分布 makeElite/tickElite/缴械钩子/AFTER_DEATH);⑤ 佩恩按血量 3 阶段狂暴(PainState.phase);⑥ SurvivalRankHandler 记录 BEST_NIGHTFALL/BEST_DAY + `/yongye top`。+1 文件(91)。**待做:②天象 / ③据点防御(新方块) / ⑦商人(交易API)**。
 - **m74** **永夜天象**(推荐②)。NightfallWeatherHandler:永夜≥1 周期随机降 血月(怪群狂暴,≥2)/ 酸雨(setWeather 强制雨+露天 isSkyVisible 受伤,≥3)/ 流星雨(落点 magic AoE,≥4),起止广播,纯服务端(无客户端红天/雾)。+1 文件(92)。③据点防御/⑦商人 用户决定不做。
 - **m75** **永夜 HUD**(应需求)。S2C `NightfallSyncPayload`(level+name),setLevel 变更 + JOIN 下发(YongyeNet.sendNightfall);客户端 YongyeClient 存 nightfallLevel/Name,`HudRenderCallback` 在 level≥1 时把阶段名(getLevelName)居中画屏幕顶部(y=4)。**[待验证 HudRenderCallback 签名]**。+1 文件(93)。
+- **m76** **永夜剥视**(应需求)。NightfallVisionHandler:永夜≥nightfallDarknessMinLevel(1)时每 2s 续 100t DARKNESS,视野吞噬式压缩(沉浸)。纯服务端,无 mixin。+1 文件(94)。(非渲染距离雾;真距离雾需客户端 fog mixin。)
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 

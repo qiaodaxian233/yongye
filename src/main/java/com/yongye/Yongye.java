@@ -81,6 +81,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.NightfallHordeHandler.register();
         com.yongye.system.SurvivalRankHandler.register();
         com.yongye.system.NightfallWeatherHandler.register();
+        com.yongye.system.NightfallVisionHandler.register();
         EliteHandler.register();
         ArmorHealthHandler.register();
         LootHandler.register();
