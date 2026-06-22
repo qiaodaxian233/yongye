@@ -3,6 +3,7 @@ package com.yongye.system;
 import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import com.yongye.registry.ModAttachments;
+import com.yongye.registry.ModSounds;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -12,7 +13,6 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -75,9 +75,10 @@ public final class HimJumpscareHandler {
                 if (!(p.getWorld() instanceof ServerWorld world)) continue;
                 if (cfg.himNightOrCaveOnly && !isNightOrDark(world, p)) continue;
                 if (world.getRandom().nextDouble() >= cfg.himChance) continue;
-                // 出现前失明 5 秒
-                p.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 100, 0, false, false, true));
-                PENDING.put(p.getUuid(), now + 100);
+                // 出现前短暂失明铺垫(时长可配,越短越突然)
+                int blind = Math.max(1, cfg.himBlindnessTicks);
+                p.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, blind, 0, false, false, true));
+                PENDING.put(p.getUuid(), now + blind);
             }
         });
         Yongye.LOGGER.info("[亡途荒夜] HIM 惊吓系统已挂载");
@@ -121,7 +122,11 @@ public final class HimJumpscareHandler {
         him.setHeadYaw(fy);
         him.setBodyYaw(fy);
 
-        player.playSoundToPlayer(SoundEvents.ENTITY_ENDERMAN_STARE, SoundCategory.HOSTILE, 1.0f, 0.6f);
+        // 突脸音效(自定义 OGG)+ 传送闪现粒子(紫色末影门 + 烟),营造"啪地闪到面前"
+        player.playSoundToPlayer(ModSounds.HIM_JUMPSCARE, SoundCategory.HOSTILE, 1.0f, 1.0f);
+        if (cfg.himTeleportFlash) {
+            world.spawnParticles(ParticleTypes.PORTAL, sx, sy + 1.0, sz, 50, 0.4, 0.9, 0.4, 0.4);
+        }
         world.spawnParticles(ParticleTypes.LARGE_SMOKE, sx, sy + 1.0, sz, 15, 0.2, 0.4, 0.2, 0.01);
 
         ACTIVE.put(him.getUuid(), now + cfg.himDurationTicks);

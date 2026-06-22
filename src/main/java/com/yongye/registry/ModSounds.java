@@ -14,6 +14,7 @@ public final class ModSounds {
     public static final SoundEvent PAIN_ALMIGHTY_PUSH = register("pain_almighty_push");
     public static final SoundEvent PAIN_UNIVERSAL_PULL = register("pain_universal_pull");
     public static final SoundEvent PAIN_PLANETARY = register("pain_planetary");
+    public static final SoundEvent HIM_JUMPSCARE = register("him_jumpscare");
 
     private static SoundEvent register(String name) {
         Identifier id = Identifier.of(Yongye.MOD_ID, name);

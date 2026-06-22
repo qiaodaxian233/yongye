@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m60**:m55-57 已 **build 通过 ✅**,m58(调试菜单)/ m59(精英光环)/ m60(怪物BOSS版+搭方块)已 push **待实机验证** · 本段最新,优先看)
+## 0.5 当前状态(截至 **m61**:m55-57 已 **build 通过 ✅**,m58-60 已 push(m60 已修 import,**待 build 验证**),m61(HIM 自定义音效+闪现)已加 **待 push** · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -51,6 +51,7 @@
 - **m58** **调试/运营菜单 `/yongye debug`**(OP):服务端命令→S2C `OpenDebugPayload`→客户端 `client/DebugScreen`(纯 Screen,照 `StatsScreen`),6 组按钮(永夜/成长/职业武器/神器/事件Boss/运维),每个按钮 = `networkHandler.sendCommand("yongye …")` 复用现有命令(命令仍走权限2,故能开菜单的 OP 才有效);`shouldPause=false`,纯客户端零 mixin、零新服务端逻辑。**附带修 m56 遗留**:`/yongye nightfall` 参数从 `integer(0,5)` 放开为 `integer(0)`(m56 封顶已移到 `nightfallMaxLevel`,旧上限导致 `/yongye nightfall 6+` 被拒、深渊层无法触达)。新增 83 个 Java 文件(+2)。
 - **m59** **精英怪光环特效**(应需求):精英周身常显幽蓝魂火光环(脚下旋转 `SOUL_FIRE_FLAME` + 上升 `SOUL`),`EliteHandler.tickElite` 每 `eliteAuraIntervalTicks`(默认4)tick 服务端 `spawnParticles`,**纯服务端不走描边**(规避 m21 渲染崩溃,`eliteGlowing` 仍默认关);配置 `eliteAuraEffect`/`eliteAuraIntervalTicks`。**+ `/yongye elite`**:把附近 16 格怪物就地变精英(`EliteHandler.makeNearbyElite` 复用 `makeElite`,免等概率刷),调试菜单「刷怪测试」组加「精英化附近」按钮。**澄清(非 bug)**:用户"没见到 BOSS"——Boss = 被增强的原版 Boss(凋灵/监守者/远古守卫/末影龙/袭击队长,只在各自原生场景,非主世界随机刷)+ 长门·佩恩(仅永夜≥IV 且 ≥第5天按概率自然降临);`/yongye painboss` 或调试菜单「长门降临」可即时召出。
 - **m60** **普通怪 BOSS 版 + 搭方块爬塔**(应需求三连)。**① 怪物BOSS版(新增 `MobBossHandler`)**:第 `mobBossStartDay`(默认10)天起普通敌对怪按 `mobBossChance`(0.8%)BOSS化 = 打 `IS_BOSS`(**自动继承** BossAbility 能力/BossHandler 掉落/Pursuit Boss档挖墙/HighHpCounter/跳过普通掉落)+ 大属性(血×12/攻×4)+ 体型放大(`GENERIC_SCALE`×1.6)+ 红色 ServerBossBar + 【BOSS】名牌;独立持久 `IS_MOB_BOSS` 区分原版Boss,仅其挂血条(每tick更新%+同步48格内玩家,死亡clearPlayers,重载补回)。注册在 EliteHandler 前 + Elite 加 `IS_BOSS` 跳过(防双标记)。**② 搭方块爬塔(PursuitHandler)**:玩家近乎正上方(水平≤`pillarMaxHorizontal`2.5)且高出`pillarMinHeightDiff`(3)格时,怪每`pillarCooldownTicks`(8t)搭一格(先上移再填脚位`pillarBlock`圆石)垒到玩家高度,`pillared`优先于爬墙,受世界之锚+`canMobsDig`(第5天)+`mobPillarUp`约束——反制单格高塔躲猫猫。测试:`/yongye mobboss` / 调试菜单「BOSS化附近」。**⚠ 唯一待编译验证点**:`EntityAttributes.GENERIC_SCALE`(1.21.1 应带 GENERIC_ 前缀;若 build 报 cannot find symbol 就改成 `SCALE`)。84 个 Java 文件(+1)。
+- **m61** **HIM 突脸:自定义音效 + 传送闪现**(应需求)。用户上传 `突脸惊吓.mp3` → ffmpeg 转 `him_jumpscare.ogg`(14.3s),复用既有音效管线:`sounds.json` + `ModSounds.HIM_JUMPSCARE`,HIM 登场换播此音效(原 ENTITY_ENDERMAN_STARE)。登场加 `ParticleTypes.PORTAL` 紫色闪现粒子(`himTeleportFlash`)。失明铺垫 100t→可配 `himBlindnessTicks`(默认 20t≈1s,更突然)。**注意**:音效 14.3s 远长于 HIM 停留 1.75s,会放完;要贴合就裁短 mp3。全程复用已 build API,无待验证点。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 
@@ -63,6 +64,7 @@
 6. **m58 调试菜单**:`/yongye debug`(OP)弹出面板;点各按钮确认对应命令生效(发书/发神器/拉永夜/给职业武器等)。+ 天赋 GUI / 掉武器 / 盾姿势 / `#6` 仍未实机验证;盾握持 display 数值需按实机截图微调。
 7. **m59 精英光环**:`/yongye elite`(或调试菜单「精英化附近」)把附近怪变精英 → 看周身幽蓝魂火光环转起来;觉得费/太花可调 `eliteAuraIntervalTicks` 或关 `eliteAuraEffect`。
 8. **m60 怪物BOSS版 + 搭塔**:`/yongye mobboss`(或调试菜单「BOSS化附近」)→ 看顶部红血条 + 怪变大 + Boss 能力(减伤/狂暴/召援/冲击波),击杀看翻倍掉落。搭塔:造个单格高柱站上去等怪追来,看它原地垒圆石爬上来(`mobPillarUp` 可关)。**先确认 build:若报 `GENERIC_SCALE` 找不到 → 改成 `SCALE`**。怪物BOSS可能偏频/掉落偏厚,按手感调 `mobBossChance` / `mobBossStartDay` / `bossDropMultiplier`。
+9. **m61 HIM 音效+闪现**:夜里/洞穴待着触发(或临时把 `himChance` 调到 1.0、`himCheckIntervalTicks` 调到 100 快速测)→ 看 HIM 紫粒子闪现到面前 + 听自定义突脸音效。音效 14.3s 远长于 HIM 停留(1.75s),嫌拖就裁短 mp3 重转或调大 `himDurationTicks`;`himBlindnessTicks` 控制"突然"程度(小=突,大=慢压迫)。
 
 **接下来用户清单里没做的**:`#8` 美术占位替换(**需用户提供素材或指明物品,Claude 无法凭空画好像素图**)、整体数值平衡、真弧形盾面(需自定义 Java 物品渲染器,高风险,留另议)、天赋树连线美化。(**调试菜单已于 m58 落地。**)
 

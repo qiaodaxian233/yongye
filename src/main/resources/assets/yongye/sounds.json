@@ -2,5 +2,6 @@
   "pain_bgm": { "category": "music", "sounds": [ { "name": "yongye:pain_bgm", "stream": true } ] },
   "pain_almighty_push": { "category": "hostile", "sounds": [ "yongye:pain_almighty_push" ] },
   "pain_universal_pull": { "category": "hostile", "sounds": [ "yongye:pain_universal_pull" ] },
-  "pain_planetary": { "category": "hostile", "sounds": [ "yongye:pain_planetary" ] }
+  "pain_planetary": { "category": "hostile", "sounds": [ "yongye:pain_planetary" ] },
+  "him_jumpscare": { "category": "hostile", "sounds": [ { "name": "yongye:him_jumpscare", "stream": true } ] }
 }

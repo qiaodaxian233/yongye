@@ -195,6 +195,8 @@ public class YongyeConfig {
     public int himDurationTicks = 35;
     public boolean himNightOrCaveOnly = true;
     public double himSpawnDistance = 2.2;
+    public int himBlindnessTicks = 20;        // 出现前的短暂失明铺垫(tick);越短越"突然"。原 100(5秒),20≈1秒
+    public boolean himTeleportFlash = true;   // 登场时喷紫色末影门粒子(传送闪现感)
 
     // ===== 硬核开局生存包 =====
     public boolean enableHardcoreSurvival = true;
