@@ -86,6 +86,9 @@ public final class NightfallManager {
         level = clamped;
         save();
         broadcast(server, Text.literal("【永夜】世界进入:" + getLevelName()).formatted(Formatting.DARK_PURPLE));
+        for (net.minecraft.server.network.ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            com.yongye.network.YongyeNet.sendNightfall(p);
+        }
     }
 
     public static void escalate(MinecraftServer server) {

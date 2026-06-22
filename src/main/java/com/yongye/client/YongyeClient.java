@@ -35,6 +35,9 @@ import org.lwjgl.glfw.GLFW;
 public class YongyeClient implements ClientModInitializer {
 
     private static boolean pendingClassSelect = false;
+    /** 永夜 HUD 状态(由 NightfallSyncPayload 更新):等级 + 阶段名 */
+    public static int nightfallLevel = 0;
+    public static String nightfallName = "";
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -59,6 +62,22 @@ public class YongyeClient implements ClientModInitializer {
         // 命令在世界内显式触发,不存在登录过场覆盖问题,直接 setScreen 即可。
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenDebugPayload.ID, (payload, context) ->
                 context.client().execute(() -> context.client().setScreen(new DebugScreen())));
+
+        // 永夜同步:更新 HUD 状态
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.NightfallSyncPayload.ID, (payload, context) ->
+                context.client().execute(() -> { nightfallLevel = payload.level(); nightfallName = payload.name(); }));
+
+        // 永夜 HUD:开启永夜(等级≥1)时,在屏幕中上显示当前阶段
+        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
+            if (nightfallLevel < 1 || nightfallName.isEmpty()) return;
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player == null || mc.options.hudHidden) return;
+            net.minecraft.text.Text t = net.minecraft.text.Text.literal(nightfallName)
+                    .formatted(net.minecraft.util.Formatting.DARK_RED, net.minecraft.util.Formatting.BOLD);
+            int w = mc.textRenderer.getWidth(t);
+            int x = (mc.getWindow().getScaledWidth() - w) / 2;
+            ctx.drawTextWithShadow(mc.textRenderer, t, x, 4, 0xFFFF5555);
+        });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (pendingClassSelect && client.player != null && client.currentScreen == null) {
                 pendingClassSelect = false;

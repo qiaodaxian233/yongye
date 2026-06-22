@@ -45,6 +45,7 @@ public final class YongyeNet {
         });
         // 天赋界面:S2C 同步状态 + C2S 加点请求
         PayloadTypeRegistry.playS2C().register(com.yongye.network.TalentSyncPayload.ID, com.yongye.network.TalentSyncPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.NightfallSyncPayload.ID, com.yongye.network.NightfallSyncPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(com.yongye.network.TalentLearnPayload.ID, com.yongye.network.TalentLearnPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.TalentLearnPayload.ID, (payload, context) -> {
             ServerPlayerEntity p = context.player();
@@ -95,6 +96,7 @@ public final class YongyeNet {
         // 登录即推送一次,保证面板有数据
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sendStats(handler.player));
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sendTalents(handler.player));
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sendNightfall(handler.player));
     }
 
     /** 同步玩家天赋状态(点数 + 已习得职业 + 各节点等级)到客户端,供天赋界面渲染。 */
@@ -117,5 +119,12 @@ public final class YongyeNet {
         java.util.List<String> cls = com.yongye.system.ClassManager.learnedList(player);
         String className = cls.isEmpty() ? "" : cls.get(0);
         ServerPlayNetworking.send(player, new StatsPayload(health, levels, className));
+    }
+
+    /** 下发当前永夜等级 + 阶段名给指定玩家(HUD 显示用)。 */
+    public static void sendNightfall(ServerPlayerEntity player) {
+        ServerPlayNetworking.send(player, new com.yongye.network.NightfallSyncPayload(
+                com.yongye.system.NightfallManager.getLevel(),
+                com.yongye.system.NightfallManager.getLevelName()));
     }
 }

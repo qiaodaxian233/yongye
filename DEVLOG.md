@@ -529,3 +529,11 @@
   - 起止全服广播。纯服务端——血月红天/浓雾等客户端渲染未做(用广播 + 玩法效果替代)。
 - 92 个 Java 文件(+1 NightfallWeatherHandler)。setWeather/isSkyVisible/spawnParticles 均原版稳定 API。
 - 推荐功能 ③据点防御(新方块)/ ⑦商人(交易API)按用户要求**不做**。
+
+---
+
+## 里程碑 75 — 永夜 HUD:屏幕中上显示当前阶段
+应需求:开启永夜(等级≥1)时,在屏幕中上显示当前阶段。
+- **同步**:新增 S2C `NightfallSyncPayload(int level, String name)`;`NightfallManager.setLevel` 变更后向全体玩家下发,`ServerPlayConnectionEvents.JOIN` 时也下发(`YongyeNet.sendNightfall`)。阶段名复用现成的 `NightfallManager.getLevelName()`(永夜 I·暗潮 … V·灭世 / 深渊 N 层)。
+- **客户端**:`YongyeClient` 存 `nightfallLevel/nightfallName`,收到包即更新;`HudRenderCallback` 在 `level≥1` 时把阶段名(深红加粗)居中绘制在屏幕顶部(y=4,boss 血条上方);`hudHidden`(F1)时不画。
+- 93 个 Java 文件(+1 NightfallSyncPayload)。**[待编译验证:`HudRenderCallback` 在 1.21.1 的 `(DrawContext, RenderTickCounter)` 签名]**,其余为项目现成 S2C/JOIN 范式。
