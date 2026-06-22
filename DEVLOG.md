@@ -453,3 +453,13 @@
 - **软依赖**:背包是独立 mod,**不硬依赖**——按字符串 id(配置 `startingBackpackItem`,默认 `sophisticatedbackpacks:netherite_backpack`)在 `Registries.ITEM` 查;查不到(未装该 mod / id 错)**静默跳过且不打标记**(玩家日后装上该 mod、下次登录可补发),不崩。
 - 老玩家(尚无标记)下次登录也会补发一个 → "所有人"最终都拿到一个。配置 `giveStartingBackpack` 开关。
 - 89 个 Java 文件(+1 StartingKitHandler)。无待验证点。
+
+---
+
+## 里程碑 68 — 佩恩强化 + 通用配置命令 + 调试菜单调参
+应需求四项:
+- **① 佩恩数值**:血量 1000→**20000**、攻击 12→**2000**(配置默认值)。
+- **② 佩恩按时间线增强**(此前缺失):生成时复用怪物缩放公式——`MobEnhancementHandler.progressionMultiplier` 改 `public`,佩恩血量 ×进度倍率、攻击按 `mobScalingAttackRatio` 比例缩放,封顶 `mobScalingMaxMultiplier`;受 `enableMobScaling` 开关控制。倍率随永夜等级 + 游戏天数 + 附近玩家强度 + 进化阶段上升,与普通怪同一套。
+- **③ 通用配置命令**:`/yongye config set <字段> <值>`、`get <字段>`、`list`。**反射读写 `YongyeConfig` 任意 public 实例字段**(boolean/int/long/double/String;数组只读),改完 `YongyeConfig.save()` 写盘,大多即时生效(部分需重进世界)。这是"所有功能进调试可设"的通用入口——任意配置都能游戏内改,不用编辑 json。
+- **④ 调试菜单"调参/配置"组**:技能书爆率(精英 `skillBookDropChanceElite` / 普通 `skillBookDropChanceNormal`,本就有字段)+ 佩恩血/攻 快捷按钮(点即 `config set`);更多字段用命令。
+- 89 个 Java 文件,无新增文件。`config set` 用反射(`getField`/`setX`),无新依赖。

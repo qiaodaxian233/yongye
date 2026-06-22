@@ -95,8 +95,8 @@ public final class MobEnhancementHandler {
         Yongye.LOGGER.info("[永夜] 怪物增强系统已挂载");
     }
 
-    /** 进度倍率:基于永夜等级 + 游戏天数 + 附近玩家最大生命。 */
-    private static double progressionMultiplier(MobEntity mob, YongyeConfig cfg) {
+    /** 进度倍率:基于永夜等级 + 游戏天数 + 附近玩家最大生命。(public:佩恩等特殊怪复用同一套缩放) */
+    public static double progressionMultiplier(MobEntity mob, YongyeConfig cfg) {
         double prog = 1.0;
         prog += NightfallManager.getLevel() * cfg.mobScalingPerNightfall;
 

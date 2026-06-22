@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m67**:m58-65 已 push 且 **m65 本地 build 通过 ✅**,m66(材料兑换)/m67(开局背包)已加待 push · 本段最新,优先看)
+## 0.5 当前状态(截至 **m68**:m65 本地 **build 通过 ✅**,m66-68 已 push **待实机验证** · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -58,6 +58,7 @@
 - **m65** **改名→「永夜」**(应需求)。全局把显示名字符串 `亡途荒夜`→`永夜`:fabric.mod.json name、日志前缀 `[永夜]`、调试菜单标题、lang(物品组/按键分类)、注释、文档。**内部 id/包名/资源命名空间 `yongye` 全部未动**(yongye=永夜拼音,本就一致;动了毁存档/资源)。无逻辑改动。**已 build 通过 ✅**
 - **m66** **材料兑换按钮**(应需求)。背包加「兑换」按钮 → `ExchangeScreen`(三行 10→1 + 全部兑换,实时显示数量)→ C2S `ExchangePayload(tier,all)` → 服务端 `MaterialExchange` 扫背包扣料/给料。10 碎片→结晶→核心→血核,固定 10:1(与材料强化等值)。配置 `enableMaterialExchange`。新增 3 文件,88 个 Java 文件。无待验证点。
 - **m67** **开局赠礼:下界合金背包**(应需求)。`StartingKitHandler`(JOIN 事件)每人首次进入发一个背包,持久标记 `GOT_STARTING_KIT` 防重发/防刷。**软依赖**:按 id `Registries.ITEM.get`(配置 `startingBackpackItem` 默认 `sophisticatedbackpacks:netherite_backpack`),未装该 mod 静默跳过不打标记(补发友好),不硬依赖不崩。老玩家下次登录补发。配置 `giveStartingBackpack`。
+- **m68** **佩恩强化 + 通用配置命令 + 调参菜单**(应需求)。① 佩恩血 20000 / 攻 2000;② 佩恩生成复用 `MobEnhancementHandler.progressionMultiplier`(改 public)按永夜+天数缩放;③ **`/yongye config set/get/list`** 反射读写 YongyeConfig 任意 public 字段(boolean/int/long/double/String)+ `save()` 写盘——"所有功能游戏内可设"的通用入口;④ DebugScreen 加"调参/配置"组(技能书爆率 skillBookDropChanceElite/Normal + 佩恩血攻,点即 config set)。无新增文件。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 

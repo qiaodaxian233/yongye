@@ -49,7 +49,7 @@ public class DebugScreen extends Screen {
         headerYs.clear();
 
         // 整个网格垂直居中:先估算总高度,再定起点 y(6 个分组,每组 = 标题 + 1 行按钮 + 组间距)
-        int groups = 6;
+        int groups = 8;
         int blockH = HEADER_H + BTN_H + GAP_Y;
         int totalH = 24 /*顶部标题*/ + groups * blockH + 28 /*底部关闭按钮区*/;
         int startY = Math.max(30, (this.height - totalH) / 2 + 24);
@@ -108,6 +108,14 @@ public class DebugScreen extends Screen {
         y = section(x0, y, "运维", new Btn[]{
                 new Btn("查掉率", "yongye loot show"),
                 new Btn("重置配置", "yongye config reset"),
+        });
+
+        // —— 调参 / 配置 ——(技能书爆率 + 佩恩数值;任意字段用 /yongye config set <字段> <值>,查全部用 config list)
+        y = section(x0, y, "调参 / 配置(更多用 config set)", new Btn[]{
+                new Btn("技书爆率·精英↑", "yongye config set skillBookDropChanceElite 1.0"),
+                new Btn("技书爆率·普通↑", "yongye config set skillBookDropChanceNormal 0.5"),
+                new Btn("佩恩血 20000", "yongye config set painBossMaxHealth 20000"),
+                new Btn("佩恩攻 2000", "yongye config set painBossAttack 2000"),
         });
 
         // 关闭按钮(底部居中;y 已是最后一组之后的位置)

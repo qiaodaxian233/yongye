@@ -246,13 +246,21 @@ public final class PainBossHandler {
         pain.setAttached(ModAttachments.IS_PAIN, true);
 
         YongyeConfig cfg = YongyeConfig.get();
-        setBase(pain, EntityAttributes.GENERIC_MAX_HEALTH, cfg.painBossMaxHealth);
-        setBase(pain, EntityAttributes.GENERIC_ATTACK_DAMAGE, cfg.painBossAttack);
+        // 时间线增强:复用怪物缩放公式(永夜等级 + 游戏天数 + 附近玩家强度 + 进化阶段,封顶 mobScalingMaxMultiplier)。
+        // 血量按整倍率,攻击按 mobScalingAttackRatio 比例(与普通怪一致,避免攻击膨胀过猛)。
+        double prog = cfg.enableMobScaling ? MobEnhancementHandler.progressionMultiplier(pain, cfg) : 1.0;
+        double atkProg = 1.0 + (prog - 1.0) * cfg.mobScalingAttackRatio;
+        setBase(pain, EntityAttributes.GENERIC_MAX_HEALTH, cfg.painBossMaxHealth * prog);
+        setBase(pain, EntityAttributes.GENERIC_ATTACK_DAMAGE, cfg.painBossAttack * atkProg);
         setBase(pain, EntityAttributes.GENERIC_ARMOR, cfg.painBossArmor);
         setBase(pain, EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0);
         setBase(pain, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3);
         setBase(pain, EntityAttributes.GENERIC_FOLLOW_RANGE, 48.0);
         pain.setHealth(pain.getMaxHealth());
+        if (prog > 1.01) {
+            Yongye.LOGGER.info(String.format("[永夜] 佩恩降临:进度倍率 ×%.2f → 血量 %.0f / 攻击 %.0f",
+                    prog, cfg.painBossMaxHealth * prog, cfg.painBossAttack * atkProg));
+        }
 
         world.spawnEntity(pain);
         playBgmNear(world, pain);

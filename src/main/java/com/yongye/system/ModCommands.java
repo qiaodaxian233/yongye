@@ -161,6 +161,29 @@ public final class ModCommands {
                                     ctx.getSource().sendFeedback(() ->
                                             Text.literal("配置已重置为默认值(部分改动重进世界生效)").formatted(Formatting.AQUA), false);
                                     return 1;
+                                }))
+                                .then(CommandManager.literal("set")
+                                        .then(CommandManager.argument("key", StringArgumentType.word())
+                                                .then(CommandManager.argument("value", StringArgumentType.greedyString())
+                                                        .executes(ctx -> {
+                                                            String msg = setConfigField(StringArgumentType.getString(ctx, "key"),
+                                                                    StringArgumentType.getString(ctx, "value"));
+                                                            ctx.getSource().sendFeedback(() ->
+                                                                    Text.literal(msg).formatted(Formatting.AQUA), false);
+                                                            return 1;
+                                                        }))))
+                                .then(CommandManager.literal("get")
+                                        .then(CommandManager.argument("key", StringArgumentType.word())
+                                                .executes(ctx -> {
+                                                    String key = StringArgumentType.getString(ctx, "key");
+                                                    ctx.getSource().sendFeedback(() ->
+                                                            Text.literal(key + " = " + getConfigField(key)).formatted(Formatting.AQUA), false);
+                                                    return 1;
+                                                })))
+                                .then(CommandManager.literal("list").executes(ctx -> {
+                                    ctx.getSource().sendFeedback(() ->
+                                            Text.literal(listConfigFields()).formatted(Formatting.GRAY), false);
+                                    return 1;
                                 })))
 
                         .then(CommandManager.literal("wardbook").executes(ctx -> {
@@ -311,5 +334,67 @@ public final class ModCommands {
         });
 
         Yongye.LOGGER.info("[永夜] 指令已注册");
+    }
+
+    // ===== 通用配置读写(反射:任意 YongyeConfig 公共实例字段都能在游戏内 set/get/list)=====
+    // 支持类型:boolean / int / long / double / String。数组等复杂字段只读不写。
+    // 改完立即写盘(YongyeConfig.save());部分字段需重进世界才生效。
+
+    private static String setConfigField(String key, String value) {
+        com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
+        try {
+            java.lang.reflect.Field f = com.yongye.YongyeConfig.class.getField(key);
+            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) return "该字段不可设置:" + key;
+            Class<?> t = f.getType();
+            if (t == boolean.class) {
+                f.setBoolean(cfg, value.equalsIgnoreCase("true") || value.equals("1") || value.equals("是"));
+            } else if (t == int.class) {
+                f.setInt(cfg, (int) Math.round(Double.parseDouble(value)));
+            } else if (t == long.class) {
+                f.setLong(cfg, (long) Math.round(Double.parseDouble(value)));
+            } else if (t == double.class) {
+                f.setDouble(cfg, Double.parseDouble(value));
+            } else if (t == String.class) {
+                f.set(cfg, value);
+            } else {
+                return "暂不支持该字段类型(" + t.getSimpleName() + "):" + key;
+            }
+            com.yongye.YongyeConfig.save();
+            return "已设置 " + key + " = " + getConfigField(key) + "(部分改动重进世界生效)";
+        } catch (NoSuchFieldException e) {
+            return "无此配置字段:" + key + "(用 /yongye config list 查看全部)";
+        } catch (NumberFormatException e) {
+            return "数值无法解析:" + value;
+        } catch (IllegalAccessException e) {
+            return "设置失败:" + key;
+        }
+    }
+
+    private static String getConfigField(String key) {
+        try {
+            java.lang.reflect.Field f = com.yongye.YongyeConfig.class.getField(key);
+            Object v = f.get(com.yongye.YongyeConfig.get());
+            if (v instanceof double[] arr) return java.util.Arrays.toString(arr);
+            return String.valueOf(v);
+        } catch (NoSuchFieldException e) {
+            return "<无此字段>";
+        } catch (IllegalAccessException e) {
+            return "<读取失败>";
+        }
+    }
+
+    private static String listConfigFields() {
+        StringBuilder sb = new StringBuilder();
+        int n = 0;
+        for (java.lang.reflect.Field f : com.yongye.YongyeConfig.class.getFields()) {
+            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+            Class<?> t = f.getType();
+            if (t == boolean.class || t == int.class || t == long.class || t == double.class || t == String.class) {
+                if (n > 0) sb.append("、");
+                sb.append(f.getName());
+                n++;
+            }
+        }
+        return "共 " + n + " 个可设字段:" + sb;
     }
 }
