@@ -17,6 +17,7 @@ import com.yongye.system.HardcoreSurvivalHandler;
 import com.yongye.system.HimJumpscareHandler;
 import com.yongye.system.HighHpCounterHandler;
 import com.yongye.system.LootHandler;
+import com.yongye.system.MobBossHandler;
 import com.yongye.system.MobEnhancementHandler;
 import com.yongye.system.ModCommands;
 import com.yongye.system.NightfallManager;
