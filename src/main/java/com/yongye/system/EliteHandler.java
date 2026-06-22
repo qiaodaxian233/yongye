@@ -107,6 +107,7 @@ public final class EliteHandler {
             if (!cfg.enableElite) return;
             if (!(entity instanceof MobEntity mob) || !(entity instanceof Monster)) return;
             if (BossHandler.isBoss(mob)) return;
+            if (mob.getAttachedOrElse(ModAttachments.IS_BOSS, false)) return; // 已是(怪物)BOSS版,不再精英化
             if (mob.getAttachedOrElse(ModAttachments.IS_PAIN, false)) return;
             if (mob.getAttachedOrElse(ModAttachments.IS_HIM, false)) return;
             if (mob.getAttachedOrElse(ModAttachments.IS_ELITE, false)) {
@@ -138,6 +139,29 @@ public final class EliteHandler {
         Yongye.LOGGER.info("[亡途荒夜] 精英怪系统已挂载");
     }
 
+    /**
+     * 测试用:把玩家附近 radius 格内、尚未精英化的敌对怪物就地变成精英(复用 makeElite)。
+     * 供 /yongye elite 命令调用,方便实机查看精英光环/属性,免去干等 4% 概率刷新。返回精英化的数量。
+     */
+    public static int makeNearbyElite(ServerPlayerEntity p, double radius) {
+        if (!(p.getWorld() instanceof ServerWorld sw)) return 0;
+        YongyeConfig cfg = YongyeConfig.get();
+        Box box = p.getBoundingBox().expand(radius);
+        List<MobEntity> mobs = sw.getEntitiesByClass(MobEntity.class, box,
+                m -> m.isAlive() && m instanceof Monster
+                        && !BossHandler.isBoss(m)
+                        && !m.getAttachedOrElse(ModAttachments.IS_PAIN, false)
+                        && !m.getAttachedOrElse(ModAttachments.IS_HIM, false)
+                        && !m.getAttachedOrElse(ModAttachments.IS_ELITE, false));
+        int count = 0;
+        for (MobEntity mob : mobs) {
+            makeElite(mob, cfg);
+            ELITES.add(mob);
+            count++;
+        }
+        return count;
+    }
+
     private static void makeElite(MobEntity mob, YongyeConfig cfg) {
         mob.setAttached(ModAttachments.IS_ELITE, true);
 
@@ -161,6 +185,12 @@ public final class EliteHandler {
     }
 
     private static void tickElite(ServerWorld sw, MobEntity e, YongyeConfig cfg) {
+        // 精英光环特效:每 eliteAuraIntervalTicks tick 在周身喷一圈幽蓝魂火(纯服务端 spawnParticles,
+        // 自动广播给附近玩家;不走发光描边,无 m21 那类渲染mod崩溃风险)。与金色名牌一样常显,作精英标识。
+        if (cfg.eliteAuraEffect && e.age % Math.max(1, cfg.eliteAuraIntervalTicks) == 0) {
+            spawnAura(sw, e);
+        }
+
         LivingEntity target = e.getTarget();
 
         // 精英主动感知:没有目标(或目标已死)时,锁定感知半径内最近的玩家
@@ -288,6 +318,27 @@ public final class EliteHandler {
                 20, 0.3, 0.5, 0.3, 0.02);
         sw.playSound(null, tx, ty, tz,
                 SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.HOSTILE, 1.0f, 0.9f);
+    }
+
+    /** 精英光环:脚下一圈随时间旋转的幽蓝魂火 + 少量上升魂粒,营造"被诅咒的强敌"气场。纯服务端粒子,零渲染风险。 */
+    private static void spawnAura(ServerWorld sw, MobEntity e) {
+        double cx = e.getX();
+        double cy = e.getY();
+        double cz = e.getZ();
+        double h = e.getHeight();
+        // 脚下一圈魂火,随 age 缓慢旋转(约 2 秒一圈),形成环绕的火环
+        final int points = 5;
+        final double radius = 0.55;
+        double base = (e.age % 40) / 40.0 * (Math.PI * 2.0);
+        for (int i = 0; i < points; i++) {
+            double a = base + i * (Math.PI * 2.0 / points);
+            double px = cx + Math.cos(a) * radius;
+            double pz = cz + Math.sin(a) * radius;
+            // count=1、零速度 = 在该点定住一簇幽蓝魂火
+            sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, px, cy + 0.15, pz, 1, 0.0, 0.0, 0.0, 0.0);
+        }
+        // 周身少量上升魂粒
+        sw.spawnParticles(ParticleTypes.SOUL, cx, cy + h * 0.5, cz, 1, 0.25, h * 0.35, 0.25, 0.01);
     }
 
     private static void addMultiplier(LivingEntity e, RegistryEntry<EntityAttribute> attr, Identifier id, double multiplier) {

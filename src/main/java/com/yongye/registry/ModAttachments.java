@@ -70,6 +70,13 @@ public final class ModAttachments {
                     .initializer(() -> false)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_boss"));
 
+    /** IS_MOB_BOSS: 该实体为"普通怪 BOSS 版"(区别于原版 Boss;仅此类挂自定义红色血条)。 */
+    public static final AttachmentType<Boolean> IS_MOB_BOSS =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "is_mob_boss"));
+
     /** IS_PAIN: 该实体为长门(佩恩)Boss。 */
     public static final AttachmentType<Boolean> IS_PAIN =
             AttachmentRegistry.<Boolean>builder()

@@ -135,6 +135,26 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        // 把附近 16 格内的怪物就地变精英(测试精英光环/属性,免等 4% 概率刷新)
+                        .then(CommandManager.literal("elite").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            int n = EliteHandler.makeNearbyElite(p, 16.0);
+                            ctx.getSource().sendFeedback(() -> Text.literal(n > 0
+                                    ? "已把附近 " + n + " 只怪物变为精英(看周身幽蓝魂火光环)"
+                                    : "附近 16 格内没有可精英化的怪物——先在夜晚/洞穴附近刷点怪再用").formatted(Formatting.GOLD), false);
+                            return 1;
+                        }))
+
+                        // 把附近 16 格内的怪物就地变 BOSS(测试怪物BOSS版:红血条/大属性/Boss能力/掉落,免等概率刷新)
+                        .then(CommandManager.literal("mobboss").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            int n = MobBossHandler.makeNearbyMobBoss(p, 16.0);
+                            ctx.getSource().sendFeedback(() -> Text.literal(n > 0
+                                    ? "已把附近 " + n + " 只怪物变为 BOSS(顶部红色血条 + 体型放大 + Boss 能力)"
+                                    : "附近 16 格内没有可BOSS化的怪物——先在夜晚/洞穴附近刷点怪再用").formatted(Formatting.DARK_RED), false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("config")
                                 .then(CommandManager.literal("reset").executes(ctx -> {
                                     com.yongye.YongyeConfig.reset();

@@ -91,12 +91,17 @@ public class DebugScreen extends Screen {
                 new Btn("守护书", "yongye wardbook"),
         });
 
-        // —— 事件 / Boss / 任务 ——
-        y = section(x0, y, "事件 / Boss / 任务", new Btn[]{
+        // —— 刷怪测试 ——(一键召出特殊怪实机查看:精英 / 怪物BOSS / 长门)
+        y = section(x0, y, "刷怪测试", new Btn[]{
+                new Btn("精英化附近", "yongye elite"),
+                new Btn("BOSS化附近", "yongye mobboss"),
                 new Btn("长门降临", "yongye painboss"),
+        });
+
+        // —— 事件 / 任务 ——
+        y = section(x0, y, "事件 / 任务", new Btn[]{
                 new Btn("灾厄核心", "yongye core"),
                 new Btn("任务·猎杀", "yongye quest hunt"),
-                new Btn("任务·存活", "yongye quest survive"),
         });
 
         // —— 运维 ——

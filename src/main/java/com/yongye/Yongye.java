@@ -73,6 +73,7 @@ public class Yongye implements ModInitializer {
         MobEnhancementHandler.register();
         BossHandler.register();
         BossAbilityHandler.register();
+        MobBossHandler.register();
         EliteHandler.register();
         ArmorHealthHandler.register();
         LootHandler.register();

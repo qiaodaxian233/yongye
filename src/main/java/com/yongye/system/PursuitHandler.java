@@ -5,13 +5,17 @@ import com.yongye.YongyeConfig;
 import com.yongye.item.ArtifactType;
 import com.yongye.registry.ModAttachments;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
@@ -35,6 +39,8 @@ public final class PursuitHandler {
     private static final Map<MobEntity, Integer> LAST_DIG_AGE = new WeakHashMap<>();
     // 卡住跟踪:{最近距玩家最小平方距离, 取得该最小值时的 age}
     private static final Map<MobEntity, double[]> STUCK = new WeakHashMap<>();
+    // 搭塔冷却:每只怪上次搭方块的 age
+    private static final Map<MobEntity, Integer> LAST_PILLAR_AGE = new WeakHashMap<>();
     private static int tickCounter = 0;
     private static int teleportsThisTick = 0;
 
@@ -133,8 +139,22 @@ public final class PursuitHandler {
                         }
                     }
 
-                    // —— 爬墙 —— 正前方有墙且玩家更高时,持续向上推(蜘蛛之外的怪也能爬)
-                    if (!anchor && (elite || boss || nf >= 3) && wallAhead
+                    // —— 搭方块爬塔 —— 反制玩家用单格高塔躲在怪够不着的正上方:
+                    // 玩家近乎正上方且高出若干格时,怪原地搭方块柱子逐格上移(比纯爬墙更可靠)。
+                    boolean pillared = false;
+                    if (!anchor && cfg.mobPillarUp && ProgressionManager.canMobsDig(world)
+                            && player.getY() - mob.getY() > cfg.pillarMinHeightDiff
+                            && Math.sqrt(dx * dx + dz * dz) <= cfg.pillarMaxHorizontal
+                            && mob.isOnGround()) {
+                        int lastP = LAST_PILLAR_AGE.getOrDefault(mob, -100000);
+                        if (mob.age - lastP >= cfg.pillarCooldownTicks && tryPillarUp(world, mob, cfg)) {
+                            LAST_PILLAR_AGE.put(mob, mob.age);
+                            pillared = true;
+                        }
+                    }
+
+                    // —— 爬墙 —— 正前方有墙且玩家更高时,持续向上推(没搭方块时才走;蜘蛛之外的怪也能爬)
+                    if (!pillared && !anchor && (elite || boss || nf >= 3) && wallAhead
                             && player.getY() > mob.getY() + 0.6) {
                         Vec3d v = mob.getVelocity();
                         double pushX = dir.getOffsetX() * 0.12;
@@ -209,5 +229,34 @@ public final class PursuitHandler {
             return true;
         }
         return false;
+    }
+
+    /** 怪原地搭一格方块往上爬(像玩家搭柱子):先上移 1 格,再在原脚位填方块。成功返回 true。 */
+    private static boolean tryPillarUp(ServerWorld world, MobEntity mob, YongyeConfig cfg) {
+        BlockPos feet = mob.getBlockPos();
+        // 上移后怪会占据 feet.up(1)+feet.up(2),需 feet.up(2) 为空;脚位本应是空气(怪站在 feet.down 上)
+        if (!world.getBlockState(feet.up(2)).isAir()) return false;
+        if (!world.getBlockState(feet).isAir()) return false;
+        BlockState block = pillarBlockState(cfg);
+        mob.getNavigation().stop();
+        mob.refreshPositionAndAngles(feet.getX() + 0.5, feet.getY() + 1.0, feet.getZ() + 0.5, mob.getYaw(), mob.getPitch());
+        world.setBlockState(feet, block);
+        mob.setVelocity(Vec3d.ZERO);
+        mob.velocityModified = true;
+        mob.fallDistance = 0.0f;
+        world.spawnParticles(ParticleTypes.CLOUD, feet.getX() + 0.5, feet.getY() + 0.5, feet.getZ() + 0.5,
+                5, 0.2, 0.1, 0.2, 0.0);
+        world.playSound(null, feet, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.HOSTILE, 0.6f, 1.0f);
+        return true;
+    }
+
+    /** 解析配置里的搭塔方块 id(非法/缺失则回退圆石)。 */
+    private static BlockState pillarBlockState(YongyeConfig cfg) {
+        Identifier id = Identifier.tryParse(cfg.pillarBlock);
+        if (id != null) {
+            var b = Registries.BLOCK.get(id);
+            if (b != Blocks.AIR) return b.getDefaultState();
+        }
+        return Blocks.COBBLESTONE.getDefaultState();
     }
 }

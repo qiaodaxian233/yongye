@@ -65,6 +65,10 @@ public class YongyeConfig {
     public boolean enableElite = true;
     /** 精英怪持续发光(部分渲染mod如AcceleratedRendering处理实体描边有bug,默认关防崩) */
     public boolean eliteGlowing = false;
+    /** 精英怪光环特效:周身喷幽蓝魂火粒子(纯服务端 spawnParticles,不走发光描边,无渲染mod崩溃风险) */
+    public boolean eliteAuraEffect = true;
+    /** 光环特效的发射间隔(tick),越小越密集越费;默认 4(约每秒 5 次) */
+    public int eliteAuraIntervalTicks = 4;
     /** 怪物精英化的基础概率 */
     public double eliteChance = 0.04;
     /** 精英在"基础增强之上"再追加的属性倍率/数值 */
@@ -95,6 +99,17 @@ public class YongyeConfig {
     public double bossKnockbackResistanceAdd = 0.4;
     /** 掉落奖励翻倍系数 */
     public double bossDropMultiplier = 2.0;
+
+    // ============ 普通怪 BOSS 版(m60:第 N 天起,普通怪低概率"BOSS化")============
+    public boolean enableMobBoss = true;
+    public int mobBossStartDay = 10;             // 第几天起开始刷怪物BOSS(早于此天不刷)
+    public double mobBossChance = 0.008;         // 每只普通怪生成时BOSS化的概率(低,作偶发精英BOSS)
+    public double mobBossHealthMultiplier = 12.0;
+    public double mobBossAttackMultiplier = 4.0;
+    public double mobBossSpeedMultiplier = 1.25;
+    public double mobBossKnockbackResistanceAdd = 0.9;
+    public double mobBossScaleMultiplier = 1.6;  // 体型放大(更像Boss);1.0=不放大。靠 GENERIC_SCALE 属性
+    public double mobBossBarRadius = 48.0;        // 多远内的玩家能看到这只BOSS的血条
 
     // —— Boss 专属机制(文档 7.1)——
     public boolean enableBossAbilities = true;
@@ -251,6 +266,13 @@ public class YongyeConfig {
     public double digMaxHardnessBoss = 60.0;    // 含黑曜石
     /** 爬墙竖直速度 */
     public double climbSpeed = 0.22;
+
+    // —— 搭方块爬塔(m60:反制玩家用单格高塔躲在怪够不着的高处)——
+    public boolean mobPillarUp = true;            // 怪在玩家正上方够不着时,原地搭方块柱子往上爬
+    public double pillarMinHeightDiff = 3.0;      // 玩家高出怪多少格才触发搭塔
+    public double pillarMaxHorizontal = 2.5;      // 怪与玩家水平距离小于此值才搭(即玩家近乎正上方)
+    public int pillarCooldownTicks = 8;           // 每搭一格的间隔(tick),越小爬得越快
+    public String pillarBlock = "minecraft:cobblestone"; // 搭塔用的方块 id(默认圆石,玩家可挖掉)
     /** 卡住兜底:船卡/水/岩浆/挖不动的墙后,传送到玩家身边 */
     public boolean pursuitTeleportStuck = true;
     public int pursuitStuckTicks = 60;          // 持续无进展多久判定卡住(tick,3s)
