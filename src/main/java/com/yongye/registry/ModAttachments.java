@@ -153,6 +153,6 @@ public final class ModAttachments {
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "starting_class_chosen"));
 
     public static void init() {
-        Yongye.LOGGER.info("[亡途荒夜] 数据附着已注册");
+        Yongye.LOGGER.info("[永夜] 数据附着已注册");
     }
 }

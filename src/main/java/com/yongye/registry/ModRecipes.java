@@ -35,6 +35,6 @@ public final class ModRecipes {
                     new SpecialRecipeSerializer<>(EquipmentEnhanceRecipe::new));
 
     public static void init() {
-        Yongye.LOGGER.info("[亡途荒夜] 配方序列化器已注册");
+        Yongye.LOGGER.info("[永夜] 配方序列化器已注册");
     }
 }

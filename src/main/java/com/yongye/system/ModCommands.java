@@ -310,6 +310,6 @@ public final class ModCommands {
                 );
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 指令已注册");
+        Yongye.LOGGER.info("[永夜] 指令已注册");
     }
 }

@@ -40,7 +40,7 @@ public class DebugScreen extends Screen {
     private final List<Integer> headerYs = new ArrayList<>();
 
     public DebugScreen() {
-        super(Text.literal("亡途荒夜 · 调试菜单"));
+        super(Text.literal("永夜 · 调试菜单"));
     }
 
     @Override

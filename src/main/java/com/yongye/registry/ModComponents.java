@@ -54,6 +54,6 @@ public final class ModComponents {
     );
 
     public static void init() {
-        Yongye.LOGGER.info("[亡途荒夜] 数据组件已注册");
+        Yongye.LOGGER.info("[永夜] 数据组件已注册");
     }
 }

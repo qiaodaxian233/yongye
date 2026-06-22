@@ -92,7 +92,7 @@ public final class QuestManager {
             }
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 随机任务系统已挂载");
+        Yongye.LOGGER.info("[永夜] 随机任务系统已挂载");
     }
 
     private static void tick(MinecraftServer server) {
@@ -117,7 +117,7 @@ public final class QuestManager {
             try {
                 return tickQuest(server, e.getKey(), e.getValue());
             } catch (Exception ex) {
-                Yongye.LOGGER.error("[亡途荒夜] 任务处理异常,已移除该任务", ex);
+                Yongye.LOGGER.error("[永夜] 任务处理异常,已移除该任务", ex);
                 Quest q = e.getValue();
                 if (q != null && q.bar != null) q.bar.clearPlayers();
                 return true;

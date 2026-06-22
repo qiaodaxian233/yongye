@@ -38,6 +38,6 @@ public final class BonusXpHandler {
                 ExperienceOrbEntity.spawn(world, mob.getPos(), bonus);
             }
         });
-        Yongye.LOGGER.info("[亡途荒夜] 精英+ 额外经验系统已挂载");
+        Yongye.LOGGER.info("[永夜] 精英+ 额外经验系统已挂载");
     }
 }

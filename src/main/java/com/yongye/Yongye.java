@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 《亡途荒夜》主入口。
+ * 《永夜》主入口。
  * Phase 0: 工程骨架 + 配置 + 注册框架。
  * Phase 1: 怪物基础增强 / 套装血量 / 技能书(V1~V65535,含同级合成) / 随机掉落 / 超稀有材料。
  * Phase 2: 精英怪系统 / Boss 翻倍。
@@ -45,11 +45,11 @@ import org.slf4j.LoggerFactory;
  */
 public class Yongye implements ModInitializer {
     public static final String MOD_ID = "yongye";
-    public static final Logger LOGGER = LoggerFactory.getLogger("亡途荒夜");
+    public static final Logger LOGGER = LoggerFactory.getLogger("永夜");
 
     @Override
     public void onInitialize() {
-        LOGGER.info("[亡途荒夜] 世界已经坏掉了，正在初始化……");
+        LOGGER.info("[永夜] 世界已经坏掉了，正在初始化……");
 
         // 配置
         YongyeConfig.load();
@@ -108,7 +108,7 @@ public class Yongye implements ModInitializer {
             newPlayer.setHealth(newPlayer.getMaxHealth()); // 复活回满血(而非默认20)
         });
 
-        LOGGER.info("[亡途荒夜] 初始化完成。活到天亮就是胜利。");
+        LOGGER.info("[永夜] 初始化完成。活到天亮就是胜利。");
     }
 
     /** 把某个属性的硬上限抬到 max(原版默认夹在 1024,会让高血量/高强化失效)。 */
@@ -125,6 +125,6 @@ public class Yongye implements ModInitializer {
         raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE, cap);
         raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ARMOR, cap);
         raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ARMOR_TOUGHNESS, cap);
-        LOGGER.info("[亡途荒夜] 已抬高属性上限(原版默认夹在 1024)");
+        LOGGER.info("[永夜] 已抬高属性上限(原版默认夹在 1024)");
     }
 }

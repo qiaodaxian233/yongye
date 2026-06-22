@@ -160,7 +160,7 @@ public final class LootHandler {
                 }
             }
         });
-        Yongye.LOGGER.info("[亡途荒夜] 随机掉落系统已挂载");
+        Yongye.LOGGER.info("[永夜] 随机掉落系统已挂载");
     }
 
     private static List<LootFactory> pickPool(double roll, YongyeConfig cfg) {

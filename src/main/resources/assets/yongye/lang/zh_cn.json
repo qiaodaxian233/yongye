@@ -1,5 +1,5 @@
 {
-  "itemGroup.yongye.general": "亡途荒夜",
+  "itemGroup.yongye.general": "永夜",
   "block.yongye.catastrophe_core": "灾厄核心",
   "item.yongye.health_skill_book": "血量强化技能书",
   "item.yongye.life_shard": "生命碎片",
@@ -54,7 +54,7 @@
   "item.yongye.artifact.glutton_heart.desc": "击杀怪物恢复生命",
   "item.yongye.artifact.world_anchor.desc": "降低附近怪物的挖墙与爬墙能力",
   "item.yongye.artifact.in_bag": "放入背包即生效 · 同类只取最高等级",
-  "key.categories.yongye": "亡途荒夜",
+  "key.categories.yongye": "永夜",
   "key.yongye.skill1": "武器技能 1(混沌斩)",
   "key.yongye.skill2": "武器技能 2(深渊吞噬)",
   "key.yongye.skill3": "武器技能 3(终焉降临)",

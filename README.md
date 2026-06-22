@@ -1,4 +1,4 @@
-# 亡途荒夜 (Yongye)
+# 永夜 (Yongye)
 
 极难灾变生存玩法 · Minecraft **Fabric 1.21.1**
 

@@ -1,4 +1,4 @@
-# 亡途荒夜 · 项目交接文档（HANDOVER）
+# 永夜 · 项目交接文档（HANDOVER）
 
 > 给接手这个项目的人（或新对话里的 AI 助手）。读完这份就能无缝接上，不用回头翻聊天记录。
 > 仓库：https://github.com/qiaodaxian233/yongye　·　Minecraft **Fabric 1.21.1** · 纯 Java，无前置 mod（Fabric API 除外）。
@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m64**:m55-57 已 **build 通过 ✅**,m58-63 已 push **待实机验证**,m64(材质包只留怪物皮肤+音效)已加待 push · 本段最新,优先看)
+## 0.5 当前状态(截至 **m65**:m55-57 已 **build 通过 ✅**,m58-64 已 push **待实机验证**,m65(改名→永夜)已加待 push · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -55,6 +55,7 @@
 - **m62** **精英+ 额外经验**(应需求·升级慢)。新增 `BonusXpHandler`(AFTER_DEATH),按档 `ExperienceOrbEntity.spawn` 掉经验:长门500>怪物BOSS150>原版Boss200>精英25(取最高适用,先判 IS_MOB_BOSS)。配置 `enableBonusXp`+`xpBonus*`。无 mixin/依赖/待验证。**同批未完**:材质包应用/默认皮肤/音效——`minecraft.zip` 未真正上传(uploads 空),待用户重传(预定 m63)。
 - **m63** **整套材质/音效资源包并入**(应需求·切换默认皮肤+音效)。用户把资源包做成 7z 分卷直接提交进仓库(`e0699af`),本里程碑解开(341贴图+784音效+models/lang/splash)整套并入 `src/main/resources/assets/minecraft/`——mod jar 资源盖过原版默认,装 mod 即自动应用(怪物皮肤/方块/物品/音效),无需手动挂包;音效靠同路径 ogg 覆盖(无 sounds.json)。删掉根目录 raw `.7z` 分卷。`assets/minecraft` 约 37MB,jar 随之变大(预期)。无 Java 改动。想要可菜单开关再转 `registerBuiltinResourcePack`+`DEFAULT_ENABLED`。
 - **m64** **材质包只留怪物皮肤**(应需求·方块皮肤不要)。从 m63 整套包删掉非怪物视觉资产(textures 的 block/item/environment/painting/particle/models + models/ + blockstates/ + lang/ + texts/,共 168 文件),只留 textures/entity(217 怪物皮肤)+ sounds(784 音效)。items/lang 也按"只留怪物皮肤"一并去掉,想要可加回。
+- **m65** **改名→「永夜」**(应需求)。全局把显示名字符串 `亡途荒夜`→`永夜`:fabric.mod.json name、日志前缀 `[永夜]`、调试菜单标题、lang(物品组/按键分类)、注释、文档。**内部 id/包名/资源命名空间 `yongye` 全部未动**(yongye=永夜拼音,本就一致;动了毁存档/资源)。无逻辑改动。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 

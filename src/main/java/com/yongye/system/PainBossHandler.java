@@ -105,7 +105,7 @@ public final class PainBossHandler {
             }
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 长门(佩恩)Boss 已挂载");
+        Yongye.LOGGER.info("[永夜] 长门(佩恩)Boss 已挂载");
     }
 
     /** 永夜达到阈值后,按概率让长门作为「六道之痛」自然降临(全局唯一)。 */

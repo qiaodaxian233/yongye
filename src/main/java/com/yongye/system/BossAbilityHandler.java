@@ -78,7 +78,7 @@ public final class BossAbilityHandler {
             }
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] Boss 专属机制已挂载");
+        Yongye.LOGGER.info("[永夜] Boss 专属机制已挂载");
     }
 
     private static void applyAbilities(ServerWorld world, MobEntity boss, int now, YongyeConfig cfg) {

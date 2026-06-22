@@ -420,7 +420,7 @@ public class YongyeConfig {
                 save();
             }
         } catch (IOException | RuntimeException e) {
-            Yongye.LOGGER.error("[亡途荒夜] 读取配置失败,使用默认值", e);
+            Yongye.LOGGER.error("[永夜] 读取配置失败,使用默认值", e);
             INSTANCE = new YongyeConfig();
         }
     }
@@ -437,7 +437,7 @@ public class YongyeConfig {
             Files.createDirectories(path.getParent());
             Files.writeString(path, GSON.toJson(INSTANCE == null ? new YongyeConfig() : INSTANCE));
         } catch (IOException e) {
-            Yongye.LOGGER.error("[亡途荒夜] 写入配置失败", e);
+            Yongye.LOGGER.error("[永夜] 写入配置失败", e);
         }
     }
 }

@@ -119,7 +119,7 @@ public final class ArtifactManager {
             return false; // 取消死亡
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 背包神器系统已挂载");
+        Yongye.LOGGER.info("[永夜] 背包神器系统已挂载");
     }
 
     private static void applyAll(ServerPlayerEntity p) {

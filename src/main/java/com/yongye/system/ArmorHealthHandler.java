@@ -46,7 +46,7 @@ public final class ArmorHealthHandler {
                 updatePlayer(player);
             }
         });
-        Yongye.LOGGER.info("[亡途荒夜] 套装血量系统已挂载");
+        Yongye.LOGGER.info("[永夜] 套装血量系统已挂载");
     }
 
     private static void updatePlayer(ServerPlayerEntity player) {

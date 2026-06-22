@@ -81,7 +81,7 @@ public final class HimJumpscareHandler {
                 PENDING.put(p.getUuid(), now + blind);
             }
         });
-        Yongye.LOGGER.info("[亡途荒夜] HIM 惊吓系统已挂载");
+        Yongye.LOGGER.info("[永夜] HIM 惊吓系统已挂载");
     }
 
     private static boolean isNightOrDark(ServerWorld world, ServerPlayerEntity p) {

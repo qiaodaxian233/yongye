@@ -22,6 +22,6 @@ public final class ModSounds {
     }
 
     public static void init() {
-        Yongye.LOGGER.info("[亡途荒夜] 音效已注册");
+        Yongye.LOGGER.info("[永夜] 音效已注册");
     }
 }

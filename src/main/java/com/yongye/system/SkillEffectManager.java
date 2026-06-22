@@ -108,7 +108,7 @@ public final class SkillEffectManager {
             return ActionResult.PASS;
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 技能书(护甲/恢复/闪避/反伤/抗性/饱食/抢夺)系统已挂载");
+        Yongye.LOGGER.info("[永夜] 技能书(护甲/恢复/闪避/反伤/抗性/饱食/抢夺)系统已挂载");
     }
 
     private static void applyAttributes(ServerPlayerEntity p) {

@@ -70,6 +70,6 @@ public final class ModItemGroups {
             }
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 物品组已注册");
+        Yongye.LOGGER.info("[永夜] 物品组已注册");
     }
 }

@@ -167,7 +167,7 @@ public final class PursuitHandler {
             }
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 追杀系统已挂载");
+        Yongye.LOGGER.info("[永夜] 追杀系统已挂载");
     }
 
     /** 在玩家附近(相近高度)找一个可站立的安全点把怪传过去。成功返回 true。 */

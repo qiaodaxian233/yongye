@@ -30,6 +30,6 @@ public final class ModBlocks {
     }
 
     public static void init() {
-        Yongye.LOGGER.info("[亡途荒夜] 方块已注册");
+        Yongye.LOGGER.info("[永夜] 方块已注册");
     }
 }

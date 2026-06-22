@@ -54,7 +54,7 @@ public final class ProgressionManager {
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(ProgressionManager::tickFirstDay);
-        Yongye.LOGGER.info("[亡途荒夜] 时间进度系统已挂载");
+        Yongye.LOGGER.info("[永夜] 时间进度系统已挂载");
     }
 
     /** 第一天白天放慢到 firstDayMinutes 分钟(仅主世界、仅首个白天 0..12000)。 */

@@ -152,6 +152,6 @@ public final class WeaponSkillManager {
         // 玩家退出时清理冷却表,避免内存堆积
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 COOLDOWNS.remove(handler.player.getUuid()));
-        Yongye.LOGGER.info("[亡途荒夜] 武器主动技能系统已挂载");
+        Yongye.LOGGER.info("[永夜] 武器主动技能系统已挂载");
     }
 }

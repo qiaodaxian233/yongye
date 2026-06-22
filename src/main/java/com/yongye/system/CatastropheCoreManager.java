@@ -70,7 +70,7 @@ public final class CatastropheCoreManager {
             tickCores(world);
             maybeNaturalSpawn(server, world);
         });
-        Yongye.LOGGER.info("[亡途荒夜] 灾厄核心系统已挂载");
+        Yongye.LOGGER.info("[永夜] 灾厄核心系统已挂载");
     }
 
     private static void tickCores(ServerWorld world) {
@@ -206,7 +206,7 @@ public final class CatastropheCoreManager {
                 }
             }
         } catch (Exception e) {
-            Yongye.LOGGER.error("[亡途荒夜] 读取灾厄核心存档失败", e);
+            Yongye.LOGGER.error("[永夜] 读取灾厄核心存档失败", e);
         }
     }
 
@@ -217,7 +217,7 @@ public final class CatastropheCoreManager {
             s.cores = cores.stream().mapToLong(Long::longValue).toArray();
             Files.writeString(savePath, GSON.toJson(s));
         } catch (Exception e) {
-            Yongye.LOGGER.error("[亡途荒夜] 保存灾厄核心存档失败", e);
+            Yongye.LOGGER.error("[永夜] 保存灾厄核心存档失败", e);
         }
     }
 }

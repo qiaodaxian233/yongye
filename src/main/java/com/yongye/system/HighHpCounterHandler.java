@@ -122,7 +122,7 @@ public final class HighHpCounterHandler {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 SUPPRESS_UNTIL.remove(handler.player.getUuid()));
 
-        Yongye.LOGGER.info("[亡途荒夜] 高血量反制系统已挂载");
+        Yongye.LOGGER.info("[永夜] 高血量反制系统已挂载");
     }
 
     private static void applySuppress(ServerPlayerEntity player) {

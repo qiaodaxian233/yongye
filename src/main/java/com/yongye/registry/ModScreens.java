@@ -23,6 +23,6 @@ public final class ModScreens {
                     new ScreenHandlerType<>(com.yongye.screen.EnhanceScreenHandler::new, FeatureFlags.VANILLA_FEATURES));
 
     public static void init() {
-        Yongye.LOGGER.info("[亡途荒夜] 饰品/强化容器已注册");
+        Yongye.LOGGER.info("[永夜] 饰品/强化容器已注册");
     }
 }

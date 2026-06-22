@@ -129,6 +129,6 @@ public final class ModItems {
     }
 
     public static void init() {
-        Yongye.LOGGER.info("[亡途荒夜] 物品已注册");
+        Yongye.LOGGER.info("[永夜] 物品已注册");
     }
 }

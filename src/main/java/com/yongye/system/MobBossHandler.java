@@ -95,7 +95,7 @@ public final class MobBossHandler {
             }
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 普通怪 BOSS 版系统已挂载");
+        Yongye.LOGGER.info("[永夜] 普通怪 BOSS 版系统已挂载");
     }
 
     /** 测试用:把玩家附近 radius 格内、尚未BOSS化的普通敌对怪就地 BOSS 化。返回数量。 */

@@ -67,7 +67,7 @@ public final class NightfallManager {
             lockNight(server);
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 永夜系统已挂载");
+        Yongye.LOGGER.info("[永夜] 永夜系统已挂载");
     }
 
     private static void lockNight(MinecraftServer server) {
@@ -113,7 +113,7 @@ public final class NightfallManager {
                 if (s != null) level = Math.max(0, Math.min(YongyeConfig.get().nightfallMaxLevel, s.level));
             }
         } catch (IOException | RuntimeException e) {
-            Yongye.LOGGER.error("[亡途荒夜] 读取永夜状态失败", e);
+            Yongye.LOGGER.error("[永夜] 读取永夜状态失败", e);
         }
     }
 
@@ -124,7 +124,7 @@ public final class NightfallManager {
             s.level = level;
             Files.writeString(savePath, GSON.toJson(s));
         } catch (IOException e) {
-            Yongye.LOGGER.error("[亡途荒夜] 写入永夜状态失败", e);
+            Yongye.LOGGER.error("[永夜] 写入永夜状态失败", e);
         }
     }
 }

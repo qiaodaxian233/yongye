@@ -44,7 +44,7 @@ public final class HardcoreSurvivalHandler {
             YongyeConfig cfg = YongyeConfig.get();
             if (cfg.enableHardcoreSurvival && cfg.hcNoSleepSkip) {
                 server.getGameRules().get(GameRules.PLAYERS_SLEEPING_PERCENTAGE).set(101, server);
-                Yongye.LOGGER.info("[亡途荒夜] 硬核:睡觉无法跳过夜晚");
+                Yongye.LOGGER.info("[永夜] 硬核:睡觉无法跳过夜晚");
             }
         });
 
@@ -118,7 +118,7 @@ public final class HardcoreSurvivalHandler {
             }
         });
 
-        Yongye.LOGGER.info("[亡途荒夜] 硬核开局生存包已挂载");
+        Yongye.LOGGER.info("[永夜] 硬核开局生存包已挂载");
     }
 
     /** 在玩家附近刷一只敌对怪(无视亮度);surface=true 用地表高度,否则用玩家所在高度。 */
