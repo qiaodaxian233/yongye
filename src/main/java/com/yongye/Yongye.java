@@ -9,6 +9,7 @@ import com.yongye.registry.ModSounds;
 import com.yongye.registry.ModRecipes;
 import com.yongye.system.ArmorHealthHandler;
 import com.yongye.system.ArtifactManager;
+import com.yongye.system.BonusXpHandler;
 import com.yongye.system.BossHandler;
 import com.yongye.system.BossAbilityHandler;
 import com.yongye.system.CatastropheCoreManager;
@@ -75,6 +76,7 @@ public class Yongye implements ModInitializer {
         BossHandler.register();
         BossAbilityHandler.register();
         MobBossHandler.register();
+        BonusXpHandler.register();
         EliteHandler.register();
         ArmorHealthHandler.register();
         LootHandler.register();

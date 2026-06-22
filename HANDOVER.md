@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m61**:m55-57 已 **build 通过 ✅**,m58-60 已 push(m60 已修 import,**待 build 验证**),m61(HIM 自定义音效+闪现)已加 **待 push** · 本段最新,优先看)
+## 0.5 当前状态(截至 **m62**:m55-57 已 **build 通过 ✅**,m58-61 已 push **待实机验证**,m62(精英+经验)已加待 push;材质/皮肤/音效待用户重传 zip · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -52,6 +52,7 @@
 - **m59** **精英怪光环特效**(应需求):精英周身常显幽蓝魂火光环(脚下旋转 `SOUL_FIRE_FLAME` + 上升 `SOUL`),`EliteHandler.tickElite` 每 `eliteAuraIntervalTicks`(默认4)tick 服务端 `spawnParticles`,**纯服务端不走描边**(规避 m21 渲染崩溃,`eliteGlowing` 仍默认关);配置 `eliteAuraEffect`/`eliteAuraIntervalTicks`。**+ `/yongye elite`**:把附近 16 格怪物就地变精英(`EliteHandler.makeNearbyElite` 复用 `makeElite`,免等概率刷),调试菜单「刷怪测试」组加「精英化附近」按钮。**澄清(非 bug)**:用户"没见到 BOSS"——Boss = 被增强的原版 Boss(凋灵/监守者/远古守卫/末影龙/袭击队长,只在各自原生场景,非主世界随机刷)+ 长门·佩恩(仅永夜≥IV 且 ≥第5天按概率自然降临);`/yongye painboss` 或调试菜单「长门降临」可即时召出。
 - **m60** **普通怪 BOSS 版 + 搭方块爬塔**(应需求三连)。**① 怪物BOSS版(新增 `MobBossHandler`)**:第 `mobBossStartDay`(默认10)天起普通敌对怪按 `mobBossChance`(0.8%)BOSS化 = 打 `IS_BOSS`(**自动继承** BossAbility 能力/BossHandler 掉落/Pursuit Boss档挖墙/HighHpCounter/跳过普通掉落)+ 大属性(血×12/攻×4)+ 体型放大(`GENERIC_SCALE`×1.6)+ 红色 ServerBossBar + 【BOSS】名牌;独立持久 `IS_MOB_BOSS` 区分原版Boss,仅其挂血条(每tick更新%+同步48格内玩家,死亡clearPlayers,重载补回)。注册在 EliteHandler 前 + Elite 加 `IS_BOSS` 跳过(防双标记)。**② 搭方块爬塔(PursuitHandler)**:玩家近乎正上方(水平≤`pillarMaxHorizontal`2.5)且高出`pillarMinHeightDiff`(3)格时,怪每`pillarCooldownTicks`(8t)搭一格(先上移再填脚位`pillarBlock`圆石)垒到玩家高度,`pillared`优先于爬墙,受世界之锚+`canMobsDig`(第5天)+`mobPillarUp`约束——反制单格高塔躲猫猫。测试:`/yongye mobboss` / 调试菜单「BOSS化附近」。**⚠ 唯一待编译验证点**:`EntityAttributes.GENERIC_SCALE`(1.21.1 应带 GENERIC_ 前缀;若 build 报 cannot find symbol 就改成 `SCALE`)。84 个 Java 文件(+1)。
 - **m61** **HIM 突脸:自定义音效 + 传送闪现**(应需求)。用户上传 `突脸惊吓.mp3` → ffmpeg 转 `him_jumpscare.ogg`(14.3s),复用既有音效管线:`sounds.json` + `ModSounds.HIM_JUMPSCARE`,HIM 登场换播此音效(原 ENTITY_ENDERMAN_STARE)。登场加 `ParticleTypes.PORTAL` 紫色闪现粒子(`himTeleportFlash`)。失明铺垫 100t→可配 `himBlindnessTicks`(默认 20t≈1s,更突然)。**注意**:音效 14.3s 远长于 HIM 停留 1.75s,会放完;要贴合就裁短 mp3。全程复用已 build API,无待验证点。
+- **m62** **精英+ 额外经验**(应需求·升级慢)。新增 `BonusXpHandler`(AFTER_DEATH),按档 `ExperienceOrbEntity.spawn` 掉经验:长门500>怪物BOSS150>原版Boss200>精英25(取最高适用,先判 IS_MOB_BOSS)。配置 `enableBonusXp`+`xpBonus*`。无 mixin/依赖/待验证。**同批未完**:材质包应用/默认皮肤/音效——`minecraft.zip` 未真正上传(uploads 空),待用户重传(预定 m63)。
 
 **✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
 

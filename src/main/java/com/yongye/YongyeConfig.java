@@ -111,6 +111,13 @@ public class YongyeConfig {
     public double mobBossScaleMultiplier = 1.6;  // 体型放大(更像Boss);1.0=不放大。靠 GENERIC_SCALE 属性
     public double mobBossBarRadius = 48.0;        // 多远内的玩家能看到这只BOSS的血条
 
+    // ============ 精英+ 额外经验(m62:加快升级)============
+    public boolean enableBonusXp = true;
+    public int xpBonusElite = 25;                 // 精英怪死亡额外经验
+    public int xpBonusMobBoss = 150;              // 怪物BOSS版死亡额外经验
+    public int xpBonusVanillaBoss = 200;          // 原版Boss(凋灵/监守者等)死亡额外经验(原版自带经验之外再加)
+    public int xpBonusPain = 500;                 // 长门·佩恩死亡额外经验
+
     // —— Boss 专属机制(文档 7.1)——
     public boolean enableBossAbilities = true;
     public double bossAggroRange = 48.0;       // 锁定/能力作用范围
