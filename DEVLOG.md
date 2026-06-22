@@ -621,3 +621,20 @@
 应需求(把 m83 的队长门控做进调试菜单,免敲命令)。
 - `DebugScreen` 新增分组「Boss 门控」3 按钮(走 `config set bossRaidCaptainMinDay`):队长Boss·第8天 / 第15天 / 关闭(9999)。分组计数 8→9(垂直居中估算同步)。
 - 无新增文件/无新接口,纯按钮+现有 config set 命令。重建即生效。
+
+---
+
+## 里程碑 85 — 调试菜单重做为「分页全命令」
+应需求(把所有可用命令都放进调试菜单)。
+- `DebugScreen` 重写为**顶部分类页签 + 分页**:8 页(永夜/道具/神器/职业/刷怪/掉率/配置/天赋),覆盖 ModCommands 全部子命令。
+  - 永夜:nightfall 0/4/5/7、status、redeem;quest hunt/survive/flee/core/gather;top。
+  - 道具:book、level、enhance、recover;skillbook 全 8 型(attack/armor/regen/evasion/thorns/resistance/satiety/steal)。
+  - 神器:artifact 全 10 型(life_idol…world_anchor)L3;wardbook。
+  - 职业:classbook×6、classweapon×6、chaosblade、tankshield。
+  - 刷怪:elite/mobboss/painboss/core。
+  - 掉率:loot show/shard/crystal/core/bloodcore/enable。
+  - 配置:config set 常用预设×8 + Boss门控×3 + config list/reset。
+  - 天赋:talent / list / reset(learn/info 需 id,按钮无法枚举,留手敲)。
+- 数据用 `Page/Section/Btn` record 静态表;`section()` 支持按钮自动换行(超 COLS 换行);页签点击 `rebuildWidgets()` 重建本页;当前页签 `active=false` 高亮。
+- 命令串与 config 字段名已逐条核对(8 skillbook 型 / 10 artifact 型 / 6 职业 / 9 config 字段全部对得上)。
+- 仅改 DebugScreen 单文件;新增用法仅 `rebuildWidgets()` + `ButtonWidget.active`(均 1.21.1 稳定)。无新增文件(97)。
