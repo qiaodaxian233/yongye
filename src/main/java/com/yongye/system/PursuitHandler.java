@@ -74,7 +74,7 @@ public final class PursuitHandler {
                     boolean elite = mob.getAttachedOrElse(ModAttachments.IS_ELITE, false);
                     boolean boss = mob.getAttachedOrElse(ModAttachments.IS_BOSS, false);
 
-                    // —— 嵌墙兜底:怪整只卡在实心方块里 → 传送(默认关:pursuitTeleportWallStuck=false,改为靠挖墙脱困)——
+                    // —— 嵌墙兜底:怪整只卡在实心方块里 → 能在玩家身边找到落点就传送脱困;找不到则下方挖墙脱困 ——
                     if (!anchor && cfg.pursuitTeleportWallStuck && isStuckInWall(world, mob)) {
                         if (teleportsThisTick < cfg.pursuitMaxTeleportsPerTick
                                 && teleportNear(world, mob, player, cfg)) {

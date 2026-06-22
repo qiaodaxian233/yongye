@@ -431,8 +431,8 @@ public class YongyeConfig {
     public double nightfallHordeRadius = 24.0;     // 在玩家周围多大范围刷/统计
     public double nightfallHordeMinDistance = 8.0; // 刷怪点距玩家最小距离
 
-    /** 追杀:墙后卡住是否传送(默认关——改为挖墙 + 起跳翻越,不再瞬移) */
-    public boolean pursuitTeleportWallStuck = false;
+    /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
+    public boolean pursuitTeleportWallStuck = true;
     /** 追杀:撞低墙时给一次起跳冲量帮助翻越 */
     public boolean pursuitJumpWalls = true;
 

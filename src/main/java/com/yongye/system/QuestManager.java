@@ -264,17 +264,17 @@ public final class QuestManager {
     private static void reward(ServerPlayerEntity player) {
         if (!(player.getWorld() instanceof ServerWorld world)) return;
         var r = player.getRandom();
-        int nf = NightfallManager.getLevel();
-        // 保底一本血量书,等级随永夜走高
-        drop(world, player, HealthSkillBookItem.create(3 + nf * 2 + r.nextInt(3)));
-        // 高价值按概率(永夜越高越易、越值),不再保底堆钻石/金苹果
-        if (r.nextDouble() < 0.40 + nf * 0.10) drop(world, player, new ItemStack(ModItems.LIFE_CRYSTAL, 1 + r.nextInt(2)));
-        if (r.nextDouble() < 0.20 + nf * 0.08) drop(world, player, new ItemStack(ModItems.LIFE_CORE));
-        if (r.nextDouble() < 0.08 + nf * 0.05) {
+        int nf = Math.min(NightfallManager.getLevel(), 5); // 奖励的永夜加成封顶,避免深渊层奖励随等级暴涨
+        // 保底一本低级血量书(等级低 + 小幅随永夜上浮,封顶 ~V9;原先 92 层会保底 ~V187 过高)
+        drop(world, player, HealthSkillBookItem.create(2 + r.nextInt(3) + nf)); // V2~V9
+        // 高价值材料按低概率
+        if (r.nextDouble() < 0.20 + nf * 0.03) drop(world, player, new ItemStack(ModItems.LIFE_CRYSTAL, 1));
+        if (r.nextDouble() < 0.08 + nf * 0.02) drop(world, player, new ItemStack(ModItems.LIFE_CORE));
+        if (r.nextDouble() < 0.03 + nf * 0.01) {
             Item[] mats = { ModItems.ENDING_ESSENCE, ModItems.ABYSS_SOUL_CRYSTAL, ModItems.RIFT_FRAGMENT, ModItems.CATASTROPHE_BLOOD_CORE };
             drop(world, player, new ItemStack(mats[r.nextInt(mats.length)]));
         }
-        if (r.nextDouble() < 0.15) drop(world, player, new ItemStack(Items.ENCHANTED_GOLDEN_APPLE));
+        if (r.nextDouble() < 0.08) drop(world, player, new ItemStack(Items.ENCHANTED_GOLDEN_APPLE));
     }
 
     private static void drop(ServerWorld world, PlayerEntity player, ItemStack stack) {
