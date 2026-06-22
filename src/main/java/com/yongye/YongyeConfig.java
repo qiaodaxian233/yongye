@@ -526,4 +526,21 @@ public class YongyeConfig {
             Yongye.LOGGER.error("[永夜] 写入配置失败", e);
         }
     }
+
+    /** 配置文件(yongye.json)的绝对路径——供「导出配置」打印给用户定位。 */
+    public static Path configPath() {
+        return FabricLoader.getInstance().getConfigDir().resolve("yongye.json");
+    }
+
+    /** 按字段名反射读取当前值并转成字符串(供爆率编辑器回传当前值)。无此字段/不可读返回空串。 */
+    public static String getFieldString(String key) {
+        try {
+            java.lang.reflect.Field f = YongyeConfig.class.getField(key);
+            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) return "";
+            Object v = f.get(get());
+            return String.valueOf(v);
+        } catch (ReflectiveOperationException e) {
+            return "";
+        }
+    }
 }

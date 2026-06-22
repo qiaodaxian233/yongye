@@ -184,6 +184,15 @@ public final class ModCommands {
                                     ctx.getSource().sendFeedback(() ->
                                             Text.literal(listConfigFields()).formatted(Formatting.GRAY), false);
                                     return 1;
+                                }))
+                                .then(CommandManager.literal("export").executes(ctx -> {
+                                    com.yongye.YongyeConfig.save(); // 确保最新值已写盘
+                                    String path = com.yongye.YongyeConfig.configPath().toAbsolutePath().toString();
+                                    ctx.getSource().sendFeedback(() -> Text.literal(
+                                            "配置已保存。文件位置:\n" + path
+                                            + "\n把这个 yongye.json 发给作者即可设为默认配置。").formatted(Formatting.AQUA), false);
+                                    com.yongye.Yongye.LOGGER.info("[永夜] 配置导出路径: {}", path);
+                                    return 1;
                                 })))
 
                         .then(CommandManager.literal("wardbook").executes(ctx -> {

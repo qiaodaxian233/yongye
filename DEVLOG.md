@@ -638,3 +638,15 @@
 - 数据用 `Page/Section/Btn` record 静态表;`section()` 支持按钮自动换行(超 COLS 换行);页签点击 `rebuildWidgets()` 重建本页;当前页签 `active=false` 高亮。
 - 命令串与 config 字段名已逐条核对(8 skillbook 型 / 10 artifact 型 / 6 职业 / 9 config 字段全部对得上)。
 - 仅改 DebugScreen 单文件;新增用法仅 `rebuildWidgets()` + `ButtonWidget.active`(均 1.21.1 稳定)。无新增文件(97)。
+
+---
+
+## 里程碑 86 — 爆率编辑器(直接输入)+ 导出配置
+应需求(爆率界面可直接输入修改;调完导出配置给作者设默认)。
+- **爆率编辑器**(新 `DropRateConfigScreen`):14 个爆率/经验字段做成**文本输入框**(碎片/结晶/核心/血核/技能书精英·普通/职业书/职业武器/精英化/怪物BOSS化 + 4 档额外经验),改完点「✔ 应用并保存」对每个字段 `config set <key> <值>`(即时生效并写盘)。预填当前值:
+  - 新 C2S `RequestConfigPayload`(空,`PacketCodec.unit`)+ S2C `ConfigValuesPayload(String data='key=value\n...')`,字段清单 `EDITABLE_KEYS` + 中文标签 `labelOf` 定义在 payload 内(服务端客户端单一来源)。
+  - 服务端 `YongyeNet.sendConfigValues` 用 `YongyeConfig.getFieldString`(新公开反射读值)拼回传;打开编辑器即请求,到达后 `onValues` 填入 CACHE 并 `rebuildWidgets` 预填(无请求→无循环)。
+  - 入口:调试菜单「掉率」页新增整行按钮「✎ 爆率编辑器」(客户端 setScreen,非命令);另有「↻ 刷新当前值 / ⤓ 导出配置 / 关闭」。
+- **导出配置**:新 `/yongye config export` 命令——`save()` 后打印 `config/yongye.json` 绝对路径到聊天 + 日志(`YongyeConfig.configPath()`);调试菜单「配置」页维护组加「导出配置(路径)」按钮。用户据路径找到文件发作者即可设默认。
+- 新增 3 文件(RequestConfigPayload / ConfigValuesPayload / DropRateConfigScreen,100);改 YongyeConfig(+configPath/+getFieldString)、YongyeNet、YongyeClient、DebugScreen、ModCommands。
+- **[待验证]**:`TextFieldWidget(TextRenderer,x,y,w,h,Text)` 6 参构造 + setText/getText/setMaxLength(vanilla 稳定控件,低风险);其余复用已验证范式(unit 包 / ClientPlayNetworking.send / 反射 config)。

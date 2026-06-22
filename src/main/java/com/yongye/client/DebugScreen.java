@@ -175,6 +175,7 @@ public class DebugScreen extends Screen {
                     }),
                     new Section("维护", new Btn[]{
                             new Btn("列出全部字段", "yongye config list"),
+                            new Btn("导出配置(路径)", "yongye config export"),
                             new Btn("重置为默认", "yongye config reset"),
                     }),
             }),
@@ -216,6 +217,15 @@ public class DebugScreen extends Screen {
         int y = tabY + tabH + 8;
         for (Section s : PAGES[page].sections()) {
             y = section(x0, y, s.title(), s.btns());
+        }
+
+        // 掉率页:额外加一个「直接输入编辑」按钮(客户端动作,打开爆率编辑器,而非发命令)
+        if ("掉率".equals(PAGES[page].tab())) {
+            addDrawableChild(ButtonWidget.builder(
+                            Text.literal("✎ 爆率编辑器(直接输入数值)").formatted(Formatting.YELLOW),
+                            b -> MinecraftClient.getInstance().setScreen(new DropRateConfigScreen()))
+                    .dimensions(x0, y + 2, COLS * BTN_W + (COLS - 1) * GAP_X, BTN_H).build());
+            y += BTN_H + GAP_Y;
         }
 
         // 关闭按钮(底部居中)

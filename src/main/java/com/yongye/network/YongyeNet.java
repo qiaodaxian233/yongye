@@ -47,6 +47,13 @@ public final class YongyeNet {
         PayloadTypeRegistry.playS2C().register(com.yongye.network.TalentSyncPayload.ID, com.yongye.network.TalentSyncPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.NightfallSyncPayload.ID, com.yongye.network.NightfallSyncPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.CoreLocatorPayload.ID, com.yongye.network.CoreLocatorPayload.CODEC);
+        // 爆率编辑器:C2S 请求当前值 → S2C 回传(key=value 多行)
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.RequestConfigPayload.ID, com.yongye.network.RequestConfigPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.ConfigValuesPayload.ID, com.yongye.network.ConfigValuesPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.RequestConfigPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> sendConfigValues(p));
+        });
         PayloadTypeRegistry.playC2S().register(com.yongye.network.TalentLearnPayload.ID, com.yongye.network.TalentLearnPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.TalentLearnPayload.ID, (payload, context) -> {
             ServerPlayerEntity p = context.player();
@@ -136,5 +143,14 @@ public final class YongyeNet {
     /** 下发"最近灾厄核心位置"给玩家(HUD 方向箭头用);has=false 表示范围内无核心。 */
     public static void sendCoreLocator(ServerPlayerEntity player, boolean has, double x, double y, double z) {
         ServerPlayNetworking.send(player, new com.yongye.network.CoreLocatorPayload(has, x, y, z));
+    }
+
+    /** 把当前可编辑配置(爆率/经验)的值回传客户端,供爆率编辑器预填(data='key=value\n...')。 */
+    public static void sendConfigValues(ServerPlayerEntity player) {
+        StringBuilder sb = new StringBuilder();
+        for (String key : com.yongye.network.ConfigValuesPayload.EDITABLE_KEYS) {
+            sb.append(key).append('=').append(com.yongye.YongyeConfig.getFieldString(key)).append('\n');
+        }
+        ServerPlayNetworking.send(player, new com.yongye.network.ConfigValuesPayload(sb.toString()));
     }
 }

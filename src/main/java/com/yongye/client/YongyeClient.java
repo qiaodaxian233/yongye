@@ -82,6 +82,10 @@ public class YongyeClient implements ClientModInitializer {
                     coreTX = payload.x(); coreTY = payload.y(); coreTZ = payload.z();
                 }));
 
+        // 爆率编辑器:收到当前配置值 → 填进编辑器输入框
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ConfigValuesPayload.ID, (payload, context) ->
+                context.client().execute(() -> DropRateConfigScreen.onValues(payload.data())));
+
         // 永夜暗角:恒定亮度的边缘压暗,替代会"一闪一闪"的原版黑暗效果。
         // 纯静态绘制(不含任何时间/帧变量)→ 亮度固定、绝不闪;vision 越大越暗越收窄。
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
