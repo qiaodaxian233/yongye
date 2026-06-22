@@ -34,13 +34,23 @@ public final class ModCommands {
                                                     + "(等级 " + NightfallManager.getLevel() + ")").formatted(Formatting.DARK_PURPLE), false);
                                     return 1;
                                 }))
-                                .then(CommandManager.argument("level", IntegerArgumentType.integer(0, 5)).executes(ctx -> {
+                                // 上界放开:m56 已把封顶移到 nightfallMaxLevel(默认99),setLevel 内部会钳;
+                                // 若仍写 (0,5),/yongye nightfall 6+ 会被 Brigadier 拒绝,深渊层无法用命令触达。
+                                .then(CommandManager.argument("level", IntegerArgumentType.integer(0)).executes(ctx -> {
                                     NightfallManager.setLevel(ctx.getSource().getServer(), IntegerArgumentType.getInteger(ctx, "level"));
                                     return 1;
                                 })))
 
                         .then(CommandManager.literal("redeem").executes(ctx -> {
                             NightfallManager.redeem(ctx.getSource().getServer());
+                            return 1;
+                        }))
+
+                        // 打开调试 / 运营菜单(客户端 DebugScreen):服务端发 S2C 包,客户端收到即开界面。
+                        // 菜单里的按钮再 sendCommand 回这些 /yongye 子命令,故仍受权限2约束。
+                        .then(CommandManager.literal("debug").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p, new com.yongye.network.OpenDebugPayload());
                             return 1;
                         }))
 

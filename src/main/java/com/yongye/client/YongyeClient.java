@@ -54,6 +54,11 @@ public class YongyeClient implements ClientModInitializer {
         // 开局选职:收到 S2C 后置位,待进入世界且无其它界面时再弹出(避免被登录过场覆盖)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenClassSelectPayload.ID, (payload, context) ->
                 context.client().execute(() -> pendingClassSelect = true));
+
+        // 调试菜单:收到 S2C(由 /yongye debug 触发)即打开 DebugScreen。
+        // 命令在世界内显式触发,不存在登录过场覆盖问题,直接 setScreen 即可。
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenDebugPayload.ID, (payload, context) ->
+                context.client().execute(() -> context.client().setScreen(new DebugScreen())));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (pendingClassSelect && client.player != null && client.currentScreen == null) {
                 pendingClassSelect = false;

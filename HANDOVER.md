@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m57 / HEAD `b92db89`**:m55+m56+m57 已 push,**等用户 build + 实机验证** · 本段最新,优先看)
+## 0.5 当前状态(截至 **m58**:m55-57 已 **build 通过 ✅**,m58(调试菜单 + nightfall 修复)已 push **待实机验证** · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
@@ -48,16 +48,19 @@
 - **m55** ① **解除原版 1024 属性上限**:accessor mixin `mixin/ClampedEntityAttributeAccessor` 暴露 `ClampedEntityAttribute.maxValue`,`Yongye.raiseAttributeCaps` 把 max_health/attack_damage/armor/toughness 抬到 100 万(攻速不动)。② **镇魂攻防双修**:`EquipmentEnhancer` 新增 `Kind.HYBRID`(攻击+护甲兼具),强化时攻击按 `enhanceHybridDamageFraction`(0.5)打折、护甲/韧性/生命照盔甲涨;修了"镇魂强化不加攻击"(旧 `kindOf` 先判护甲把它误判成盔甲)。③ **武器强化窗口**:背包「强化」按钮→`EnhanceScreenHandler`(装备槽+材料槽+升级按钮),升级级数=材料数量×单值,一组碎片一键+64 级;新增 `client/EnhanceScreen`、`ModScreens.ENHANCE`、`OpenEnhancePayload`/`EnhanceApplyPayload`(照饰品栏抄)。④ 顺带修 m52 天赋同步漏调:`ClassManager.chooseStartingClass`/`learn` 补 `sendTalents`(选职后天赋面板即时显示职业,不用重进)。新增 81 个 Java 文件(+5)。
 - **m56** ① **神器远古/终焉可见合成表**:升阶配方是特殊配方不进 JEI、基础表只产残破(默认 1 级),故远古/终焉像"没有"。给 10 个神器各加直接 shaped 表(远古 3 级中心换生命核心 / 终焉 6 级 4 角换终焉神髓+保留招牌中心),结果用 `components.artifact_level` 直接带级(ARTIFACT_LEVEL 是 Codec.INT)。共 20 张,已校验无配方冲突。② **永夜 V5 解封顶**:`nightfallMaxLevel`(默认 99)替代 5 封顶;V5 之后 `MobEnhancementHandler` 按 `(lvl-5)×nightfallBeyondHpPerLevel`(0.5)线性叠怪物最大生命(仅血、独立封顶);名字对 >5 出"永夜·深渊 N 层"。纯 JSON + 服务端 Java,无新 mixin。
 - **m57(热修)** **饰品栏神器死亡后消失**:`ModAttachments.ACCESSORIES`(饰品 NBT)虽 `.persistent` 但漏了 `.copyOnDeath()`(模组其它成长全有),玩家一死饰品附件被重置为空、神器蒸发。修复=加 `.copyOnDeath()`(死亡保留)。由用户实机日志(大量死亡 + 聊天"放饰品里没了")定位。一行改动。
+- **m58** **调试/运营菜单 `/yongye debug`**(OP):服务端命令→S2C `OpenDebugPayload`→客户端 `client/DebugScreen`(纯 Screen,照 `StatsScreen`),6 组按钮(永夜/成长/职业武器/神器/事件Boss/运维),每个按钮 = `networkHandler.sendCommand("yongye …")` 复用现有命令(命令仍走权限2,故能开菜单的 OP 才有效);`shouldPause=false`,纯客户端零 mixin、零新服务端逻辑。**附带修 m56 遗留**:`/yongye nightfall` 参数从 `integer(0,5)` 放开为 `integer(0)`(m56 封顶已移到 `nightfallMaxLevel`,旧上限导致 `/yongye nightfall 6+` 被拒、深渊层无法触达)。新增 83 个 Java 文件(+2)。
 
-**⚠️ 待验证(让用户 build + 跑游戏确认)**:
-1. **m55 唯一硬待验证 = `ClampedEntityAttributeAccessor` 的字段名 `maxValue`**:accessor 字段名由 IDEA 的 fabric mixin 注解处理器在【编译期】校验,名字不符直接编译失败报 "Unable to locate field maxValue"——拿日志/报错来改真实映射名即可,不会运行崩。build 通过即说明名字对。
-2. **m54 `#5` mixin**——`modifyAppliedDamage` 的 1.21.1 映射名仍未经编译验证,`require=0` 保证不崩但可能没挂上。**让用户启动看日志**:若 `TankDefenseMixin` 注入器报"找不到目标",拿日志来改方法名;没报错则实测坦克挨打伤害是否按比例降。
+**✅ build 已通过**(m55-57 编译关卡全过 → m55 `maxValue` accessor 字段名确认正确)。剩余为运行期 / 实机项:
+
+**⚠️ 待验证(跑游戏 / 看启动日志确认)**:
+1. ✅ **m55 `maxValue` accessor** —— build 通过即证字段名对(编译期校验,名字错会直接 build 失败)。
+2. **m54 `#5` mixin** —— 已查 Yarn 确认 `LivingEntity#modifyAppliedDamage(DamageSource,float)` 在 1.21 线存在(1.21.2 改的是 `applyDamage`,此方法没动),预期挂得上;但 @Inject 启动时才解析,**启动看日志**:若 `TankDefenseMixin` 报"找不到目标"再改,没报错则实测坦克挨打伤害按比例降。
 3. m55 跑游戏确认:① 血量能超 1024(学高级血量书);② 镇魂强化后攻击有涨(打折后的)、护甲/韧性/生命也涨;③ 背包「强化」按钮开窗口、放装备+碎片点升级、按数量加等级;④ 选本命职业后天赋面板立刻显示职业(不用重进)。
-4. **m56 神器合成表**:result 里 `"components":{"yongye:artifact_level":N}` 的 JSON 语法沙箱测不了——若 1.21.1 略有出入,该表会在数据包加载时报错(不崩),拿日志来修;通过则远古/终焉应能在合成表/JEI 里看到并合成、产出对应等级。**m56 永夜**:`/yongye nightfall <6+>` 或失败升到 V5 以上,确认怪血随等级线性涨、深渊层名正常。
+4. **m56 神器合成表**:已查官方确认 1.20.5+ 配方 result 支持 `components`(1.21.1 在内),格式应对;数据包加载期解析,有出入会在 latest.log 报包错误(不崩),拿日志来修;通过则远古/终焉能在合成表/JEI 看到并合出对应等级。**m56 永夜**:`/yongye nightfall 7`(m58 已修参数上限,现可直接用)确认怪血随等级线性涨、深渊层名("永夜·深渊 N 层")正常。
 5. **m57 饰品死亡保留**:神器放饰品栏 → 故意死一次 → 重生后神器仍在饰品栏(不再蒸发)。
-6. 天赋 GUI / 掉武器 / 盾姿势 / `#6` 均未实机验证过。盾握持 display 数值需按实机截图微调。
+6. **m58 调试菜单**:`/yongye debug`(OP)弹出面板;点各按钮确认对应命令生效(发书/发神器/拉永夜/给职业武器等)。+ 天赋 GUI / 掉武器 / 盾姿势 / `#6` 仍未实机验证;盾握持 display 数值需按实机截图微调。
 
-**接下来用户清单里没做的**:`#8` 美术占位替换(**需用户提供素材或指明物品,Claude 无法凭空画好像素图**)、**调试菜单**(拟 `/yongye debug`→S2C 开 `DebugScreen`,按钮里用 `client.player.networkHandler.sendCommand("yongye xxx")` 复用现有命令,安全低风险)、整体数值平衡、真弧形盾面(需自定义 Java 物品渲染器,高风险,留另议)、天赋树连线美化。
+**接下来用户清单里没做的**:`#8` 美术占位替换(**需用户提供素材或指明物品,Claude 无法凭空画好像素图**)、整体数值平衡、真弧形盾面(需自定义 Java 物品渲染器,高风险,留另议)、天赋树连线美化。(**调试菜单已于 m58 落地。**)
 
 > ⚠️ 我(上一轮 Claude)本会话犯过两次守则:① 没测就说"三个 PAT 都活着"(实际两个已失效);② 没核 1.21.1 格式就说配方"挑不出毛病"(实际全坏)。**教训:状态类结论(凭据是否有效/代码是否正确)先实测或明确标"待验证",绝不凭印象下结论。**
 

@@ -32,6 +32,8 @@ public final class YongyeNet {
                             syncId, playerInv, com.yongye.system.AccessoryStorage.load(pl)),
                     net.minecraft.text.Text.literal("饰品栏"))));
         });
+        // 调试菜单:S2C 通知客户端开界面(命令 /yongye debug 触发)
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.OpenDebugPayload.ID, com.yongye.network.OpenDebugPayload.CODEC);
         // 开局选职
         PayloadTypeRegistry.playS2C().register(com.yongye.network.OpenClassSelectPayload.ID, com.yongye.network.OpenClassSelectPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(com.yongye.network.ChooseClassPayload.ID, com.yongye.network.ChooseClassPayload.CODEC);
