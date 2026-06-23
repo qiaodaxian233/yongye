@@ -43,6 +43,7 @@ public final class EquipmentEnhancer {
         if (hasArmor) return Kind.ARMOR;
         if (hasDmg) return Kind.WEAPON;
         if (item instanceof net.minecraft.item.ArmorItem) return Kind.ARMOR; // 兜底:属性组件没暴露 generic.armor 的盔甲
+        if (item instanceof net.minecraft.item.ElytraItem) return Kind.ARMOR; // 鞘翅/永夜之翼:无属性,归护甲类可强化(强化加生命/护甲)
         return Kind.NONE;
     }
 
@@ -159,7 +160,7 @@ public final class EquipmentEnhancer {
                                     EntityAttributeModifier.Operation.ADD_VALUE), M);
                 }
             } else if (kind == Kind.ARMOR) {
-                AttributeModifierSlot slot = armorSlotOf(result);
+                AttributeModifierSlot slot = slotForItem(pristine.getItem(), result);
                 result = result
                         .with(EntityAttributes.GENERIC_ARMOR,
                                 new EntityAttributeModifier(ARMOR_ID, level * c.enhanceArmorPerLevel,
@@ -194,5 +195,11 @@ public final class EquipmentEnhancer {
             if (e.attribute().equals(EntityAttributes.GENERIC_ARMOR)) return e.slot();
         }
         return AttributeModifierSlot.ARMOR;
+    }
+
+    /** 鞘翅/永夜之翼专用:强化属性绑定到 CHEST 槽(背饰穿胸甲槽,确保生效)。 */
+    private static AttributeModifierSlot slotForItem(Item item, AttributeModifiersComponent base) {
+        if (item instanceof net.minecraft.item.ElytraItem) return AttributeModifierSlot.CHEST;
+        return armorSlotOf(base);
     }
 }
