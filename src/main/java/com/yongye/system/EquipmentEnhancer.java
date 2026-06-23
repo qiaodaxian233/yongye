@@ -202,4 +202,46 @@ public final class EquipmentEnhancer {
         if (item instanceof net.minecraft.item.ElytraItem) return AttributeModifierSlot.CHEST;
         return armorSlotOf(base);
     }
+
+    /** 背包里所有强化材料合计能提供的强化级数(数量×单值)。 */
+    public static int totalMaterialLevels(net.minecraft.entity.player.PlayerInventory inv) {
+        int sum = 0;
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack s = inv.getStack(i);
+            if (!s.isEmpty() && isMaterial(s.getItem())) sum += s.getCount() * materialValue(s.getItem());
+        }
+        return sum;
+    }
+
+    /**
+     * 一键强化:对玩家背包第 slot 件装备,用背包里「全部」强化材料升级(级数 = 各材料 数量×单值 之和),
+     * 并清空所用材料。由 EnhanceSelectPayload 接收器调用,服务端权威。
+     */
+    public static void enhanceFromInventory(net.minecraft.server.network.ServerPlayerEntity p, int slot) {
+        net.minecraft.entity.player.PlayerInventory inv = p.getInventory();
+        if (slot < 0 || slot >= inv.size()) return;
+        ItemStack target = inv.getStack(slot);
+        if (target.isEmpty() || !isEnhanceable(target.getItem())) {
+            p.sendMessage(net.minecraft.text.Text.literal("该物品不可强化").formatted(net.minecraft.util.Formatting.RED), true);
+            return;
+        }
+        int add = totalMaterialLevels(inv);
+        if (add <= 0) {
+            p.sendMessage(net.minecraft.text.Text.literal("背包里没有强化材料(生命碎片/结晶/核心/血核)")
+                    .formatted(net.minecraft.util.Formatting.YELLOW), true);
+            return;
+        }
+        // 扣掉所有强化材料
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack s = inv.getStack(i);
+            if (!s.isEmpty() && isMaterial(s.getItem())) inv.setStack(i, ItemStack.EMPTY);
+        }
+        ItemStack upgraded = addLevels(target, add);
+        inv.setStack(slot, upgraded);
+        p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(),
+                net.minecraft.sound.SoundEvents.BLOCK_ANVIL_USE,
+                net.minecraft.sound.SoundCategory.PLAYERS, 0.7f, 1.2f);
+        p.sendMessage(net.minecraft.text.Text.literal("强化 +" + add + " 级,当前 Lv." + getLevel(upgraded)
+                + "(" + qualityOf(upgraded).cn + ")").formatted(net.minecraft.util.Formatting.GOLD), true);
+    }
 }

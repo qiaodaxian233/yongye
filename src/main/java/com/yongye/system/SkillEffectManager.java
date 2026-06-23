@@ -64,6 +64,41 @@ public final class SkillEffectManager {
         return LearnResult.OK;
     }
 
+    /**
+     * 一键学书:扫描背包,把所有属性技能书 + 血量书一次性全部学掉(按 等级×数量 累加)并清空对应栈。
+     * 由背包「学书」按钮经 UseAllBooksPayload 触发。
+     */
+    public static void useAllBooks(ServerPlayerEntity player) {
+        net.minecraft.entity.player.PlayerInventory inv = player.getInventory();
+        int booksUsed = 0;
+        int healthGained = 0;
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack s = inv.getStack(i);
+            if (s.isEmpty()) continue;
+            if (s.getItem() instanceof com.yongye.item.SkillBookItem sb) {
+                int total = com.yongye.item.SkillBookItem.getLevel(s) * s.getCount();   // 等级×数量
+                learn(player, sb.getType(), total);
+                booksUsed += s.getCount();
+                inv.setStack(i, ItemStack.EMPTY);
+            } else if (s.getItem() instanceof com.yongye.item.HealthSkillBookItem) {
+                int total = com.yongye.item.HealthSkillBookItem.getLevel(s) * s.getCount();
+                PlayerSkillManager.learnHealth(player, total);
+                healthGained += total;
+                booksUsed += s.getCount();
+                inv.setStack(i, ItemStack.EMPTY);
+            }
+        }
+        if (booksUsed == 0) {
+            player.sendMessage(Text.literal("背包里没有可学的技能书").formatted(Formatting.YELLOW), true);
+            return;
+        }
+        player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.8f, 1.4f);
+        player.sendMessage(Text.literal("一键学书:消耗 " + booksUsed + " 本"
+                + (healthGained > 0 ? "(含血量 +V" + healthGained + ")" : "")).formatted(Formatting.AQUA), true);
+        com.yongye.network.YongyeNet.sendStats(player);
+    }
+
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (++tickCounter < 20) return; // 每秒一次

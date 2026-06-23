@@ -34,12 +34,12 @@
 ## 0. 一分钟速览
 
 - 这是一个 **极难灾变生存** 玩法 mod：白天搜刮、夜晚逃命，任务失败会推高「永夜」等级，怪物锁定/挖墙/爬墙追杀；玩家靠 **装备血量 + 8 种技能书 + 10 种背包神器 + 饰品栏 + 职业 + 随机掉落** 反向变强,并按游戏天数推进难度(类「惊变」)。
-- 代码量:**115 个 Java 文件 / 约 1.1 万行 / 337 项可调配置 / DEVLOG 120 个里程碑**。
+- 代码量:**117 个 Java 文件 / 约 1.1 万行 / 337 项可调配置 / DEVLOG 121 个里程碑**。
 - **项目完成度(估)≈ 99%**:核心玩法、成长线、世界节奏、Boss、HUD、饰品栏、时间进度、职业系统、天赋树(命令版+GUI版)、职业专属技能/武器/盾、开局选职业(卡图版)、职业大招、坦克真减伤、武僧全用途耐久惩罚均已落地;余下主要是整体数值平衡(配置全开放待实测)、若干美术占位替换、调试菜单、真弧形盾面渲染。
 
 ---
 
-## 0.5 当前状态(截至 **m120**:m65 本地 **build 通过 ✅**,m66-118 已 push **待实机验证**;m119 定时清理掉落物(ItemCleanupHandler,21分起每5分清+倒计时)+ 职业任选替换(满2职业右键新书弹 ClassReplaceScreen 选丢哪个);m120 天赋每职业加99级「精通」吸点 + 搜集任务击杀掉目标物(粘液球等) + 后期拿不下优化(材料/书堆叠64→99 + LootMagnetHandler 磁吸本mod掉落物);待验证接口 m72 UnbreakableComponent / m75 HudRenderCallback / m119 ServerWorld.iterateEntities·getWorlds / m120 Entity.velocityModified·Registries.getId.getNamespace · 六职业武器全成品+永夜之翼背饰;武僧无武器吃材料;磐盾已并入铁壁核心 · 本段最新,优先看)
+## 0.5 当前状态(截至 **m121**(m121 武器破蜘蛛网 getMiningSpeedMultiplier override / 背包「学书」一键学完所有技能书 / 「强化」改 Ward 式 EnhanceSelectScreen 选装备+全部材料一键强化,待编译验证 getMiningSpeedMultiplier 签名):m65 本地 **build 通过 ✅**,m66-118 已 push **待实机验证**;m119 定时清理掉落物(ItemCleanupHandler,21分起每5分清+倒计时)+ 职业任选替换(满2职业右键新书弹 ClassReplaceScreen 选丢哪个);m120 天赋每职业加99级「精通」吸点 + 搜集任务击杀掉目标物(粘液球等) + 后期拿不下优化(材料/书堆叠64→99 + LootMagnetHandler 磁吸本mod掉落物);待验证接口 m72 UnbreakableComponent / m75 HudRenderCallback / m119 ServerWorld.iterateEntities·getWorlds / m120 Entity.velocityModified·Registries.getId.getNamespace · 六职业武器全成品+永夜之翼背饰;武僧无武器吃材料;磐盾已并入铁壁核心 · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。

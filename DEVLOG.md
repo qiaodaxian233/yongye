@@ -1024,3 +1024,11 @@ m109 build 成功但**启动崩溃**:
 - 新配置:questGatherDropChance/Amount、enableLootMagnet、lootMagnetRadius,均可 config set。
 - 静态自检:改动文件全配平(TalentManager 那处单括号差为原版注释自带,m118 即如此,无影响);新增 22/22 配平。
 - **[待编译验证]**:LootMagnet 用的 `Entity.velocityModified` 公有字段、`Registries.ITEM.getId().getNamespace()`——常见但仓库无先例;getEntitiesByClass/setVelocity 有先例。
+
+## 里程碑 121 — 武器破蜘蛛网 + 一键学书 + Ward式一键强化(选武器)
+三个需求,先功能后界面美化。
+- **武器破不动蜘蛛网** → `ClassWeaponItem`/`ChaosBladeItem`(都 extends Item,无挖掘加成)override `getMiningSpeedMultiplier(ItemStack,BlockState)`:对 COBWEB 返回 15.0F(同原版剑),其余走 super。现在能像剑一样秒破网。
+- **一键学书** → 背包加「学书」按钮 → C2S `UseAllBooksPayload` → `SkillEffectManager.useAllBooks`:扫背包,所有属性技能书+血量书按 等级×数量 一次性全学掉并清栈,提示消耗本数。
+- **Ward 式一键强化(选武器)** → 「强化」按钮改为开新 `EnhanceSelectScreen`(照 WardScreen:扫背包列出所有可强化装备+当前 Lv+可加级数,分页,点哪件强化哪件)→ C2S `EnhanceSelectPayload(slot)` → `EquipmentEnhancer.enhanceFromInventory`:用背包「全部」强化材料(各 数量×单值 之和)给该件加级并扣光材料,服务端权威。新增 `totalMaterialLevels(inv)` 工具。旧的槽位式 EnhanceScreen/Handler/OpenEnhancePayload 保留但不再由按钮触发。
+- 静态自检全配平;调用链闭合;EnhanceSelectScreen 全用 WardScreen 已验证的 API(drawItem/fill/drawTextWithShadow/ButtonWidget/getInventory)。
+- **[待编译验证]**:`Item.getMiningSpeedMultiplier(ItemStack,BlockState)` 1.21.1 方法签名(override)。其余为项目内既有写法。

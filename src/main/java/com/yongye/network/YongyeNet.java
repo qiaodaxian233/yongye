@@ -98,6 +98,18 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.item.WardBookItem.applyWard(p, payload.slot()));
         });
+        // 一键学书:把背包所有技能书/血量书一次学掉
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.UseAllBooksPayload.ID, com.yongye.network.UseAllBooksPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.UseAllBooksPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.SkillEffectManager.useAllBooks(p));
+        });
+        // Ward 式强化:点选装备 → 用背包全部材料一键强化
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.EnhanceSelectPayload.ID, com.yongye.network.EnhanceSelectPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.EnhanceSelectPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.EquipmentEnhancer.enhanceFromInventory(p, payload.slot()));
+        });
         // 登录:未选过本命职业则弹出选职界面;老玩家(已有职业)只补标记
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity pl = handler.player;

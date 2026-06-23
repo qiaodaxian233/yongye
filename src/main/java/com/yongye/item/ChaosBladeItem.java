@@ -9,6 +9,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 
 import java.util.List;
 
@@ -21,6 +23,13 @@ public class ChaosBladeItem extends Item {
 
     public ChaosBladeItem(Settings settings) {
         super(settings);
+    }
+
+    /** 像剑一样快速破坏蜘蛛网。待编译验证:1.21.1 方法签名。 */
+    @Override
+    public float getMiningSpeedMultiplier(ItemStack stack, BlockState state) {
+        if (state.isOf(Blocks.COBWEB)) return 15.0F;
+        return super.getMiningSpeedMultiplier(stack, state);
     }
 
     /** 固定基础属性:攻击力约 +30,攻速较快。用基础修饰符 ID 让 tooltip 显示为总值。 */

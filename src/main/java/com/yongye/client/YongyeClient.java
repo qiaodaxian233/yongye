@@ -213,13 +213,17 @@ public class YongyeClient implements ClientModInitializer {
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("天赋"),
                         b -> client.setScreen(new TalentScreen(screen)))
                         .dimensions(bx, by + pitch * row++, bw, bh).build());
-                // 强化:打开武器强化窗口
+                // 强化:打开 Ward 式强化窗口(点装备=用背包全部材料一键强化)
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("强化"),
-                        b -> ClientPlayNetworking.send(new com.yongye.network.OpenEnhancePayload()))
+                        b -> client.setScreen(new EnhanceSelectScreen(screen)))
                         .dimensions(bx, by + pitch * row++, bw, bh).build());
                 // 兑换:打开材料兑换界面(10 碎片→结晶→核心→血核)
                 Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("兑换"),
                         b -> client.setScreen(new ExchangeScreen(screen)))
+                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                // 学书:一键把背包所有技能书/血量书学掉
+                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("学书"),
+                        b -> ClientPlayNetworking.send(new com.yongye.network.UseAllBooksPayload()))
                         .dimensions(bx, by + pitch * row++, bw, bh).build());
                 // 当前本命职业(点开成长面板)
                 com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
