@@ -35,8 +35,15 @@ public class AccessoryScreen extends HandledScreen<AccessoryScreenHandler> {
         // 自定义背景图(176x158);缺失时不影响——槽位描边照画
         ctx.drawTexture(BG, x, y, 0, 0, backgroundWidth, backgroundHeight, backgroundWidth, backgroundHeight);
         for (Slot s : this.handler.slots) {
-            ctx.fill(x + s.x - 1, y + s.y - 1, x + s.x + 17, y + s.y + 17, 0xFF8B8B8B);
+            // 第 11 槽(鞘翅格)固定在 x=152,y=28(见 ScreenHandler);用坐标识别
+            boolean isWingSlot = (s.x == 152 && s.y == 28);
+            int border = isWingSlot ? 0xFF8B0000 : 0xFF8B8B8B;  // 鞘翅格暗红边
+            ctx.fill(x + s.x - 1, y + s.y - 1, x + s.x + 17, y + s.y + 17, border);
             ctx.fill(x + s.x, y + s.y, x + s.x + 16, y + s.y + 16, 0xFF373737);
+            if (isWingSlot && !s.hasStack()) {
+                ctx.drawText(this.textRenderer, net.minecraft.text.Text.literal("翼"),
+                        x + s.x + 4, y + s.y + 4, 0xFF6B0000, false);
+            }
         }
     }
 

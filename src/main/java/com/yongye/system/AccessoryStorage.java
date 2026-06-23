@@ -13,7 +13,7 @@ import net.minecraft.util.collection.DefaultedList;
 public final class AccessoryStorage {
     private AccessoryStorage() {}
 
-    public static final int SIZE = 10;
+    public static final int SIZE = 11;  // 槽10(第11个)为鞘翅/背饰专用格(永夜之翼)
 
     /** 从玩家附件载入饰品到一个新的 SimpleInventory(开界面时用)。 */
     public static SimpleInventory load(PlayerEntity p) {

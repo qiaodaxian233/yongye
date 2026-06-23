@@ -6,7 +6,8 @@
   "mixins": [
     "ClampedEntityAttributeAccessor",
     "MiningSpeedMixin",
-    "TankDefenseMixin"
+    "TankDefenseMixin",
+    "AccessoryGliderMixin"
   ],
   "client": [
     "client.HudCompactMixin",

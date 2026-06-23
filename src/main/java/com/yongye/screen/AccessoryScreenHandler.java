@@ -27,7 +27,7 @@ public class AccessoryScreenHandler extends ScreenHandler {
         acc.onOpen(playerInv.player);
 
         // 10 个饰品槽(2 行 5 列,只接受神器)
-        for (int i = 0; i < AccessoryStorage.SIZE; i++) {
+        for (int i = 0; i < 10; i++) {
             int col = i % 5;
             int row = i / 5;
             addSlot(new Slot(acc, i, 44 + col * 18, 18 + row * 20) {
@@ -41,6 +41,18 @@ public class AccessoryScreenHandler extends ScreenHandler {
                 }
             });
         }
+        // 第 11 槽(index 10):鞘翅/背饰专用格(永夜之翼或原版鞘翅),放右侧
+        addSlot(new Slot(acc, 10, 152, 28) {
+            @Override
+            public boolean canInsert(ItemStack stack) {
+                return stack.getItem() == com.yongye.registry.ModItems.NIGHT_WING
+                        || stack.getItem() instanceof net.minecraft.item.ElytraItem;
+            }
+            @Override
+            public int getMaxItemCount() {
+                return 1;
+            }
+        });
         // 玩家背包 3x9
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 9; c++) {
