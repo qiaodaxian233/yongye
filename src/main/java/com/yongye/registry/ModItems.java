@@ -31,7 +31,7 @@ public final class ModItems {
     private ModItems() {}
 
     public static final Item HEALTH_SKILL_BOOK = register("health_skill_book",
-            new HealthSkillBookItem(new Item.Settings().maxCount(64)));
+            new HealthSkillBookItem(new Item.Settings().maxCount(99)));
 
     // —— 混沌之刃:专属传说武器(固定高属性 + 三技能无需解锁) ——
     public static final Item WARD_BOOK = register("ward_book", new WardBookItem(new Item.Settings().maxCount(16)));
@@ -43,14 +43,15 @@ public final class ModItems {
                     .attributeModifiers(ChaosBladeItem.baseAttributes())));
 
     // —— 超稀有材料(用于技能书 / 神器升级,详见文档第 15 章)——
-    public static final Item LIFE_SHARD            = register("life_shard", new Item(new Item.Settings()));
-    public static final Item LIFE_CRYSTAL          = register("life_crystal", new Item(new Item.Settings()));
-    public static final Item LIFE_CORE             = register("life_core", new Item(new Item.Settings()));
-    public static final Item CATASTROPHE_BLOOD_CORE = register("catastrophe_blood_core", new Item(new Item.Settings()));
-    public static final Item ENDLESS_NIGHT_DUST    = register("endless_night_dust", new Item(new Item.Settings()));
-    public static final Item RIFT_FRAGMENT         = register("rift_fragment", new Item(new Item.Settings()));
-    public static final Item ABYSS_SOUL_CRYSTAL    = register("abyss_soul_crystal", new Item(new Item.Settings()));
-    public static final Item ENDING_ESSENCE        = register("ending_essence", new Item(new Item.Settings()));
+    // 堆叠上限 99(原版上限),后期掉落多时少占背包格,缓解"拿不下"
+    public static final Item LIFE_SHARD            = register("life_shard", new Item(new Item.Settings().maxCount(99)));
+    public static final Item LIFE_CRYSTAL          = register("life_crystal", new Item(new Item.Settings().maxCount(99)));
+    public static final Item LIFE_CORE             = register("life_core", new Item(new Item.Settings().maxCount(99)));
+    public static final Item CATASTROPHE_BLOOD_CORE = register("catastrophe_blood_core", new Item(new Item.Settings().maxCount(99)));
+    public static final Item ENDLESS_NIGHT_DUST    = register("endless_night_dust", new Item(new Item.Settings().maxCount(99)));
+    public static final Item RIFT_FRAGMENT         = register("rift_fragment", new Item(new Item.Settings().maxCount(99)));
+    public static final Item ABYSS_SOUL_CRYSTAL    = register("abyss_soul_crystal", new Item(new Item.Settings().maxCount(99)));
+    public static final Item ENDING_ESSENCE        = register("ending_essence", new Item(new Item.Settings().maxCount(99)));
 
     // —— 背包神器(文档第 14 章)——
     private static final Map<ArtifactType, Item> ARTIFACTS = new EnumMap<>(ArtifactType.class);
@@ -88,7 +89,7 @@ public final class ModItems {
 
     static {
         for (SkillType t : SkillType.values()) {
-            SKILL_BOOKS.put(t, register("skill_book_" + t.id, new SkillBookItem(t, new Item.Settings().maxCount(64))));
+            SKILL_BOOKS.put(t, register("skill_book_" + t.id, new SkillBookItem(t, new Item.Settings().maxCount(99))));
         }
     }
 

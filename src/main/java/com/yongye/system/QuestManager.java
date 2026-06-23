@@ -89,6 +89,13 @@ public final class QuestManager {
             } else if (q.type == Type.SLAY && entity instanceof Monster) {
                 q.kills++;
                 if (q.kills >= q.killNeed) complete(killer); else refreshKillBar(q);
+            } else if (q.type == Type.GATHER && q.targetItem != null && entity instanceof Monster) {
+                // 搜集任务:击杀敌对怪概率掉落目标物,让粘液球等前期难凑物有稳定来源
+                YongyeConfig cfg = YongyeConfig.get();
+                if (cfg.questGatherDropChance > 0 && killer.getRandom().nextDouble() < cfg.questGatherDropChance
+                        && killer.getWorld() instanceof ServerWorld sw) {
+                    drop(sw, killer, new ItemStack(q.targetItem, Math.max(1, cfg.questGatherDropAmount)));
+                }
             }
         });
 

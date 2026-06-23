@@ -1008,3 +1008,19 @@ m109 build 成功但**启动崩溃**:
 - 新配置 warlockBoltMinMult/MaxMult 可调;warlockBoltDamage 降级为保底(防裸装攻击力过低)。
 - 耗血仍按 0.4→1.0(不随倍率暴涨)。命中提示加显示蓄力倍率"×N.N"。
 - 静态自检 34/34·206/206。无新接口(复用 getAttributeValue)。
+
+## 里程碑 119 — 定时清理掉落物(带倒计时)+ 职业可任选替换
+两个需求一起落地。
+- **定时清理掉落物**(新 `ItemCleanupHandler`):服务器启动后第 `itemCleanupFirstMinutes`(默认21)分钟首次清理,之后每 `itemCleanupIntervalMinutes`(默认5)分钟一次;清理前 60/30/10/5/4/3/2/1 秒全服倒计时(60/30 聊天栏、≤10 动作栏);到点遍历所有世界 discard 全部存活 ItemEntity,广播清理数量(0个只记日志)。计时基于 server.getTicks()(重启归零)。配置 enableItemCleanup + 两个分钟字段,可 config set。
+- **职业任选替换**:满 2 职业再右键新职业书,不再直接拒绝,而是 S2C `OpenClassReplacePayload` 弹 `ClassReplaceScreen`(照 ClassSelectScreen 卡图范式),展示当前两张职业卡(本命/第二),点哪张丢哪张换上新职业;ESC 取消不扣书。C2S `ClassReplacePayload` → `ClassManager.replaceClass`:校验仍满2职业/达 classLevel2/背包确有该新职业书,新职业占被丢弃者原槽位,扣1本书。`ClassBookItem.use` 加满2职业分支(界面确认才扣)。tooltip 同步。注:被丢弃职业天赋点不退还;替换本命槽不重发开局武器。
+- 静态自检全配平;客户端 API + 6 张职业卡资源均 ClassSelectScreen 已验证,无新版本敏感点。
+- **[待编译验证]**:ServerWorld.iterateEntities()(全实体遍历)、MinecraftServer.getWorlds()——常见 API 但仓库无先例;iterateEntities 若报错改用 getEntitiesByType(EntityType.ITEM,...)。
+
+## 里程碑 120 — 天赋吸点 + 搜集任务掉目标物 + 后期拿不下三连优化
+针对实测三问题。
+- **天赋点多到没处用** → 每职业天赋树加第 6 个高上限「精通」节点(maxRank 99,前置=该职业首节点),给小幅 +攻击/生命/护甲等可无限堆,消化溢出点。`TalentScreen.nodeX` 改成按行内节点数自适应居中(原硬编码 5,现容纳 6)。applyTalents 本就通用遍历,新节点自动生效(每效果独立 modId 不冲突)。
+- **前期任务物难凑(尤其粘液球)** → QuestManager 死亡事件加 GATHER 分支:持搜集任务时击杀敌对怪,按 `questGatherDropChance`(默认0.4)掉 `questGatherDropAmount`(默认1)个该任务目标物,给粘液球等无稳定来源的物资一条获取路。
+- **后期地上东西太多拿不下** → ① 8 种材料 + 技能书 + 血量书堆叠上限 64→99(原版上限,少占格);② 新 `LootMagnetHandler` 战利品磁吸:每4tick把玩家附近(`lootMagnetRadius`默认8格)、命名空间=yongye 的掉落物用 setVelocity 拉向玩家自动拾取;只吸本mod贵重物,原版杂物留给 m119 定时清理(贵的自己飞来、垃圾被扫)。
+- 新配置:questGatherDropChance/Amount、enableLootMagnet、lootMagnetRadius,均可 config set。
+- 静态自检:改动文件全配平(TalentManager 那处单括号差为原版注释自带,m118 即如此,无影响);新增 22/22 配平。
+- **[待编译验证]**:LootMagnet 用的 `Entity.velocityModified` 公有字段、`Registries.ITEM.getId().getNamespace()`——常见但仓库无先例;getEntitiesByClass/setVelocity 有先例。

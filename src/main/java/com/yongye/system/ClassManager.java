@@ -121,6 +121,68 @@ public final class ClassManager {
         return true;
     }
 
+    /**
+     * 替换职业:丢弃 discardId 对应的职业,在其原槽位换上 newId(任选丢弃本命或第二,新职业沿用被丢弃者的槽位)。
+     * 需:仍满 2 职业、等级达到 classLevel2、背包里确有该新职业书(创造模式免扣)。由替换界面确认后调用。
+     * 注:被丢弃职业已投入的天赋点不退还;若替换的是本命槽,不会重新发放开局专属武器。
+     */
+    public static boolean replaceClass(ServerPlayerEntity p, String discardId, String newId) {
+        YongyeConfig cfg = YongyeConfig.get();
+        List<String> learned = learnedList(p);
+        PlayerClass nc = PlayerClass.byId(newId);
+        if (nc == null) return false;
+        if (learned.size() < 2) {                       // 防御:不足 2 职业不该走替换流程
+            p.sendMessage(Text.literal("当前职业不足 2 个,无需替换").formatted(Formatting.YELLOW), true);
+            return false;
+        }
+        if (learned.contains(newId)) {
+            p.sendMessage(Text.literal("你已经学过【" + nc.cn + "】了").formatted(Formatting.YELLOW), true);
+            return false;
+        }
+        int slot = learned.indexOf(discardId);
+        if (slot < 0) {
+            p.sendMessage(Text.literal("要丢弃的职业不存在").formatted(Formatting.RED), true);
+            return false;
+        }
+        if (p.experienceLevel < cfg.classLevel2) {
+            p.sendMessage(Text.literal("替换职业需要等级 " + cfg.classLevel2 + "(当前 " + p.experienceLevel + ")").formatted(Formatting.RED), true);
+            return false;
+        }
+        // 校验背包确有该新职业书(防止界面停留期间书被丢弃/换走才扣书)
+        net.minecraft.item.Item bookItem = com.yongye.registry.ModItems.getClassBook(nc);
+        if (!p.isCreative() && !hasItem(p, bookItem)) {
+            p.sendMessage(Text.literal("职业书不在背包里了").formatted(Formatting.RED), true);
+            return false;
+        }
+        PlayerClass dc = PlayerClass.byId(discardId);
+        learned.set(slot, newId);                       // 新职业占据被丢弃职业的原槽位(保持另一职业槽位不变)
+        p.setAttached(ModAttachments.LEARNED_CLASSES, learned);
+        if (!p.isCreative()) removeOne(p, bookItem);
+        applyClasses(p);
+        p.sendMessage(Text.literal("已用【" + nc.cn + "】替换【" + (dc != null ? dc.cn : "?") + "】!").formatted(Formatting.GOLD), false);
+        com.yongye.network.YongyeNet.sendStats(p);
+        com.yongye.network.YongyeNet.sendTalents(p);
+        return true;
+    }
+
+    /** 背包里是否至少有 1 个指定物品。 */
+    private static boolean hasItem(ServerPlayerEntity p, net.minecraft.item.Item item) {
+        var inv = p.getInventory();
+        for (int i = 0; i < inv.size(); i++) {
+            if (inv.getStack(i).getItem() == item) return true;
+        }
+        return false;
+    }
+
+    /** 从背包扣除 1 个指定物品(从前往后找第一栈)。 */
+    private static void removeOne(ServerPlayerEntity p, net.minecraft.item.Item item) {
+        var inv = p.getInventory();
+        for (int i = 0; i < inv.size(); i++) {
+            net.minecraft.item.ItemStack s = inv.getStack(i);
+            if (s.getItem() == item) { s.decrement(1); return; }
+        }
+    }
+
     private static List<PlayerClass> enforceAndGet(ServerPlayerEntity p) {
         YongyeConfig cfg = YongyeConfig.get();
         List<String> learned = learnedList(p);

@@ -85,42 +85,54 @@ public final class TalentManager {
                 attr("t_armor", "重甲", "+护甲", 5, null, new Eff(1, 2, Operation.ADD_VALUE)),
                 attr("t_tough", "坚韧", "+护甲韧性", 3, "t_armor", new Eff(6, 2, Operation.ADD_VALUE)),
                 attr("t_kbr", "如山", "+击退抗性", 2, "t_hp", new Eff(5, 0.3, Operation.ADD_VALUE)),
-                skill("t_guard", "守护者", "持续抗性(随等级提升)", 2, "t_tough", StatusEffects.RESISTANCE)
+                skill("t_guard", "守护者", "持续抗性(随等级提升)", 2, "t_tough", StatusEffects.RESISTANCE),
+                attr("t_mastery", "壁垒精通", "+生命+护甲(可无限堆,消化多余天赋点)", 99, "t_hp",
+                        new Eff(0, 4, Operation.ADD_VALUE), new Eff(1, 1, Operation.ADD_VALUE))
         ));
         m.put(PlayerClass.WARRIOR, List.of(
                 attr("w_atk", "战意", "+攻击", 5, null, new Eff(2, 1, Operation.ADD_VALUE)),
                 attr("w_hp", "血勇", "+生命", 5, null, new Eff(0, 4, Operation.ADD_VALUE)),
                 attr("w_speed", "突进", "+移速", 3, "w_hp", new Eff(3, 0.05, Operation.ADD_MULTIPLIED_BASE)),
                 attr("w_aspd", "连击", "+攻速", 3, "w_atk", new Eff(4, 0.1, Operation.ADD_MULTIPLIED_BASE)),
-                skill("w_rage", "狂战", "持续力量", 2, "w_atk", StatusEffects.STRENGTH)
+                skill("w_rage", "狂战", "持续力量", 2, "w_atk", StatusEffects.STRENGTH),
+                attr("w_mastery", "武道精通", "+攻击+生命(可无限堆,消化多余天赋点)", 99, "w_atk",
+                        new Eff(2, 0.6, Operation.ADD_VALUE), new Eff(0, 2, Operation.ADD_VALUE))
         ));
         m.put(PlayerClass.WARLOCK, List.of(
                 attr("k_atk", "咒伤", "+攻击", 5, null, new Eff(2, 1, Operation.ADD_VALUE)),
                 attr("k_ereach", "法力延伸", "+实体交互距离", 3, null, new Eff(9, 1, Operation.ADD_VALUE)),
                 attr("k_luck", "诅咒", "+幸运", 3, "k_atk", new Eff(7, 1, Operation.ADD_VALUE)),
                 attr("k_breach", "穿透", "+方块交互距离", 3, "k_ereach", new Eff(8, 1, Operation.ADD_VALUE)),
-                skill("k_haste", "急速咏唱", "持续急迫", 2, "k_atk", StatusEffects.HASTE)
+                skill("k_haste", "急速咏唱", "持续急迫", 2, "k_atk", StatusEffects.HASTE),
+                attr("k_mastery", "咒术精通", "+攻击+幸运(可无限堆,消化多余天赋点)", 99, "k_atk",
+                        new Eff(2, 0.6, Operation.ADD_VALUE), new Eff(7, 0.2, Operation.ADD_VALUE))
         ));
         m.put(PlayerClass.SWORDSMAN, List.of(
                 attr("s_atk", "锋锐", "+攻击", 5, null, new Eff(2, 1.2, Operation.ADD_VALUE)),
                 attr("s_aspd", "疾斩", "+攻速", 3, null, new Eff(4, 0.12, Operation.ADD_MULTIPLIED_BASE)),
                 attr("s_speed", "身法", "+移速", 3, "s_aspd", new Eff(3, 0.05, Operation.ADD_MULTIPLIED_BASE)),
                 attr("s_reach", "突刺", "+实体交互距离", 2, "s_atk", new Eff(9, 0.5, Operation.ADD_VALUE)),
-                skill("s_qi", "剑气", "持续力量", 2, "s_atk", StatusEffects.STRENGTH)
+                skill("s_qi", "剑气", "持续力量", 2, "s_atk", StatusEffects.STRENGTH),
+                attr("s_mastery", "剑道精通", "+攻击(可无限堆,消化多余天赋点)", 99, "s_atk",
+                        new Eff(2, 0.8, Operation.ADD_VALUE))
         ));
         m.put(PlayerClass.MONK, List.of(
                 attr("m_hp", "气血", "+生命", 5, null, new Eff(0, 5, Operation.ADD_VALUE)),
                 attr("m_armor", "铁布衫", "+护甲", 4, null, new Eff(1, 2, Operation.ADD_VALUE)),
                 attr("m_aspd", "连拳", "+攻速", 3, "m_hp", new Eff(4, 0.12, Operation.ADD_MULTIPLIED_BASE)),
                 attr("m_kbr", "扎马", "+击退抗性", 2, "m_armor", new Eff(5, 0.3, Operation.ADD_VALUE)),
-                skill("m_breath", "吐纳", "持续生命恢复", 2, "m_armor", StatusEffects.REGENERATION)
+                skill("m_breath", "吐纳", "持续生命恢复", 2, "m_armor", StatusEffects.REGENERATION),
+                attr("m_mastery", "武学精通", "+生命+护甲(可无限堆,消化多余天赋点)", 99, "m_hp",
+                        new Eff(0, 4, Operation.ADD_VALUE), new Eff(1, 1, Operation.ADD_VALUE))
         ));
         m.put(PlayerClass.ASSASSIN, List.of(
                 attr("a_atk", "暗袭", "+攻击", 5, null, new Eff(2, 1.2, Operation.ADD_VALUE)),
                 attr("a_speed", "疾影", "+移速", 4, null, new Eff(3, 0.06, Operation.ADD_MULTIPLIED_BASE)),
                 attr("a_aspd", "刺击", "+攻速", 3, "a_atk", new Eff(4, 0.12, Operation.ADD_MULTIPLIED_BASE)),
                 attr("a_luck", "暗运", "+幸运", 3, "a_speed", new Eff(7, 1, Operation.ADD_VALUE)),
-                skill("a_sprint", "疾风步", "持续迅捷", 2, "a_speed", StatusEffects.SPEED)
+                skill("a_sprint", "疾风步", "持续迅捷", 2, "a_speed", StatusEffects.SPEED),
+                attr("a_mastery", "暗杀精通", "+攻击(可无限堆,消化多余天赋点)", 99, "a_atk",
+                        new Eff(2, 0.8, Operation.ADD_VALUE))
         ));
         return m;
     }

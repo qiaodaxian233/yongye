@@ -49,9 +49,9 @@ public class TalentScreen extends Screen {
         return ClientTalents.classes;
     }
 
-    /** 第 ci 个职业行、第 ni 个节点的左上角 X。 */
-    private int nodeX(int ni) {
-        int rowW = 5 * NW + 4 * GAP_X;
+    /** 第 ci 个职业行、第 ni 个节点的左上角 X(按该行节点总数 count 居中,自适应节点数变化)。 */
+    private int nodeX(int ni, int count) {
+        int rowW = count * NW + (count - 1) * GAP_X;
         return this.width / 2 - rowW / 2 + ni * (NW + GAP_X);
     }
     private int rowY(int ci) {
@@ -80,7 +80,7 @@ public class TalentScreen extends Screen {
                 List<TalentManager.NodeView> nodes = TalentManager.treeView(c);
                 int y = rowY(ci) + 12;
                 for (int ni = 0; ni < nodes.size(); ni++) {
-                    int x = nodeX(ni);
+                    int x = nodeX(ni, nodes.size());
                     if (mouseX >= x && mouseX <= x + NW && mouseY >= y && mouseY <= y + NH) {
                         TalentManager.NodeView n = nodes.get(ni);
                         if (learnable(n)) {
@@ -122,11 +122,11 @@ public class TalentScreen extends Screen {
 
             // 职业名(行首,画在第一个节点左侧上方)
             ctx.drawTextWithShadow(this.textRenderer,
-                    Text.literal("【" + c.cn + "】").formatted(Formatting.YELLOW), nodeX(0), headerY, 0xFFFFFF55);
+                    Text.literal("【" + c.cn + "】").formatted(Formatting.YELLOW), nodeX(0, nodes.size()), headerY, 0xFFFFFF55);
 
             for (int ni = 0; ni < nodes.size(); ni++) {
                 TalentManager.NodeView n = nodes.get(ni);
-                int x = nodeX(ni);
+                int x = nodeX(ni, nodes.size());
                 int r = rank(n.id());
                 boolean maxed = r >= n.maxRank();
                 boolean locked = n.prereq() != null && rank(n.prereq()) <= 0;

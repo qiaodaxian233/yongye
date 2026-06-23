@@ -342,6 +342,13 @@ public class YongyeConfig {
     public boolean antiCheeseBreakRoof = true;        // 头顶有方块龟缩 → 破开顶盖(让空袭俯冲)
     public int antiCheeseRoofBreakHeight = 4;         // 向上破几格顶盖
     public boolean antiCheeseSummonEnderman = true;   // 顶盖/封闭龟缩 → 召末影人搬走结构方块
+    // —— 定时清理掉落物 ——
+    public boolean enableItemCleanup = true;          // 总开关
+    public int itemCleanupFirstMinutes = 21;          // 服务器启动后多少分钟进行首次清理
+    public int itemCleanupIntervalMinutes = 5;        // 之后每隔多少分钟清理一次
+    // —— 战利品磁吸(只吸本 mod 贵重掉落物到玩家;原版杂物留给定时清理)——
+    public boolean enableLootMagnet = true;
+    public double lootMagnetRadius = 8.0;             // 磁吸半径(格)
     // 刺客
     public double assassinBackstabBonus = 4.0;
     public double assassinDodgeChance = 0.20;
@@ -423,6 +430,9 @@ public class YongyeConfig {
     public int questSlayCount = 20;           // 屠戮任务需击杀的怪物数(随永夜+)
     public double questFleeDistance = 120.0;  // 逃离任务所需距离(随永夜+)
     public double questPlayerScaling = 0.5;   // 每多一名在线玩家,任务目标量倍率增量
+    /** 持有搜集任务时,击杀敌对怪掉落该任务目标物的概率(解决粘液球等前期难凑物的来源) */
+    public double questGatherDropChance = 0.4;
+    public int questGatherDropAmount = 1;     // 每次掉落的目标物数量
 
     // ============ 背包神器(文档第 14 章)============
     public boolean enableArtifacts = true;
