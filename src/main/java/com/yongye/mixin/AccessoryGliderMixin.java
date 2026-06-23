@@ -9,28 +9,28 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.event.GameEvent;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 让永夜之翼能滑翔(m107 重写,依据 1.21.1 LivingEntity 源码)。
+ * 让永夜之翼能滑翔(m108 修编译:protected 方法用 @Shadow)。
  *
- * 1.21.1 滑翔真实机制(源码 tickFallFlying):每 tick 检查 flag(7)=滑翔位,
- * 维持条件是「胸甲槽 == Items.ELYTRA 且 ElytraItem.isUsable」——只认原版鞘翅,
- * 连继承 ElytraItem 的自定义物品都不认!所以:
- *   ① 永夜之翼穿胸甲槽飞不了(物品不是 Items.ELYTRA)
- *   ② 放饰品栏更飞不了(根本不看饰品栏)
+ * 1.21.1 滑翔真实机制(LivingEntity 源码 tickFallFlying):滑翔=flag(7)位;
+ * 每 tick 检查胸甲槽 isOf(Items.ELYTRA)——只认原版鞘翅,不认继承 ElytraItem 的自定义物品。
+ * 本 mixin 注入 tickFallFlying HEAD:胸甲槽/饰品栏有永夜之翼时强制维持 flag(7),接管原方法。
  *
- * 本 mixin 注入 tickFallFlying 的 HEAD:若(胸甲槽是永夜之翼)或(饰品栏有永夜之翼),
- * 且在空中/无坐骑/无飘浮,就强制维持滑翔位 flag(7)=true,并 cancel 掉原方法
- * (避免原逻辑因"不是 Items.ELYTRA"而关掉滑翔位);同时按原逻辑每10tick耗一点饰品翼耐久。
- *
- * tickFallFlying 在 1.21.1 是 private void 无参——mixin 按字节码名匹配,private 可注入。
- * require=0 兜底:若名字仍不符则警告不崩。
+ * getFlag/setFlag/emitGameEvent 是 Entity 的 protected 方法,
+ * mixin 中需用 @Shadow 声明后以 this 调用(直接 (LivingEntity)this 外部调会报 protected 不可访问)。
+ * require=0 兜底。
  */
 @Mixin(LivingEntity.class)
 public abstract class AccessoryGliderMixin {
+
+    @Shadow protected abstract boolean getFlag(int index);
+    @Shadow protected abstract void setFlag(int index, boolean value);
+    @Shadow public abstract void emitGameEvent(GameEvent event);
 
     @Inject(method = "tickFallFlying", at = @At("HEAD"), cancellable = true, require = 0)
     private void yongye$accessoryGlide(CallbackInfo ci) {
@@ -38,30 +38,26 @@ public abstract class AccessoryGliderMixin {
         if (!(self instanceof PlayerEntity player)) return;
 
         // 是否拥有永夜之翼:胸甲槽 或 饰品栏
-        boolean wingInChest = self.getEquippedStack(EquipmentSlot.CHEST).getItem() == ModItems.NIGHT_WING;
-        boolean wingInAccessory = false;
-        if (!wingInChest) {
+        boolean wing = self.getEquippedStack(EquipmentSlot.CHEST).getItem() == ModItems.NIGHT_WING;
+        if (!wing) {
             for (ItemStack s : AccessoryStorage.stacks(player)) {
-                if (!s.isEmpty() && s.getItem() == ModItems.NIGHT_WING) { wingInAccessory = true; break; }
+                if (!s.isEmpty() && s.getItem() == ModItems.NIGHT_WING) { wing = true; break; }
             }
         }
-        if (!wingInChest && !wingInAccessory) return; // 没有永夜之翼,交回原版逻辑(原版鞘翅照常)
+        if (!wing) return; // 没有永夜之翼,交回原版逻辑(原版鞘翅照常)
 
-        // 维持滑翔的物理条件(对齐原版 tickFallFlying)
-        boolean gliding = self.getFlag(7);
+        boolean gliding = this.getFlag(7);
         if (gliding && !self.isOnGround() && !self.hasVehicle()
                 && !self.hasStatusEffect(StatusEffects.LEVITATION)) {
-            // 永夜之翼有效:维持滑翔位,接管(cancel 原方法避免它关掉)
+            // 永夜之翼有效:维持滑翔位,接管(cancel 原方法避免它因非原版鞘翅关掉)
             if (!self.getWorld().isClient) {
-                self.setFlag(7, true);
-                self.emitGameEvent(GameEvent.ELYTRA_GLIDE);
+                this.setFlag(7, true);
+                this.emitGameEvent(GameEvent.ELYTRA_GLIDE);
             }
             ci.cancel();
         } else if (gliding && self.isOnGround() && !self.getWorld().isClient) {
-            // 落地:关滑翔位(对齐原版)
-            self.setFlag(7, false);
+            this.setFlag(7, false); // 落地关滑翔位
             ci.cancel();
         }
-        // 其它情况(没在滑翔/客户端)不接管,让原版处理
     }
 }
