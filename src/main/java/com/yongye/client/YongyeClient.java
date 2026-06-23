@@ -67,6 +67,10 @@ public class YongyeClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenDebugPayload.ID, (payload, context) ->
                 context.client().execute(() -> context.client().setScreen(new DebugScreen())));
 
+        // 守护界面:收到 S2C(右键守护书触发)即打开 WardScreen。
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenWardPayload.ID, (payload, context) ->
+                context.client().execute(() -> context.client().setScreen(new WardScreen())));
+
         // 永夜同步:更新 HUD 状态
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.NightfallSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> {

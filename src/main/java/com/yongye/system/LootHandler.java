@@ -53,6 +53,18 @@ public final class LootHandler {
         return SkillBookItem.create(t, lvl);
     }
 
+    /**
+     * 随机一本「任意」技能书:从 [血量技能书] + [6 种属性技能书] 中等概率选一类,等级 [minV, maxV]。
+     * 用于精英必爆套餐——比只出属性书更全面(也可能出血量书)。
+     */
+    private static ItemStack randomAnySkillBook(Random r, int minV, int maxV) {
+        SkillType[] types = SkillType.values();
+        int pick = r.nextInt(types.length + 1); // 0 = 血量书,其余 = 属性书
+        int lvl = minV + (maxV > minV ? r.nextInt(maxV - minV + 1) : 0);
+        if (pick == 0) return HealthSkillBookItem.create(lvl);
+        return SkillBookItem.create(types[pick - 1], lvl);
+    }
+
     private static final List<LootFactory> COMMON = List.of(
             item(Items.DIRT, 1, 4), item(Items.COBBLESTONE, 1, 4), item(Items.STICK, 1, 3),
             item(Items.ROTTEN_FLESH, 1, 3), item(Items.WHEAT_SEEDS, 1, 3), item(Items.STRING, 1, 3),
@@ -99,6 +111,19 @@ public final class LootHandler {
             boolean elite = entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_ELITE, false);
 
             if (elite) {
+                // —— 精英必爆套餐(m90):在下面的概率掉落之上额外保底,提高精英击杀收益 ——
+                if (cfg.eliteGuaranteedDrops) {
+                    if (cfg.eliteGuaranteedShards > 0) {
+                        drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, cfg.eliteGuaranteedShards));
+                    }
+                    if (cfg.eliteGuaranteedCrystals > 0) {
+                        drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL, cfg.eliteGuaranteedCrystals));
+                    }
+                    for (int i = 0; i < cfg.eliteGuaranteedSkillBooks; i++) {
+                        drop(world, entity, randomAnySkillBook(r,
+                                cfg.eliteGuaranteedSkillBookMinLevel, cfg.eliteGuaranteedSkillBookMaxLevel));
+                    }
+                }
                 // 精英:技能书改为按概率掉(skillBookDropChanceElite,默认已调极低)+ 一件稀有以上战利品 + 概率材料
                 if (r.nextDouble() < cfg.skillBookDropChanceElite) {
                     drop(world, entity, HealthSkillBookItem.create(1 + r.nextInt(3))); // V1~V3

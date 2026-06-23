@@ -242,6 +242,18 @@ public class YongyeConfig {
     public double lifeCoreDropChance = 0.05;     // 生命核心:仅精英(普通怪绝不掉)
     public double bloodCoreDropChanceElite = 0.025; // 灾厄血核:仅精英,小概率
     public double classWeaponDropChanceElite = 0.04; // 精英掉落职业专属武器(随机职业)的几率
+    // —— m90:精英「必爆套餐」(在上面的概率掉落之上额外保底,提高精英击杀收益)——
+    /** 精英是否必爆保底套餐(碎片+结晶+随机技能书);关掉则只走概率掉落 */
+    public boolean eliteGuaranteedDrops = true;
+    /** 精英必爆:生命碎片数量 */
+    public int eliteGuaranteedShards = 10;
+    /** 精英必爆:生命结晶数量 */
+    public int eliteGuaranteedCrystals = 1;
+    /** 精英必爆:随机技能书数量(从血量书 + 6 种属性书里随机,等级见下) */
+    public int eliteGuaranteedSkillBooks = 1;
+    /** 精英必爆随机技能书的等级范围 [min,max] */
+    public int eliteGuaranteedSkillBookMinLevel = 1;
+    public int eliteGuaranteedSkillBookMaxLevel = 3;
     /** 仅当怪物被玩家击杀才触发随机掉落 */
     public boolean lootRequirePlayerKill = true;
 

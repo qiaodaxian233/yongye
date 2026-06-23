@@ -90,6 +90,13 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.system.MaterialExchange.exchange(p, payload.tier(), payload.all()));
         });
+        // 守护界面:S2C 开界面(右键守护书触发) + C2S 对指定背包槽位施加守护(服务端校验+扣书)
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.OpenWardPayload.ID, com.yongye.network.OpenWardPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.WardApplyPayload.ID, com.yongye.network.WardApplyPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.WardApplyPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.item.WardBookItem.applyWard(p, payload.slot()));
+        });
         // 登录:未选过本命职业则弹出选职界面;老玩家(已有职业)只补标记
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity pl = handler.player;
