@@ -39,13 +39,21 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "learned_classes"));
 
-    /** MONK_FIST_BONUS: 武僧空手击杀累计的额外拳击伤害。 */
+    /** MONK_FIST_BONUS: 武僧空手击杀+吃材料累计的额外拳击伤害。 */
     public static final AttachmentType<Integer> MONK_FIST_BONUS =
             AttachmentRegistry.<Integer>builder()
                     .persistent(Codec.INT)
                     .initializer(() -> 0)
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "monk_fist_bonus"));
+
+    /** MONK_HP_BONUS: 武僧吃材料累计的额外生命上限(越吃越肥)。 */
+    public static final AttachmentType<Integer> MONK_HP_BONUS =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .initializer(() -> 0)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "monk_hp_bonus"));
 
     /**
      * MOB_ENHANCED: 标记某个怪物是否已被增强,避免反复 re-roll 随机药水。

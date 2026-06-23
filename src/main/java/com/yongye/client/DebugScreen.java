@@ -128,7 +128,6 @@ public class DebugScreen extends Screen {
                             new Btn("战士武器", "yongye classweapon warrior"),
                             new Btn("术士武器", "yongye classweapon warlock"),
                             new Btn("剑客武器", "yongye classweapon swordsman"),
-                            new Btn("武僧武器", "yongye classweapon monk"),
                             new Btn("刺客武器", "yongye classweapon assassin"),
                     }),
                     new Section("特殊武器", new Btn[]{

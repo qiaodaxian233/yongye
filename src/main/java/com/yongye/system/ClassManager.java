@@ -58,6 +58,7 @@ public final class ClassManager {
         return Identifier.of(Yongye.MOD_ID, "class_" + c.id + "_" + key);
     }
     private static final Identifier MONK_FIST_ID = Identifier.of(Yongye.MOD_ID, "class_monk_fist");
+    private static final Identifier MONK_HP_ID = Identifier.of(Yongye.MOD_ID, "class_monk_hp");
 
     public static List<String> learnedList(ServerPlayerEntity p) {
         return new ArrayList<>(p.getAttachedOrElse(ModAttachments.LEARNED_CLASSES, List.of()));
@@ -150,6 +151,8 @@ public final class ClassManager {
         }
         EntityAttributeInstance atk = p.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
         if (atk != null) atk.removeModifier(MONK_FIST_ID);
+        EntityAttributeInstance hpInst = p.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+        if (hpInst != null) hpInst.removeModifier(MONK_HP_ID);
 
         List<PlayerClass> active = enforceAndGet(p);
         for (PlayerClass c : active) {
@@ -165,6 +168,11 @@ public final class ClassManager {
         if (active.contains(PlayerClass.MONK) && p.getMainHandStack().isEmpty() && atk != null) {
             int bonus = p.getAttachedOrElse(ModAttachments.MONK_FIST_BONUS, 0);
             if (bonus > 0) atk.addTemporaryModifier(new EntityAttributeModifier(MONK_FIST_ID, bonus, Operation.ADD_VALUE));
+        }
+        // 武僧:吃材料攒的生命上限(不限空手,越吃越肥一直在)
+        if (active.contains(PlayerClass.MONK) && hpInst != null) {
+            int hpBonus = p.getAttachedOrElse(ModAttachments.MONK_HP_BONUS, 0);
+            if (hpBonus > 0) hpInst.addTemporaryModifier(new EntityAttributeModifier(MONK_HP_ID, hpBonus, Operation.ADD_VALUE));
         }
         // 刺客:夜视
         if (active.contains(PlayerClass.ASSASSIN)) {
