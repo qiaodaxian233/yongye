@@ -1056,3 +1056,11 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 修法:两文件的方法名 + super 调用 `getMiningSpeedMultiplier`→`getMiningSpeed`,逻辑不动(对 COBWEB 返 15.0F,其余 super)。最小改动、复用 1.21.x 正确扩展点,不引入 ToolComponent/RegistryEntryList 等新接口。
 - 静态自检:ChaosBladeItem 5/5·31/31、ClassWeaponItem 35/35·212/212 配平;全仓库无 getMiningSpeedMultiplier 代码残留(仅注释里提及旧名作说明)。
 - 这是 m121 那条"待编译验证 getMiningSpeedMultiplier 签名"的最终落地:已确认正确方法名为 getMiningSpeed。
+
+## 里程碑 125 — 去掉主菜单顶部黑红横幅(透明贴图隐藏原版 logo)
+应需求:m123 全景图上线后,顶部那条黑红横幅(m80 加的:不透明黑条 + 血红下边线 + 渐变)挡住了全景顶部,用户要求去掉。
+- 横幅原本的作用是**盖住原版 MINECRAFT logo**(直接删条会让原版 logo 冒出来跟「永夜」大字重叠穿帮)。
+- 解法(纯资源、零编译风险,不动渲染代码):用**全透明贴图**覆盖原版 logo 与 Java Edition 副标——`assets/minecraft/textures/gui/title/minecraft.png`(512² 透明)+ `edition.png`(256² 透明),原版 logo 直接不可见,横幅随之不再需要。
+- `TitleScreenMixin`:删掉第 2 段(bannerH + 5 个 ctx.fill 横幅/渐变/红线),保留「永夜」血红大字 + 英文副标(直接浮在全景图上);更新类 Javadoc 记录 m79/m80→m123→m125 演进。
+- 结果:标题屏 = 完整全景图(顶部天空/闪电不再被挡)+「永夜」大字 + 副标 + 按钮,无任何黑红条。
+- 静态自检:mixin 花 2/2·圆 38/38 配平,代码体无 bannerH/ctx.fill 残留(仅注释提及)。无新接口、无版本敏感点(logo 贴图路径 textures/gui/title/minecraft.png·edition.png 已 web 核实)。

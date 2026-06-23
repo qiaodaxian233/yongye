@@ -13,15 +13,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * 主菜单「永夜」暗黑化。
  *
- * 思路(最稳):只在 render 的 TAIL 叠加绘制,不取消原版任何渲染(不碰 logo/全景图/按钮的
- * 原生绘制流程),因此版本兼容性最好、最不易崩:
- *   1. 全屏压暗 —— 营造暗黑末日氛围(按钮有自身贴图,压暗后仍清晰可读)。
- *   2. 顶部不透明横幅 + 血红下边线 —— 彻底盖死原版 MINECRAFT logo
- *      (旧版半透明横幅会让 logo 透出来很乱;现改为完全不透明 + 下方渐变过渡)。
- *   3. 「永夜」血红大字(暗红辉光描边 + 矩阵放大)+ 一行英文副标题。
+ * 思路(最稳):render 的 TAIL 只叠加绘制「永夜」标题文字,不取消原版任何渲染流程,版本兼容性最好。
+ * 演进:
+ *   - m79/m80:全屏压暗 + 顶部黑红横幅(盖原版 logo)+「永夜」大字。
+ *   - m123:用户做了暗黑全景图作背景,去掉全屏压暗让全景显出。
+ *   - m125:用户要求去掉顶部黑红横幅。横幅原是用来盖原版 MINECRAFT logo 的;现改为用**透明贴图**
+ *     覆盖原版 logo 与 Java Edition 副标(assets/minecraft/textures/gui/title/minecraft.png · edition.png),
+ *     logo 直接不可见,于是横幅不再需要。最终只剩「永夜」大字 + 英文副标浮在全景图上。
  *
- * 备注:原版 logo 是像素贴图图集、无法塞中文,故标题只能用文字重画(本 mixin 即此法)。
- * 顶部横幅高度 80 是按常见分辨率估的;若某些 GUI 缩放下仍露出原 logo 或压到按钮,调 bannerH 即可。
+ * 备注:原版 logo 是像素贴图、无法塞中文,故标题用文字重画(本 mixin) + 透明贴图隐藏原 logo。
+ * 「永夜」大字默认在屏幕顶部(translate y=16, scale 5x);若位置要调,改下面 translate 的 y 即可。
  */
 @Mixin(TitleScreen.class)
 public class TitleScreenMixin {
@@ -35,15 +36,9 @@ public class TitleScreenMixin {
         //    全景本身平均亮度仅约 40/255,足够暗;原版按钮自带半透底+白字,直接铺在全景上仍清晰可读。
         //    如需为按钮区再加一点可读性,可在底部叠一条很淡的渐变,这里先全去掉。
 
-        // 2. 顶部横幅:完全不透明,彻底盖死原版 MINECRAFT logo(上版半透明导致 logo 透出来很乱)
-        int bannerH = 80;
-        ctx.fill(0, 0, w, bannerH, 0xFF0A0306);                       // 主体:近黑暗红,不透明
-        // 横幅下方做几段递减透明的渐变,平滑过渡到压暗层(避免一条硬边)
-        ctx.fill(0, bannerH, w, bannerH + 4, 0xCC120006);
-        ctx.fill(0, bannerH + 4, w, bannerH + 9, 0x77100005);
-        ctx.fill(0, bannerH + 9, w, bannerH + 14, 0x33100005);
-        // 血红下边线:把横幅边缘变成有意的设计而非穿帮
-        ctx.fill(0, bannerH - 2, w, bannerH, 0xFF8B0000);
+        // 2. (m125 改)去掉顶部黑红横幅(用户要求)。横幅原本是用来盖住原版 MINECRAFT logo 的;
+        //    现改为用透明贴图覆盖原版 logo(assets/minecraft/textures/gui/title/minecraft.png · edition.png),
+        //    logo 直接不可见,于是横幅就不需要了——全景图顶部(天空/闪电)得以完整显示,「永夜」大字直接浮在全景上。
 
         // 3. 「永夜」大字:先画暗红辉光(四向偏移)再叠亮血红主体,矩阵放大、水平居中
         Text title = Text.literal("永夜").formatted(Formatting.BOLD);
