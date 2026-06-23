@@ -110,6 +110,7 @@ public class DebugScreen extends Screen {
                     }),
                     new Section("其它", new Btn[]{
                             new Btn("守护附魔书", "yongye wardbook"),
+                            new Btn("永夜之翼", "yongye nightwing"),
                     }),
             }),
             // —— 职业 / 武器 ——

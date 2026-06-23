@@ -7,6 +7,7 @@ import com.yongye.item.ArtifactType;
 import com.yongye.item.ClassBookItem;
 import com.yongye.item.ClassWeaponItem;
 import com.yongye.item.TankShieldItem;
+import com.yongye.item.NightWingItem;
 import com.yongye.item.PlayerClass;
 import com.yongye.item.HealthSkillBookItem;
 import com.yongye.item.SkillBookItem;
@@ -124,7 +125,13 @@ public final class ModItems {
                     .rarity(Rarity.EPIC)
                     .attributeModifiers(TankShieldItem.offhandAttributes())));
 
-    private static Item register(String name, Item item) {
+        // —— 永夜之翼:可穿戴背饰,继承鞘翅自带滑翔(羽翼 voxel 模型) ——
+    public static final Item NIGHT_WING = register("night_wing",
+            new NightWingItem(new Item.Settings()
+                    .maxDamage(648)
+                    .rarity(Rarity.EPIC)));
+
+private static Item register(String name, Item item) {
         return Registry.register(Registries.ITEM, Identifier.of(Yongye.MOD_ID, name), item);
     }
 
