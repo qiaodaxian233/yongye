@@ -34,12 +34,12 @@
 ## 0. 一分钟速览
 
 - 这是一个 **极难灾变生存** 玩法 mod：白天搜刮、夜晚逃命，任务失败会推高「永夜」等级，怪物锁定/挖墙/爬墙追杀；玩家靠 **装备血量 + 8 种技能书 + 10 种背包神器 + 饰品栏 + 职业 + 随机掉落** 反向变强,并按游戏天数推进难度(类「惊变」)。
-- 代码量:**100 个 Java 文件 / 约 1.1 万行 / 324 项可调配置 / DEVLOG 88 个里程碑**。
+- 代码量:**100 个 Java 文件 / 约 1.1 万行 / 324 项可调配置 / DEVLOG 89 个里程碑**。
 - **项目完成度(估)≈ 99%**:核心玩法、成长线、世界节奏、Boss、HUD、饰品栏、时间进度、职业系统、天赋树(命令版+GUI版)、职业专属技能/武器/盾、开局选职业(卡图版)、职业大招、坦克真减伤、武僧全用途耐久惩罚均已落地;余下主要是整体数值平衡(配置全开放待实测)、若干美术占位替换、调试菜单、真弧形盾面渲染。
 
 ---
 
-## 0.5 当前状态(截至 **m88**:m65 本地 **build 通过 ✅**,m66-88 已 push **待实机验证**;待验证接口 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis / m86 TextFieldWidget六参构造 · 本段最新,优先看)
+## 0.5 当前状态(截至 **m89**:m65 本地 **build 通过 ✅**,m66-89 已 push **待实机验证**;待验证接口 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis / m86 TextFieldWidget六参构造 · m89 守护书泛化+缴械夺盾无新接口 · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。

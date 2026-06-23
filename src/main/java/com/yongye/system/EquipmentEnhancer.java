@@ -56,6 +56,18 @@ public final class EquipmentEnhancer {
         return k == Kind.WEAPON || k == Kind.HYBRID; // hybrid(攻防双修)也算武器,可暴击、走武器结算
     }
 
+    /**
+     * 是否「可被守护」(守护附魔书的施加门槛)。
+     * 凡是会被精英缴械夺走、或玩家有投入想保护的随身装备都算:武器(含攻防双修)、盔甲、盾牌。
+     * 盾牌:自定义磐盾因带 GENERIC_ARMOR 已归 ARMOR;原版盾无属性会归 NONE,故额外用 instanceof ShieldItem 显式放行。
+     */
+    public static boolean isWardable(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        Kind k = kindOf(stack.getItem());
+        if (k == Kind.WEAPON || k == Kind.HYBRID || k == Kind.ARMOR) return true;
+        return stack.getItem() instanceof net.minecraft.item.ShieldItem; // 兜底:无属性的原版盾
+    }
+
     public static int getLevel(ItemStack stack) {
         return stack.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);
     }

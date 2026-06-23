@@ -152,19 +152,31 @@ public final class EliteHandler {
                 stole = true;
             }
 
-            // 夺护甲(随机一件已穿戴、且精英对应槽为空的;抢到直接穿身上)
+            // 夺护甲/副手盾(随机一件已穿戴、未被守护、且精英对应槽为空的;抢到直接穿身上,击杀夺回)
             if (cfg.eliteStealArmor && player.getRandom().nextDouble() < cfg.eliteStealArmorChance) {
-                EquipmentSlot[] slots = { EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET };
+                // 四件护甲 + 副手(盾)。副手只夺「装备类」(盾/武器),不夺火把、食物、方块等杂物。
+                EquipmentSlot[] slots = { EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.OFFHAND };
                 java.util.List<EquipmentSlot> avail = new java.util.ArrayList<>();
                 for (EquipmentSlot s : slots) {
-                    if (!player.getEquippedStack(s).isEmpty() && attacker.getEquippedStack(s).isEmpty()) avail.add(s);
+                    ItemStack worn = player.getEquippedStack(s);
+                    if (worn.isEmpty()) continue;                                                            // 空槽
+                    if (worn.getOrDefault(com.yongye.registry.ModComponents.DISARM_PROOF, false)) continue;  // 已被守护
+                    if (s == EquipmentSlot.OFFHAND) {
+                        // 副手:只夺装备类(盾/武器),可覆盖精英自带的免费盾(同主手夺武器逻辑,后期精英也带盾)
+                        if (!EquipmentEnhancer.isWardable(worn)) continue;
+                    } else {
+                        // 四件护甲:精英该槽已占则不夺(精英本不戴甲,正常为空)
+                        if (!attacker.getEquippedStack(s).isEmpty()) continue;
+                    }
+                    avail.add(s);
                 }
                 if (!avail.isEmpty()) {
                     EquipmentSlot s = avail.get(player.getRandom().nextInt(avail.size()));
                     attacker.equipStack(s, player.getEquippedStack(s).copy());
                     attacker.setEquipmentDropChance(s, 1.0f);
                     player.equipStack(s, ItemStack.EMPTY);
-                    player.sendMessage(Text.literal("精英怪扒走了你的护甲!击杀它夺回").formatted(Formatting.RED), true);
+                    String what = s == EquipmentSlot.OFFHAND ? "副手盾" : "护甲";
+                    player.sendMessage(Text.literal("精英怪扒走了你的" + what + "!击杀它夺回").formatted(Formatting.RED), true);
                     stole = true;
                 }
             }

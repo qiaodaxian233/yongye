@@ -17,8 +17,8 @@ import net.minecraft.world.World;
 import java.util.List;
 
 /**
- * 守护附魔书:一只手拿武器、另一只手拿本书右键,为该武器附上「无法被夺取」(精英缴械会跳过)。
- * 推荐:守护书放主手、武器放副手,右键即可(避免武器自身右键吞掉操作)。
+ * 守护附魔书:一只手拿装备(武器/盔甲/盾牌)、另一只手拿本书右键,为该装备附上「无法被夺取」(精英缴械会跳过)。
+ * 推荐:守护书放主手、装备放副手,右键即可(避免装备自身右键吞掉操作)。
  */
 public class WardBookItem extends Item {
     public WardBookItem(Settings settings) {
@@ -31,20 +31,21 @@ public class WardBookItem extends Item {
         if (world.isClient) return TypedActionResult.success(book, true);
 
         Hand other = hand == Hand.MAIN_HAND ? Hand.OFF_HAND : Hand.MAIN_HAND;
-        ItemStack weapon = user.getStackInHand(other);
-        if (weapon.isEmpty() || !EquipmentEnhancer.isWeapon(weapon)) {
-            user.sendMessage(Text.literal("请另一只手拿着要保护的武器,再右键守护书").formatted(Formatting.GRAY), true);
+        // 另一只手拿的「要保护的装备」:武器 / 盔甲 / 盾牌均可(见 EquipmentEnhancer.isWardable)
+        ItemStack target = user.getStackInHand(other);
+        if (target.isEmpty() || !EquipmentEnhancer.isWardable(target)) {
+            user.sendMessage(Text.literal("请另一只手拿着要保护的武器/护甲/盾牌,再右键守护书").formatted(Formatting.GRAY), true);
             return TypedActionResult.fail(book);
         }
-        if (weapon.getOrDefault(ModComponents.DISARM_PROOF, false)) {
-            user.sendMessage(Text.literal("该武器已无法被夺取").formatted(Formatting.GRAY), true);
+        if (target.getOrDefault(ModComponents.DISARM_PROOF, false)) {
+            user.sendMessage(Text.literal("该装备已无法被夺取").formatted(Formatting.GRAY), true);
             return TypedActionResult.fail(book);
         }
-        weapon.set(ModComponents.DISARM_PROOF, true);
+        target.set(ModComponents.DISARM_PROOF, true);
         book.decrement(1);
         world.playSound(null, user.getX(), user.getY(), user.getZ(),
                 SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.PLAYERS, 0.8f, 1.2f);
-        user.sendMessage(Text.literal("已为武器附上守护:无法被精英夺取").formatted(Formatting.LIGHT_PURPLE), true);
+        user.sendMessage(Text.literal("已为装备附上守护:无法被精英夺取").formatted(Formatting.LIGHT_PURPLE), true);
         return TypedActionResult.success(book, false);
     }
 
