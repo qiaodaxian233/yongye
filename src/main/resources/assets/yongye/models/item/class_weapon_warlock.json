@@ -1,6 +1,168 @@
 {
-  "parent": "minecraft:item/handheld",
   "textures": {
     "layer0": "yongye:item/class_weapon_warlock"
+  },
+  "elements": [
+    {
+      "comment": "=== 杖身主体 (斜对角,左上→右下,3像素宽) ===",
+      "from": [0, 12, 7.5],
+      "to":   [3, 15, 8.5],
+      "faces": {
+        "north": {"uv": [5, 9, 8, 10], "texture": "#layer0"},
+        "south": {"uv": [5, 9, 8, 10], "texture": "#layer0"},
+        "up":    {"uv": [5, 9, 8, 10], "texture": "#layer0"},
+        "down":  {"uv": [5, 9, 8, 10], "texture": "#layer0"},
+        "east":  {"uv": [8, 9, 9, 10], "texture": "#layer0"},
+        "west":  {"uv": [8, 9, 9, 10], "texture": "#layer0"}
+      },
+      "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    },
+    {
+      "comment": "杖身中段",
+      "from": [3, 9, 7.5],
+      "to":   [6, 12, 8.5],
+      "faces": {
+        "north": {"uv": [6, 10, 9, 13], "texture": "#layer0"},
+        "south": {"uv": [6, 10, 9, 13], "texture": "#layer0"},
+        "up":    {"uv": [6, 10, 9, 11], "texture": "#layer0"},
+        "down":  {"uv": [6, 10, 9, 11], "texture": "#layer0"},
+        "east":  {"uv": [8, 10, 9, 13], "texture": "#layer0"},
+        "west":  {"uv": [8, 10, 9, 13], "texture": "#layer0"}
+      },
+      "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    },
+    {
+      "comment": "杖身下段",
+      "from": [6, 6, 7.5],
+      "to":   [9, 9, 8.5],
+      "faces": {
+        "north": {"uv": [7, 11, 10, 14], "texture": "#layer0"},
+        "south": {"uv": [7, 11, 10, 14], "texture": "#layer0"},
+        "up":    {"uv": [7, 11, 10, 12], "texture": "#layer0"},
+        "down":  {"uv": [7, 11, 10, 12], "texture": "#layer0"},
+        "east":  {"uv": [9, 11, 10, 14], "texture": "#layer0"},
+        "west":  {"uv": [9, 11, 10, 14], "texture": "#layer0"}
+      },
+      "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    },
+    {
+      "comment": "杖身尾段",
+      "from": [9, 3, 7.5],
+      "to":   [12, 6, 8.5],
+      "faces": {
+        "north": {"uv": [8, 12, 11, 15], "texture": "#layer0"},
+        "south": {"uv": [8, 12, 11, 15], "texture": "#layer0"},
+        "up":    {"uv": [8, 12, 11, 13], "texture": "#layer0"},
+        "down":  {"uv": [8, 12, 11, 13], "texture": "#layer0"},
+        "east":  {"uv": [10, 12, 11, 15], "texture": "#layer0"},
+        "west":  {"uv": [10, 12, 11, 15], "texture": "#layer0"}
+      },
+      "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    },
+    {
+      "comment": "=== 握环 (杖身中偏下,比杖身宽1px) ===",
+      "from": [6.5, 5.5, 7],
+      "to":   [9.5, 7.5, 9],
+      "faces": {
+        "north": {"uv": [3, 7, 6, 9], "texture": "#layer0"},
+        "south": {"uv": [3, 7, 6, 9], "texture": "#layer0"},
+        "up":    {"uv": [3, 7, 6, 8], "texture": "#layer0"},
+        "down":  {"uv": [3, 7, 6, 8], "texture": "#layer0"},
+        "east":  {"uv": [5, 7, 6, 9], "texture": "#layer0"},
+        "west":  {"uv": [3, 7, 4, 9], "texture": "#layer0"}
+      },
+      "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    },
+    {
+      "comment": "=== 水晶主体 (杖头,菱形用3层叠加) ===",
+      "from": [1.5, 13, 7],
+      "to":   [4.5, 16, 9],
+      "faces": {
+        "north": {"uv": [1, 2, 4, 5], "texture": "#layer0"},
+        "south": {"uv": [1, 2, 4, 5], "texture": "#layer0"},
+        "up":    {"uv": [1, 2, 4, 3], "texture": "#layer0"},
+        "down":  {"uv": [1, 4, 4, 5], "texture": "#layer0"},
+        "east":  {"uv": [3, 2, 4, 5], "texture": "#layer0"},
+        "west":  {"uv": [1, 2, 2, 5], "texture": "#layer0"}
+      },
+      "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    },
+    {
+      "comment": "水晶顶尖 (细一圈,向上突出)",
+      "from": [2.5, 15.5, 7.5],
+      "to":   [3.5, 17.5, 8.5],
+      "faces": {
+        "north": {"uv": [1, 1, 2, 3], "texture": "#layer0"},
+        "south": {"uv": [1, 1, 2, 3], "texture": "#layer0"},
+        "up":    {"uv": [1, 1, 2, 2], "texture": "#layer0"},
+        "down":  {"uv": [1, 2, 2, 3], "texture": "#layer0"},
+        "east":  {"uv": [1, 1, 2, 3], "texture": "#layer0"},
+        "west":  {"uv": [1, 1, 2, 3], "texture": "#layer0"}
+      },
+      "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    },
+    {
+      "comment": "=== 托爪-左 (水晶底部左侧) ===",
+      "from": [0, 12, 7.5],
+      "to":   [1.5, 14, 8.5],
+      "faces": {
+        "north": {"uv": [4, 7, 5, 9], "texture": "#layer0"},
+        "south": {"uv": [4, 7, 5, 9], "texture": "#layer0"},
+        "up":    {"uv": [4, 7, 5, 8], "texture": "#layer0"},
+        "down":  {"uv": [4, 8, 5, 9], "texture": "#layer0"},
+        "east":  {"uv": [4, 7, 5, 9], "texture": "#layer0"},
+        "west":  {"uv": [4, 7, 5, 9], "texture": "#layer0"}
+      },
+      "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    },
+    {
+      "comment": "=== 托爪-右 ===",
+      "from": [4.5, 12, 7.5],
+      "to":   [6, 14, 8.5],
+      "faces": {
+        "north": {"uv": [4, 7, 5, 9], "texture": "#layer0"},
+        "south": {"uv": [4, 7, 5, 9], "texture": "#layer0"},
+        "up":    {"uv": [4, 7, 5, 8], "texture": "#layer0"},
+        "down":  {"uv": [4, 8, 5, 9], "texture": "#layer0"},
+        "east":  {"uv": [4, 7, 5, 9], "texture": "#layer0"},
+        "west":  {"uv": [4, 7, 5, 9], "texture": "#layer0"}
+      },
+      "rotation": {"angle": 45, "axis": "z", "origin": [8, 8, 8]}
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, -90, 210],
+      "translation": [0, 1, -3],
+      "scale": [0.55, 0.55, 0.55]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, -90, 210],
+      "translation": [0, 1, -3],
+      "scale": [0.55, 0.55, 0.55]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, -90, 25],
+      "translation": [1.13, 3.2, 1.13],
+      "scale": [0.68, 0.68, 0.68]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 90, -25],
+      "translation": [1.13, 3.2, 1.13],
+      "scale": [0.68, 0.68, 0.68]
+    },
+    "gui": {
+      "rotation": [30, 225, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.625, 0.625, 0.625]
+    },
+    "ground": {
+      "translation": [0, 2, 0],
+      "scale": [0.25, 0.25, 0.25]
+    },
+    "fixed": {
+      "rotation": [0, 180, 0],
+      "scale": [1, 1, 1]
+    }
   }
 }
