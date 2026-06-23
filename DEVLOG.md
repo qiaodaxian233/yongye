@@ -1000,3 +1000,11 @@ m109 build 成功但**启动崩溃**:
 - require=0 兜底(addParticle 重载签名版本敏感)。
 - 静态自检 5/5·27/27;注册 client.ParticleReducerMixin。
 - **[待编译验证]**:ParticleManager#addParticle 重载描述符;mc.world.getEntities() 返回可迭代。
+
+## 里程碑 118 — 术士蓄力伤害改为攻击力的倍数(蓄力越久越高)
+应需求:术士蓄力魔法弹伤害应是攻击力的几倍,蓄力越久越高。
+- 原:伤害 = warlockBoltDamage(固定18) × (0.4→1.0),完全没用攻击力。
+- 改:伤害 = max(玩家攻击力, 保底基础值) × 蓄力倍率;倍率 warlockBoltMinMult(0.5)→warlockBoltMaxMult(4.0)随蓄力线性提升。即满蓄力≈攻击力×4倍(持专属武器再×1.2)。
+- 新配置 warlockBoltMinMult/MaxMult 可调;warlockBoltDamage 降级为保底(防裸装攻击力过低)。
+- 耗血仍按 0.4→1.0(不随倍率暴涨)。命中提示加显示蓄力倍率"×N.N"。
+- 静态自检 34/34·206/206。无新接口(复用 getAttributeValue)。

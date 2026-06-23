@@ -354,7 +354,9 @@ public class YongyeConfig {
     public double warlockAoeRadius = 4.0;
     public double warlockAoeDamage = 8.0;
     // 术士法术弹(右键蓄力施法)
-    public double warlockBoltDamage   = 18.0;         // 满蓄力魔法弹基础伤害
+    public double warlockBoltDamage   = 18.0;         // (旧)固定基础伤害,现作保底:伤害取 max(攻击力×倍率, 此值×倍率)
+    public double warlockBoltMinMult  = 0.5;          // 最低蓄力(刚够触发)= 攻击力 × 此倍率
+    public double warlockBoltMaxMult  = 4.0;          // 满蓄力 = 攻击力 × 此倍率(蓄力越久越接近)
     public double warlockBoltHpCost   = 3.0;          // 满蓄力耗血(min蓄=×0.4)
     public double warlockBoltRange    = 20.0;         // 射线最大射程(格)
     public int    warlockBoltChargeTicks = 30;        // 满蓄力所需 tick(默认1.5s)

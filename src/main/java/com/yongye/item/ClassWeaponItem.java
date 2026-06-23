@@ -179,9 +179,12 @@ public class ClassWeaponItem extends Item {
         if (used < 5) return; // 蓄力不足0.25s:无效
 
         float charge = Math.min(1.0f, used / (float) cfg.warlockBoltChargeTicks);
-        float mult = 0.4f + charge * 0.6f; // 0.4→1.0
-        float damage = (float) (cfg.warlockBoltDamage * mult);
-        float hpCost = (float) (cfg.warlockBoltHpCost * mult);
+        // 蓄力倍率:minMult → maxMult 随蓄力线性提升(满蓄力=攻击力×maxMult,默认4倍)
+        double mult = cfg.warlockBoltMinMult + charge * (cfg.warlockBoltMaxMult - cfg.warlockBoltMinMult);
+        double atk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        // 伤害 = 攻击力 × 倍率(保底用配置基础值,防裸装攻击力过低)
+        float damage = (float) (Math.max(atk, cfg.warlockBoltDamage) * mult);
+        float hpCost = (float) (cfg.warlockBoltHpCost * (0.4 + charge * 0.6)); // 耗血仍按 0.4→1.0
         boolean hasWeapon = ClassWeaponItem.held(p, PlayerClass.WARLOCK);
         if (hasWeapon) { damage *= 1.2f; hpCost *= 0.8f; } // 专属武器加成
 
@@ -221,7 +224,7 @@ public class ClassWeaponItem extends Item {
             sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, hpos.x, hpos.y, hpos.z, 8, 0.3, 0.3, 0.3, 0.02);
             world.playSound(null, hit.getBlockPos(), SoundEvents.ENTITY_BLAZE_HURT,
                     SoundCategory.PLAYERS, 1.0f, 0.7f + charge * 0.5f);
-            p.sendMessage(Text.literal(String.format("魔法弹命中!%.1f伤害 / 耗%.1f血", damage, hpCost))
+            p.sendMessage(Text.literal(String.format("魔法弹命中!%.1f伤害(×%.1f) / 耗%.1f血", damage, mult, hpCost))
                     .formatted(Formatting.LIGHT_PURPLE), true);
         } else {
             // 未命中音效
