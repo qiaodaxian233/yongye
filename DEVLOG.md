@@ -908,3 +908,13 @@ m107 build 失败:getFlag/setFlag 是 Entity 的 protected 方法,通过 `(Livin
 - 逻辑不变(tickFallFlying HEAD 接管维持滑翔位)。
 - 静态自检 8/8·44/44。
 - **[待编译验证]**:@Shadow 签名需与 1.21.1 目标完全一致(getFlag(int):boolean / setFlag(int,boolean):void / emitGameEvent(GameEvent):void,均据源码);emitGameEvent 若有重载冲突或修饰符不符,build 会报,届时调整。
+
+## 里程碑 109 — 修 @Shadow 目标类 + GameEvent 类型
+m108 build 失败两点:
+1. @Shadow 找不到目标——getFlag/setFlag 定义在 Entity(LivingEntity 父类),@Shadow 默认只在直接目标类找;需 mixin 类 `extends Entity` 才能解析继承来的方法。
+2. emitGameEvent(GameEvent.ELYTRA_GLIDE) 报类型错——ELYTRA_GLIDE 是 RegistryEntry<GameEvent> 而非 GameEvent。
+- 修:
+  - mixin 类 `extends Entity` + 加构造转发 `super(EntityType,World)`(mixin 继承具体父类的标准写法,构造永不被实际调用,仅满足编译);@Shadow getFlag/setFlag 改 public(Entity 中实际可见性,abstract 声明)。
+  - 去掉 emitGameEvent 调用(仅触发滑翔音效,非必需),省去 RegistryEntry 类型麻烦。
+- 静态自检 8/8·43/43,代码体仅用已 shadow 的 getFlag/setFlag。
+- **[待编译验证]**:@Shadow 方法可见性需与 Entity 实际一致(getFlag/setFlag 在 Entity 是 protected,abstract 声明用 public 应兼容或需调;若报错改 protected);Entity 构造签名 (EntityType<?>,World) 据 1.21.1。
