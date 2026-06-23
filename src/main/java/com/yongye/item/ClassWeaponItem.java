@@ -1,19 +1,34 @@
 package com.yongye.item;
 
 import com.yongye.Yongye;
+import com.yongye.YongyeConfig;
+import com.yongye.system.ClassManager;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.component.type.AttributeModifiersComponent;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributeModifier.Operation;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.text.MutableText;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.TypedActionResult;
+import net.minecraft.util.UseAction;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 import java.util.List;
 
@@ -99,10 +114,127 @@ public class ClassWeaponItem extends Item {
         return b.build();
     }
 
+    // =====================================================================
+    // 术士专属:右键噬魂杖 → 蓄力吟唱 → 松手释放魔法弹(以命为薪)
+    // getMaxUseTime / getUseAction / usageTick / onStoppedUsing
+    // 【待编译验证】:四个方法签名在 1.21.1 yarn 下的确切形式
+    // =====================================================================
+
+    /** 非术士武器不触发蓄力;右键其他职业武器走默认 PASS */
+    @Override
+    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+        if (playerClass != PlayerClass.WARLOCK) return TypedActionResult.pass(user.getStackInHand(hand));
+        if (!ClassManager.isActive(user, PlayerClass.WARLOCK)) return TypedActionResult.pass(user.getStackInHand(hand));
+        // setCurrentHand 触发原版使用动作(举杖+进入蓄力)
+        user.setCurrentHand(hand);  // 【待编译验证】1.21.1 签名
+        return TypedActionResult.consume(user.getStackInHand(hand));
+    }
+
+    /** 最长蓄力时间(tick);原版按此计算蓄力进度 0→1 */
+    @Override
+    public int getMaxUseTime(ItemStack stack, LivingEntity user) {  // 【待编译验证】是否需要 LivingEntity 参
+        return YongyeConfig.get().warlockBoltChargeTicks * 3; // 给足余量,实际松手即触发
+    }
+
+    /** 使用动作外观:BOW(举臂拉弓姿势,最贴合蓄力吟唱) */
+    @Override
+    public UseAction getUseAction(ItemStack stack) {  // 【待编译验证】
+        return UseAction.BOW;
+    }
+
+    /** 蓄力 tick:播放吟唱粒子+音效(每8tick一次) */
+    @Override
+    public void usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {  // 【待编译验证】
+        if (world.isClient || !(user instanceof ServerPlayerEntity p)) return;
+        int used = getMaxUseTime(stack, user) - remainingUseTicks;
+        if (used > 0 && used % 8 == 0) {
+            // 身周灵魂火粒子(吟唱感)
+            if (world instanceof ServerWorld sw) {
+                Vec3d pos = p.getPos().add(0, 1.0, 0);
+                double angle = (used * 0.4) % (Math.PI * 2);
+                double ox = Math.sin(angle) * 0.8;
+                double oz = Math.cos(angle) * 0.8;
+                sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, pos.x + ox, pos.y, pos.z + oz, 2, 0.1, 0.1, 0.1, 0.02);
+            }
+            // 渐强吟唱音效(pitch 随蓄力提升)
+            float progress = Math.min(1.0f, used / (float) YongyeConfig.get().warlockBoltChargeTicks);
+            world.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_ENDERMAN_AMBIENT,
+                    SoundCategory.PLAYERS, 0.3f, 0.8f + progress * 0.5f);
+        }
+    }
+
+    /**
+     * 松手/中断:释放魔法弹。
+     * 用手动逐点射线检测第一个目标(不用 RaycastContext,避免版本敏感点)。
+     * 蓄力越满伤害/耗血越高(0.4×~1.0×)。
+     */
+    @Override
+    public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {  // 【待编译验证】1.21.2+可能返回boolean
+        if (world.isClient || !(user instanceof ServerPlayerEntity p)) return;
+        YongyeConfig cfg = YongyeConfig.get();
+        int used = getMaxUseTime(stack, user) - remainingUseTicks;
+        if (used < 5) return; // 蓄力不足0.25s:无效
+
+        float charge = Math.min(1.0f, used / (float) cfg.warlockBoltChargeTicks);
+        float mult = 0.4f + charge * 0.6f; // 0.4→1.0
+        float damage = (float) (cfg.warlockBoltDamage * mult);
+        float hpCost = (float) (cfg.warlockBoltHpCost * mult);
+        boolean hasWeapon = ClassWeaponItem.held(p, PlayerClass.WARLOCK);
+        if (hasWeapon) { damage *= 1.2f; hpCost *= 0.8f; } // 专属武器加成
+
+        // 扣血(至少留1点)
+        if (p.getHealth() <= hpCost + 1.0f) {
+            p.sendMessage(Text.literal("生命不足,无法施法!").formatted(Formatting.RED), true);
+            return;
+        }
+        p.setHealth(Math.max(1.0f, p.getHealth() - hpCost));
+
+        // 手动逐点射线(步长0.5格,检测前方范围内第一个目标)
+        Vec3d eye = p.getEyePos();
+        Vec3d dir = p.getRotationVector().normalize();
+        double range = cfg.warlockBoltRange;
+        LivingEntity hit = null;
+        ServerWorld sw = (ServerWorld) world;
+        for (double d = 0.5; d <= range; d += 0.5) {
+            Vec3d pt = eye.add(dir.x * d, dir.y * d, dir.z * d);
+            // 粒子光束
+            if ((int)(d * 2) % 3 == 0) {
+                sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, pt.x, pt.y, pt.z, 1, 0.05, 0.05, 0.05, 0.0);
+            }
+            if (hit != null) continue;
+            Box box = new Box(pt.x - 0.5, pt.y - 0.5, pt.z - 0.5, pt.x + 0.5, pt.y + 0.5, pt.z + 0.5);
+            List<LivingEntity> near = sw.getEntitiesByClass(LivingEntity.class, box,
+                    e -> e.isAlive() && e != p && !(e instanceof PlayerEntity));
+            if (!near.isEmpty()) hit = near.get(0);
+        }
+
+        if (hit != null) {
+            DamageSource magic = world.getDamageSources().magic();
+            hit.damage(magic, damage);
+            hit.timeUntilRegen = 0;
+            // 命中爆点粒子
+            Vec3d hpos = hit.getPos().add(0, 1.0, 0);
+            sw.spawnParticles(ParticleTypes.SOUL, hpos.x, hpos.y, hpos.z, 12, 0.4, 0.4, 0.4, 0.05);
+            sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, hpos.x, hpos.y, hpos.z, 8, 0.3, 0.3, 0.3, 0.02);
+            world.playSound(null, hit.getBlockPos(), SoundEvents.ENTITY_BLAZE_HURT,
+                    SoundCategory.PLAYERS, 1.0f, 0.7f + charge * 0.5f);
+            p.sendMessage(Text.literal(String.format("魔法弹命中!%.1f伤害 / 耗%.1f血", damage, hpCost))
+                    .formatted(Formatting.LIGHT_PURPLE), true);
+        } else {
+            // 未命中音效
+            world.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_ENDER_PEARL_THROW,
+                    SoundCategory.PLAYERS, 0.6f, 1.2f);
+        }
+    }
+
     @Override
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
         tooltip.add(Text.literal("职业专属 · 【" + playerClass.cn + "】").formatted(Formatting.GOLD));
         tooltip.add(flavor(playerClass).formatted(Formatting.GRAY));
+        if (playerClass == PlayerClass.WARLOCK) {
+            tooltip.add(Text.literal("✦ 右键蓄力吟唱,松手释放魔法弹").formatted(Formatting.LIGHT_PURPLE));
+            tooltip.add(Text.literal("  蓄力越满伤害越高 · 消耗生命施法").formatted(Formatting.DARK_PURPLE));
+        }
         tooltip.add(Text.literal("✦ 手持且本职业生效时强化:").formatted(Formatting.LIGHT_PURPLE));
         tooltip.add(synergy(playerClass).formatted(Formatting.WHITE));
     }

@@ -343,6 +343,11 @@ public class YongyeConfig {
     public double warlockAoeHpCost = 6.0;             // 潜行攻击消耗的生命
     public double warlockAoeRadius = 4.0;
     public double warlockAoeDamage = 8.0;
+    // 术士法术弹(右键蓄力施法)
+    public double warlockBoltDamage   = 18.0;         // 满蓄力魔法弹基础伤害
+    public double warlockBoltHpCost   = 3.0;          // 满蓄力耗血(min蓄=×0.4)
+    public double warlockBoltRange    = 20.0;         // 射线最大射程(格)
+    public int    warlockBoltChargeTicks = 30;        // 满蓄力所需 tick(默认1.5s)
     // 武僧
     public int monkComboWindowTicks = 40;
     public double monkComboBonusPerHit = 1.0;
