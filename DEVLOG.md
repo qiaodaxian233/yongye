@@ -1042,3 +1042,11 @@ m109 build 成功但**启动崩溃**:
 - **成书构造(1.21.1 数据组件)**:`new ItemStack(Items.WRITTEN_BOOK)` + `WRITTEN_BOOK_CONTENT` 组件;`WrittenBookContentComponent(RawFilteredPair<String> 书名, String 作者, int generation=0, List<RawFilteredPair<Text>> 页, boolean resolved=true)`;`RawFilteredPair` 用规范构造器 `new RawFilteredPair<>(raw, Optional.empty())`(无 of() 静态方法)。每页 = 暗红粗体标题 + 空行 + 默认黑正文(父空样式、两子各自带样式,互不串色)。
 - 静态自检:WelcomeBookHandler 花括号 9/9、圆括号 105/105、26 个 page() = 两本各 13 页;`GOT_WELCOME_BOOKS`/`giveWelcomeBooks` 定义↔引用一一对上;主类已注册。
 - **[待编译验证]**(web 查过 yarn 1.21.1 已确认 record 组件名与 RawFilteredPair 规范构造器,但仓库无成书先例):`WrittenBookContentComponent` 五参构造器**参数顺序**(应为 书名/作者/generation/页/resolved);若 build 报参数不符,核对顺序即可。`DataComponentTypes.WRITTEN_BOOK_CONTENT`、`Items.WRITTEN_BOOK` 为原版稳定符号。其余(Text/MutableText/Formatting/giveItemStack/附件 API)均项目内既有写法。
+
+## 里程碑 123 — 主页全景图 + 清掉并入的怪物皮肤/音效(留长门·HIM)
+应需求:① 用户做了主页全景图,接进去当标题屏背景;② 去除 m63/m64 并入的怪物皮肤+音效,只留长门(佩恩)和 HIM(他们的资源本就在 yongye 命名空间、独立)。
+- **全景图**:gui.zip 内含 6 面立方体全景 panorama_0~5(1024×1025),裁成正方形 1024² 放进 `assets/minecraft/textures/gui/title/background/`(Java 版标题屏全景标准路径,已 web 核实 minecraft.wiki:0-3 横向、4 顶、5 底)。原版标题屏本就渲染这套全景,纯资源覆盖、无 Java 改动即生效。画面是暗蓝末日场景(降临者+暗影军团+闪电),平均亮度约 40/255。
+- **去掉全屏压暗**:m80 的 `TitleScreenMixin` 在 render TAIL 叠了 53% 全屏黑(`0x88000000`)——那是没自定义全景时做的;用户全景本身够暗,再叠会压成死黑。删掉那行全屏 fill(连带去掉不再用的 `h` 变量);保留顶部不透明横幅(盖原版 MINECRAFT logo)+「永夜」血红大字+副标题。现在全景完整显示在标题下方。
+- **清资源**:删 `assets/minecraft/textures/entity/`(217 个并入的原版怪物替换皮肤)+ `assets/minecraft/sounds/`(784 个并入音效)。长门/HIM 不受影响——皮肤由 `client/EliteSkinFeatureRenderer` 按自定义名叠加 `yongye:textures/entity/pain_boss.png`·`him.png`,音效注册在 `assets/yongye/sounds.json`(pain_bgm/almighty_push/universal_pull/planetary + him_jumpscare),全在 yongye 命名空间,独立于被删的 minecraft 包。精英皮肤(elite_* 同在 yongye)一并保留。
+- **保留(非"怪物皮肤/音效")**:`assets/minecraft/textures/environment/`(m78 红月 moon_phases.png + 绿雨 rain.png)、`assets/minecraft/texts/splashes.txt`(m79 splash)。如果这些也想去掉,说一声。
+- jar 体积大幅减小(少 ~1001 个资源)。无新增/删除 Java 文件(仅改 TitleScreenMixin);无编译风险(全景为标准路径资源,删的是路径覆盖资源、无代码引用)。

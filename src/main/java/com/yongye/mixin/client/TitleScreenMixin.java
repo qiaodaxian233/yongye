@@ -30,10 +30,10 @@ public class TitleScreenMixin {
     private void yongye$darkTitle(DrawContext ctx, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         MinecraftClient mc = MinecraftClient.getInstance();
         int w = ctx.getScaledWindowWidth();
-        int h = ctx.getScaledWindowHeight();
 
-        // 1. 全屏压暗:整体暗黑末日氛围(比上版更暗)
-        ctx.fill(0, 0, w, h, 0x88000000);
+        // 1. (m123 改)不再全屏压暗:用户已做暗黑全景图作主页背景,再叠 53% 黑会把全景压成死黑。
+        //    全景本身平均亮度仅约 40/255,足够暗;原版按钮自带半透底+白字,直接铺在全景上仍清晰可读。
+        //    如需为按钮区再加一点可读性,可在底部叠一条很淡的渐变,这里先全去掉。
 
         // 2. 顶部横幅:完全不透明,彻底盖死原版 MINECRAFT logo(上版半透明导致 logo 透出来很乱)
         int bannerH = 80;
