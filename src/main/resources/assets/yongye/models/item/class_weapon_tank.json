@@ -1,6 +1,52 @@
 {
-  "parent": "minecraft:item/handheld",
-  "textures": {
-    "layer0": "yongye:item/class_weapon_tank"
+  "comment": "镇魂(坦克重武器)立体化,沿用现有32x32贴图",
+  "textures": { "layer0": "yongye:item/class_weapon_tank" },
+  "elements": [
+    {
+      "comment": "厚重刃身(宽刃)",
+      "from": [6.5, 5, 7],
+      "to":   [9.5, 25, 9],
+      "faces": {
+        "north": {"uv": [12, 1, 20, 21], "texture": "#layer0"},
+        "south": {"uv": [12, 1, 20, 21], "texture": "#layer0"},
+        "east":  {"uv": [14, 1, 16, 21], "texture": "#layer0"},
+        "west":  {"uv": [14, 1, 16, 21], "texture": "#layer0"},
+        "up":    {"uv": [12, 1, 20, 3], "texture": "#layer0"}
+      }
+    },
+    {
+      "comment": "护手(宽)",
+      "from": [4.5, 3, 6.5],
+      "to":   [11.5, 5, 9.5],
+      "faces": {
+        "north": {"uv": [6, 21, 26, 24], "texture": "#layer0"},
+        "south": {"uv": [6, 21, 26, 24], "texture": "#layer0"},
+        "east":  {"uv": [6, 21, 9, 24], "texture": "#layer0"},
+        "west":  {"uv": [23, 21, 26, 24], "texture": "#layer0"},
+        "up":    {"uv": [6, 21, 26, 22], "texture": "#layer0"},
+        "down":  {"uv": [6, 23, 26, 24], "texture": "#layer0"}
+      }
+    },
+    {
+      "comment": "握柄",
+      "from": [7, 0, 7],
+      "to":   [9, 3, 9],
+      "faces": {
+        "north": {"uv": [13, 25, 19, 31], "texture": "#layer0"},
+        "south": {"uv": [13, 25, 19, 31], "texture": "#layer0"},
+        "east":  {"uv": [13, 25, 19, 31], "texture": "#layer0"},
+        "west":  {"uv": [13, 25, 19, 31], "texture": "#layer0"},
+        "down":  {"uv": [13, 30, 19, 31], "texture": "#layer0"}
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": { "rotation": [0, -90, 55], "translation": [0, 4, 1], "scale": [0.85, 0.85, 0.85] },
+    "thirdperson_lefthand":  { "rotation": [0, 90, -55], "translation": [0, 4, 1], "scale": [0.85, 0.85, 0.85] },
+    "firstperson_righthand": { "rotation": [0, -90, 25], "translation": [0, 4, 1], "scale": [0.9, 0.9, 0.9] },
+    "firstperson_lefthand":  { "rotation": [0, 90, -25], "translation": [0, 4, 1], "scale": [0.9, 0.9, 0.9] },
+    "gui":    { "rotation": [0, 0, 45], "translation": [0, 1, 0], "scale": [0.65, 0.65, 0.65] },
+    "ground": { "translation": [0, 2, 0], "scale": [0.35, 0.35, 0.35] },
+    "fixed":  { "rotation": [0, 180, 0], "scale": [0.8, 0.8, 0.8] }
   }
 }

@@ -1,6 +1,51 @@
 {
-  "parent": "minecraft:item/handheld",
-  "textures": {
-    "layer0": "yongye:item/class_weapon_monk"
+  "textures": { "layer0": "yongye:item/class_weapon_monk" },
+  "elements": [
+    {
+      "comment": "护手主体(扁平贴手背)",
+      "from": [4, 4, 6.5],
+      "to":   [12, 14, 9.5],
+      "faces": {
+        "north": {"uv": [8, 8, 24, 28], "texture": "#layer0"},
+        "south": {"uv": [8, 8, 24, 28], "texture": "#layer0"},
+        "east":  {"uv": [8, 8, 11, 28], "texture": "#layer0"},
+        "west":  {"uv": [21, 8, 24, 28], "texture": "#layer0"},
+        "up":    {"uv": [8, 8, 24, 11], "texture": "#layer0"},
+        "down":  {"uv": [8, 25, 24, 28], "texture": "#layer0"}
+      }
+    },
+    {
+      "comment": "指节护甲(凸起一排)",
+      "from": [4, 12, 6],
+      "to":   [12, 15, 10],
+      "faces": {
+        "north": {"uv": [8, 6, 24, 10], "texture": "#layer0"},
+        "south": {"uv": [8, 6, 24, 10], "texture": "#layer0"},
+        "east":  {"uv": [8, 6, 11, 10], "texture": "#layer0"},
+        "west":  {"uv": [21, 6, 24, 10], "texture": "#layer0"},
+        "up":    {"uv": [8, 6, 24, 8], "texture": "#layer0"}
+      }
+    },
+    {
+      "comment": "腕甲",
+      "from": [5, 0, 6.5],
+      "to":   [11, 4, 9.5],
+      "faces": {
+        "north": {"uv": [10, 22, 22, 27], "texture": "#layer0"},
+        "south": {"uv": [10, 22, 22, 27], "texture": "#layer0"},
+        "east":  {"uv": [10, 22, 13, 27], "texture": "#layer0"},
+        "west":  {"uv": [19, 22, 22, 27], "texture": "#layer0"},
+        "down":  {"uv": [10, 26, 22, 27], "texture": "#layer0"}
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": { "rotation": [0, 0, 0], "translation": [0, 2, 1], "scale": [0.6, 0.6, 0.6] },
+    "thirdperson_lefthand":  { "rotation": [0, 0, 0], "translation": [0, 2, 1], "scale": [0.6, 0.6, 0.6] },
+    "firstperson_righthand": { "rotation": [0, 0, 0], "translation": [0, 1, 0], "scale": [0.7, 0.7, 0.7] },
+    "firstperson_lefthand":  { "rotation": [0, 0, 0], "translation": [0, 1, 0], "scale": [0.7, 0.7, 0.7] },
+    "gui":    { "rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1.0, 1.0, 1.0] },
+    "ground": { "translation": [0, 2, 0], "scale": [0.4, 0.4, 0.4] },
+    "fixed":  { "rotation": [0, 180, 0], "scale": [0.8, 0.8, 0.8] }
   }
 }

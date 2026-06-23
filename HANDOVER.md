@@ -39,7 +39,7 @@
 
 ---
 
-## 0.5 当前状态(截至 **m93**:m65 本地 **build 通过 ✅**,m66-90 已 push **待实机验证**;待验证接口 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis / m86 TextFieldWidget六参构造 · m90 守护书改GUI+精英必爆套餐(界面API全有先例,无新版本敏感点) · m93 RPG血条+六职业MP条(新增MpSyncPayload,ClassSkillHandler加MP状态计算,HudCompactMixin重写)(待编译验证:getMaxUseTime/usageTick/onStoppedUsing签名) · 本段最新,优先看)
+## 0.5 当前状态(截至 **m94**:m65 本地 **build 通过 ✅**,m66-90 已 push **待实机验证**;待验证接口 m72 UnbreakableComponent / m75 HudRenderCallback / m78 红月alpha / m79-80 TitleScreen渲染 / m81 Title包·RotationAxis / m86 TextFieldWidget六参构造 · m90 守护书改GUI+精英必爆套餐(界面API全有先例,无新版本敏感点) · m94 全武器3D模型重做(法杖照参考图/锤雷神化/拳套贴手/剑立体/盾朝向修正)+HUD整合饥饿(待编译验证:renderFood方法名)(待编译验证:getMaxUseTime/usageTick/onStoppedUsing签名) · 本段最新,优先看)
 
 **最近几轮做的(均已 push,但用户大概率还没在游戏里实测)**:
 - **m52** 天赋树 GUI:背包「天赋」按钮 → `client/TalentScreen`,逐职业展示 5 节点、点击加点(C2S `TalentLearnPayload`→`TalentManager.learn` 校验→S2C `TalentSyncPayload` 即时刷新);新增 `TalentManager.NodeView/treeView`(只读暴露)、`client/ClientTalents`、`YongyeNet.sendTalents`(登录/发点/加点推送)。**+** Boss 必掉 1 把随机职业武器、精英 `classWeaponDropChanceElite`(默认 4%)概率掉。
