@@ -48,11 +48,11 @@ public class ClassWeaponItem extends Item {
         this.playerClass = playerClass;
     }
 
-    /** 像剑一样快速破坏蜘蛛网(自定义武器默认是 Item,没有这个加成,会破不动)。待编译验证:1.21.1 方法签名。 */
+    /** 像剑一样快速破坏蜘蛛网(自定义武器默认是 Item,没有这个加成,会破不动)。1.21.x 重命名为 getMiningSpeed(已核实 yarn 1.21.1)。 */
     @Override
-    public float getMiningSpeedMultiplier(ItemStack stack, BlockState state) {
+    public float getMiningSpeed(ItemStack stack, BlockState state) {
         if (state.isOf(Blocks.COBWEB)) return 15.0F;
-        return super.getMiningSpeedMultiplier(stack, state);
+        return super.getMiningSpeed(stack, state);
     }
 
     /** 主手持有该职业专属武器? */

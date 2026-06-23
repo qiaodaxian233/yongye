@@ -25,11 +25,11 @@ public class ChaosBladeItem extends Item {
         super(settings);
     }
 
-    /** 像剑一样快速破坏蜘蛛网。待编译验证:1.21.1 方法签名。 */
+    /** 像剑一样快速破坏蜘蛛网。1.21.x 把 1.20 的 getMiningSpeedMultiplier 重命名为 getMiningSpeed(已核实 yarn 1.21.1)。 */
     @Override
-    public float getMiningSpeedMultiplier(ItemStack stack, BlockState state) {
+    public float getMiningSpeed(ItemStack stack, BlockState state) {
         if (state.isOf(Blocks.COBWEB)) return 15.0F;
-        return super.getMiningSpeedMultiplier(stack, state);
+        return super.getMiningSpeed(stack, state);
     }
 
     /** 固定基础属性:攻击力约 +30,攻速较快。用基础修饰符 ID 让 tooltip 显示为总值。 */

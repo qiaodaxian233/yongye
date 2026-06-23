@@ -1050,3 +1050,9 @@ m109 build 成功但**启动崩溃**:
 - **清资源**:删 `assets/minecraft/textures/entity/`(217 个并入的原版怪物替换皮肤)+ `assets/minecraft/sounds/`(784 个并入音效)。长门/HIM 不受影响——皮肤由 `client/EliteSkinFeatureRenderer` 按自定义名叠加 `yongye:textures/entity/pain_boss.png`·`him.png`,音效注册在 `assets/yongye/sounds.json`(pain_bgm/almighty_push/universal_pull/planetary + him_jumpscare),全在 yongye 命名空间,独立于被删的 minecraft 包。精英皮肤(elite_* 同在 yongye)一并保留。
 - **保留(非"怪物皮肤/音效")**:`assets/minecraft/textures/environment/`(m78 红月 moon_phases.png + 绿雨 rain.png)、`assets/minecraft/texts/splashes.txt`(m79 splash)。如果这些也想去掉,说一声。
 - jar 体积大幅减小(少 ~1001 个资源)。无新增/删除 Java 文件(仅改 TitleScreenMixin);无编译风险(全景为标准路径资源,删的是路径覆盖资源、无代码引用)。
+
+## 里程碑 124 — 热修:破蜘蛛网方法名(m121 build 报错)
+m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultiplier(ItemStack,BlockState)` 在 1.21.1 不存在(build 报"方法不会覆盖超类型的方法"+"找不到符号")——根因:1.21.x 把 1.20 的 `Item.getMiningSpeedMultiplier` **重命名为 `getMiningSpeed(ItemStack,BlockState)`**(挖掘速度默认读 tool 数据组件,该方法仍是 public 可覆盖的扩展点;web 核实 yarn 1.21/1.21.2 Item 均为此名)。
+- 修法:两文件的方法名 + super 调用 `getMiningSpeedMultiplier`→`getMiningSpeed`,逻辑不动(对 COBWEB 返 15.0F,其余 super)。最小改动、复用 1.21.x 正确扩展点,不引入 ToolComponent/RegistryEntryList 等新接口。
+- 静态自检:ChaosBladeItem 5/5·31/31、ClassWeaponItem 35/35·212/212 配平;全仓库无 getMiningSpeedMultiplier 代码残留(仅注释里提及旧名作说明)。
+- 这是 m121 那条"待编译验证 getMiningSpeedMultiplier 签名"的最终落地:已确认正确方法名为 getMiningSpeed。
