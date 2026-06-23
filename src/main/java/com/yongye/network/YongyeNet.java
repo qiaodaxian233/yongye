@@ -47,6 +47,7 @@ public final class YongyeNet {
         PayloadTypeRegistry.playS2C().register(com.yongye.network.TalentSyncPayload.ID, com.yongye.network.TalentSyncPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.NightfallSyncPayload.ID, com.yongye.network.NightfallSyncPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.CoreLocatorPayload.ID, com.yongye.network.CoreLocatorPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.MpSyncPayload.ID, com.yongye.network.MpSyncPayload.CODEC);
         // 爆率编辑器:C2S 请求当前值 → S2C 回传(key=value 多行)
         PayloadTypeRegistry.playC2S().register(com.yongye.network.RequestConfigPayload.ID, com.yongye.network.RequestConfigPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.ConfigValuesPayload.ID, com.yongye.network.ConfigValuesPayload.CODEC);

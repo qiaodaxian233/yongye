@@ -79,6 +79,10 @@ public class YongyeClient implements ClientModInitializer {
                     nightfallVision = payload.vision();
                 }));
 
+        // MP 同步:职业资源条(每10tick)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.MpSyncPayload.ID, (payload, context) ->
+                context.client().execute(() -> ClientStats.mp = payload.mp()));
+
         // 灾厄核心定位器同步:更新方向箭头目标
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.CoreLocatorPayload.ID, (payload, context) ->
                 context.client().execute(() -> {

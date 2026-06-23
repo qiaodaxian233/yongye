@@ -51,6 +51,53 @@ public final class ClassSkillHandler {
     private static final Map<UUID, Long> comboUntil = new HashMap<>();
     private static final Map<UUID, Long> lastCombat = new HashMap<>();
 
+    // ===== 职业资源(MP)计算用状态 =====
+    /** 战士:当前怒气 0.0~1.0(受伤涨、不战斗衰减) */
+    private static final Map<UUID, Float> warriorRage = new HashMap<>();
+    /** 剑客:当前剑气层数(每次命中+1,最大10层) */
+    private static final Map<UUID, Integer> swordsmanEdge = new HashMap<>();
+    /** 肉盾:上次移动的 tick 时刻(静止越久坚守越高) */
+    private static final Map<UUID, Long> tankLastMove = new HashMap<>();
+    /** 肉盾:上次记录的位置(用于判断是否移动) */
+    private static final Map<UUID, net.minecraft.util.math.Vec3d> tankLastPos = new HashMap<>();
+    /** 刺客:上次受伤的 tick 时刻(脱战时间决定暗能) */
+    private static final Map<UUID, Long> assassinLastHit = new HashMap<>();
+
+    /** 给 YongyeNet 读取各职业 MP 值(0.0~1.0) */
+    public static float getMp(net.minecraft.server.network.ServerPlayerEntity p, PlayerClass cls) {
+        if (cls == null) return 0f;
+        UUID id = p.getUuid();
+        long now = p.getServerWorld().getTime();
+        return switch (cls) {
+            case WARLOCK -> {
+                // 灵力 = 当前血/最大血(实时反映,施法耗血即掉条)
+                float ratio = p.getHealth() / Math.max(1f, p.getMaxHealth());
+                yield Math.max(0f, Math.min(1f, ratio));
+            }
+            case WARRIOR -> warriorRage.getOrDefault(id, 0f);
+            case ASSASSIN -> {
+                // 暗能 = 脱战时间,脱战10s(200tick)满格
+                long last = assassinLastHit.getOrDefault(id, 0L);
+                float ticks = now - last;
+                yield Math.max(0f, Math.min(1f, ticks / 200f));
+            }
+            case SWORDSMAN -> {
+                int edge = swordsmanEdge.getOrDefault(id, 0);
+                yield Math.max(0f, Math.min(1f, edge / 10f));
+            }
+            case TANK -> {
+                // 坚守 = 静止时间,静止5s(100tick)满格
+                long lastMove = tankLastMove.getOrDefault(id, now);
+                float ticks = now - lastMove;
+                yield Math.max(0f, Math.min(1f, ticks / 100f));
+            }
+            case MONK -> {
+                int combo = comboCount.getOrDefault(id, 0);
+                yield Math.max(0f, Math.min(1f, combo / 10f));
+            }
+        };
+    }
+
     private static boolean isBossLike(LivingEntity e) {
         return e.getAttachedOrElse(ModAttachments.IS_BOSS, false)
                 || e.getAttachedOrElse(ModAttachments.IS_PAIN, false);
@@ -82,6 +129,16 @@ public final class ClassSkillHandler {
             boolean charged = p.getAttackCooldownProgress(0.5f) >= 0.9f;
             DamageSource atkSrc = world.getDamageSources().playerAttack(p);
             boolean empty = p.getMainHandStack().isEmpty();
+
+            // ===== MP 状态更新:命中触发 =====
+            // 剑客剑气:每次命中+1层,最多10层
+            if (ClassManager.isActive(p, PlayerClass.SWORDSMAN)) {
+                swordsmanEdge.merge(p.getUuid(), 1, (a, b) -> Math.min(10, a + b));
+            }
+            // 刺客命中=进入战斗,重置暗能计时
+            if (ClassManager.isActive(p, PlayerClass.ASSASSIN)) {
+                assassinLastHit.put(p.getUuid(), world.getTime());
+            }
 
             // 战士:吸血 + 斩杀
             if (charged && ClassManager.isActive(p, PlayerClass.WARRIOR)) {
@@ -211,6 +268,15 @@ public final class ClassSkillHandler {
             if (source.getAttacker() == null) return true; // 仅闪避/格挡来自实体的攻击
 
             lastCombat.put(p.getUuid(), p.getWorld().getTime());
+            // 战士受伤:怒气+0.15(受重伤更多,最多+0.3)
+            if (ClassManager.isActive(p, PlayerClass.WARRIOR)) {
+                float gain = Math.min(0.30f, 0.15f + amount / 100f);
+                warriorRage.merge(p.getUuid(), gain, (a, b) -> Math.min(1f, a + b));
+            }
+            // 刺客受伤:重置暗能计时
+            if (ClassManager.isActive(p, PlayerClass.ASSASSIN)) {
+                assassinLastHit.put(p.getUuid(), p.getWorld().getTime());
+            }
 
             // 坦克:持磐盾格挡被近战命中 → 反震(不否决,叠在原版格挡减伤之上)
             if (p.isBlocking() && ClassManager.isActive(p, PlayerClass.TANK)
@@ -273,6 +339,39 @@ public final class ClassSkillHandler {
                         mob.setTarget(p);
                     }
                 }
+                // ===== 战士怒气衰减(每tick -0.003,约6s不战斗清空) =====
+                if (ClassManager.isActive(p, PlayerClass.WARRIOR)) {
+                    UUID wid = p.getUuid();
+                    long lastFight = lastCombat.getOrDefault(wid, 0L);
+                    long wtime = p.getServerWorld().getTime();
+                    if (wtime - lastFight > 40) { // 2s无战斗才衰减
+                        warriorRage.compute(wid, (k, v) -> Math.max(0f, (v == null ? 0f : v) - 0.003f));
+                    }
+                }
+                // ===== 肉盾坚守:检测是否移动 =====
+                if (ClassManager.isActive(p, PlayerClass.TANK)) {
+                    UUID tid = p.getUuid();
+                    net.minecraft.util.math.Vec3d cur = p.getPos();
+                    net.minecraft.util.math.Vec3d last = tankLastPos.get(tid);
+                    if (last == null || cur.squaredDistanceTo(last) > 0.01) {
+                        // 移动了:重置静止计时
+                        tankLastMove.put(tid, p.getServerWorld().getTime());
+                        tankLastPos.put(tid, cur);
+                    }
+                }
+                // ===== 每10tick向客户端同步MP =====
+                if (server.getTicks() % 10 == 0) {
+                    java.util.List<String> cls = com.yongye.system.ClassManager.learnedList(p);
+                    if (!cls.isEmpty()) {
+                        com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(cls.get(0));
+                        if (pc != null) {
+                            float mp = getMp(p, pc);
+                            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                                    new com.yongye.network.MpSyncPayload(mp));
+                        }
+                    }
+                }
+
                 // 刺客脱战加速:离开战斗一段时间后获得迅捷
                 if (server.getTicks() % 20 == 0 && ClassManager.isActive(p, PlayerClass.ASSASSIN)) {
                     long last = lastCombat.getOrDefault(p.getUuid(), 0L);
