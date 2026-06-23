@@ -71,6 +71,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.ProgressionManager.register();
         com.yongye.system.ClassManager.register();
         com.yongye.system.MonkSystem.register();
+        com.yongye.system.AntiCheeseHandler.register();
         com.yongye.system.TalentManager.register();
         com.yongye.system.ClassSkillHandler.register();
         MobEnhancementHandler.register();

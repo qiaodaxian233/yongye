@@ -325,8 +325,7 @@ public final class ClassSkillHandler {
                 // 坦克护盾(吸收)每秒续命;手持镇魂 +1 级,副手磐盾再 +1 级
                 if (server.getTicks() % 20 == 0 && ClassManager.isActive(p, PlayerClass.TANK)) {
                     int amp = Math.max(0, cfg.tankShieldAmplifier)
-                            + (ClassWeaponItem.held(p, PlayerClass.TANK) ? 1 : 0)
-                            + (p.getOffHandStack().getItem() instanceof com.yongye.item.TankShieldItem ? 1 : 0);
+                            + (ClassWeaponItem.held(p, PlayerClass.TANK) ? 1 : 0);
                     p.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 60,
                             amp, true, false, false));
                 }

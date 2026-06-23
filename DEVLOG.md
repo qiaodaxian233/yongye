@@ -962,3 +962,13 @@ m109 build 成功但**启动崩溃**:
 - require=0 兜底(renderStatusBars 名若不符则不接管,不崩)。
 - 静态自检 27/27 配平。
 - **[待编译验证]**:renderStatusBars 方法名/签名(DrawContext 单参,1.21.1 InGameHud);若报找不到,贴 InGameHud 实际名。
+
+## 里程碑 114 — 检查肉盾回血(无bug)+ 反苟机制(泡水/虚空/龟缩)
+**肉盾回血检查结论**:坦克无"回血"功能,只有"回护盾(吸收)"——每20tick加吸收效果,逻辑正常无bug。发现并清理 m104 取消磐盾后遗留的死代码(副手磐盾+1级判断,永远false)。
+
+**反苟机制(新 AntiCheeseHandler)**——破解三种龟缩流,每20tick检测:
+- ① **泡水苟**:玩家泡水累计超 antiCheeseWaterSeconds(默认8s)→ 召2只守护者(Guardian)追杀+持续扣血;每10s补一波。
+- ② **虚空/搭方块苟**:站在孤立平台(脚下有支撑但周围8格≥6格下方悬空4格)超 antiCheeseAirborneSeconds(默认10s)→ 召3只幻翼(Phantom)空袭+扣血。
+- ③ **龟缩通用扣血**:进入苟态超宽限期(antiCheeseGraceSeconds默认6s)→ 持续扣血=固定点(4/s)+最大生命比例(2%/s,应对高血量苟),setHealth直接削(真伤逼出),下限留1不致死。
+- 配置:enableAntiCheese 总开关 + 各阈值/扣血量可调。创造/旁观豁免。
+- **[待编译验证]**:GuardianEntity/PhantomEntity 构造(EntityType,World);isSubmergedInWater();refreshPositionAndAngles(x,y,z,yaw,pitch);setTarget(ServerPlayerEntity)。均常见 API 但仓库无精确先例,若 build 报错贴出。

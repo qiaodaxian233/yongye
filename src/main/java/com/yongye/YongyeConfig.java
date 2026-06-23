@@ -332,6 +332,13 @@ public class YongyeConfig {
     public int tankShieldAmplifier = 1;               // 吸收等级(0=吸收I=4心)
     public double tankShieldReflect = 4.0;            // 持磐盾格挡时的反震伤害
     public double tankTrueDamageReduction = 0.15;     // 坦克真·百分比减伤(0~0.9;0=关。经 LivingEntity mixin 削减最终伤害)
+    // —— 反苟机制(破解泡水/虚空搭方块/远程龟缩) ——
+    public boolean enableAntiCheese = true;
+    public int antiCheeseWaterSeconds = 8;            // 泡水超此秒数 → 召唤守护者追杀
+    public int antiCheeseAirborneSeconds = 10;        // 长时间悬空(搭方块龟缩)超此秒数 → 召飞行怪
+    public int antiCheeseGraceSeconds = 6;            // 进入苟态后多少秒宽限,超过才开始持续扣血
+    public double antiCheeseDrainPerSecond = 4.0;     // 龟缩持续扣血(点/秒,按比例叠加最大生命)
+    public double antiCheeseDrainMaxHpFraction = 0.02;// 额外按最大生命比例扣(应对高血量苟),每秒
     // 刺客
     public double assassinBackstabBonus = 4.0;
     public double assassinDodgeChance = 0.20;
