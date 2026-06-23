@@ -918,3 +918,15 @@ m108 build 失败两点:
   - 去掉 emitGameEvent 调用(仅触发滑翔音效,非必需),省去 RegistryEntry 类型麻烦。
 - 静态自检 8/8·43/43,代码体仅用已 shadow 的 getFlag/setFlag。
 - **[待编译验证]**:@Shadow 方法可见性需与 Entity 实际一致(getFlag/setFlag 在 Entity 是 protected,abstract 声明用 public 应兼容或需调;若报错改 protected);Entity 构造签名 (EntityType<?>,World) 据 1.21.1。
+
+## 里程碑 110 — 修 m109 启动崩溃(@Shadow 找不到父类方法 → 改用 @Invoker)
+m109 build 成功但**启动崩溃**:
+`InvalidMixinException: @Shadow method method_5795(I)Z ... was not located in target class class_1309`
+(method_5795=getFlag,class_1309=LivingEntity)。
+**根因**:getFlag/setFlag 定义在 Entity(class_1297),不在 LivingEntity。@Shadow 运行时严格在 @Mixin 指定的目标类里查找、**不沿继承链**(即使 mixin 类 extends Entity 也不行)——m109 那两个编译警告"Cannot find target"就是预警,误判为无害。
+**修**:
+- 新建 `EntityFlagInvoker`(@Mixin(Entity.class) interface + @Invoker)暴露 getFlag/setFlag——accessor 的目标类必须是方法真实所在的 Entity。
+- AccessoryGliderMixin 去掉 @Shadow/extends Entity,把 this 转成 EntityFlagInvoker 调 yongye$getFlag/setFlag。
+- 注册 EntityFlagInvoker 到 yongye.mixins.json。
+- 静态自检配平。
+- **教训**:@Shadow 目标方法必须真实存在于 @Mixin 目标类本身,父类方法须用指向父类的独立 accessor。编译期"Cannot find target"警告即运行时崩溃前兆,不可忽略。

@@ -7,7 +7,8 @@
     "ClampedEntityAttributeAccessor",
     "MiningSpeedMixin",
     "TankDefenseMixin",
-    "AccessoryGliderMixin"
+    "AccessoryGliderMixin",
+    "EntityFlagInvoker"
   ],
   "client": [
     "client.HudCompactMixin",
