@@ -339,6 +339,9 @@ public class YongyeConfig {
     public int antiCheeseGraceSeconds = 6;            // 进入苟态后多少秒宽限,超过才开始持续扣血
     public double antiCheeseDrainPerSecond = 4.0;     // 龟缩持续扣血(点/秒,按比例叠加最大生命)
     public double antiCheeseDrainMaxHpFraction = 0.02;// 额外按最大生命比例扣(应对高血量苟),每秒
+    public boolean antiCheeseBreakRoof = true;        // 头顶有方块龟缩 → 破开顶盖(让空袭俯冲)
+    public int antiCheeseRoofBreakHeight = 4;         // 向上破几格顶盖
+    public boolean antiCheeseSummonEnderman = true;   // 顶盖/封闭龟缩 → 召末影人搬走结构方块
     // 刺客
     public double assassinBackstabBonus = 4.0;
     public double assassinDodgeChance = 0.20;

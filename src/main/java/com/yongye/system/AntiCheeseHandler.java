@@ -4,8 +4,11 @@ import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.GuardianEntity;
 import net.minecraft.entity.mob.PhantomEntity;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -39,6 +42,7 @@ public final class AntiCheeseHandler {
     /** 已对该玩家召过守护者(避免每秒刷) */
     private static final Map<UUID, Long> lastGuardian = new HashMap<>();
     private static final Map<UUID, Long> lastPhantom = new HashMap<>();
+    private static final Map<UUID, Long> lastEnderman = new HashMap<>();
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -85,6 +89,20 @@ public final class AntiCheeseHandler {
                     }
                 } else {
                     airSec.remove(id);
+                }
+
+                // ③ 封顶龟缩:玩家头顶有方块挡住(泡水或悬空已持续一段时间) → 破顶 + 召末影人搬墙
+                boolean cheesing = (inWater && waterSec.getOrDefault(id, 0) >= cfg.antiCheeseWaterSeconds)
+                        || (airborne && airSec.getOrDefault(id, 0) >= cfg.antiCheeseAirborneSeconds);
+                if (cheesing && yongye$hasRoof(p, sw)) {
+                    if (cfg.antiCheeseBreakRoof) yongye$breakRoof(p, sw, cfg.antiCheeseRoofBreakHeight);
+                    if (cfg.antiCheeseSummonEnderman
+                            && now - lastEnderman.getOrDefault(id, -99999L) > 200) {
+                        yongye$summonEnderman(sw, p);
+                        lastEnderman.put(id, now);
+                        p.sendMessage(Text.literal("躲在壳里也没用——它来拆你的墙了!")
+                                .formatted(Formatting.DARK_GRAY), true);
+                    }
                 }
             }
         });
@@ -146,5 +164,46 @@ public final class AntiCheeseHandler {
         }
         sw.spawnParticles(ParticleTypes.SMOKE, p.getX(), p.getY() + 2, p.getZ(), 30, 1, 1, 1, 0.05);
         sw.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_PHANTOM_SWOOP, SoundCategory.HOSTILE, 1f, 0.7f);
+    }
+
+    /** 玩家头顶是否被方块封住(往上 roofHeight 内有非空气方块 = 有顶盖)。 */
+    private static boolean yongye$hasRoof(ServerPlayerEntity p, ServerWorld sw) {
+        BlockPos head = p.getBlockPos().up(2);
+        for (int dy = 0; dy < 4; dy++) {
+            BlockState st = sw.getBlockState(head.up(dy));
+            if (!st.isAir() && st.getFluidState().isEmpty()) return true; // 固体顶盖(水不算)
+        }
+        return false;
+    }
+
+    /** 破开玩家头顶的顶盖(向上 height 格,掉落物保留),让空袭能俯冲进来。 */
+    private static void yongye$breakRoof(ServerPlayerEntity p, ServerWorld sw, int height) {
+        BlockPos base = p.getBlockPos().up(2);
+        for (int dy = 0; dy < height; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    BlockPos pos = base.add(dx, dy, dz);
+                    BlockState st = sw.getBlockState(pos);
+                    // 不破基岩等不可破坏方块(硬度<0);水/空气跳过
+                    if (st.isAir()) continue;
+                    if (st.getHardness(sw, pos) < 0) continue;
+                    sw.breakBlock(pos, true); // true=掉落物
+                }
+            }
+        }
+        sw.spawnParticles(ParticleTypes.CRIT, p.getX(), p.getY() + 3, p.getZ(), 20, 1, 0.5, 1, 0.1);
+    }
+
+    /** 召唤末影人(原版自带搬方块能力,会拆玩家周围结构)。 */
+    private static void yongye$summonEnderman(ServerWorld sw, ServerPlayerEntity p) {
+        for (int i = 0; i < 2; i++) {
+            EndermanEntity e = new EndermanEntity(EntityType.ENDERMAN, sw);
+            Vec3d pos = p.getPos().add((sw.random.nextDouble() - 0.5) * 5, 0, (sw.random.nextDouble() - 0.5) * 5);
+            e.refreshPositionAndAngles(pos.x, pos.y, pos.z, 0, 0);
+            e.setTarget(p);
+            sw.spawnEntity(e);
+        }
+        sw.spawnParticles(ParticleTypes.PORTAL, p.getX(), p.getY() + 1, p.getZ(), 30, 1, 1, 1, 0.3);
+        sw.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_ENDERMAN_STARE, SoundCategory.HOSTILE, 1f, 0.7f);
     }
 }

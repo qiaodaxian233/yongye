@@ -979,3 +979,12 @@ m109 build 成功但**启动崩溃**:
 - 修:武僧两段加前先 `if (getModifier(id) != null) removeModifier(id)` 双保险(对齐 ArtifactManager.applyAttribute 的安全模式)。
 - 注:本崩溃与 m114 反苟无关(幻翼/守护者召唤正常,用户反馈"幻翼来了");是 m103 武僧系统的潜伏 bug 被触发。
 - 静态自检 33/33·210/210。
+
+## 里程碑 116 — 反苟强化:破顶盖 + 召末影人(应对头顶封方块)
+用户反馈:幻翼会来,但玩家头顶放方块就挡住俯冲。需求:① 召会破方块的怪 ② 直接破头顶方块。两个都做。
+- **封顶检测 yongye$hasRoof**:玩家头顶(up2 起)向上4格内有固体方块(水不算)=有顶盖。仅在玩家已处于泡水/悬空苟态时才判,避免正常房顶误触发。
+- **破顶 yongye$breakRoof**:破玩家头顶 3×3×height(默认4)柱状方块,跳过不可破坏(硬度<0如基岩)/空气,保留掉落物。让幻翼空袭俯冲进来。
+- **召末影人 yongye$summonEnderman**:2 只末影人(原版自带搬方块 AI,会拆周围结构),每10s一波。
+- 配置:antiCheeseBreakRoof / antiCheeseRoofBreakHeight / antiCheeseSummonEnderman 可调。
+- 静态自检 33/33·195/195。
+- **[待编译验证]**:EndermanEntity 构造;BlockState.getHardness(world,pos);getFluidState().isEmpty();ServerWorld.breakBlock(pos,boolean) 两参重载(PursuitHandler 用的是三参版)。
