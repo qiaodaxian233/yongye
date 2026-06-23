@@ -124,7 +124,10 @@ public class ClassWeaponItem extends Item {
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         if (playerClass != PlayerClass.WARLOCK) return TypedActionResult.pass(user.getStackInHand(hand));
-        if (!ClassManager.isActive(user, PlayerClass.WARLOCK)) return TypedActionResult.pass(user.getStackInHand(hand));
+        // use() 客户端+服务端均跑;服务端才能检查职业(ServerPlayerEntity),客户端直接放行触发蓄力动画
+        if (!world.isClient && !(user instanceof ServerPlayerEntity sp && ClassManager.isActive(sp, PlayerClass.WARLOCK))) {
+            return TypedActionResult.pass(user.getStackInHand(hand));
+        }
         // setCurrentHand 触发原版使用动作(举杖+进入蓄力)
         user.setCurrentHand(hand);  // 【待编译验证】1.21.1 签名
         return TypedActionResult.consume(user.getStackInHand(hand));
