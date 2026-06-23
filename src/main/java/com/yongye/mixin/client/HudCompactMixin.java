@@ -54,14 +54,13 @@ public class HudCompactMixin {
         int   food  = player.getHungerManager().getFoodLevel();
         float rate  = HealthRateTracker.getRatePerSec();
 
-        // 锚点:上移到物品栏上方更高处,腾出原版食物条空间(整条 HUD 自成一块)
+        // 锚点:物品栏正上方一行,横贯居中
         int left = mc.getWindow().getScaledWidth() / 2 - 91;
-        int top  = mc.getWindow().getScaledHeight() - 52;
+        int top  = mc.getWindow().getScaledHeight() - 50;
 
-        // 底衬
-        int padX = 4, padY = 3;
+        // 底衬:只包住血条+MP条本身(贴合,不留大空框)
         int totalH = BAR_H + GAP + MP_H;
-        ctx.fill(left - padX, top - padY, left + BAR_W + padX, top + totalH + padY, 0xA0000000);
+        ctx.fill(left - 2, top - 2, left + BAR_W + 2, top + totalH + 2, 0xC0000000);
 
         // ===== 血条 =====
         ctx.fill(left, top, left + BAR_W, top + BAR_H, 0xFF3B0000);              // 深红底
@@ -77,13 +76,13 @@ public class HudCompactMixin {
         String hpStr = yongye$num(curHp) + " / " + yongye$num(maxHp)
                 + (absHp >= 0.5f ? "  +" + yongye$num(absHp) : "");
         int tw = tr.getWidth(hpStr);
-        ctx.drawTextWithShadow(tr, Text.literal(hpStr), left + (BAR_W - tw) / 2, top + (BAR_H - 7) / 2, 0xFFFFFFFF);
+        ctx.drawTextWithShadow(tr, Text.literal(hpStr), left + (BAR_W - tw) / 2, top - 1, 0xFFFFFFFF);
 
         // 速率(条左)
         if (Math.abs(rate) >= 0.1f) {
             String rs = yongye$rate(rate);
             int col = rate > 0 ? 0xFF55FF55 : 0xFFFF5555;
-            ctx.drawTextWithShadow(tr, Text.literal(rs), left - tr.getWidth(rs) - 5, top - 5, col);
+            ctx.drawTextWithShadow(tr, Text.literal(rs), left - tr.getWidth(rs) - 5, top - 1, col);
         }
 
         // ===== 血条右侧:护甲 + 饥饿(图标+数字,整合,不再用原版条) =====
