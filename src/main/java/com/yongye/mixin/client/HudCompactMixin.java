@@ -38,16 +38,14 @@ public class HudCompactMixin {
     private static final Identifier ARMOR = Identifier.ofVanilla("hud/armor_full");
     private static final Identifier FOOD  = Identifier.ofVanilla("hud/food_full");
 
-    @Inject(method = "renderHealthBar", at = @At("HEAD"), cancellable = true)
-    private void yongye$renderHealthBar(DrawContext ctx, PlayerEntity player, int x, int y,
-                                        int lines, int regenIdx, float maxHealth,
-                                        int lastHealth, int health, int absorption,
-                                        boolean blinking, CallbackInfo ci) {
+    @Inject(method = "renderStatusBars", at = @At("HEAD"), cancellable = true, require = 0)
+    private void yongye$renderStatusBars(DrawContext ctx, CallbackInfo ci) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        PlayerEntity player = mc.player;
+        if (player == null) return;
         float maxHp = player.getMaxHealth();
         float absHp = player.getAbsorptionAmount();
-        if (maxHp + absHp <= THRESHOLD) return;
-
-        MinecraftClient mc = MinecraftClient.getInstance();
+        if (maxHp + absHp <= THRESHOLD) return;  // 低血量交回原版,不接管
         TextRenderer tr = mc.textRenderer;
 
         float curHp = player.getHealth();

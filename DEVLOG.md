@@ -953,3 +953,12 @@ m109 build 成功但**启动崩溃**:
 - **布局下移**:锚点 top 从 -50 改 -44(整块下移贴近物品栏);底衬扩展包住 等级行+血条+MP条+食物条。
 - 结构(自上而下):等级行 → 血条 → MP条 → 食物条。
 - 静态自检 27/27·134/134。沿用已验证的 fill/drawText API,无新接口。
+
+## 里程碑 113 — 修血条不更新 bug(注入点 renderHealthBar→renderStatusBars)
+用户报:没食物一直掉血(饥饿伤害),但 HUD 血条不掉。
+**根因**:m94 起血条注入 `renderHealthBar` HEAD——该方法被原版 renderStatusBars 调用,但原版有 lastHealth 缓存+心数变化判定,高血量/特定状态下不每帧调 renderHealthBar,导致我的条不重画(画的内容用 player.getHealth() 是对的,但不刷新)。
+**修**:注入点改为 `renderStatusBars`(InGameHud 每帧必调) HEAD:高血量(>THRESHOLD)时画自己的 等级+血+MP+食物条并 cancel 整个原版状态栏;低血量 return 交回原版。这样每帧按实时 getHealth() 重画,血量任何变化立即反映。
+- 副作用:高血量时原版状态栏整体被接管(氧气泡等也不画,但本 mod 高血量 RPG 模式本就自绘 HUD);renderArmor/renderFood 旧注入在高血量时不再被调(冗余无害),低血量时原版正常。
+- require=0 兜底(renderStatusBars 名若不符则不接管,不崩)。
+- 静态自检 27/27 配平。
+- **[待编译验证]**:renderStatusBars 方法名/签名(DrawContext 单参,1.21.1 InGameHud);若报找不到,贴 InGameHud 实际名。
