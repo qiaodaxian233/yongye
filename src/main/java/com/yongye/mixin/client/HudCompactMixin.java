@@ -31,6 +31,7 @@ public class HudCompactMixin {
     private static final int BAR_W = 182;
     private static final int BAR_H = 6;
     private static final int MP_H  = 4;
+    private static final int FOOD_H = 3;
     private static final int GAP   = 2;
 
     private static final Identifier HEART = Identifier.ofVanilla("hud/heart/full");
@@ -54,13 +55,21 @@ public class HudCompactMixin {
         int   food  = player.getHungerManager().getFoodLevel();
         float rate  = HealthRateTracker.getRatePerSec();
 
-        // 锚点:物品栏正上方一行,横贯居中
+        // 锚点:整个 HUD 块下移,贴近物品栏上方
         int left = mc.getWindow().getScaledWidth() / 2 - 91;
-        int top  = mc.getWindow().getScaledHeight() - 50;
+        int top  = mc.getWindow().getScaledHeight() - 44;
 
-        // 底衬:只包住血条+MP条本身(贴合,不留大空框)
-        int totalH = BAR_H + GAP + MP_H;
-        ctx.fill(left - 2, top - 2, left + BAR_W + 2, top + totalH + 2, 0xC0000000);
+        // 底衬:包住 等级行 + 血条 + MP条 + 食物条(贴合)
+        int totalH = BAR_H + GAP + MP_H + GAP + FOOD_H;
+        ctx.fill(left - 2, top - 11, left + BAR_W + 2, top + totalH + 2, 0xC0000000);
+
+        // ===== 等级行(本命职业 Lv.X · 名)在血条正上方 =====
+        String cls0 = ClientStats.className;
+        if (cls0 != null && !cls0.isEmpty()) {
+            int lv = yongye$classLevel(cls0);
+            String lvStr = "Lv." + lv + " " + yongye$classCnName(cls0);
+            ctx.drawTextWithShadow(tr, Text.literal(lvStr), left, top - 10, 0xFFFFD700);
+        }
 
         // ===== 血条 =====
         ctx.fill(left, top, left + BAR_W, top + BAR_H, 0xFF3B0000);              // 深红底
@@ -85,20 +94,25 @@ public class HudCompactMixin {
             ctx.drawTextWithShadow(tr, Text.literal(rs), left - tr.getWidth(rs) - 5, top - 1, col);
         }
 
-        // ===== 血条右侧:护甲 + 饥饿(图标+数字,整合,不再用原版条) =====
+        // 血条右侧:护甲(图标+数字)
         int rx = left + BAR_W + 6;
         if (armor > 0) {
             ctx.drawGuiTexture(ARMOR, rx, top - 1, 8, 8);
             String as = String.valueOf(armor);
             ctx.drawTextWithShadow(tr, Text.literal(as), rx + 10, top, 0xFFB0C4FF);
-            rx += 10 + tr.getWidth(as) + 8;
         }
-        // 饥饿:图标+数字
-        ctx.drawGuiTexture(FOOD, rx, top - 1, 8, 8);
-        ctx.drawTextWithShadow(tr, Text.literal(food + "/20"), rx + 10, top, 0xFFCBA34E);
 
         // ===== MP 条 =====
         yongye$renderMpBar(ctx, tr, left, top + BAR_H + GAP);
+
+        // ===== 食物条(MP 条下方,棕黄色横条) =====
+        int foodTop = top + BAR_H + GAP + MP_H + GAP;
+        ctx.fill(left, foodTop, left + BAR_W, foodTop + FOOD_H, 0xFF2A1A00);      // 深棕底
+        int foodW = (int)(BAR_W * Math.max(0f, Math.min(1f, food / 20f)));
+        ctx.fill(left, foodTop, left + foodW, foodTop + FOOD_H, 0xFFCBA34E);      // 棕黄填充
+        ctx.fill(left, foodTop, left + foodW, foodTop + 1, 0x40FFFFFF);           // 高光
+        ctx.drawGuiTexture(FOOD, left + BAR_W + 6, foodTop - 2, 8, 8);
+        ctx.drawTextWithShadow(tr, Text.literal(food + "/20"), left + BAR_W + 16, foodTop - 1, 0xFFCBA34E);
 
         ci.cancel();
     }
@@ -144,6 +158,30 @@ public class HudCompactMixin {
             case "monk"      -> "拳意";
             default          -> "";
         };
+    }
+
+    /** 职业 id → 中文名(HUD 等级行用)。 */
+    private static String yongye$classCnName(String cls) {
+        return switch (cls) {
+            case "tank"      -> "肉盾";
+            case "warrior"   -> "战士";
+            case "warlock"   -> "术士";
+            case "swordsman" -> "剑客";
+            case "monk"      -> "武僧";
+            case "assassin"  -> "刺客";
+            default          -> "";
+        };
+    }
+
+    /** 本命职业的等级(levels 数组顺序:tank/warrior/warlock/swordsman/monk/assassin)。 */
+    private static int yongye$classLevel(String cls) {
+        int idx = switch (cls) {
+            case "tank" -> 0; case "warrior" -> 1; case "warlock" -> 2;
+            case "swordsman" -> 3; case "monk" -> 4; case "assassin" -> 5;
+            default -> -1;
+        };
+        int[] lv = ClientStats.levels;
+        return (idx >= 0 && idx < lv.length) ? lv[idx] : 0;
     }
 
     private static String yongye$num(float v) { return String.valueOf(Math.round(v)); }
