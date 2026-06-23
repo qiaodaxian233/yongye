@@ -33,12 +33,15 @@ public class ExchangeScreen extends Screen {
     @Override
     protected void init() {
         int cx = this.width / 2;
-        int y0 = this.height / 2 - 46;
+        int y0 = this.height / 2 - 82;
         addRowButtons(cx, y0, 0);
-        addRowButtons(cx, y0 + 36, 1);
-        addRowButtons(cx, y0 + 72, 2);
+        addRowButtons(cx, y0 + 30, 1);
+        addRowButtons(cx, y0 + 60, 2);
+        addRowButtons(cx, y0 + 96, 3);   // 永夜系
+        addRowButtons(cx, y0 + 126, 4);
+        addRowButtons(cx, y0 + 156, 5);
         addDrawableChild(ButtonWidget.builder(Text.literal("关闭"), b -> close())
-                .dimensions(cx - 50, y0 + 116, 100, 20).build());
+                .dimensions(cx - 50, y0 + 190, 100, 20).build());
     }
 
     private void addRowButtons(int cx, int y, int tier) {
@@ -66,15 +69,18 @@ public class ExchangeScreen extends Screen {
         this.renderBackground(ctx, mouseX, mouseY, delta);
         super.render(ctx, mouseX, mouseY, delta);
         int cx = this.width / 2;
-        int y0 = this.height / 2 - 46;
+        int y0 = this.height / 2 - 82;
 
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("◆ 材料兑换(" + RATIO + " 换 1 · 等值)◆").formatted(Formatting.GOLD),
-                cx, y0 - 26, 0xFFFFD700);
+                cx, y0 - 20, 0xFFFFD700);
 
         drawRowLabel(ctx, cx, y0, ModItems.LIFE_SHARD, "生命碎片", "生命结晶");
-        drawRowLabel(ctx, cx, y0 + 36, ModItems.LIFE_CRYSTAL, "生命结晶", "生命核心");
-        drawRowLabel(ctx, cx, y0 + 72, ModItems.LIFE_CORE, "生命核心", "灾变血核");
+        drawRowLabel(ctx, cx, y0 + 30, ModItems.LIFE_CRYSTAL, "生命结晶", "生命核心");
+        drawRowLabel(ctx, cx, y0 + 60, ModItems.LIFE_CORE, "生命核心", "灾变血核");
+        drawRowLabel(ctx, cx, y0 + 96, ModItems.ENDLESS_NIGHT_DUST, "永夜之尘", "裂隙碎片");
+        drawRowLabel(ctx, cx, y0 + 126, ModItems.RIFT_FRAGMENT, "裂隙碎片", "深渊魂晶");
+        drawRowLabel(ctx, cx, y0 + 156, ModItems.ABYSS_SOUL_CRYSTAL, "深渊魂晶", "终焉精华");
     }
 
     private void drawRowLabel(DrawContext ctx, int cx, int y, Item fromItem, String from, String to) {

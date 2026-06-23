@@ -38,7 +38,6 @@ public final class ModItemGroups {
             for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
                 entries.add(ModItems.getClassWeapon(c));
             }
-            entries.add(ModItems.TANK_SHIELD);
             entries.add(ModItems.NIGHT_WING);
             entries.add(HealthSkillBookItem.create(1));
             entries.add(HealthSkillBookItem.create(5));

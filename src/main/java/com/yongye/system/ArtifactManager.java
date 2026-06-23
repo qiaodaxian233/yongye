@@ -39,6 +39,15 @@ public final class ArtifactManager {
 
     private static final Identifier ID_LIFE = Identifier.of(Yongye.MOD_ID, "artifact_life");
     private static final Identifier ID_SPEED = Identifier.of(Yongye.MOD_ID, "artifact_speed");
+    // 铁壁核心:合并原磐盾防御(护甲/韧性/击退/生命),按等级递增(满级≥原磐盾)
+    private static final Identifier ID_IRON_ARMOR = Identifier.of(Yongye.MOD_ID, "artifact_iron_armor");
+    private static final Identifier ID_IRON_TOUGH = Identifier.of(Yongye.MOD_ID, "artifact_iron_tough");
+    private static final Identifier ID_IRON_KBR = Identifier.of(Yongye.MOD_ID, "artifact_iron_kbr");
+    private static final Identifier ID_IRON_HP = Identifier.of(Yongye.MOD_ID, "artifact_iron_hp");
+    private static final double[] IRON_ARMOR = {2, 3, 4, 5, 6, 8};      // 护甲(满级超原盾6)
+    private static final double[] IRON_TOUGH = {1, 2, 2, 3, 4, 5};      // 韧性
+    private static final double[] IRON_KBR   = {0.1, 0.15, 0.2, 0.25, 0.3, 0.4}; // 击退抗性
+    private static final double[] IRON_HP    = {4, 6, 8, 10, 12, 16};   // 生命
 
     private static final double[] LIFE_IDOL_HP = {20, 50, 100, 300, 1000, 5000};
     private static final double[] ESCAPIST_SPEED = {0.05, 0.10, 0.15, 0.20, 0.30, 0.40};
@@ -130,12 +139,20 @@ public final class ArtifactManager {
         applyAttribute(p, EntityAttributes.GENERIC_MOVEMENT_SPEED, ID_SPEED,
                 level(p, ArtifactType.ESCAPIST_BOOTS), ESCAPIST_SPEED, EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
-        // 铁壁核心(近似:抗性)
+        // 铁壁核心(近似:抗性 + 合并原磐盾的护甲/韧性/击退/生命防御)
         int iron = level(p, ArtifactType.IRON_CORE);
         if (iron > 0) {
             p.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 40,
                     IRON_CORE_AMP[iron - 1], true, false, false));
         }
+        applyAttribute(p, EntityAttributes.GENERIC_ARMOR, ID_IRON_ARMOR,
+                iron, IRON_ARMOR, EntityAttributeModifier.Operation.ADD_VALUE);
+        applyAttribute(p, EntityAttributes.GENERIC_ARMOR_TOUGHNESS, ID_IRON_TOUGH,
+                iron, IRON_TOUGH, EntityAttributeModifier.Operation.ADD_VALUE);
+        applyAttribute(p, EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, ID_IRON_KBR,
+                iron, IRON_KBR, EntityAttributeModifier.Operation.ADD_VALUE);
+        applyAttribute(p, EntityAttributes.GENERIC_MAX_HEALTH, ID_IRON_HP,
+                iron, IRON_HP, EntityAttributeModifier.Operation.ADD_VALUE);
 
         // 永夜之眼:永夜期间夜视
         int eye = level(p, ArtifactType.NIGHTFALL_EYE);

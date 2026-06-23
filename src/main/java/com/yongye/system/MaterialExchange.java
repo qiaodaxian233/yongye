@@ -25,6 +25,10 @@ public final class MaterialExchange {
             case 0 -> ModItems.LIFE_SHARD;
             case 1 -> ModItems.LIFE_CRYSTAL;
             case 2 -> ModItems.LIFE_CORE;
+            // 永夜系升级链:尘→裂隙→魂晶→终焉
+            case 3 -> ModItems.ENDLESS_NIGHT_DUST;
+            case 4 -> ModItems.RIFT_FRAGMENT;
+            case 5 -> ModItems.ABYSS_SOUL_CRYSTAL;
             default -> null;
         };
     }
@@ -34,16 +38,27 @@ public final class MaterialExchange {
             case 0 -> ModItems.LIFE_CRYSTAL;
             case 1 -> ModItems.LIFE_CORE;
             case 2 -> ModItems.CATASTROPHE_BLOOD_CORE;
+            case 3 -> ModItems.RIFT_FRAGMENT;
+            case 4 -> ModItems.ABYSS_SOUL_CRYSTAL;
+            case 5 -> ModItems.ENDING_ESSENCE;
             default -> null;
         };
     }
 
     private static String fromName(int tier) {
-        return switch (tier) { case 0 -> "生命碎片"; case 1 -> "生命结晶"; case 2 -> "生命核心"; default -> ""; };
+        return switch (tier) {
+            case 0 -> "生命碎片"; case 1 -> "生命结晶"; case 2 -> "生命核心";
+            case 3 -> "永夜之尘"; case 4 -> "裂隙碎片"; case 5 -> "深渊魂晶";
+            default -> "";
+        };
     }
 
     private static String toName(int tier) {
-        return switch (tier) { case 0 -> "生命结晶"; case 1 -> "生命核心"; case 2 -> "灾变血核"; default -> ""; };
+        return switch (tier) {
+            case 0 -> "生命结晶"; case 1 -> "生命核心"; case 2 -> "灾变血核";
+            case 3 -> "裂隙碎片"; case 4 -> "深渊魂晶"; case 5 -> "终焉精华";
+            default -> "";
+        };
     }
 
     /** 执行兑换。all=false 只换一组(10→1);all=true 把能换的全换掉。 */

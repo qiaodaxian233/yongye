@@ -132,7 +132,6 @@ public class DebugScreen extends Screen {
                     }),
                     new Section("特殊武器", new Btn[]{
                             new Btn("混沌之刃", "yongye chaosblade"),
-                            new Btn("磐盾", "yongye tankshield"),
                     }),
             }),
             // —— 刷怪 / 事件 ——
