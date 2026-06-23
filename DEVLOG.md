@@ -988,3 +988,15 @@ m109 build 成功但**启动崩溃**:
 - 配置:antiCheeseBreakRoof / antiCheeseRoofBreakHeight / antiCheeseSummonEnderman 可调。
 - 静态自检 33/33·195/195。
 - **[待编译验证]**:EndermanEntity 构造;BlockState.getHardness(world,pos);getFluidState().isEmpty();ServerWorld.breakBlock(pos,boolean) 两参重载(PursuitHandler 用的是三参版)。
+
+## 里程碑 117 — 崩溃复查(全安全)+ 怪多自动削减粒子(减卡顿)
+**崩溃复查**:全仓库 9 处 addTemporaryModifier 逐一核查——除 m115 已修的武僧两处,其余(主循环/ArmorHealth/PlayerSkill/HighHpCounter/Talent/SkillEffect)本就先 removeModifier 保护。崩溃隐患已全清,无遗漏同类。待用户 build m115+ 实测确认。
+
+**怪多自动削减粒子(新 ParticleReducerMixin,纯客户端)**:
+- 注入 ParticleManager#addParticle(ParticleEffect,6×double) HEAD。
+- 每次生成粒子前查客户端世界实体数(每500ms缓存,不每粒子遍历):
+  ≤120 不削减;120~400 线性增加丢弃率;≥400 丢弃90%。命中则 setReturnValue(null) 不生成。
+- 平滑降压(非全关,保留观感);实体少时零影响。
+- require=0 兜底(addParticle 重载签名版本敏感)。
+- 静态自检 5/5·27/27;注册 client.ParticleReducerMixin。
+- **[待编译验证]**:ParticleManager#addParticle 重载描述符;mc.world.getEntities() 返回可迭代。

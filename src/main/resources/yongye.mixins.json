@@ -12,7 +12,8 @@
   ],
   "client": [
     "client.HudCompactMixin",
-    "client.TitleScreenMixin"
+    "client.TitleScreenMixin",
+    "client.ParticleReducerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
