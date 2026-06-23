@@ -972,3 +972,10 @@ m109 build 成功但**启动崩溃**:
 - ③ **龟缩通用扣血**:进入苟态超宽限期(antiCheeseGraceSeconds默认6s)→ 持续扣血=固定点(4/s)+最大生命比例(2%/s,应对高血量苟),setHealth直接削(真伤逼出),下限留1不致死。
 - 配置:enableAntiCheese 总开关 + 各阈值/扣血量可调。创造/旁观豁免。
 - **[待编译验证]**:GuardianEntity/PhantomEntity 构造(EntityType,World);isSubmergedInWater();refreshPositionAndAngles(x,y,z,yaw,pitch);setTarget(ServerPlayerEntity)。均常见 API 但仓库无精确先例,若 build 报错贴出。
+
+## 里程碑 115 — 热修服务端崩溃(武僧属性修饰符重复应用)
+崩溃:`IllegalArgumentException: Modifier is already applied on this attribute!` @ ClassManager.applyClasses:175(武僧生命加成 hpInst.addTemporaryModifier(MONK_HP_ID))。
+- 根因:m103 武僧拳击/生命两段直接 addTemporaryModifier,虽函数开头已 removeModifier,但某些时序下(同 tick 重入/实例状态)仍可能撞到已存在的同 ID 修饰符 → addTemporaryModifier 抛异常 → 服务端 tick 循环崩溃。
+- 修:武僧两段加前先 `if (getModifier(id) != null) removeModifier(id)` 双保险(对齐 ArtifactManager.applyAttribute 的安全模式)。
+- 注:本崩溃与 m114 反苟无关(幻翼/守护者召唤正常,用户反馈"幻翼来了");是 m103 武僧系统的潜伏 bug 被触发。
+- 静态自检 33/33·210/210。

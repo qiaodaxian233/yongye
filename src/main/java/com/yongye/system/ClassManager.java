@@ -167,12 +167,18 @@ public final class ClassManager {
         // 武僧:空手时叠加拳击伤害
         if (active.contains(PlayerClass.MONK) && p.getMainHandStack().isEmpty() && atk != null) {
             int bonus = p.getAttachedOrElse(ModAttachments.MONK_FIST_BONUS, 0);
-            if (bonus > 0) atk.addTemporaryModifier(new EntityAttributeModifier(MONK_FIST_ID, bonus, Operation.ADD_VALUE));
+            if (bonus > 0) {
+                if (atk.getModifier(MONK_FIST_ID) != null) atk.removeModifier(MONK_FIST_ID);
+                atk.addTemporaryModifier(new EntityAttributeModifier(MONK_FIST_ID, bonus, Operation.ADD_VALUE));
+            }
         }
         // 武僧:吃材料攒的生命上限(不限空手,越吃越肥一直在)
         if (active.contains(PlayerClass.MONK) && hpInst != null) {
             int hpBonus = p.getAttachedOrElse(ModAttachments.MONK_HP_BONUS, 0);
-            if (hpBonus > 0) hpInst.addTemporaryModifier(new EntityAttributeModifier(MONK_HP_ID, hpBonus, Operation.ADD_VALUE));
+            if (hpBonus > 0) {
+                if (hpInst.getModifier(MONK_HP_ID) != null) hpInst.removeModifier(MONK_HP_ID);
+                hpInst.addTemporaryModifier(new EntityAttributeModifier(MONK_HP_ID, hpBonus, Operation.ADD_VALUE));
+            }
         }
         // 刺客:夜视
         if (active.contains(PlayerClass.ASSASSIN)) {
