@@ -446,6 +446,9 @@ public class YongyeConfig {
     /** 开局赠送的物品 id。默认 Sophisticated Backpacks 的下界合金背包;软依赖:未装该 mod 则自动跳过。 */
     public String startingBackpackItem = "sophisticatedbackpacks:netherite_backpack";
 
+    // ============ 开局两本书(m122:每人首次进入发《永夜·缘起》+《幸存者手册》)============
+    public boolean giveWelcomeBooks = true;
+
     // ============ 高血量反制(文档第 17 章)============
     public boolean enableHighHpCounter = true;
     /** Boss 攻击附加的"最大生命百分比"伤害 */

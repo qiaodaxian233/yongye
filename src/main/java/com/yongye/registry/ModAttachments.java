@@ -168,6 +168,14 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_starting_kit"));
 
+    /** GOT_WELCOME_BOOKS: 是否已领取开局两本书(剧情/手册),每人只发一次(死亡保留,避免重复塞包)。 */
+    public static final AttachmentType<Boolean> GOT_WELCOME_BOOKS =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_welcome_books"));
+
     /** LOST_WEAPON_ENHANCE: 被夺且未找回的武器强化等级(供 /yongye recover 转移到新武器,损失 1/3)。 */
     public static final AttachmentType<Integer> LOST_WEAPON_ENHANCE =
             AttachmentRegistry.<Integer>builder()

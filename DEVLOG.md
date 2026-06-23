@@ -1032,3 +1032,13 @@ m109 build 成功但**启动崩溃**:
 - **Ward 式一键强化(选武器)** → 「强化」按钮改为开新 `EnhanceSelectScreen`(照 WardScreen:扫背包列出所有可强化装备+当前 Lv+可加级数,分页,点哪件强化哪件)→ C2S `EnhanceSelectPayload(slot)` → `EquipmentEnhancer.enhanceFromInventory`:用背包「全部」强化材料(各 数量×单值 之和)给该件加级并扣光材料,服务端权威。新增 `totalMaterialLevels(inv)` 工具。旧的槽位式 EnhanceScreen/Handler/OpenEnhancePayload 保留但不再由按钮触发。
 - 静态自检全配平;调用链闭合;EnhanceSelectScreen 全用 WardScreen 已验证的 API(drawItem/fill/drawTextWithShadow/ButtonWidget/getInventory)。
 - **[待编译验证]**:`Item.getMiningSpeedMultiplier(ItemStack,BlockState)` 1.21.1 方法签名(override)。其余为项目内既有写法。
+
+## 里程碑 122 — 开局两本书(剧情《永夜·缘起》+ 玩法《幸存者手册》)
+应需求:给新出生的玩家发两本成书 —— 一本讲剧情背景,一本讲怎么玩。
+- **新增 `WelcomeBookHandler`**:照 `StartingKitHandler` 范式 —— `ServerPlayConnectionEvents.JOIN` + 持久附件 `GOT_WELCOME_BOOKS`(死亡保留,防重复塞包),每人首次进入发两本 `written_book`。开关配置 `giveWelcomeBooks`(默认 true,可 config set)。
+- **书内容**:
+  - ①《永夜·缘起》13 页:太阳不再升起 / 脉动黑暗 / 世界换主人 / 永夜加深与赎夜 / 长门·佩恩 / 黑暗恨强者的三条规矩(禁疗·缴械·反苟) / 六大本命 / 两种余烬(生命系·永夜系) / 你的处境。取自仓库内剧情设定,与实装机制一一对应。
+  - ②《幸存者手册》13 页:变厚(碎片→结晶/兑换/强化) / 选本命 + 术士蓄力放法术(非近战) / 武僧吃材料 / 第二本命与替换 / 技能书 + 一键学书 / 强化 + 守护书右键开界面 / 神器 + 永夜之翼(鞘翅槽/饰品栏鞘翅格) / 反苟两页(水→守护者·塔→幻翼·封顶→末影人拆墙+持续扣血) / 战利品必爆 + 磁吸 + 定时清理 / 天赋精通 / 撑多久。均按当前实装写,玩家照着就能上手。
+- **成书构造(1.21.1 数据组件)**:`new ItemStack(Items.WRITTEN_BOOK)` + `WRITTEN_BOOK_CONTENT` 组件;`WrittenBookContentComponent(RawFilteredPair<String> 书名, String 作者, int generation=0, List<RawFilteredPair<Text>> 页, boolean resolved=true)`;`RawFilteredPair` 用规范构造器 `new RawFilteredPair<>(raw, Optional.empty())`(无 of() 静态方法)。每页 = 暗红粗体标题 + 空行 + 默认黑正文(父空样式、两子各自带样式,互不串色)。
+- 静态自检:WelcomeBookHandler 花括号 9/9、圆括号 105/105、26 个 page() = 两本各 13 页;`GOT_WELCOME_BOOKS`/`giveWelcomeBooks` 定义↔引用一一对上;主类已注册。
+- **[待编译验证]**(web 查过 yarn 1.21.1 已确认 record 组件名与 RawFilteredPair 规范构造器,但仓库无成书先例):`WrittenBookContentComponent` 五参构造器**参数顺序**(应为 书名/作者/generation/页/resolved);若 build 报参数不符,核对顺序即可。`DataComponentTypes.WRITTEN_BOOK_CONTENT`、`Items.WRITTEN_BOOK` 为原版稳定符号。其余(Text/MutableText/Formatting/giveItemStack/附件 API)均项目内既有写法。
