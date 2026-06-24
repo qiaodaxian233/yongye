@@ -1064,3 +1064,9 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - `TitleScreenMixin`:删掉第 2 段(bannerH + 5 个 ctx.fill 横幅/渐变/红线),保留「永夜」血红大字 + 英文副标(直接浮在全景图上);更新类 Javadoc 记录 m79/m80→m123→m125 演进。
 - 结果:标题屏 = 完整全景图(顶部天空/闪电不再被挡)+「永夜」大字 + 副标 + 按钮,无任何黑红条。
 - 静态自检:mixin 花 2/2·圆 38/38 配平,代码体无 bannerH/ctx.fill 残留(仅注释提及)。无新接口、无版本敏感点(logo 贴图路径 textures/gui/title/minecraft.png·edition.png 已 web 核实)。
+
+## 里程碑 126 — 删除 MiningSpeedMixin + 修「被守卫者杀死后无法重生」崩坏
+两件事一起处理。
+- **① 删除挖矿/砍树减速(应需求)**:`MiningSpeedMixin`(注入 `PlayerEntity#getBlockBreakingSpeed` 对原木/石头/煤铁矿乘 0.3)**整段移除**——删 `mixin/MiningSpeedMixin.java` + 从 `yongye.mixins.json` 的 `mixins` 列表移除条目 + 删掉 `YongyeConfig` 三个只服务于它的死字段(`hcMiningSlowdown`/`hcMiningSpeedMultiplier`/`hcMiningSlowAll`,确认全仓库仅该 mixin 引用)。此后挖掘**恒为原版速度**,不再有任何减速开关。**根因补记**:此前该功能虽代码默认已关(`hcMiningSlowdown=false`),但配置走 GSON 整对象反序列化,旧 `yongye.json`(早期默认 true 时生成)里的 `true` 会盖过代码新默认值,导致玩家挖矿仍慢——彻底删除后免疫该持久化坑。顺手修正 `HardcoreSurvivalHandler`/`TankDefenseMixin` 两处提及已删文件的过时注释。
+- **② 修无法重生(关键崩坏)**:`AntiCheeseHandler` 每秒遍历玩家时**只跳过创造/旁观,漏判已死亡的尸体**。玩家被守护者(反苟·泡水召的)打死后,尸体仍在水里、仍在玩家列表,下一秒被判定「泡水超阈值」→ `yongye$drain` 执行 `setHealth(Math.max(1.0f, 0-dmg))` = **对尸体 setHealth(1.0)**,把「死亡↔重生」状态机搅乱(服务端以为活着、客户端卡死亡界面)→ 点重生无反应;且每 10s 在尸体处反复召守护者。**修法**:循环内 `if (!p.isAlive()) { 清空该玩家 waterSec/airSec/lastGuardian/lastPhantom/lastEnderman; continue; }`——尸体期间绝不处理(不再 setHealth/召怪),并清空其反苟状态,使重生后(哪怕落在水里)重新走完整宽限期,杜绝「重生即被旧累计秒数瞬间二次触发」的死循环。
+- 静态自检:AntiCheeseHandler 花 34/34 配平;`MiningSpeedMixin` 与三个死字段全仓库无代码残留(仅 YongyeConfig 一条说明性注释);`isAlive()` 为 LivingEntity 既有 API。本轮无新接口、无版本敏感点。

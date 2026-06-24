@@ -226,9 +226,7 @@ public class YongyeConfig {
     public double hcCaveDebuffChance = 0.15;
     public boolean hcResourceHarder = true;
     public double hcResourceFatigueChance = 0.5;
-    public boolean hcMiningSlowdown = false;       // 已关闭:不再限制砍树/挖矿速度
-    public double hcMiningSpeedMultiplier = 0.3;   // 挖掘速度系数(0.3≈耗时3.3倍;越小越慢)
-    public boolean hcMiningSlowAll = false;        // true=所有方块减速;false=只木头/石头/矿物
+    // 注:挖矿/砍树减速功能(MiningSpeedMixin)已于 m126 整段移除——挖掘恒为原版速度,不再有任何减速开关。
 
     // ============ 随机掉落(文档 11.2 普通怪概率)============
     public double lootChanceCommon = 0.35;

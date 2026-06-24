@@ -56,6 +56,14 @@ public final class AntiCheeseHandler {
                 if (!(p.getWorld() instanceof ServerWorld sw)) continue;
                 UUID id = p.getUuid();
 
+                // 死亡(尸体未重生)期间绝不处理:否则会对尸体 setHealth(1) 把死亡/重生状态机搅乱→无法重生,
+                // 也不该对尸体召怪。顺手清空该玩家全部反苟状态,使其重生后(哪怕落在水里)重新走完整宽限期。
+                if (!p.isAlive()) {
+                    waterSec.remove(id); airSec.remove(id);
+                    lastGuardian.remove(id); lastPhantom.remove(id); lastEnderman.remove(id);
+                    continue;
+                }
+
                 boolean inWater = p.isTouchingWater() || p.isSubmergedInWater();
                 boolean airborne = yongye$isAirborneCheese(p, sw);
 

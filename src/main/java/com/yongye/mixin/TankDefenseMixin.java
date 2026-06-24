@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  *
  * 安全说明:require = 0 —— 若该方法在本映射里名字/签名不符(沙箱无法编译验证),
  * 此注入器会"找不到目标"而被静默跳过,**不会导致游戏启动崩溃**;届时看日志确认是否挂上即可。
- * 写法严格对齐项目现有的 MiningSpeedMixin(@Inject + RETURN + cancellable + cir.setReturnValue)。
+ * 写法:@Inject + RETURN + cancellable + cir.setReturnValue(标准返回值注入)。
  */
 @Mixin(LivingEntity.class)
 public abstract class TankDefenseMixin {

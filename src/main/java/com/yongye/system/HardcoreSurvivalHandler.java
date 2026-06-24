@@ -112,7 +112,7 @@ public final class HardcoreSurvivalHandler {
             boolean hard = state.isIn(BlockTags.LOGS) || state.isIn(BlockTags.BASE_STONE_OVERWORLD)
                     || state.isIn(BlockTags.COAL_ORES) || state.isIn(BlockTags.IRON_ORES);
             if (!hard) return;
-            // 挖掘减速由 MiningSpeedMixin 处理;这里仅按概率额外扣体力(挖矿很累)
+            // 挖矿很累:按概率额外扣体力(挖掘速度已恒为原版,m126 起不再减速)
             if (sp.getRandom().nextDouble() < cfg.hcResourceFatigueChance) {
                 sp.getHungerManager().addExhaustion(2.0f);
             }

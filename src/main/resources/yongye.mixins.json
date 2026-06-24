@@ -5,7 +5,6 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "ClampedEntityAttributeAccessor",
-    "MiningSpeedMixin",
     "TankDefenseMixin",
     "AccessoryGliderMixin",
     "EntityFlagInvoker"
