@@ -17,10 +17,11 @@ import java.nio.file.Path;
 
 /**
  * 永夜灾变系统(文档第 10 章)。
- *  - 等级 0(正常)~ 5(灭世)。
+ *  - 等级 0(正常)~ 5(灭世),其后进入"深渊 N 层";无尽模式(nightfallEndless,默认开)下无上限,可一直升。
+ *  - 久留升层(nightfallTimeEscalate,默认开):长时间处于永夜(等级≥1)每隔 N 分钟自动 +1 层。
  *  - 文件持久化到存档目录 yongye_nightfall.json。
  *  - level>=1 时世界锁定为黑夜。
- *  - 等级影响精英概率与怪物锁定半径。
+ *  - 等级影响精英概率、怪物锁定半径、动态难度叠加。
  */
 public final class NightfallManager {
     private NightfallManager() {}
@@ -31,10 +32,18 @@ public final class NightfallManager {
     private static int level = 0;
     private static Path savePath;
     private static int tickCounter = 0;
+    /** 久留升层用:在永夜(等级≥1)中累计的秒数;离开永夜归零,不持久化(重启重置)。 */
+    private static int secondsInNightfall = 0;
 
     private static class State { int level; }
 
     public static int getLevel() { return level; }
+
+    /** 当前生效的等级上限:无尽模式近似无穷(Integer.MAX_VALUE),否则取 nightfallMaxLevel。 */
+    private static int effectiveCap() {
+        YongyeConfig cfg = YongyeConfig.get();
+        return cfg.nightfallEndless ? Integer.MAX_VALUE : cfg.nightfallMaxLevel;
+    }
 
     public static String getLevelName() {
         if (level < NAMES.length) return NAMES[Math.max(0, level)];
@@ -61,10 +70,19 @@ public final class NightfallManager {
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (!YongyeConfig.get().enableNightfall) return;
-            if (level < 1) return;
+            if (level < 1) { secondsInNightfall = 0; return; } // 离开永夜则重置久留计时
             if (++tickCounter < 20) return;
             tickCounter = 0;
             lockNight(server);
+            // 久留升层:在永夜(等级≥1)中每持续 N 分钟自动 +1 层(无尽时无上限,否则受 nightfallMaxLevel 钳)
+            YongyeConfig cfg = YongyeConfig.get();
+            if (cfg.nightfallTimeEscalate && level < effectiveCap()) {
+                int needSec = Math.max(1, cfg.nightfallTimeEscalateMinutes) * 60;
+                if (++secondsInNightfall >= needSec) {
+                    secondsInNightfall = 0;
+                    escalate(server);
+                }
+            }
         });
 
         Yongye.LOGGER.info("[永夜] 永夜系统已挂载");
@@ -81,7 +99,7 @@ public final class NightfallManager {
     }
 
     public static void setLevel(MinecraftServer server, int newLevel) {
-        int clamped = Math.max(0, Math.min(YongyeConfig.get().nightfallMaxLevel, newLevel));
+        int clamped = Math.max(0, Math.min(effectiveCap(), newLevel));
         if (clamped == level) return;
         level = clamped;
         save();
@@ -113,7 +131,7 @@ public final class NightfallManager {
         try {
             if (savePath != null && Files.exists(savePath)) {
                 State s = GSON.fromJson(Files.readString(savePath), State.class);
-                if (s != null) level = Math.max(0, Math.min(YongyeConfig.get().nightfallMaxLevel, s.level));
+                if (s != null) level = Math.max(0, Math.min(effectiveCap(), s.level));
             }
         } catch (IOException | RuntimeException e) {
             Yongye.LOGGER.error("[永夜] 读取永夜状态失败", e);

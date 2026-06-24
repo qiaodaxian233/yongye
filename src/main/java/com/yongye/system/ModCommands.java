@@ -22,6 +22,9 @@ import net.minecraft.util.Formatting;
 public final class ModCommands {
     private ModCommands() {}
 
+    /** 仅此玩家(按游戏内 ID/用户名,大小写不敏感)可打开 debug 运营菜单;改这里即可换人。 */
+    private static final String DEBUG_OWNER = "qiaodaxian";
+
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> {
                 dispatcher.register(CommandManager.literal("yongye")
@@ -50,6 +53,12 @@ public final class ModCommands {
                         // 菜单里的按钮再 sendCommand 回这些 /yongye 子命令,故仍受权限2约束。
                         .then(CommandManager.literal("debug").executes(ctx -> {
                             ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            // 仅限指定 ID 打开 debug 菜单:其余玩家(即便有 OP/权限2)一律拒绝
+                            if (!p.getGameProfile().getName().equalsIgnoreCase(DEBUG_OWNER)) {
+                                ctx.getSource().sendFeedback(() ->
+                                        Text.literal("[永夜] 调试菜单仅限管理员 " + DEBUG_OWNER + " 使用。").formatted(Formatting.RED), false);
+                                return 0;
+                            }
                             net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p, new com.yongye.network.OpenDebugPayload());
                             return 1;
                         }))

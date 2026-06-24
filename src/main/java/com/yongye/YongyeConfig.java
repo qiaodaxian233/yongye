@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 2;
+    public static final int CURRENT_CONFIG_VERSION = 3;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -290,6 +290,12 @@ public class YongyeConfig {
     public int nightfallMaxLevel = 99;
     /** 永夜超过 V5 后,每多一级给怪物叠加的最大生命倍率(线性、无额外封顶):V6=+50%、V7=+100%… */
     public double nightfallBeyondHpPerLevel = 2.0;
+    /** 无尽永夜:开启后等级无上限(可一直往上升,深渊层无尽),关闭则仍受 nightfallMaxLevel 钳制。默认开。 */
+    public boolean nightfallEndless = true;
+    /** 久留升层:长时间处于永夜(等级≥1)会自动提升一层。默认开。 */
+    public boolean nightfallTimeEscalate = true;
+    /** 久留升层的间隔(分钟):在永夜中每持续这么久,永夜自动 +1。默认 30。 */
+    public int nightfallTimeEscalateMinutes = 30;
 
     // —— 灾厄核心(文档 9.3 / 第 14、15 章)——
     public boolean enableCatastropheCore = true;

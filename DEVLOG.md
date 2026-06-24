@@ -1084,3 +1084,16 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 新增配置 14 项(动态怪缩放 6 + 动态爆率 5 + configVersion + 祭坛/死亡升永夜 2);MobBoss 基础倍率上调 5 项。新增 2 文件(DynamicScaling、PlayerPower),120 个 Java 文件。
 - 静态自检:10 个改动文件花括号/圆括号全配平;全部新 `cfg.*` 引用 ↔ 定义核对一致;关键 API 走仓库既有用法(`getClosestPlayer(Entity,double)`@MobEnhancement:112、`getAttributeValue`/`getMaxHealth`、`getEquippedStack(EquipmentSlot)`、`EntityAttributeModifier` 三参 + `ADD_MULTIPLIED_TOTAL`、`NightfallManager.escalate`、`ServerLivingEntityEvents.AFTER_DEATH`、`setBlockState` 二参)。
 - **待编译验证**:(1) 原版方块字段 `Blocks.POLISHED_BLACKSTONE_BRICKS`/`CRYING_OBSIDIAN`/`SOUL_LANTERN`(标准块,但本仓库他处未用过);(2) Gson `JsonParser.parseString` + `JsonObject.keySet()`(标准 API,新引入本仓库)。两者均低风险。
+
+## 里程碑 128 — 无尽永夜 + 久留自动升层
+- 需求:永夜深渊要无尽(可一直涨);长时间处于永夜还会自动提升层数。
+- **无尽**:`YongyeConfig` 加 `nightfallEndless`(默认 true)。`NightfallManager` 新增 `effectiveCap()`——无尽时返回 `Integer.MAX_VALUE`(等级实质无上限),关闭则取 `nightfallMaxLevel`(默认 99,给想要有限上限的人保留)。`setLevel` / `load` 的钳制全改用 `effectiveCap()`,所以等级可一直往上叠(深渊 N 层无尽)。`getLevelName()` 对 >5 本就输出「永夜 · 深渊 N 层」,无需改。机制层面 `MobEnhancementHandler` 对 >5 的层用 `(nf-5)×nightfallBeyondHpPerLevel` 线性叠血/攻、`progressionMultiplier` 线性加,精英概率/锁定半径数组高层取末位值——升得越高世界越难,无尽有实际意义。
+- **久留升层**:加 `nightfallTimeEscalate`(默认 true)+ `nightfallTimeEscalateMinutes`(默认 30)。`NightfallManager` 加运行时计数 `secondsInNightfall`,在已有的每秒 tick(等级≥1 才走)里累计,满 N 分钟 `escalate(+1)` 并清零;离开永夜(level<1)立即归零(避免赎夜后马上再触发)。受 `effectiveCap()` 钳制:无尽时一直升,非无尽到顶即停。计数不持久化(重启重置,最多丢 N 分钟进度,可接受)。
+- **避坑**:三个新字段对旧 `yongye.json` 是「缺失键」,GSON 反序列化保留代码初值(true/true/30)——天然绕开「旧值盖新默认」的坑(不像改 `nightfallMaxLevel` 默认值会被旧配置顶掉)。`configVersion` 2→3。
+- 静态自检:NightfallManager 30/30 花括号、102/102 圆括号;YongyeConfig 33/33;`effectiveCap`/`secondsInNightfall`/三新字段定义↔引用一致;NightfallManager 内 `nightfallMaxLevel` 仅剩 `effectiveCap` 内部引用(无遗留直接钳)。本轮只用 `Integer.MAX_VALUE` + 现成 `escalate`/`YongyeConfig.get()`,无新接口、无版本敏感点。
+
+## 里程碑 129 — debug 菜单仅限管理员 ID(qiaodaxian)
+- 需求:`/yongye debug` 只识别我的 ID `qiaodaxian` 才可以打开。
+- `ModCommands` 加常量 `DEBUG_OWNER = "qiaodaxian"`;debug 命令体里取 `p.getGameProfile().getName()`(与本文件 227 行同款用法),`equalsIgnoreCase(DEBUG_OWNER)` 不符则发红字「调试菜单仅限管理员 qiaodaxian 使用」并 `return 0`,不发开屏包。大小写不敏感(MC 用户名全局唯一不区分大小写,既安全又稳),改常量即可换人。
+- **范围说明**:门控的是「打开 debug 菜单」这一步。菜单按钮回发的那些 `/yongye xxx` 子命令仍只受 `requires(hasPermissionLevel(2))` 约束——即便不是 qiaodaxian 的 OP,若手敲原始子命令仍可执行(需知道命令名)。若要把全部子命令也锁到该 ID,下一轮可把 ID 校验提到命令树根的 `requires` 上。
+- 静态自检:ModCommands 77/77 花括号、659/659 圆括号;`DEBUG_OWNER` 定义↔2 处引用一致;`getGameProfile().getName()`/`sendFeedback`/`Text.literal().formatted` 全是本文件既有写法,无新接口、无版本敏感点。
