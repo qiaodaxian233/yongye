@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 3;
+    public static final int CURRENT_CONFIG_VERSION = 4;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -194,6 +194,15 @@ public class YongyeConfig {
     public double skillFinalityDamage = 20.0;
     public double skillFinalityDamagePerLevel = 0.6;
     public double skillFinalityRadius = 9.0;
+
+    // ===== 武器技能升级(m131:用终焉精华升级三大技能,每级加伤+略减冷却)=====
+    public boolean enableWeaponSkillUpgrade = true;
+    public int skillUpgradeMaxLevel = 20;            // 每个技能最高升级等级
+    public int skillUpgradeBaseCost = 1;             // 升到 Lv.1 需要的终焉精华数
+    public int skillUpgradeCostPerLevel = 1;         // 每升一级额外多需的终焉精华数(线性递增)
+    public double skillUpgradeDamagePerLevel = 0.25; // 每级技能 → 该技能伤害额外 +25%(乘在最终伤害上)
+    public int skillUpgradeCdReductionPerLevel = 4;  // 每级技能 → 冷却 -4 tick
+    public int skillUpgradeCdFloor = 40;             // 冷却下限(tick,2s),再升级也不会更短
 
     // ===== 怪物随进度递增(血量/攻击跟着玩家变强) =====
     public boolean enableMobScaling = true;
@@ -412,6 +421,17 @@ public class YongyeConfig {
     // ===== 开局选职(m43)=====
     public boolean enableStartingClassSelect = true;   // 新玩家出生弹出选职界面
     public boolean startingClassGiveWeapon = true;     // 选职附赠该职业专属武器(默认开)
+
+    // ===== 开局难度 + 职业选择书(m130)=====
+    public boolean enableDifficultySelect = true;      // 登录首次弹「难度选择」界面(取代旧的强制选职弹窗)
+    public boolean giveClassSelectBook = true;         // 首次登录发一本「职业选择书」,玩家自行右键选职
+
+    // ===== 武器后期吸血(m130:强化达阈值后,蓄满攻击命中按攻击力比例回血)=====
+    public boolean enableWeaponLifesteal = true;
+    public int weaponLifestealMinLevel = 1000;         // 武器强化达此等级才有吸血
+    public double weaponLifestealBase = 0.1;           // 到达阈值时的吸血比例(0.1=攻击力的10%回血)
+    public double weaponLifestealPerLevel = 0.0001;    // 每超过阈值 1 级,吸血比例 +0.0001(+0.1/千级)
+    public double weaponLifestealMax = 0.5;            // 吸血比例上限(50%)
 
     // ===== 职业大招(m47,主动技能,默认 X 键)=====
     public boolean enableClassUltimate = true;

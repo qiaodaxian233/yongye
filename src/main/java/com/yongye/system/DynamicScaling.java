@@ -40,12 +40,14 @@ public final class DynamicScaling {
 
         double pAtk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
         double pHp  = p.getMaxHealth();
+        // 难度倍率:按最近玩家所选难度放大「对位目标」(只增不减,故低难度≈接近原版,高难度怪物更凶)
+        double diffMult = com.yongye.item.GameDifficulty.mobMultOf(p);
 
-        // —— 血量对位:目标 = 玩家每击攻击 × 期望击杀次数,只增不减 ——
+        // —— 血量对位:目标 = 玩家每击攻击 × 期望击杀次数 × 难度,只增不减 ——
         EntityAttributeInstance hpInst = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
         if (hpInst != null && targetHits > 0 && pAtk > 0) {
             double curHp = hpInst.getValue();
-            double targetHp = pAtk * targetHits;
+            double targetHp = pAtk * targetHits * diffMult;
             if (curHp > 0 && targetHp > curHp) {
                 hpInst.removeModifier(ID_DYN_HP);
                 hpInst.addPersistentModifier(new EntityAttributeModifier(
@@ -53,11 +55,11 @@ public final class DynamicScaling {
             }
         }
 
-        // —— 伤害对位:目标 = 玩家最大生命 ÷ 期望承受次数,只增不减 ——
+        // —— 伤害对位:目标 = 玩家最大生命 ÷ 期望承受次数 × 难度,只增不减 ——
         EntityAttributeInstance atkInst = mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
         if (atkInst != null && surviveHits > 0) {
             double curDmg = atkInst.getValue();
-            double targetDmg = pHp / surviveHits;
+            double targetDmg = (pHp / surviveHits) * diffMult;
             if (curDmg > 0 && targetDmg > curDmg) {
                 atkInst.removeModifier(ID_DYN_ATK);
                 atkInst.addPersistentModifier(new EntityAttributeModifier(

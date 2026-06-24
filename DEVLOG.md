@@ -1097,3 +1097,21 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - `ModCommands` 加常量 `DEBUG_OWNER = "qiaodaxian"`;debug 命令体里取 `p.getGameProfile().getName()`(与本文件 227 行同款用法),`equalsIgnoreCase(DEBUG_OWNER)` 不符则发红字「调试菜单仅限管理员 qiaodaxian 使用」并 `return 0`,不发开屏包。大小写不敏感(MC 用户名全局唯一不区分大小写,既安全又稳),改常量即可换人。
 - **范围说明**:门控的是「打开 debug 菜单」这一步。菜单按钮回发的那些 `/yongye xxx` 子命令仍只受 `requires(hasPermissionLevel(2))` 约束——即便不是 qiaodaxian 的 OP,若手敲原始子命令仍可执行(需知道命令名)。若要把全部子命令也锁到该 ID,下一轮可把 ID 校验提到命令树根的 `requires` 上。
 - 静态自检:ModCommands 77/77 花括号、659/659 圆括号;`DEBUG_OWNER` 定义↔2 处引用一致;`getGameProfile().getName()`/`sendFeedback`/`Text.literal().formatted` 全是本文件既有写法,无新接口、无版本敏感点。
+
+## 里程碑 130 — 开局难度选择 + 职业选择书(取代强制选职弹窗)+ 武器后期吸血
+- 需求:开局不要先弹选职;改为先弹「难度选择」(含游戏介绍),职业改用「职业选择书」之后自选;难度 7 档(游玩/简单/适中/困难/地狱/深渊/永夜);武器强化到 1000+ 出现「0.几」吸血。
+- **难度系统**:新 `GameDifficulty` 枚举 7 档(ordinal 即等级),每档带怪物强度倍率(游玩0.5→永夜6.0)+ 简介 + 配色。倍率作用在 `DynamicScaling` 的「对位目标血量/伤害 × diffMult」上;因为对位只增不减,低难度≈接近原版(只是少拔高)、高难度把怪往死里堆。难度按「最近玩家」读取(`GameDifficulty.mobMultOf`,读 `ModAttachments.DIFFICULTY`,未选=-1按适中1.0),与现有「按最近玩家攻击/血量缩放」同一套逻辑,不引入世界级存档。
+- **开局流程重做**:`YongyeNet` 的 JOIN 处理器不再自动发 `OpenClassSelectPayload`,改为①未选难度则发 `OpenDifficultyPayload`(客户端 `DifficultyScreen`,强制选择、屏蔽ESC、顶部含剧情/玩法简介);②首次发一本 `ClassSelectBookItem`(职业选择书,复用原版 writable_book 贴图,无新PNG)。新 S2C `OpenDifficultyPayload`+C2S `ChooseDifficultyPayload(idx)`,服务端校验未选过才写 DIFFICULTY 并播报。
+- **职业选择书**:右键 → 未选过本命才发 `OpenClassSelectPayload`(复用现有全职业卡图 `ClassSelectScreen`+`ChooseClassPayload`→`chooseStartingClass`);选职成功后 `ChooseClass` 接收器扫背包消耗一本选择书。已选过则书失效提示。客户端 `pendingDifficulty` 标志位延后弹出(同 `pendingClassSelect`,避免被登录过场覆盖,难度先于职业)。
+- **武器后期吸血**:`WeaponCombatHandler` 命中结算加吸血——武器强化 ≥`weaponLifestealMinLevel`(默认1000)且攻击蓄满(≥0.9,防连点刷)且未满血时,按攻击力 ×`frac` 回血,`frac=min(max 0.5, base 0.1 + 超阈级数×0.0001)`(即千级 +0.1,封顶50%)。复用 `EntityAttributes.GENERIC_ATTACK_DAMAGE` + `player.heal`,无新接口。
+- 新增配置:难度/选择书 2(enableDifficultySelect/giveClassSelectBook)+ 吸血 5(enableWeaponLifesteal/weaponLifestealMinLevel/Base/PerLevel/Max);新增附件 DIFFICULTY/GOT_CLASS_BOOK;configVersion 3→4。
+- 静态自检:全部改动文件花括号/圆括号配平;新配置字段定义↔引用一致;`appendTooltip` 签名与 WardBookItem 完全一致;`class_select_book.json` + `zh_cn.json` 合法。无版本敏感点(全走仓库既有 API:Screen/ButtonWidget/ClientPlayNetworking/getClosestPlayer/getAttributeValue/heal/giveItemStack)。
+
+## 里程碑 131 — 武器技能升级(终焉精华升级三大技能)
+- 需求:武器技能也可升级,通过难获取的材料升级。
+- **每技能独立等级**:新附件 `WEAPON_SKILL_LV`(Map<技能枚举名,等级>,死亡保留)。升级用最稀有材料「终焉精华」(ENDING_ESSENCE),花费 `base 1 + 当前等级×1`(线性递增,越往后越贵),上限 `skillUpgradeMaxLevel`(默认20)。
+- **效果**:`WeaponSkillManager.use` 里 `dmgMult = 1 + 技能等级×skillUpgradeDamagePerLevel(0.25)` 乘进三技能最终伤害(改三方法签名 +dmgMult 参数);冷却 `cd = max(skillUpgradeCdFloor 40, 基础CD − 等级×skillUpgradeCdReductionPerLevel 4)`。施放动作栏显示「Lv.N」。
+- **升级入口**:`WeaponInfoScreen`(背包→装备)底部加 3 个按钮「升·混沌斩/深渊吞噬/终焉降临」(仅武器+开关开时),点击发 C2S `UpgradeWeaponSkillPayload(idx)` → 服务端 `WeaponSkillManager.upgradeSkill` 校验+扣终焉精华+写回等级+动作栏反馈。面板高 244→270 给按钮腾位、与 init() 共用 PANEL_W/PANEL_H 常量保证对齐。
+- **诚实局限**:WeaponInfoScreen 是纯客户端、未同步玩家技能等级,故按钮不显示当前等级/精确花费,结果走服务端动作栏反馈(升至 Lv.N、消耗 N 终焉精华 / 材料不足提示)。要在面板直接看等级需加一条 stats 同步,留待后续。
+- 新增配置 7(enableWeaponSkillUpgrade/skillUpgradeMaxLevel/BaseCost/CostPerLevel/DamagePerLevel/CdReductionPerLevel/CdFloor);新增附件 WEAPON_SKILL_LV;新增 2 文件(UpgradeWeaponSkillPayload + 上轮的 m130 新文件)。
+- 静态自检:WeaponSkillManager 32/32 花括号、200/200 圆括号;三技能调用均 5 参;`upgradeSkill`/`skillLevel` 定义↔YongyeNet 引用一致;`countItem`/`consumeItem` 用 PlayerInventory 遍历(本仓库既有写法)。无版本敏感点。

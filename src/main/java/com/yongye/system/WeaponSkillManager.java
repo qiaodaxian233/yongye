@@ -61,18 +61,25 @@ public final class WeaponSkillManager {
         }
 
         int cd;
+        int skLv = skillLevel(player, skill);
+        double dmgMult = 1.0 + (cfg.enableWeaponSkillUpgrade ? skLv * cfg.skillUpgradeDamagePerLevel : 0.0);
         switch (skill) {
-            case SLASH -> { cd = cfg.skillSlashCooldown; chaosSlash(world, player, level, cfg); }
-            case DEVOUR -> { cd = cfg.skillDevourCooldown; abyssDevour(world, player, level, cfg); }
-            default -> { cd = cfg.skillFinalityCooldown; finality(world, player, level, cfg); }
+            case SLASH -> { cd = cfg.skillSlashCooldown; chaosSlash(world, player, level, cfg, dmgMult); }
+            case DEVOUR -> { cd = cfg.skillDevourCooldown; abyssDevour(world, player, level, cfg, dmgMult); }
+            default -> { cd = cfg.skillFinalityCooldown; finality(world, player, level, cfg, dmgMult); }
+        }
+        // 技能升级:每级降低冷却(有下限,避免无限缩短)
+        if (cfg.enableWeaponSkillUpgrade && skLv > 0) {
+            cd = Math.max(cfg.skillUpgradeCdFloor, cd - skLv * cfg.skillUpgradeCdReductionPerLevel);
         }
         cds[index] = now + cd;
-        actionbar(player, "施放【" + skill.cn + "】!", Formatting.LIGHT_PURPLE);
+        actionbar(player, "施放【" + skill.cn + "】" + (skLv > 0 ? " Lv." + skLv : "") + "!", Formatting.LIGHT_PURPLE);
     }
 
     /** 混沌斩:面朝方向锥形范围伤害 + 击退。 */
-    private static void chaosSlash(ServerWorld world, ServerPlayerEntity player, int level, YongyeConfig cfg) {
+    private static void chaosSlash(ServerWorld world, ServerPlayerEntity player, int level, YongyeConfig cfg, double dmgMult) {
         double dmg = cfg.skillSlashDamage + level * cfg.skillSlashDamagePerLevel + player.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.skillSlashAttackRatio;
+        dmg *= dmgMult;
         double range = cfg.skillSlashRange;
         Vec3d look = player.getRotationVector().normalize();
         Vec3d eye = player.getEyePos();
@@ -95,8 +102,9 @@ public final class WeaponSkillManager {
     }
 
     /** 深渊吞噬:半径内敌人受伤,按比例治疗自己。 */
-    private static void abyssDevour(ServerWorld world, ServerPlayerEntity player, int level, YongyeConfig cfg) {
+    private static void abyssDevour(ServerWorld world, ServerPlayerEntity player, int level, YongyeConfig cfg, double dmgMult) {
         double dmg = cfg.skillDevourDamage + level * cfg.skillDevourDamagePerLevel + player.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.skillDevourAttackRatio;
+        dmg *= dmgMult;
         double radius = cfg.skillDevourRadius;
         DamageSource src = world.getDamageSources().magic();
         Box box = player.getBoundingBox().expand(radius);
@@ -120,8 +128,9 @@ public final class WeaponSkillManager {
     }
 
     /** 终焉降临:大范围毁灭性打击 + 上抛。 */
-    private static void finality(ServerWorld world, ServerPlayerEntity player, int level, YongyeConfig cfg) {
+    private static void finality(ServerWorld world, ServerPlayerEntity player, int level, YongyeConfig cfg, double dmgMult) {
         double dmg = cfg.skillFinalityDamage + level * cfg.skillFinalityDamagePerLevel + player.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.skillFinalityAttackRatio;
+        dmg *= dmgMult;
         double radius = cfg.skillFinalityRadius;
         DamageSource src = world.getDamageSources().playerAttack(player);
         Box box = player.getBoundingBox().expand(radius);
@@ -135,6 +144,66 @@ public final class WeaponSkillManager {
                 120, radius / 2, 1.0, radius / 2, 0.2);
         world.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ENTITY_ENDER_DRAGON_GROWL, SoundCategory.PLAYERS, 1.0f, 0.7f);
+    }
+
+    /** 读取玩家某技能的升级等级(0=未升级)。 */
+    public static int skillLevel(ServerPlayerEntity player, WeaponSkill skill) {
+        return player.getAttachedOrElse(ModAttachments.WEAPON_SKILL_LV, Map.of()).getOrDefault(skill.name(), 0);
+    }
+
+    /** 把当前等级升到下一级所需的终焉精华数:base + 当前等级 × perLevel(线性递增,越往后越贵)。 */
+    public static int upgradeCost(int curLevel) {
+        YongyeConfig cfg = YongyeConfig.get();
+        return cfg.skillUpgradeBaseCost + curLevel * cfg.skillUpgradeCostPerLevel;
+    }
+
+    /**
+     * 服务端:用背包里的「终焉精华」把第 index 个武器技能升一级(由 UpgradeWeaponSkillPayload 调用)。
+     * 校验:开关 + 索引 + 未达上限 + 材料足够;成功则扣料、写回等级、动作栏反馈。
+     */
+    public static void upgradeSkill(ServerPlayerEntity player, int index) {
+        YongyeConfig cfg = YongyeConfig.get();
+        if (!cfg.enableWeaponSkillUpgrade) return;
+        if (index < 0 || index >= WeaponSkill.values().length) return;
+        WeaponSkill skill = WeaponSkill.values()[index];
+        Map<String, Integer> map = new HashMap<>(player.getAttachedOrElse(ModAttachments.WEAPON_SKILL_LV, Map.of()));
+        int cur = map.getOrDefault(skill.name(), 0);
+        if (cur >= cfg.skillUpgradeMaxLevel) {
+            actionbar(player, "【" + skill.cn + "】已达最高 Lv." + cur, Formatting.GRAY);
+            return;
+        }
+        int cost = upgradeCost(cur);
+        int have = countItem(player, com.yongye.registry.ModItems.ENDING_ESSENCE);
+        if (have < cost) {
+            actionbar(player, "升级【" + skill.cn + "】需 " + cost + " 终焉精华(现有 " + have + ")", Formatting.RED);
+            return;
+        }
+        consumeItem(player, com.yongye.registry.ModItems.ENDING_ESSENCE, cost);
+        map.put(skill.name(), cur + 1);
+        player.setAttached(ModAttachments.WEAPON_SKILL_LV, map);
+        actionbar(player, "【" + skill.cn + "】升级至 Lv." + (cur + 1) + "(消耗 " + cost + " 终焉精华)", Formatting.LIGHT_PURPLE);
+    }
+
+    private static int countItem(ServerPlayerEntity p, net.minecraft.item.Item item) {
+        int n = 0;
+        net.minecraft.entity.player.PlayerInventory inv = p.getInventory();
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack s = inv.getStack(i);
+            if (s.getItem() == item) n += s.getCount();
+        }
+        return n;
+    }
+
+    private static void consumeItem(ServerPlayerEntity p, net.minecraft.item.Item item, int count) {
+        net.minecraft.entity.player.PlayerInventory inv = p.getInventory();
+        for (int i = 0; i < inv.size() && count > 0; i++) {
+            ItemStack s = inv.getStack(i);
+            if (s.getItem() == item) {
+                int take = Math.min(count, s.getCount());
+                s.decrement(take);
+                count -= take;
+            }
+        }
     }
 
     private static void actionbar(ServerPlayerEntity player, String msg, Formatting color) {

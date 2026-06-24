@@ -210,6 +210,26 @@ public final class ModAttachments {
                     .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "best_day"));
 
+    /** DIFFICULTY: 玩家已选难度(GameDifficulty 的 ordinal,0~6);-1=未选(按「适中」)。死亡保留。 */
+    public static final AttachmentType<Integer> DIFFICULTY =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> -1).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "difficulty"));
+
+    /** GOT_CLASS_BOOK: 是否已发过「职业选择书」,每人只发一次(死亡保留,避免刷取)。 */
+    public static final AttachmentType<Boolean> GOT_CLASS_BOOK =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL).initializer(() -> false).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_class_book"));
+
+    /** WEAPON_SKILL_LV: 武器主动技能的升级等级,键为 WeaponSkill 枚举名(SLASH/DEVOUR/FINALITY)。死亡保留。 */
+    public static final AttachmentType<java.util.Map<String, Integer>> WEAPON_SKILL_LV =
+            AttachmentRegistry.<java.util.Map<String, Integer>>builder()
+                    .persistent(Codec.unboundedMap(Codec.STRING, Codec.INT))
+                    .initializer(java.util.HashMap::new)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "weapon_skill_lv"));
+
     public static void init() {
         Yongye.LOGGER.info("[永夜] 数据附着已注册");
     }

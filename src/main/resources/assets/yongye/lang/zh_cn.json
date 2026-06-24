@@ -24,6 +24,8 @@
   "item.yongye.skill_book.steal.desc": "命中怪物时按等级概率夺取其手持物品,等级越高越稳",
   "item.yongye.ward_book": "守护附魔书",
   "item.yongye.ward_book.desc": "右键打开守护界面 → 点击要保护的装备(武器/护甲/盾牌)即附「无法被精英夺取」,每次消耗 1 本",
+  "item.yongye.class_select_book": "职业选择书",
+  "item.yongye.class_select_book.desc": "右键打开本命职业选择;选定后出生即生效、不可更改",
   "item.yongye.skill_book.satiety.desc": "学习后持续补充饱食度,等级越高越不会饿",
   "item.yongye.skill_book.armor.desc": "增加护甲与护甲韧性(每级 +0.5 护甲 / +0.25 韧性)",
   "item.yongye.skill_book.attack.desc": "增加攻击伤害(每级 +0.5 点)",

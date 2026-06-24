@@ -35,6 +35,7 @@ import org.lwjgl.glfw.GLFW;
 public class YongyeClient implements ClientModInitializer {
 
     private static boolean pendingClassSelect = false;
+    private static boolean pendingDifficulty = false;
     /** 永夜 HUD 状态(由 NightfallSyncPayload 更新):等级 + 阶段名 + 视野压缩强度 */
     public static int nightfallLevel = 0;
     public static String nightfallName = "";
@@ -61,6 +62,10 @@ public class YongyeClient implements ClientModInitializer {
         // 开局选职:收到 S2C 后置位,待进入世界且无其它界面时再弹出(避免被登录过场覆盖)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenClassSelectPayload.ID, (payload, context) ->
                 context.client().execute(() -> pendingClassSelect = true));
+
+        // 开局难度:收到 S2C 后置位,待进入世界且无其它界面时再弹出(同选职机制)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenDifficultyPayload.ID, (payload, context) ->
+                context.client().execute(() -> pendingDifficulty = true));
 
         // 调试菜单:收到 S2C(由 /yongye debug 触发)即打开 DebugScreen。
         // 命令在世界内显式触发,不存在登录过场覆盖问题,直接 setScreen 即可。
@@ -176,6 +181,10 @@ public class YongyeClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             // 每 tick 刷新血量速率采样(供血量 HUD 显示实时回血/掉血)
             HealthRateTracker.tick();
+            if (pendingDifficulty && client.player != null && client.currentScreen == null) {
+                pendingDifficulty = false;
+                client.setScreen(new DifficultyScreen());
+            }
             if (pendingClassSelect && client.player != null && client.currentScreen == null) {
                 pendingClassSelect = false;
                 client.setScreen(new ClassSelectScreen());

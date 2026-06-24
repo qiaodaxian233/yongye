@@ -37,6 +37,19 @@ public final class YongyeNet {
         // 开局选职
         PayloadTypeRegistry.playS2C().register(com.yongye.network.OpenClassSelectPayload.ID, com.yongye.network.OpenClassSelectPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(com.yongye.network.ChooseClassPayload.ID, com.yongye.network.ChooseClassPayload.CODEC);
+        // 开局难度选择
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.OpenDifficultyPayload.ID, com.yongye.network.OpenDifficultyPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.ChooseDifficultyPayload.ID, com.yongye.network.ChooseDifficultyPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ChooseDifficultyPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> {
+                if (p.getAttachedOrElse(ModAttachments.DIFFICULTY, -1) >= 0) return; // 已选过,忽略
+                com.yongye.item.GameDifficulty d = com.yongye.item.GameDifficulty.byOrdinal(payload.index());
+                p.setAttached(ModAttachments.DIFFICULTY, d.ordinal());
+                p.sendMessage(net.minecraft.text.Text.literal("本局难度:【" + d.cn + "】 怪物强度 ×" + d.mobMult)
+                        .formatted(d.color), false);
+            });
+        });
         // 职业大招
         PayloadTypeRegistry.playC2S().register(com.yongye.network.ClassUltimatePayload.ID, com.yongye.network.ClassUltimatePayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ClassUltimatePayload.ID, (payload, context) -> {
@@ -67,7 +80,14 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> {
                 com.yongye.item.PlayerClass c = com.yongye.item.PlayerClass.byId(payload.classId());
-                if (c != null) com.yongye.system.ClassManager.chooseStartingClass(p, c);
+                if (c != null && com.yongye.system.ClassManager.chooseStartingClass(p, c)) {
+                    // 选职成功:消耗背包里一本「职业选择书」(若有)
+                    net.minecraft.entity.player.PlayerInventory inv = p.getInventory();
+                    for (int i = 0; i < inv.size(); i++) {
+                        net.minecraft.item.ItemStack s = inv.getStack(i);
+                        if (s.getItem() == com.yongye.registry.ModItems.CLASS_SELECT_BOOK) { s.decrement(1); break; }
+                    }
+                }
             });
         });
         // 武器强化窗口:打开 + 应用升级
@@ -110,16 +130,31 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.system.EquipmentEnhancer.enhanceFromInventory(p, payload.slot()));
         });
-        // 登录:未选过本命职业则弹出选职界面;老玩家(已有职业)只补标记
+        // 武器技能升级:装备介绍界面点「升级」→ 用背包终焉精华升一级
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.UpgradeWeaponSkillPayload.ID, com.yongye.network.UpgradeWeaponSkillPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.UpgradeWeaponSkillPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.WeaponSkillManager.upgradeSkill(p, payload.index()));
+        });
+        // 登录:① 未选难度则弹「难度选择」界面(取代旧的强制选职弹窗);② 首次发一本「职业选择书」让玩家自选职业
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity pl = handler.player;
-            if (!com.yongye.YongyeConfig.get().enableStartingClassSelect) return;
-            if (pl.getAttachedOrElse(ModAttachments.STARTING_CLASS_CHOSEN, false)) return;
+            com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
+            // 老玩家(已有职业)补上「已选职」标记,免得后续逻辑误判
             if (!com.yongye.system.ClassManager.learnedList(pl).isEmpty()) {
                 pl.setAttached(ModAttachments.STARTING_CLASS_CHOSEN, true);
-                return;
             }
-            ServerPlayNetworking.send(pl, new com.yongye.network.OpenClassSelectPayload());
+            // 发「职业选择书」(每人一次):未选过本命职业的玩家才需要
+            if (cfg.giveClassSelectBook
+                    && !pl.getAttachedOrElse(ModAttachments.GOT_CLASS_BOOK, false)
+                    && !pl.getAttachedOrElse(ModAttachments.STARTING_CLASS_CHOSEN, false)) {
+                pl.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.CLASS_SELECT_BOOK));
+                pl.setAttached(ModAttachments.GOT_CLASS_BOOK, true);
+            }
+            // 弹难度选择(每人一次,未选过才弹)
+            if (cfg.enableDifficultySelect && pl.getAttachedOrElse(ModAttachments.DIFFICULTY, -1) < 0) {
+                ServerPlayNetworking.send(pl, new com.yongye.network.OpenDifficultyPayload());
+            }
         });
         // 登录即推送一次,保证面板有数据
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sendStats(handler.player));

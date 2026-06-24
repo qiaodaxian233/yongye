@@ -1,9 +1,11 @@
 package com.yongye.system;
 
 import com.yongye.Yongye;
+import com.yongye.YongyeConfig;
 import com.yongye.item.WeaponQuality;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
@@ -30,8 +32,21 @@ public final class WeaponCombatHandler {
             int lvl = EquipmentEnhancer.getLevel(weapon);
             if (lvl <= 0) return ActionResult.PASS;
 
+            boolean charged = player.getAttackCooldownProgress(0.5f) >= 0.9f;
+
+            // —— 后期吸血:武器强化达阈值(默认1000级)后,蓄满攻击命中按攻击力比例回血(0.几的吸血) ——
+            YongyeConfig cfg = YongyeConfig.get();
+            if (charged && cfg.enableWeaponLifesteal && lvl >= cfg.weaponLifestealMinLevel
+                    && player.getHealth() < player.getMaxHealth()) {
+                double frac = Math.min(cfg.weaponLifestealMax,
+                        cfg.weaponLifestealBase + (lvl - cfg.weaponLifestealMinLevel) * cfg.weaponLifestealPerLevel);
+                double atk = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+                float heal = (float) (atk * frac);
+                if (heal > 0f) player.heal(heal);
+            }
+
             // 仅在攻击基本蓄满时才可暴击(连点刷子不吃暴击,尊重攻速)
-            if (player.getAttackCooldownProgress(0.5f) < 0.9f) return ActionResult.PASS;
+            if (!charged) return ActionResult.PASS;
 
             WeaponQuality q = WeaponQuality.forLevel(lvl);
             if (q.critChance <= 0) return ActionResult.PASS;

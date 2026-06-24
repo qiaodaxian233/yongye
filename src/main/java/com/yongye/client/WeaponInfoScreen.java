@@ -3,9 +3,11 @@ package com.yongye.client;
 import com.yongye.YongyeConfig;
 import com.yongye.item.WeaponQuality;
 import com.yongye.item.WeaponSkill;
+import com.yongye.network.UpgradeWeaponSkillPayload;
 import com.yongye.registry.ModComponents;
 import com.yongye.registry.ModItems;
 import com.yongye.system.EquipmentEnhancer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -20,6 +22,8 @@ import net.minecraft.util.Formatting;
  */
 public class WeaponInfoScreen extends Screen {
 
+    private static final int PANEL_W = 320, PANEL_H = 270;
+
     private final Screen parent;
     private final ItemStack stack;
 
@@ -33,6 +37,23 @@ public class WeaponInfoScreen extends Screen {
     protected void init() {
         addDrawableChild(ButtonWidget.builder(Text.literal("关闭"), b -> close())
                 .dimensions(this.width / 2 - 50, this.height - 34, 100, 20).build());
+
+        // 武器技能升级按钮(仅武器 + 开关开):各对应一个技能,点击用背包终焉精华升一级(服务端校验+反馈)
+        YongyeConfig cfg = YongyeConfig.get();
+        if (EquipmentEnhancer.isWeapon(stack) && cfg.enableWeaponSkillUpgrade) {
+            int y0 = (this.height - PANEL_H) / 2;
+            int x0 = (this.width - PANEL_W) / 2;
+            WeaponSkill[] sk = WeaponSkill.values();
+            int bw = 96, gap = 8, by = y0 + 224;
+            int total = bw * sk.length + gap * (sk.length - 1);
+            int bx = x0 + (PANEL_W - total) / 2;
+            for (int i = 0; i < sk.length; i++) {
+                final int idx = i;
+                addDrawableChild(ButtonWidget.builder(Text.literal("升·" + sk[i].cn),
+                                b -> ClientPlayNetworking.send(new UpgradeWeaponSkillPayload(idx)))
+                        .dimensions(bx + i * (bw + gap), by, bw, 20).build());
+            }
+        }
     }
 
     @Override
@@ -50,7 +71,7 @@ public class WeaponInfoScreen extends Screen {
         boolean weapon = EquipmentEnhancer.isWeapon(stack);
         YongyeConfig c = YongyeConfig.get();
 
-        int panelW = 320, panelH = 244;
+        int panelW = PANEL_W, panelH = PANEL_H;
         int x0 = (this.width - panelW) / 2;
         int y0 = (this.height - panelH) / 2;
 
@@ -114,6 +135,8 @@ public class WeaponInfoScreen extends Screen {
             int sy = y0 + 168;
             ctx.drawTextWithShadow(this.textRenderer, Text.literal("✦ 神器技能").formatted(Formatting.LIGHT_PURPLE),
                     x0 + 18, sy, 0xFFFF66FF);
+            ctx.drawTextWithShadow(this.textRenderer, Text.literal("(下方按钮·终焉精华升级)").formatted(Formatting.DARK_GRAY),
+                    x0 + 92, sy, 0xFF888888);
             sy += 14;
             int[] cds = {c.skillSlashCooldown, c.skillDevourCooldown, c.skillFinalityCooldown};
             WeaponSkill[] skills = WeaponSkill.values();

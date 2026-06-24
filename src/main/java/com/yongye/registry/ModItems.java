@@ -36,6 +36,10 @@ public final class ModItems {
     // —— 混沌之刃:专属传说武器(固定高属性 + 三技能无需解锁) ——
     public static final Item WARD_BOOK = register("ward_book", new WardBookItem(new Item.Settings().maxCount(16)));
 
+    // —— 职业选择书:右键开全职业选择界面,选定本命职业(取代旧的登录强制弹窗) ——
+    public static final Item CLASS_SELECT_BOOK = register("class_select_book",
+            new com.yongye.item.ClassSelectBookItem(new Item.Settings().maxCount(1)));
+
     public static final Item CHAOS_BLADE = register("chaos_blade",
             new ChaosBladeItem(new Item.Settings()
                     .maxDamage(2500)
