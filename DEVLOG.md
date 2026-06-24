@@ -1160,3 +1160,11 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 新增 1 文件(YongyeButton),无新配置,configVersion 不变。
 - 静态自检:YongyeButton 3/3 花括号、35/35 圆括号;YongyeClient 配平、8 处 new YongyeButton、ButtonWidget 已无引用(import 已删)。
 - **待编译验证**(标准 1.21.1 API,仓库无先例):`ButtonWidget` 受保护构造器 `super(x,y,w,h,message,onPress,DEFAULT_NARRATION_SUPPLIER)`、重写 `renderWidget(DrawContext,int,int,float)`、继承的 `DEFAULT_NARRATION_SUPPLIER` / 嵌套 `PressAction` / `isHovered()`。绘制用的 fill / drawCenteredTextWithShadow 是仓库既有写法。
+
+## 里程碑 136 — 玻璃蓝背包背景贴图(覆盖原版生存物品栏)
+- 需求:作者做了一张玻璃蓝的背包背景图,确认路径并接入。
+- 路径正确:生存物品栏(按 E)背景在 1.21.1 仍是 `assets/minecraft/textures/gui/container/inventory.png`,资源覆盖即可(与本模组已覆盖的 title/panorama/rain/moon 同套路,纯资源零代码)。
+- 放入作者上传的 1254×1254 RGBA 贴图到该路径(新建 container 目录)。
+- 关键校验:Minecraft 把背景图当 256 底、只取左上 176×166 区域绘制(归一化后 = 这张图左上 68.8%×64.8% ≈ 862×813 px)。已验证面板内容包围盒 x[0..860] y[0..812],严丝合缝落在采样区内,右下白边在采样区外不显示——布局正确,直接生效。
+- 注意:背包左侧那列功能按钮(m135 YongyeButton)是独立控件、不在这张贴图里;槽位与物品的像素对齐需进游戏实测(若物品与玻璃格子有偏移,说明格子位置要按原版槽位微调)。
+- 无 Java 改动,无配置变更。
