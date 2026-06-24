@@ -1183,3 +1183,12 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 布局校验:相对 top —— 血条 0..6、食物 8..14、MP 16..20,底衬覆盖到 22,全包住;totalH 公式(和式)不受顺序影响仍正确。
 - 待作者提供并接入的快捷栏配套精灵:hud/hotbar_selection.png(选中白框)、hotbar_offhand_left/right.png(副手)、hotbar_attack_indicator_*(攻击冷却)——收到图即放入 sprites/hud。
 - 无新文件、无配置变更。
+
+## 里程碑 139 — HUD 配色修正(纠正 m138 理解错误)+ 底衬对齐快捷栏
+- 作者纠正:m138 理解反了。正确需求 = 黑底衬→蓝、血条仍红、食物黄、资源条(拳意等)蓝、所有职业统一这一套配色、半透明背景与底部快捷栏对齐。
+- 底衬:黑 0xC0000000 → 半透明蓝 0xCC14406E;宽度从 left-2..left+BAR_W+2 改为 left..left+BAR_W,与原版 182 宽居中快捷栏左右缘精确对齐。
+- 血条:撤销 m138 的蓝,改回红(深红底 0xFF3B0000 / 鲜红 0xFFCC1010 / 白高光),金吸收保留。
+- 食物条:撤销 m138 的绿,改黄(深黄褐底 0xFF332600 / 黄 0xFFE6C42A),保持 m138 的加粗(6px)+ 上移到血条正下方。
+- 资源条:yongye$mpColors 取消按职业分色,六职业统一蓝 {0xFF0A1E38, 0xFF2E7AD0, 0xFF7FCFFF}。
+- 最终 HUD 配色:红血 / 黄食 / 蓝资源 / 蓝底衬,全职业一致。
+- 无新文件、无配置变更。静态自检:HudCompactMixin 23/23 花括号、151/151 圆括号;四处配色与对齐已核对。

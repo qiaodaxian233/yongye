@@ -57,9 +57,9 @@ public class HudCompactMixin {
         int left = mc.getWindow().getScaledWidth() / 2 - 91;
         int top  = mc.getWindow().getScaledHeight() - 44;
 
-        // 底衬:包住 等级行 + 血条 + MP条 + 食物条(贴合)
+        // 底衬:包住 等级行 + 血条 + 食物条 + 资源条;m139 改半透明蓝 + 左右对齐底部快捷栏(left..left+182)
         int totalH = BAR_H + GAP + MP_H + GAP + FOOD_H;
-        ctx.fill(left - 2, top - 11, left + BAR_W + 2, top + totalH + 2, 0xC0000000);
+        ctx.fill(left, top - 11, left + BAR_W, top + totalH + 2, 0xCC14406E);    // 半透明蓝底衬
 
         // ===== 等级行(本命职业 Lv.X · 名)在血条正上方 =====
         String cls0 = ClientStats.className;
@@ -69,16 +69,16 @@ public class HudCompactMixin {
             ctx.drawTextWithShadow(tr, Text.literal(lvStr), left, top - 10, 0xFFFFD700);
         }
 
-        // ===== 血条(m138 改蓝,配玻璃蓝 UI) =====
-        ctx.fill(left, top, left + BAR_W, top + BAR_H, 0xFF06223F);              // 深蓝底
+        // ===== 血条(红色,所有职业统一)=====
+        ctx.fill(left, top, left + BAR_W, top + BAR_H, 0xFF3B0000);              // 深红底
         float totalHp = maxHp + absHp;
         if (absHp > 0.5f) {
             int absEnd = (int)(BAR_W * Math.min(1f, (curHp + absHp) / totalHp));
             ctx.fill(left, top, left + absEnd, top + BAR_H, 0xFF806000);         // 金色吸收
         }
         int hpW = (int)(BAR_W * Math.max(0f, Math.min(1f, curHp / maxHp)));
-        ctx.fill(left, top, left + hpW, top + BAR_H, 0xFF2E86D8);                // 亮蓝血量
-        ctx.fill(left, top, left + hpW, top + 1, 0x66BFE6FF);                    // 青色玻璃高光
+        ctx.fill(left, top, left + hpW, top + BAR_H, 0xFFCC1010);                // 鲜红血量
+        ctx.fill(left, top, left + hpW, top + 1, 0x40FFFFFF);                    // 高光
 
         String hpStr = yongye$num(curHp) + " / " + yongye$num(maxHp)
                 + (absHp >= 0.5f ? "  +" + yongye$num(absHp) : "");
@@ -100,14 +100,14 @@ public class HudCompactMixin {
             ctx.drawTextWithShadow(tr, Text.literal(as), rx + 10, top, 0xFFB0C4FF);
         }
 
-        // ===== 食物条(m138:上移到血条正下方 + 加粗成正经横条,绿色与蓝血条区分)=====
+        // ===== 食物条(黄色,血条正下方,所有职业统一)=====
         int foodTop = top + BAR_H + GAP;
-        ctx.fill(left, foodTop, left + BAR_W, foodTop + FOOD_H, 0xFF18260F);      // 深绿底
+        ctx.fill(left, foodTop, left + BAR_W, foodTop + FOOD_H, 0xFF332600);      // 深黄褐底
         int foodW = (int)(BAR_W * Math.max(0f, Math.min(1f, food / 20f)));
-        ctx.fill(left, foodTop, left + foodW, foodTop + FOOD_H, 0xFF8FBF4A);      // 草绿填充
+        ctx.fill(left, foodTop, left + foodW, foodTop + FOOD_H, 0xFFE6C42A);      // 黄色填充
         ctx.fill(left, foodTop, left + foodW, foodTop + 1, 0x66FFFFFF);           // 高光
         ctx.drawGuiTexture(FOOD, left + BAR_W + 6, foodTop - 1, 8, 8);
-        ctx.drawTextWithShadow(tr, Text.literal(food + "/20"), left + BAR_W + 16, foodTop, 0xFF9FCF5A);
+        ctx.drawTextWithShadow(tr, Text.literal(food + "/20"), left + BAR_W + 16, foodTop, 0xFFE6C42A);
 
         // ===== MP/资源 条(食物条下方) =====
         yongye$renderMpBar(ctx, tr, left, top + BAR_H + GAP + FOOD_H + GAP);
@@ -135,14 +135,11 @@ public class HudCompactMixin {
     }
 
     private static int[] yongye$mpColors(String cls) {
+        // m139:所有职业统一蓝色资源条(底 / 填充 / 高光)
         return switch (cls) {
-            case "warlock"   -> new int[]{0xFF1A0040, 0xFF8A2BE2, 0xFFBF80FF};
-            case "assassin"  -> new int[]{0xFF001020, 0xFF0066CC, 0xFF4DA6FF};
-            case "warrior"   -> new int[]{0xFF300A00, 0xFFCC4400, 0xFFFF8844};
-            case "swordsman" -> new int[]{0xFF001818, 0xFF00BBCC, 0xFF80EEFF};
-            case "tank"      -> new int[]{0xFF10100A, 0xFF888800, 0xFFEEDD00};
-            case "monk"      -> new int[]{0xFF201000, 0xFFCC8800, 0xFFFFCC44};
-            default          -> null;
+            case "warlock", "assassin", "warrior", "swordsman", "tank", "monk"
+                    -> new int[]{0xFF0A1E38, 0xFF2E7AD0, 0xFF7FCFFF};
+            default -> null;
         };
     }
 
