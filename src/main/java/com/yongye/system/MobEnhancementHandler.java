@@ -88,6 +88,10 @@ public final class MobEnhancementHandler {
                 }
             }
 
+            // 动态对位:按附近最强玩家的攻击/血量,把这只怪等比拔高到「有来有回」的水平(只增不减)
+            DynamicScaling.scaleToNearestPlayer(mob,
+                    cfg.dynamicMobTargetHits, cfg.dynamicMobSurviveHits, cfg.dynamicMobScanRadius);
+
             // 加血后补满血量
             mob.setHealth(mob.getMaxHealth());
 

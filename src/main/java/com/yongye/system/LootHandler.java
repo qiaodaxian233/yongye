@@ -11,6 +11,7 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -110,26 +111,35 @@ public final class LootHandler {
             Random r = entity.getRandom();
             boolean elite = entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_ELITE, false);
 
+            // —— 动态爆率:按击杀者强度算掉率倍率(玩家越强越低),乘进所有概率掉落,并缩减精英必爆数量 ——
+            double lm = (damageSource.getAttacker() instanceof ServerPlayerEntity killer)
+                    ? PlayerPower.lootMultiplier(killer) : 1.0;
+
             if (elite) {
                 // —— 精英必爆套餐(m90):在下面的概率掉落之上额外保底,提高精英击杀收益 ——
                 if (cfg.eliteGuaranteedDrops) {
-                    if (cfg.eliteGuaranteedShards > 0) {
-                        drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, cfg.eliteGuaranteedShards));
+                    // 动态缩减必爆数量(防滚雪球;可用 dynamicLootScaleGuaranteed 关闭)
+                    double gm = cfg.dynamicLootScaleGuaranteed ? lm : 1.0;
+                    int gShards   = (int) Math.round(cfg.eliteGuaranteedShards   * gm);
+                    int gCrystals = (int) Math.round(cfg.eliteGuaranteedCrystals * gm);
+                    int gBooks    = (int) Math.round(cfg.eliteGuaranteedSkillBooks * gm);
+                    if (gShards > 0) {
+                        drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, gShards));
                     }
-                    if (cfg.eliteGuaranteedCrystals > 0) {
-                        drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL, cfg.eliteGuaranteedCrystals));
+                    if (gCrystals > 0) {
+                        drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL, gCrystals));
                     }
-                    for (int i = 0; i < cfg.eliteGuaranteedSkillBooks; i++) {
+                    for (int i = 0; i < gBooks; i++) {
                         drop(world, entity, randomAnySkillBook(r,
                                 cfg.eliteGuaranteedSkillBookMinLevel, cfg.eliteGuaranteedSkillBookMaxLevel));
                     }
                 }
                 // 精英:技能书改为按概率掉(skillBookDropChanceElite,默认已调极低)+ 一件稀有以上战利品 + 概率材料
-                if (r.nextDouble() < cfg.skillBookDropChanceElite) {
+                if (r.nextDouble() < cfg.skillBookDropChanceElite * lm) {
                     drop(world, entity, HealthSkillBookItem.create(1 + r.nextInt(3))); // V1~V3
                 }
                 // 概率掉一本属性技能书(V1~V3)
-                if (r.nextDouble() < cfg.skillBookDropChanceElite) {
+                if (r.nextDouble() < cfg.skillBookDropChanceElite * lm) {
                     drop(world, entity, randomSkillBook(r, 1, 3));
                 }
                 List<LootFactory> hi = switch (r.nextInt(3)) {
@@ -141,12 +151,12 @@ public final class LootHandler {
                 // (生命结晶改由下方统一规则按 lifeCrystalDropChance 产出,精英自动翻倍;此处不再额外写死掉落)
                 // (生命核心及血核改由下方统一规则按"仅精英"产出)
                 // 精英概率掉落职业书(随机职业)
-                if (r.nextDouble() < cfg.classBookDropChance) {
+                if (r.nextDouble() < cfg.classBookDropChance * lm) {
                     com.yongye.item.PlayerClass[] cls = com.yongye.item.PlayerClass.values();
                     drop(world, entity, new ItemStack(ModItems.getClassBook(cls[r.nextInt(cls.length)])));
                 }
                 // 精英小概率掉落职业专属武器(随机职业,EPIC)
-                if (r.nextDouble() < cfg.classWeaponDropChanceElite) {
+                if (r.nextDouble() < cfg.classWeaponDropChanceElite * lm) {
                     com.yongye.item.PlayerClass[] cls = com.yongye.item.PlayerClass.values();
                     drop(world, entity, new ItemStack(ModItems.getClassWeapon(cls[r.nextInt(cls.length)])));
                 }
@@ -154,7 +164,8 @@ public final class LootHandler {
                 // 普通怪:按品质表单选
                 double roll = r.nextDouble();
                 List<LootFactory> pool = pickPool(roll, cfg);
-                if (pool != null) {
+                // 动态爆率:玩家越强,普通池掉落越容易被跳过(保底 dynamicLootFloor)
+                if (pool != null && (lm >= 1.0 || r.nextDouble() < lm)) {
                     LootFactory f = pool.get(r.nextInt(pool.size()));
                     ItemStack loot = f.make(r);
                     // 前期(游戏天数少)压制技能书爆率
@@ -164,7 +175,7 @@ public final class LootHandler {
                 }
                 // 普通怪小概率掉一本属性技能书(V1),永夜等级越高几率越大(封顶防深渊层失控);前期再乘压制系数
                 double nfMult = Math.min(1.0 + NightfallManager.getLevel() * 0.5, cfg.skillBookNightfallMaxMult);
-                double sbChance = cfg.skillBookDropChanceNormal * nfMult;
+                double sbChance = cfg.skillBookDropChanceNormal * nfMult * lm;
                 if (isEarlyGame(world, cfg)) sbChance *= cfg.skillBookEarlyGameChance;
                 if (r.nextDouble() < sbChance) {
                     drop(world, entity, randomSkillBook(r, 1, 1));
@@ -173,22 +184,22 @@ public final class LootHandler {
 
             // 强化材料掉落(规则:生命核心及以上仅精英会爆,普通怪只出碎片/结晶)
             // 生命碎片:按 lifeShardDropChance 概率掉(普通 1 个;精英 1~2 个)
-            if (r.nextDouble() < cfg.lifeShardDropChance) {
+            if (r.nextDouble() < cfg.lifeShardDropChance * lm) {
                 drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, elite ? 1 + r.nextInt(2) : 1));
             }
             // 生命结晶:普通怪按 lifeCrystalDropChance(精英翻倍)
-            if (r.nextDouble() < cfg.lifeCrystalDropChance * (elite ? 2.0 : 1.0)) {
+            if (r.nextDouble() < cfg.lifeCrystalDropChance * (elite ? 2.0 : 1.0) * lm) {
                 drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL, 1));
             }
             // 生命核心 + 灾厄血核:仅精英
             if (elite) {
-                if (r.nextDouble() < cfg.lifeCoreDropChance) {
+                if (r.nextDouble() < cfg.lifeCoreDropChance * lm) {
                     drop(world, entity, new ItemStack(ModItems.LIFE_CORE, 1));
                 }
-                if (r.nextDouble() < cfg.bloodCoreDropChanceElite) {
+                if (r.nextDouble() < cfg.bloodCoreDropChanceElite * lm) {
                     drop(world, entity, new ItemStack(ModItems.CATASTROPHE_BLOOD_CORE, 1));
                 }
-                if (r.nextDouble() < cfg.endingEssenceDropChanceElite) {
+                if (r.nextDouble() < cfg.endingEssenceDropChanceElite * lm) {
                     drop(world, entity, new ItemStack(ModItems.ENDING_ESSENCE, 1));
                 }
             }

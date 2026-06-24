@@ -2,11 +2,17 @@ package com.yongye;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 全局配置。文件位于 config/yongye.json,可在不改代码的前提下调平衡。
@@ -15,6 +21,10 @@ public class YongyeConfig {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static YongyeConfig INSTANCE;
+
+    /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
+    public static final int CURRENT_CONFIG_VERSION = 2;
+    public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
     public boolean enableMobEnhancement = true;
@@ -108,11 +118,11 @@ public class YongyeConfig {
     public boolean enableMobBoss = true;
     public int mobBossStartDay = 10;             // 第几天起开始刷怪物BOSS(早于此天不刷)
     public double mobBossChance = 0.008;         // 每只普通怪生成时BOSS化的概率(低,作偶发精英BOSS)
-    public double mobBossHealthMultiplier = 12.0;
-    public double mobBossAttackMultiplier = 4.0;
-    public double mobBossSpeedMultiplier = 1.25;
-    public double mobBossKnockbackResistanceAdd = 0.9;
-    public double mobBossScaleMultiplier = 1.6;  // 体型放大(更像Boss);1.0=不放大。靠 GENERIC_SCALE 属性
+    public double mobBossHealthMultiplier = 25.0;
+    public double mobBossAttackMultiplier = 6.0;
+    public double mobBossSpeedMultiplier = 1.3;
+    public double mobBossKnockbackResistanceAdd = 1.0;
+    public double mobBossScaleMultiplier = 1.8;  // 体型放大(更像Boss);1.0=不放大。靠 GENERIC_SCALE 属性
     public double mobBossBarRadius = 48.0;        // 多远内的玩家能看到这只BOSS的血条
 
     // ============ 精英+ 额外经验(m62:加快升级)============
@@ -193,6 +203,21 @@ public class YongyeConfig {
     public double mobScalingPlayerHealthFactor = 0.5; // 按附近玩家「超出20的最大生命」比例的 50% 给怪加血
     public double mobScalingAttackRatio = 0.4;        // 攻击按血量缩放的 30% 同步提升
     public double mobScalingMaxMultiplier = 60.0;     // 缩放倍率上限
+
+    // ===== 动态对位缩放(按附近最强玩家的攻击/血量,把怪等比拔高,保证有来有回)=====
+    public boolean enableDynamicMobScaling = true;    // 总开关
+    public double dynamicMobScanRadius = 64.0;         // 怪生成时搜索最近玩家的半径
+    public double dynamicMobTargetHits = 8.0;          // 普通怪:期望玩家砍多少下才杀死(怪血 = 玩家攻击 × 此值)
+    public double dynamicMobSurviveHits = 30.0;        // 普通怪:期望玩家被打多少下才致命(怪伤 = 玩家最大生命 ÷ 此值)
+    public double dynamicMobBossTargetHits = 45.0;     // BOSS版:期望击杀次数(远高于普通怪,是块硬骨头)
+    public double dynamicMobBossSurviveHits = 12.0;    // BOSS版:期望承受次数(打得更疼)
+
+    // ===== 动态爆率(玩家越强、掉率越低,减缓滚雪球,让怪物成长追得上)=====
+    public boolean enableDynamicLoot = true;           // 总开关
+    public double dynamicLootK = 150.0;                // 强度半衰常数:强度=此值时掉率减半,=3×时剩 1/4
+    public double dynamicLootFloor = 0.15;             // 掉率下限:再强也保底这个倍率(避免完全不掉)
+    public double dynamicLootEnhanceWeight = 2.0;      // 强化等级在强度里的权重(1级强化 ≈ 几级技能书)
+    public boolean dynamicLootScaleGuaranteed = true;  // 是否也按倍率缩减精英「必爆」的碎片/书数量(防滚雪球关键)
 
     // ===== 防卡死:全局怪量预算 + 传送限流 =====
     public int globalMaxHostilesNearby = 60;          // 玩家附近敌对生物总数上限,超了本 mod 不再额外刷怪
@@ -281,6 +306,8 @@ public class YongyeConfig {
     public int coreSpawnNotifyRadius = 120;       // 标题/音效通知半径(此范围内玩家收到)
     public boolean enableCoreLocator = true;      // HUD 方向箭头:指向最近的灾厄核心(像 boss 指示)
     public int coreLocatorRange = 220;            // 箭头只在核心位于此范围内时显示
+    public boolean coreAltarStructure = true;     // 核心生成时建造祭坛结构(底座+立柱+灵魂灯),关掉则只放光秃秃一个核心块
+    public boolean coreDeathRaisesNightfall = true; // 祭坛存在时玩家死亡 → 激发最近祭坛凝聚完毕 + 永夜提升一层
 
     // ============ 追杀 AI(文档第 8 章)============
     public boolean enablePursuit = true;
@@ -541,6 +568,20 @@ public class YongyeConfig {
                 String json = Files.readString(path);
                 INSTANCE = GSON.fromJson(json, YongyeConfig.class);
                 if (INSTANCE == null) INSTANCE = new YongyeConfig();
+                // —— 陈旧检查:对比文件键 vs 当前字段,警告死键/缺失键/版本不符 ——
+                try {
+                    JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+                    List<String> obsolete = obsoleteKeys(obj);   // 文件有、代码已删
+                    List<String> missing = missingKeys(obj);     // 代码有、文件没有(新加的)
+                    if (!obsolete.isEmpty())
+                        Yongye.LOGGER.warn("[永夜] 配置含 {} 个陈旧字段(已从代码删除,下次保存自动清除): {}", obsolete.size(), obsolete);
+                    if (!missing.isEmpty())
+                        Yongye.LOGGER.info("[永夜] 配置缺 {} 个新字段(已采用默认值,下次保存自动补全): {}", missing.size(), missing);
+                    if (INSTANCE.configVersion != CURRENT_CONFIG_VERSION)
+                        Yongye.LOGGER.warn("[永夜] 配置版本 {} ≠ 当前 {}:部分默认值可能已调整。若要采用新默认值,用 /yongye config reset(会清自定义)或参照 /yongye config check 手动核对。",
+                                INSTANCE.configVersion, CURRENT_CONFIG_VERSION);
+                } catch (RuntimeException ignore) { /* 诊断失败不影响正常加载 */ }
+                INSTANCE.configVersion = CURRENT_CONFIG_VERSION; // 对齐版本号,下次保存写入新版
             } else {
                 INSTANCE = new YongyeConfig();
                 save();
@@ -549,6 +590,59 @@ public class YongyeConfig {
             Yongye.LOGGER.error("[永夜] 读取配置失败,使用默认值", e);
             INSTANCE = new YongyeConfig();
         }
+    }
+
+    /** 当前配置 schema 的全部字段名(public、非 static)。 */
+    private static List<String> schemaFieldNames() {
+        List<String> names = new ArrayList<>();
+        for (Field f : YongyeConfig.class.getDeclaredFields()) {
+            int m = f.getModifiers();
+            if (Modifier.isStatic(m) || !Modifier.isPublic(m)) continue;
+            names.add(f.getName());
+        }
+        return names;
+    }
+
+    /** 文件里有、但代码已删除的"死键"。 */
+    private static List<String> obsoleteKeys(JsonObject obj) {
+        List<String> fields = schemaFieldNames();
+        List<String> out = new ArrayList<>();
+        for (String k : obj.keySet()) if (!fields.contains(k)) out.add(k);
+        return out;
+    }
+
+    /** 代码里有、但文件缺少的"新键"(会采用默认值)。 */
+    private static List<String> missingKeys(JsonObject obj) {
+        List<String> out = new ArrayList<>();
+        for (String f : schemaFieldNames()) if (!obj.has(f)) out.add(f);
+        return out;
+    }
+
+    /**
+     * 现读现查:重新读盘对比,返回给玩家看的诊断报告(/yongye config check 调用)。
+     * 报告:版本是否一致、死键列表、缺失键列表、字段总数。
+     */
+    public static String diagnose() {
+        Path path = FabricLoader.getInstance().getConfigDir().resolve("yongye.json");
+        StringBuilder sb = new StringBuilder();
+        int total = schemaFieldNames().size();
+        if (!Files.exists(path)) {
+            return "配置文件尚未生成(将于下次保存时按当前默认值创建)。当前字段总数: " + total;
+        }
+        try {
+            JsonObject obj = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
+            int fileVer = obj.has("configVersion") ? obj.get("configVersion").getAsInt() : -1;
+            List<String> obsolete = obsoleteKeys(obj);
+            List<String> missing = missingKeys(obj);
+            sb.append("配置版本: 文件 ").append(fileVer).append(" / 当前 ").append(CURRENT_CONFIG_VERSION)
+                    .append(fileVer == CURRENT_CONFIG_VERSION ? "(一致)" : "(不一致,默认值可能已调整)").append('\n');
+            sb.append("字段总数: 文件 ").append(obj.size()).append(" / 代码 ").append(total).append('\n');
+            sb.append("陈旧死键(").append(obsolete.size()).append("): ").append(obsolete.isEmpty() ? "无" : obsolete).append('\n');
+            sb.append("缺失新键(").append(missing.size()).append("): ").append(missing.isEmpty() ? "无" : missing);
+        } catch (IOException | RuntimeException e) {
+            return "读取/解析配置文件失败: " + e.getMessage();
+        }
+        return sb.toString();
     }
 
     /** 重置为默认配置并写盘(/yongye config reset 调用)。 */

@@ -8,8 +8,10 @@ import com.yongye.item.SkillBookItem;
 import com.yongye.item.SkillType;
 import com.yongye.registry.ModBlocks;
 import com.yongye.registry.ModItems;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.SpawnReason;
@@ -66,6 +68,15 @@ public final class CatastropheCoreManager {
             load();
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> save());
+        // 玩家死亡 → 若世界存在祭坛,激发最近的祭坛"凝聚完毕":消耗它 + 永夜提升一层
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+            if (!(entity instanceof ServerPlayerEntity dead)) return;
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.enableCatastropheCore || !cfg.coreDeathRaisesNightfall) return;
+            if (cores.isEmpty()) return;
+            if (!(dead.getWorld() instanceof ServerWorld world)) return;
+            completeAltarOnDeath(world, dead.getBlockPos());
+        });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (!YongyeConfig.get().enableCatastropheCore) return;
             if (++tick < 40) return; // 每 2 秒一次
@@ -147,26 +158,26 @@ public final class CatastropheCoreManager {
         return new BlockPos(x, y, z);
     }
 
-    /** 放置一个核心并登记。 */
+    /** 放置一个核心(带祭坛结构)并登记。pos 为地面基准点;核心实际落在基座顶部。 */
     public static void spawnCore(ServerWorld world, BlockPos pos, boolean announce) {
-        world.setBlockState(pos, ModBlocks.CATASTROPHE_CORE.getDefaultState());
-        cores.add(pos.asLong());
+        BlockPos corePos = buildAltar(world, pos);
+        cores.add(corePos.asLong());
         if (announce && world.getServer() != null) {
             YongyeConfig cfg = YongyeConfig.get();
             // ① 全服暗红聊天(带坐标),保持原行为
             world.getServer().getPlayerManager().broadcast(
-                    Text.literal("【灾厄核心】黑暗在 " + pos.getX() + ", " + pos.getZ() + " 凝聚……前去摧毁它")
+                    Text.literal("【灾厄核心】黑暗在 " + corePos.getX() + ", " + corePos.getZ() + " 凝聚……前去摧毁它")
                             .formatted(Formatting.DARK_RED), false);
 
             // ② 提示增强:给通知半径内玩家 音效 + 屏幕中央标题(比一行会滚走的聊天更醒目)
             if (cfg.coreSpawnTitle) {
                 Text titleText = Text.literal("灾厄核心降临").formatted(Formatting.DARK_RED, Formatting.BOLD);
-                Text subText = Text.literal("一处核心在 " + pos.getX() + ", " + pos.getZ() + " 凝聚——前去摧毁")
+                Text subText = Text.literal("一处核心在 " + corePos.getX() + ", " + corePos.getZ() + " 凝聚——前去摧毁")
                         .formatted(Formatting.RED);
                 double rSq = (double) cfg.coreSpawnNotifyRadius * cfg.coreSpawnNotifyRadius;
                 for (ServerPlayerEntity sp : world.getServer().getPlayerManager().getPlayerList()) {
                     if (sp.getWorld() != world) continue;
-                    if (sp.squaredDistanceTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > rSq) continue;
+                    if (sp.squaredDistanceTo(corePos.getX() + 0.5, corePos.getY() + 0.5, corePos.getZ() + 0.5) > rSq) continue;
                     // 标题动画:淡入 10t、停留 60t、淡出 20t;先发动画参数再发标题/副标题
                     sp.networkHandler.sendPacket(new TitleFadeS2CPacket(10, 60, 20));
                     sp.networkHandler.sendPacket(new TitleS2CPacket(titleText));
@@ -176,6 +187,39 @@ public final class CatastropheCoreManager {
                 }
             }
         }
+    }
+
+    /**
+     * 建造灾厄祭坛并返回核心方块的实际位置。
+     * 结构:5×5 磨制黑石砖底座 + 四角哭泣黑曜石立柱(顶灵魂灯)+ 中央基座,核心置于基座顶(base.up(2))。
+     * 关掉 coreAltarStructure 时退回旧行为:核心直接放在地面 pos。
+     */
+    private static BlockPos buildAltar(ServerWorld world, BlockPos base) {
+        if (!YongyeConfig.get().coreAltarStructure) {
+            world.setBlockState(base, ModBlocks.CATASTROPHE_CORE.getDefaultState());
+            return base;
+        }
+        // 5×5 底座 + 清理上方,避免被地形/树木埋住
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                BlockPos p = base.add(dx, 0, dz);
+                world.setBlockState(p, Blocks.POLISHED_BLACKSTONE_BRICKS.getDefaultState());
+                for (int dy = 1; dy <= 3; dy++) world.setBlockState(p.up(dy), Blocks.AIR.getDefaultState());
+            }
+        }
+        // 四角立柱(哭泣黑曜石,2 高)+ 顶部灵魂灯
+        int[][] corners = {{-2, -2}, {-2, 2}, {2, -2}, {2, 2}};
+        for (int[] c : corners) {
+            BlockPos col = base.add(c[0], 1, c[1]);
+            world.setBlockState(col, Blocks.CRYING_OBSIDIAN.getDefaultState());
+            world.setBlockState(col.up(), Blocks.CRYING_OBSIDIAN.getDefaultState());
+            world.setBlockState(col.up(2), Blocks.SOUL_LANTERN.getDefaultState());
+        }
+        // 中央基座 + 核心(核心位于 base.up(2),四周立柱环绕)
+        world.setBlockState(base.up(1), Blocks.CRYING_OBSIDIAN.getDefaultState());
+        BlockPos corePos = base.up(2);
+        world.setBlockState(corePos, ModBlocks.CATASTROPHE_CORE.getDefaultState());
+        return corePos;
     }
 
     /**
@@ -233,7 +277,35 @@ public final class CatastropheCoreManager {
         }
     }
 
-    /** 给定位置最近的核心(用于掘墓罗盘)。 */
+    /**
+     * 玩家死亡激发:消耗距死亡点最近的核心(直接移除登记 + 把核心块换成哭泣黑曜石残骸,
+     * 绕过 onDestroyed 的赎夜逻辑),并让永夜提升一层。需要世界中已有祭坛才触发。
+     */
+    private static void completeAltarOnDeath(ServerWorld world, BlockPos deathPos) {
+        // 找最近的核心
+        long bestKey = 0;
+        double bestSq = Double.MAX_VALUE;
+        boolean found = false;
+        for (long key : cores) {
+            BlockPos p = BlockPos.fromLong(key);
+            double d = p.getSquaredDistance(deathPos);
+            if (d < bestSq) { bestSq = d; bestKey = key; found = true; }
+        }
+        if (!found) return;
+        BlockPos corePos = BlockPos.fromLong(bestKey);
+        cores.remove(bestKey); // 先摘登记,避免 tickCores 走 onDestroyed(那会赎夜,与升级冲突)
+        // 把核心块换成残骸(若该区块已加载);未加载也无妨,反正已不在登记表里
+        if (world.getBlockState(corePos).isOf(ModBlocks.CATASTROPHE_CORE)) {
+            world.setBlockState(corePos, Blocks.CRYING_OBSIDIAN.getDefaultState());
+        }
+        world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, corePos.getX() + 0.5, corePos.getY() + 1.0, corePos.getZ() + 0.5,
+                60, 0.6, 0.8, 0.6, 0.05);
+        if (world.getServer() != null) {
+            world.getServer().getPlayerManager().broadcast(
+                    Text.literal("【灾厄核心】有人倒下,祭坛凝聚完毕——黑暗更深一层").formatted(Formatting.DARK_RED, Formatting.BOLD), false);
+            NightfallManager.escalate(world.getServer());
+        }
+    }
     public static BlockPos getNearest(BlockPos from) {
         BlockPos best = null;
         double bestSq = Double.MAX_VALUE;

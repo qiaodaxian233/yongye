@@ -130,6 +130,10 @@ public final class MobBossHandler {
         addMultiplier(mob, EntityAttributes.GENERIC_SCALE, ID_SCALE, cfg.mobBossScaleMultiplier);
         mob.setHealth(mob.getMaxHealth());
 
+        // 动态对位:BOSS 版按更高的「期望击杀次数」拔高,确保对高攻玩家也是块硬骨头(它跳过了普通怪缩放)
+        DynamicScaling.scaleToNearestPlayer(mob,
+                cfg.dynamicMobBossTargetHits, cfg.dynamicMobBossSurviveHits, cfg.dynamicMobScanRadius);
+
         Text name = Text.literal("【BOSS】 ").formatted(Formatting.DARK_RED, Formatting.BOLD)
                 .append(mob.getType().getName());
         mob.setCustomName(name);

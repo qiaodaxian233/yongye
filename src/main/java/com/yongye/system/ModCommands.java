@@ -185,6 +185,12 @@ public final class ModCommands {
                                             Text.literal(listConfigFields()).formatted(Formatting.GRAY), false);
                                     return 1;
                                 }))
+                                .then(CommandManager.literal("check").executes(ctx -> {
+                                    String report = com.yongye.YongyeConfig.diagnose();
+                                    ctx.getSource().sendFeedback(() ->
+                                            Text.literal("【配置诊断】\n" + report).formatted(Formatting.AQUA), false);
+                                    return 1;
+                                }))
                                 .then(CommandManager.literal("export").executes(ctx -> {
                                     com.yongye.YongyeConfig.save(); // 确保最新值已写盘
                                     String path = com.yongye.YongyeConfig.configPath().toAbsolutePath().toString();
