@@ -105,17 +105,24 @@ public final class ModItems {
         return SKILL_BOOKS;
     }
 
-    // —— 职业专属武器(m42:精英/Boss 稀有掉落或创造获取)——
+    // —— 职业专属武器(m42:精英/Boss 稀有掉落或创造获取;m134:武僧无武器,不再注册 class_weapon_monk)——
     private static final Map<PlayerClass, Item> CLASS_WEAPONS = new EnumMap<>(PlayerClass.class);
+    /** 拥有专属武器的职业(武僧除外:空手拳+吃材料,无武器)。掉落池/创造栏/命令都用它,避免取到武僧的 null。 */
+    public static final PlayerClass[] WEAPON_CLASSES;
     static {
+        java.util.List<PlayerClass> wc = new java.util.ArrayList<>();
         for (PlayerClass c : PlayerClass.values()) {
+            if (c == PlayerClass.MONK) continue; // 武僧不发武器、不注册武器物品
             CLASS_WEAPONS.put(c, register("class_weapon_" + c.id,
                     new ClassWeaponItem(c, new Item.Settings()
                             .maxDamage(2000)
                             .rarity(Rarity.EPIC)
                             .attributeModifiers(ClassWeaponItem.baseAttributes(c)))));
+            wc.add(c);
         }
+        WEAPON_CLASSES = wc.toArray(new PlayerClass[0]);
     }
+    /** 取职业武器;武僧返回 null(无武器),调用方须用 WEAPON_CLASSES 或判空。 */
     public static Item getClassWeapon(PlayerClass c) {
         return CLASS_WEAPONS.get(c);
     }

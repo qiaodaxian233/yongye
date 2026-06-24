@@ -34,8 +34,8 @@ public final class ModItemGroups {
             for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
                 entries.add(ModItems.getClassBook(c));
             }
-            // 职业专属武器
-            for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
+            // 职业专属武器(武僧无武器,用 WEAPON_CLASSES 排除)
+            for (com.yongye.item.PlayerClass c : ModItems.WEAPON_CLASSES) {
                 entries.add(ModItems.getClassWeapon(c));
             }
             entries.add(ModItems.NIGHT_WING);

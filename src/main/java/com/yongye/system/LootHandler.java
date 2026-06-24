@@ -157,7 +157,7 @@ public final class LootHandler {
                 }
                 // 精英小概率掉落职业专属武器(随机职业,EPIC)
                 if (r.nextDouble() < cfg.classWeaponDropChanceElite * lm) {
-                    com.yongye.item.PlayerClass[] cls = com.yongye.item.PlayerClass.values();
+                    com.yongye.item.PlayerClass[] cls = ModItems.WEAPON_CLASSES;
                     drop(world, entity, new ItemStack(ModItems.getClassWeapon(cls[r.nextInt(cls.length)])));
                 }
             } else {

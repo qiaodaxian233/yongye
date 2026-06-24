@@ -1138,3 +1138,16 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:PlayerUpkeepHandler 17/17 花括号、104/104 圆括号(注释列表序号改顿号免误判);ClassManager/Yongye/YongyeConfig 全配平;PlayerUpkeepHandler.register/scheduleRespawnHeal↔Yongye 引用一致;enableWeaponCarryBonus 定义↔引用一致;PlayerClass 已导入。
 - **待编译验证**(仓库无先例,低风险):`EntityAttributeModifier` 的记录访问器 `.id()/.value()/.operation()`、`AttributeModifiersComponent.Entry` 的 `.modifier()/.slot()`(`.attribute()` 已有先例)、`AttributeModifierSlot.HAND/ANY` 取值——均为 1.21.1 标准 API,仅本仓库此前未用过。其余全走仓库既有写法(getAttributeInstance/addTemporaryModifier/removeModifier/applyClasses)。
 - **未做**:主菜单玻璃蓝按钮美化(图2风格)——属客户端渲染/美术,与本轮玩法修复分开,待与作者确认方案(按钮渲染 mixin 仅标题页 vs 自定义按钮贴图全局)后再做。
+
+## 里程碑 134 — 彻底删除武僧武器(物品+残留资源)+ 重生满血窗口加余量
+- 需求:把武僧的武器合成配方和武器都删了;所有职业(不止武僧)重生回满。
+- **配方**:武僧武器配方早在 m103 就已删除(recipe 目录只有 tank/warlock/warrior/swordsman/assassin 五个,无 monk),本轮确认无残留。
+- **重生满血**:m133 的 AFTER_RESPAWN 本就不分职业(对所有 respawn 玩家:applyHealthModifier + applyClasses + setHealth(max) + scheduleRespawnHeal 满血窗口),已是「所有职业回满」。本轮把窗口 40→60 tick(2→3 秒)加余量,确保神器(10t重应用)/职业(20t)/强化护甲/携带武器等迟到的生命上限都能在窗口内补满——根因仍是重生瞬间生命上限未全部重应用,窗口每 tick 顶满即随 max 增长补满。
+- **删武器物品**(m133 只是选职不发,物品仍注册):
+  - ModItems 注册循环 `if (c==MONK) continue;` 跳过武僧,不再注册 class_weapon_monk;getClassWeapon(MONK) 返回 null。
+  - 新增 `ModItems.WEAPON_CLASSES`(所有职业去掉武僧),供掉落池/创造栏统一使用,避免取到 null。
+  - 守住 5 个 getClassWeapon 调用点:ModItemGroups 创造栏武器循环改用 WEAPON_CLASSES;LootHandler 精英掉落 / BossHandler Boss 掉落的随机职业池改用 WEAPON_CLASSES(武僧不再掉武器);ClassManager 选职给武器已在 m133 加 c!=MONK;ModCommands debug 给武器对武僧(getClassWeapon==null)报错而非塞 null。
+  - 删资源:class_weapon_monk 的模型 json、贴图 png、zh_cn/en_us 各一条 lang(删后 JSON 仍合法)。
+- **迁移说明**:武僧武器物品被注销,旧存档若有该物品会变为无效(空)——武僧武器自 m103 起几乎无法获得,影响极小。
+- 静态自检:6 个改动 Java 文件花括号/圆括号全配平;WEAPON_CLASSES 定义↔引用(ModItemGroups/LootHandler/BossHandler)一致;全仓库无 class_weapon_monk 实际引用(仅剩一句说明性注释);ModCommands 守空逻辑读序正确。
+- **待编译验证**:本轮无新接口/无版本敏感点,全是普通 Java(枚举过滤、判空、数组)与仓库既有写法。

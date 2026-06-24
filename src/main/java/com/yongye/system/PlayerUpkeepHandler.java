@@ -46,7 +46,7 @@ public final class PlayerUpkeepHandler {
 
     /** 重生时调用:开 ~2 秒满血窗口。 */
     public static void scheduleRespawnHeal(ServerPlayerEntity p) {
-        RESPAWN_HEAL.put(p.getUuid(), 40);
+        RESPAWN_HEAL.put(p.getUuid(), 60); // 3秒窗口,给神器(10t)/职业(20t)/强化/携带武器等生命上限留足重应用时间
     }
 
     public static void register() {

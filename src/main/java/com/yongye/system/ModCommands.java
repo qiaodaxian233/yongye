@@ -322,7 +322,12 @@ public final class ModCommands {
                                         ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin)"));
                                         return 0;
                                     }
-                                    p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getClassWeapon(cls)));
+                                    net.minecraft.item.Item w = com.yongye.registry.ModItems.getClassWeapon(cls);
+                                    if (w == null) {
+                                        ctx.getSource().sendError(Text.literal("【" + cls.cn + "】是无武器职业,没有专属武器"));
+                                        return 0;
+                                    }
+                                    p.giveItemStack(new net.minecraft.item.ItemStack(w));
                                     ctx.getSource().sendFeedback(() -> Text.literal("已获得【" + cls.cn + "专属武器】").formatted(Formatting.GOLD), false);
                                     return 1;
                                 })))
