@@ -31,7 +31,7 @@ public class HudCompactMixin {
     private static final int BAR_W = 182;
     private static final int BAR_H = 6;
     private static final int MP_H  = 4;
-    private static final int FOOD_H = 3;
+    private static final int FOOD_H = 6;
     private static final int GAP   = 2;
 
     private static final Identifier HEART = Identifier.ofVanilla("hud/heart/full");
@@ -69,16 +69,16 @@ public class HudCompactMixin {
             ctx.drawTextWithShadow(tr, Text.literal(lvStr), left, top - 10, 0xFFFFD700);
         }
 
-        // ===== 血条 =====
-        ctx.fill(left, top, left + BAR_W, top + BAR_H, 0xFF3B0000);              // 深红底
+        // ===== 血条(m138 改蓝,配玻璃蓝 UI) =====
+        ctx.fill(left, top, left + BAR_W, top + BAR_H, 0xFF06223F);              // 深蓝底
         float totalHp = maxHp + absHp;
         if (absHp > 0.5f) {
             int absEnd = (int)(BAR_W * Math.min(1f, (curHp + absHp) / totalHp));
             ctx.fill(left, top, left + absEnd, top + BAR_H, 0xFF806000);         // 金色吸收
         }
         int hpW = (int)(BAR_W * Math.max(0f, Math.min(1f, curHp / maxHp)));
-        ctx.fill(left, top, left + hpW, top + BAR_H, 0xFFCC1010);                // 鲜红血量
-        ctx.fill(left, top, left + hpW, top + 1, 0x40FFFFFF);                    // 高光
+        ctx.fill(left, top, left + hpW, top + BAR_H, 0xFF2E86D8);                // 亮蓝血量
+        ctx.fill(left, top, left + hpW, top + 1, 0x66BFE6FF);                    // 青色玻璃高光
 
         String hpStr = yongye$num(curHp) + " / " + yongye$num(maxHp)
                 + (absHp >= 0.5f ? "  +" + yongye$num(absHp) : "");
@@ -100,17 +100,17 @@ public class HudCompactMixin {
             ctx.drawTextWithShadow(tr, Text.literal(as), rx + 10, top, 0xFFB0C4FF);
         }
 
-        // ===== MP 条 =====
-        yongye$renderMpBar(ctx, tr, left, top + BAR_H + GAP);
-
-        // ===== 食物条(MP 条下方,棕黄色横条) =====
-        int foodTop = top + BAR_H + GAP + MP_H + GAP;
-        ctx.fill(left, foodTop, left + BAR_W, foodTop + FOOD_H, 0xFF2A1A00);      // 深棕底
+        // ===== 食物条(m138:上移到血条正下方 + 加粗成正经横条,绿色与蓝血条区分)=====
+        int foodTop = top + BAR_H + GAP;
+        ctx.fill(left, foodTop, left + BAR_W, foodTop + FOOD_H, 0xFF18260F);      // 深绿底
         int foodW = (int)(BAR_W * Math.max(0f, Math.min(1f, food / 20f)));
-        ctx.fill(left, foodTop, left + foodW, foodTop + FOOD_H, 0xFFCBA34E);      // 棕黄填充
-        ctx.fill(left, foodTop, left + foodW, foodTop + 1, 0x40FFFFFF);           // 高光
-        ctx.drawGuiTexture(FOOD, left + BAR_W + 6, foodTop - 2, 8, 8);
-        ctx.drawTextWithShadow(tr, Text.literal(food + "/20"), left + BAR_W + 16, foodTop - 1, 0xFFCBA34E);
+        ctx.fill(left, foodTop, left + foodW, foodTop + FOOD_H, 0xFF8FBF4A);      // 草绿填充
+        ctx.fill(left, foodTop, left + foodW, foodTop + 1, 0x66FFFFFF);           // 高光
+        ctx.drawGuiTexture(FOOD, left + BAR_W + 6, foodTop - 1, 8, 8);
+        ctx.drawTextWithShadow(tr, Text.literal(food + "/20"), left + BAR_W + 16, foodTop, 0xFF9FCF5A);
+
+        // ===== MP/资源 条(食物条下方) =====
+        yongye$renderMpBar(ctx, tr, left, top + BAR_H + GAP + FOOD_H + GAP);
 
         ci.cancel();
     }
