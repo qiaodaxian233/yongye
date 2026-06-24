@@ -1128,3 +1128,13 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **迁移说明**:m130/m131 世界里已选的 per-player 难度数据作废(孤立未注册键),世界难度初始为未设定 → 房主下次进入会被询问一次设定世界难度,符合预期。
 - 静态自检:7 改动文件花括号/圆括号全配平;无 `mobMultOf`/`ModAttachments.DIFFICULTY` 残留;`DifficultyManager` 各方法定义↔引用一致(register/isSet/setLevel/getLevel/mobMult);GameDifficulty 已无 ModAttachments/PlayerEntity 依赖。
 - **待编译验证**(低风险,仓库无先例):`MinecraftServer.isSingleplayer()`(标准方法,1.21.1 应存在;用于单机房主兜底)。其余全走仓库既有写法(ServerLifecycleEvents/getSavePath/WorldSavePath/broadcast/hasPermissionLevel,与 NightfallManager 同款)。
+
+## 里程碑 133 — 武僧不发武器 + 武器携带即生效 + 重生满血(高血量)
+- 需求三连:① 选职业武僧不该发武器(却还在发);② 武器只要在身上就该有加成,现在切走加成就没了;③ 所有职业重生不回满血(比如 60万血只恢复 200 多)。
+- **① 武僧不发武器**:`ClassManager.chooseStartingClass` 给武器处加 `&& c != PlayerClass.MONK`。武僧是无武器职业(空手拳 + 吃材料),不再发 class_weapon_monk。`learn()`(第二职业)本就不发武器,无需改。
+- **② 武器携带即生效**(根因:类武器属性用 `AttributeModifierSlot.MAINHAND` 配,只有拿主手才生效,强化属性也写在物品 ATTRIBUTE_MODIFIERS 组件同样 MAINHAND/ADD_VALUE,切走自然失效——原版行为):新 `PlayerUpkeepHandler` 每 5 tick 镜像——若玩家主手不是职业武器、但背包里带着职业武器,就读该武器的 ATTRIBUTE_MODIFIERS(含基础+强化),把 MAINHAND/HAND/ANY 槽的修饰用「派生唯一 id(carry_原命名空间_原路径)」镜像到玩家;拿在主手时由原版生效、本镜像撤销,避免双倍。每次刷新前先撤销上次镜像(CARRY_APPLIED 记录),不会叠加;只取背包第一把(玩家单本命,不刷叠加)。开关 enableWeaponCarryBonus(默认开)。
+- **③ 重生满血**(根因:重生瞬间 setHealth(maxHealth) 时,职业/武僧/神器/强化/携带武器的「生命上限」加成还没全部重新应用,max 还是很低的临时值,于是只回到 200 多;之后各系统把 max 拉到 60万,但当前血量停在 200):AFTER_RESPAWN 现在先 `ClassManager.applyClasses`(刷职业/武僧生命上限)再 setHealth(max);并 `PlayerUpkeepHandler.scheduleRespawnHeal` 开 40 tick(2 秒)满血窗口,每 tick 把血顶到当前 max——随神器(10tick)/职业(20tick)/强化护甲/携带武器等生命上限陆续到位,血量跟着补满,最终回满。
+- 新增配置 1(enableWeaponCarryBonus)、新增 1 文件(PlayerUpkeepHandler)、configVersion 4→5。
+- 静态自检:PlayerUpkeepHandler 17/17 花括号、104/104 圆括号(注释列表序号改顿号免误判);ClassManager/Yongye/YongyeConfig 全配平;PlayerUpkeepHandler.register/scheduleRespawnHeal↔Yongye 引用一致;enableWeaponCarryBonus 定义↔引用一致;PlayerClass 已导入。
+- **待编译验证**(仓库无先例,低风险):`EntityAttributeModifier` 的记录访问器 `.id()/.value()/.operation()`、`AttributeModifiersComponent.Entry` 的 `.modifier()/.slot()`(`.attribute()` 已有先例)、`AttributeModifierSlot.HAND/ANY` 取值——均为 1.21.1 标准 API,仅本仓库此前未用过。其余全走仓库既有写法(getAttributeInstance/addTemporaryModifier/removeModifier/applyClasses)。
+- **未做**:主菜单玻璃蓝按钮美化(图2风格)——属客户端渲染/美术,与本轮玩法修复分开,待与作者确认方案(按钮渲染 mixin 仅标题页 vs 自定义按钮贴图全局)后再做。

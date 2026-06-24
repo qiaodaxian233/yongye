@@ -87,7 +87,7 @@ public final class ClassManager {
         p.setAttached(ModAttachments.LEARNED_CLASSES, learned);
         p.setAttached(ModAttachments.STARTING_CLASS_CHOSEN, true);
         applyClasses(p);
-        if (YongyeConfig.get().startingClassGiveWeapon) {
+        if (YongyeConfig.get().startingClassGiveWeapon && c != PlayerClass.MONK) {
             p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getClassWeapon(c)));
         }
         p.sendMessage(Text.literal("你选择了本命职业【" + c.cn + "】,出生即生效!").formatted(Formatting.GOLD), false);

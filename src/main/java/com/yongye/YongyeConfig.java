@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 4;
+    public static final int CURRENT_CONFIG_VERSION = 5;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -432,6 +432,9 @@ public class YongyeConfig {
     public double weaponLifestealBase = 0.1;           // 到达阈值时的吸血比例(0.1=攻击力的10%回血)
     public double weaponLifestealPerLevel = 0.0001;    // 每超过阈值 1 级,吸血比例 +0.0001(+0.1/千级)
     public double weaponLifestealMax = 0.5;            // 吸血比例上限(50%)
+
+    // ===== 武器携带即生效(m133:职业武器带在背包就给加成,不必拿在主手)=====
+    public boolean enableWeaponCarryBonus = true;
 
     // ===== 职业大招(m47,主动技能,默认 X 键)=====
     public boolean enableClassUltimate = true;

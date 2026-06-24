@@ -94,6 +94,7 @@ public class Yongye implements ModInitializer {
         // 玩法系统(Phase 3:永夜 / 追杀 / 任务)
         NightfallManager.register();
         com.yongye.system.DifficultyManager.register();
+        com.yongye.system.PlayerUpkeepHandler.register();
         PursuitHandler.register();
         QuestManager.register();
         CatastropheCoreManager.register();
@@ -116,7 +117,10 @@ public class Yongye implements ModInitializer {
                 PlayerSkillManager.applyHealthModifier(handler.getPlayer()));
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
             PlayerSkillManager.applyHealthModifier(newPlayer);
-            newPlayer.setHealth(newPlayer.getMaxHealth()); // 复活回满血(而非默认20)
+            com.yongye.system.ClassManager.applyClasses(newPlayer); // 重生先刷职业/武僧的生命上限
+            newPlayer.setHealth(newPlayer.getMaxHealth());          // 即时尽量回满
+            // 兜底:神器/强化护甲/携带武器等生命上限可能晚一两 tick 才应用,开 2 秒满血窗口持续补满
+            com.yongye.system.PlayerUpkeepHandler.scheduleRespawnHeal(newPlayer);
         });
 
         LOGGER.info("[永夜] 初始化完成。活到天亮就是胜利。");
