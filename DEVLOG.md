@@ -1151,3 +1151,12 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **迁移说明**:武僧武器物品被注销,旧存档若有该物品会变为无效(空)——武僧武器自 m103 起几乎无法获得,影响极小。
 - 静态自检:6 个改动 Java 文件花括号/圆括号全配平;WEAPON_CLASSES 定义↔引用(ModItemGroups/LootHandler/BossHandler)一致;全仓库无 class_weapon_monk 实际引用(仅剩一句说明性注释);ModCommands 守空逻辑读序正确。
 - **待编译验证**:本轮无新接口/无版本敏感点,全是普通 Java(枚举过滤、判空、数组)与仓库既有写法。
+
+## 里程碑 135 — 背包侧边按钮美化(自定义玻璃蓝主题按钮)
+- 需求:背包旁边那一列按钮(原版灰)不好看,想改好看。
+- 根因:这些按钮(成长/装备/饰品/天赋/强化/兑换/学书/本命职业)是在 YongyeClient 的 ScreenEvents.AFTER_INIT(InventoryScreen)里用原版 ButtonWidget 加的,所以是朴素灰按钮。
+- 做法(零 mixin、不影响其它界面):新 `YongyeButton extends ButtonWidget`,只重写 renderWidget 自绘——深海军蓝半透明底 + 顶部一道玻璃高光 + 蓝青描边,悬停描边转亮青(发光感)、底色提亮、文字转纯白,禁用态变灰。配色集中为常量,想换血红主题改常量即可。把背包那 8 个按钮从 ButtonWidget.builder(...) 全部换成 new YongyeButton(...)(功能/位置/尺寸不变),并移除 YongyeClient 中已不再使用的 ButtonWidget import。
+- 仅替换背包侧边这 8 个按钮;主菜单按钮玻璃化仍待定方案(A 标题页渲染 mixin / B 全局按钮贴图),与本轮无关。
+- 新增 1 文件(YongyeButton),无新配置,configVersion 不变。
+- 静态自检:YongyeButton 3/3 花括号、35/35 圆括号;YongyeClient 配平、8 处 new YongyeButton、ButtonWidget 已无引用(import 已删)。
+- **待编译验证**(标准 1.21.1 API,仓库无先例):`ButtonWidget` 受保护构造器 `super(x,y,w,h,message,onPress,DEFAULT_NARRATION_SUPPLIER)`、重写 `renderWidget(DrawContext,int,int,float)`、继承的 `DEFAULT_NARRATION_SUPPLIER` / 嵌套 `PressAction` / `isHovered()`。绘制用的 fill / drawCenteredTextWithShadow 是仓库既有写法。

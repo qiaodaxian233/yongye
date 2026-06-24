@@ -18,7 +18,6 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemStack;
@@ -203,43 +202,37 @@ public class YongyeClient implements ClientModInitializer {
                 int row = 0;
 
                 // 成长
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("成长"),
-                        b -> client.setScreen(new StatsScreen(screen)))
-                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                        Text.literal("成长"), b -> client.setScreen(new StatsScreen(screen))));
                 // 装备:查看手持武器/盔甲的品质介绍
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("装备"), b -> {
-                    if (client.player == null) return;
-                    ItemStack held = client.player.getMainHandStack();
-                    if (!held.isEmpty() && EquipmentEnhancer.isEnhanceable(held.getItem())) {
-                        client.setScreen(new WeaponInfoScreen(screen, held));
-                    }
-                }).dimensions(bx, by + pitch * row++, bw, bh).build());
+                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                        Text.literal("装备"), b -> {
+                            if (client.player == null) return;
+                            ItemStack held = client.player.getMainHandStack();
+                            if (!held.isEmpty() && EquipmentEnhancer.isEnhanceable(held.getItem())) {
+                                client.setScreen(new WeaponInfoScreen(screen, held));
+                            }
+                        }));
                 // 饰品:打开饰品栏(放神器)
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("饰品"),
-                        b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload()))
-                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                        Text.literal("饰品"), b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload())));
                 // 天赋:打开天赋界面
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("天赋"),
-                        b -> client.setScreen(new TalentScreen(screen)))
-                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                        Text.literal("天赋"), b -> client.setScreen(new TalentScreen(screen))));
                 // 强化:打开 Ward 式强化窗口(点装备=用背包全部材料一键强化)
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("强化"),
-                        b -> client.setScreen(new EnhanceSelectScreen(screen)))
-                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                        Text.literal("强化"), b -> client.setScreen(new EnhanceSelectScreen(screen))));
                 // 兑换:打开材料兑换界面(10 碎片→结晶→核心→血核)
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("兑换"),
-                        b -> client.setScreen(new ExchangeScreen(screen)))
-                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                        Text.literal("兑换"), b -> client.setScreen(new ExchangeScreen(screen))));
                 // 学书:一键把背包所有技能书/血量书学掉
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal("学书"),
-                        b -> ClientPlayNetworking.send(new com.yongye.network.UseAllBooksPayload()))
-                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                        Text.literal("学书"), b -> ClientPlayNetworking.send(new com.yongye.network.UseAllBooksPayload())));
                 // 当前本命职业(点开成长面板)
                 com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
-                Screens.getButtons(screen).add(ButtonWidget.builder(Text.literal(classLabel),
-                        b -> client.setScreen(new StatsScreen(screen)))
-                        .dimensions(bx, by + pitch * row++, bw, bh).build());
+                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                        Text.literal(classLabel), b -> client.setScreen(new StatsScreen(screen))));
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(
