@@ -1192,3 +1192,15 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 资源条:yongye$mpColors 取消按职业分色,六职业统一蓝 {0xFF0A1E38, 0xFF2E7AD0, 0xFF7FCFFF}。
 - 最终 HUD 配色:红血 / 黄食 / 蓝资源 / 蓝底衬,全职业一致。
 - 无新文件、无配置变更。静态自检:HudCompactMixin 23/23 花括号、151/151 圆括号;四处配色与对齐已核对。
+
+## 里程碑 140 — 删除永夜之翼 + 选中框/副手玻璃框贴图
+- 需求:永夜之翼"完全没用",删除;hotbar_selection 与副手用作者新做的玻璃框(中心透明),攻击指示不改。
+- **选中框 + 副手**:作者 1254×1204 玻璃蓝框(中心 alpha=0、框充满画布)放入 sprites/hud 的 hotbar_selection.png / hotbar_offhand_left.png / hotbar_offhand_right.png(三处同图,精灵图各自缩放到 24×22 / 29×24)。攻击指示 hotbar_attack_indicator_* 不动(保持原版)。
+- **删永夜之翼(NightWingItem,ElytraItem 背饰)**:
+  - ModItems 删注册 NIGHT_WING + import;ModItemGroups 删创造栏条目;ModCommands 删 /yongye nightwing;DebugScreen 删按钮;欢迎书页「神器与永夜之翼」→「神器」并去掉飞行那句。
+  - AccessoryScreenHandler 第11槽 canInsert 去掉 NIGHT_WING、仅保留原版鞘翅(槽位仍在,存原版鞘翅用)。
+  - 删 AccessoryGliderMixin(其唯一用途是让永夜之翼滑翔)+ 从 yongye.mixins.json 移除该 mixin 条目;原版鞘翅穿胸甲槽照常滑翔(走原版,不受影响)。
+  - 删文件:NightWingItem.java、AccessoryGliderMixin.java;删资源:模型 night_wing.json、配方 night_wing.json、贴图 night_wing_1/2/3ef.png、lang zh_cn 一条(删后补尾逗号修 JSON)。
+  - 迁移:旧存档若有永夜之翼物品变无效;饰品栏鞘翅格的"滑翔"功能随之取消(本就只对永夜之翼生效)。
+- 静态自检:6 改动 Java 全配平;src 无 NIGHT_WING/NightWing 代码残留(仅余 AccessoryStorage/EquipmentEnhancer 两处无害注释);mixins.json/zh_cn.json 合法;三张精灵图有效。
+- 无新配置;configVersion 不变。

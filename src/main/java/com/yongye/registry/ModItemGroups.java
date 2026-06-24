@@ -38,7 +38,6 @@ public final class ModItemGroups {
             for (com.yongye.item.PlayerClass c : ModItems.WEAPON_CLASSES) {
                 entries.add(ModItems.getClassWeapon(c));
             }
-            entries.add(ModItems.NIGHT_WING);
             entries.add(HealthSkillBookItem.create(1));
             entries.add(HealthSkillBookItem.create(5));
             entries.add(HealthSkillBookItem.create(10));

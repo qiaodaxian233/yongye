@@ -338,12 +338,6 @@ public final class ModCommands {
                             ctx.getSource().sendFeedback(() -> Text.literal("已获得【磐盾】").formatted(Formatting.GOLD), false);
                             return 1;
                         }))
-                        .then(CommandManager.literal("nightwing").executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
-                            p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.NIGHT_WING));
-                            ctx.getSource().sendFeedback(() -> Text.literal("已获得【永夜之翼】").formatted(Formatting.DARK_RED), false);
-                            return 1;
-                        }))
 
                         // 掉落率实时热调(改完下一只怪即生效,并写盘持久化)
                         .then(CommandManager.literal("loot")

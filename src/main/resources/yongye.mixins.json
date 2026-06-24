@@ -6,7 +6,6 @@
   "mixins": [
     "ClampedEntityAttributeAccessor",
     "TankDefenseMixin",
-    "AccessoryGliderMixin",
     "EntityFlagInvoker"
   ],
   "client": [

@@ -41,12 +41,11 @@ public class AccessoryScreenHandler extends ScreenHandler {
                 }
             });
         }
-        // 第 11 槽(index 10):鞘翅/背饰专用格(永夜之翼或原版鞘翅),放右侧
+        // 第 11 槽(index 10):鞘翅专用格(原版鞘翅),放右侧
         addSlot(new Slot(acc, 10, 152, 28) {
             @Override
             public boolean canInsert(ItemStack stack) {
-                return stack.getItem() == com.yongye.registry.ModItems.NIGHT_WING
-                        || stack.getItem() instanceof net.minecraft.item.ElytraItem;
+                return stack.getItem() instanceof net.minecraft.item.ElytraItem;
             }
             @Override
             public int getMaxItemCount() {
