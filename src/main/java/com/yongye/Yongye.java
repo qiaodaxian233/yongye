@@ -93,6 +93,7 @@ public class Yongye implements ModInitializer {
 
         // 玩法系统(Phase 3:永夜 / 追杀 / 任务)
         NightfallManager.register();
+        com.yongye.system.DifficultyManager.register();
         PursuitHandler.register();
         QuestManager.register();
         CatastropheCoreManager.register();

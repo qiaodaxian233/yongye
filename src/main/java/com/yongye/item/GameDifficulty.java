@@ -1,7 +1,5 @@
 package com.yongye.item;
 
-import com.yongye.registry.ModAttachments;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Formatting;
 
 /**
@@ -10,7 +8,7 @@ import net.minecraft.util.Formatting;
  *    因此低难度 ≈ 接近原版,高难度 = 怪物远超你的成长曲线。详见 DynamicScaling。
  *  - 倍率作用在「对位目标血量/伤害」上;由于对位只增不减,难度低不会把怪压到比原版还弱,
  *    只是少拔高;难度高则把怪往死里堆。
- * 顺序即 ordinal,存进 ModAttachments.DIFFICULTY(int);-1=未选,按「适中」处理。
+ * 顺序即 ordinal(0~6);世界难度由 DifficultyManager 持有一个值(存世界存档),未设定按「适中」处理。
  */
 public enum GameDifficulty {
     PLAY    ("游玩", 0.5,  "最轻松的体验。怪物只比原版略强,适合观光、建造、熟悉机制。",          Formatting.GREEN),
@@ -38,11 +36,5 @@ public enum GameDifficulty {
         GameDifficulty[] v = values();
         if (i < 0 || i >= v.length) return NORMAL;
         return v[i];
-    }
-
-    /** 读取该玩家已选难度的怪物强度倍率;未选(=-1)按「适中」(1.0)。 */
-    public static double mobMultOf(PlayerEntity p) {
-        int idx = p.getAttachedOrElse(ModAttachments.DIFFICULTY, -1);
-        return byOrdinal(idx).mobMult;
     }
 }

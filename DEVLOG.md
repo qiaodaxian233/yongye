@@ -1115,3 +1115,16 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **诚实局限**:WeaponInfoScreen 是纯客户端、未同步玩家技能等级,故按钮不显示当前等级/精确花费,结果走服务端动作栏反馈(升至 Lv.N、消耗 N 终焉精华 / 材料不足提示)。要在面板直接看等级需加一条 stats 同步,留待后续。
 - 新增配置 7(enableWeaponSkillUpgrade/skillUpgradeMaxLevel/BaseCost/CostPerLevel/DamagePerLevel/CdReductionPerLevel/CdFloor);新增附件 WEAPON_SKILL_LV;新增 2 文件(UpgradeWeaponSkillPayload + 上轮的 m130 新文件)。
 - 静态自检:WeaponSkillManager 32/32 花括号、200/200 圆括号;三技能调用均 5 参;`upgradeSkill`/`skillLevel` 定义↔YongyeNet 引用一致;`countItem`/`consumeItem` 用 PlayerInventory 遍历(本仓库既有写法)。无版本敏感点。
+
+## 里程碑 132 — 难度改为世界级(房主/OP 设定,全局锁定,联机不再各选)
+- 需求:难度改世界级(整局一个值,存世界存档,像永夜等级);只有房主/OP 首次进入未设定的世界时弹一次,选完全世界锁定;之后任何人联机都不再弹,所有怪按世界难度统一缩放;加 `/yongye difficulty <0-6>`(OP)事后改。
+- **从「逐玩家」改「世界级」**:m130 把难度做成了 per-player 附件(每人各选、按最近玩家缩放)——这不符合「房主定一个全局难度」。本轮改:
+  - 新 `DifficultyManager`(照 NightfallManager):静态 level(-1未设定/0~6),持久化到存档 `yongye_difficulty.json`,SERVER_STARTED 读 / STOPPING 写;`load()` 开头先 `level=-1` 复位,避免单机切世界时静态字段把上一个世界难度残留到没有难度文件的新世界。`mobMult()` 返回世界难度倍率(未设定=适中1.0)。
+  - `DynamicScaling` 的 diffMult 从 `GameDifficulty.mobMultOf(最近玩家)` 改为 `DifficultyManager.mobMult()`(全局统一,不再随谁更近变)。
+  - `GameDifficulty` 去掉 per-player 的 `mobMultOf` + ModAttachments/PlayerEntity import,回归纯数据枚举。
+  - 删掉 `ModAttachments.DIFFICULTY`(per-player 附件,已无引用;旧存档里的该键变成未注册数据被忽略,无害)。
+- **谁能设 + 何时弹**:`YongyeNet` JOIN——`enableDifficultySelect && !DifficultyManager.isSet() && (玩家 hasPermissionLevel(2) || server.isSingleplayer())` 才弹 `OpenDifficultyPayload`。**用 `isSingleplayer()` 兜底单机房主**(单机不开作弊时玩家没有权限2,只靠 OP 判定会导致单机弹不出来)。ChooseDifficulty 接收器同样校验「OP 或单机」+ 未设定,通过则 `DifficultyManager.setLevel(server, idx)` 全服播报+写盘锁定。客户端 `DifficultyScreen`/包不变。
+- **命令**:`/yongye difficulty status`(查看)+ `/yongye difficulty <0-6>`(设定),整棵 `yongye` 树本就 requires 权限2。
+- **迁移说明**:m130/m131 世界里已选的 per-player 难度数据作废(孤立未注册键),世界难度初始为未设定 → 房主下次进入会被询问一次设定世界难度,符合预期。
+- 静态自检:7 改动文件花括号/圆括号全配平;无 `mobMultOf`/`ModAttachments.DIFFICULTY` 残留;`DifficultyManager` 各方法定义↔引用一致(register/isSet/setLevel/getLevel/mobMult);GameDifficulty 已无 ModAttachments/PlayerEntity 依赖。
+- **待编译验证**(低风险,仓库无先例):`MinecraftServer.isSingleplayer()`(标准方法,1.21.1 应存在;用于单机房主兜底)。其余全走仓库既有写法(ServerLifecycleEvents/getSavePath/WorldSavePath/broadcast/hasPermissionLevel,与 NightfallManager 同款)。

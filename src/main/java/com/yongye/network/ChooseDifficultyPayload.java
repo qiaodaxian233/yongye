@@ -8,7 +8,7 @@ import net.minecraft.util.Identifier;
 
 /**
  * C2S:在难度选择界面点选难度(GameDifficulty 的 ordinal),请求确定本局难度。
- * 服务端校验未选过才写入 ModAttachments.DIFFICULTY。
+ * 服务端校验为房主/OP 且世界难度未设定才写入 DifficultyManager(世界级,全局锁定)。
  */
 public record ChooseDifficultyPayload(int index) implements CustomPayload {
     public static final CustomPayload.Id<ChooseDifficultyPayload> ID =

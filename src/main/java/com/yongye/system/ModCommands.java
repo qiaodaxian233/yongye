@@ -49,6 +49,21 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        // 世界难度:查看 / 设定(0游玩~6永夜)。整局一个值,设定即全局生效。
+                        .then(CommandManager.literal("difficulty")
+                                .then(CommandManager.literal("status").executes(ctx -> {
+                                    int lv = com.yongye.system.DifficultyManager.getLevel();
+                                    String name = lv < 0 ? "未设定(按适中)" : com.yongye.item.GameDifficulty.byOrdinal(lv).cn + "(等级 " + lv + ")";
+                                    ctx.getSource().sendFeedback(() ->
+                                            Text.literal("当前世界难度:" + name).formatted(Formatting.GOLD), false);
+                                    return 1;
+                                }))
+                                .then(CommandManager.argument("level", IntegerArgumentType.integer(0, 6)).executes(ctx -> {
+                                    com.yongye.system.DifficultyManager.setLevel(ctx.getSource().getServer(),
+                                            IntegerArgumentType.getInteger(ctx, "level"));
+                                    return 1;
+                                })))
+
                         // 打开调试 / 运营菜单(客户端 DebugScreen):服务端发 S2C 包,客户端收到即开界面。
                         // 菜单里的按钮再 sendCommand 回这些 /yongye 子命令,故仍受权限2约束。
                         .then(CommandManager.literal("debug").executes(ctx -> {

@@ -43,11 +43,10 @@ public final class YongyeNet {
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ChooseDifficultyPayload.ID, (payload, context) -> {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> {
-                if (p.getAttachedOrElse(ModAttachments.DIFFICULTY, -1) >= 0) return; // 已选过,忽略
-                com.yongye.item.GameDifficulty d = com.yongye.item.GameDifficulty.byOrdinal(payload.index());
-                p.setAttached(ModAttachments.DIFFICULTY, d.ordinal());
-                p.sendMessage(net.minecraft.text.Text.literal("本局难度:【" + d.cn + "】 怪物强度 ×" + d.mobMult)
-                        .formatted(d.color), false);
+                // 世界难度只能由房主/OP 设定一次:非 OP(且非单机房主)忽略;已设定则忽略(全局锁定)
+                if (!(p.hasPermissionLevel(2) || p.server.isSingleplayer())) return;
+                if (com.yongye.system.DifficultyManager.isSet()) return;
+                com.yongye.system.DifficultyManager.setLevel(p.server, payload.index());
             });
         });
         // 职业大招
@@ -151,8 +150,9 @@ public final class YongyeNet {
                 pl.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.CLASS_SELECT_BOOK));
                 pl.setAttached(ModAttachments.GOT_CLASS_BOOK, true);
             }
-            // 弹难度选择(每人一次,未选过才弹)
-            if (cfg.enableDifficultySelect && pl.getAttachedOrElse(ModAttachments.DIFFICULTY, -1) < 0) {
+            // 弹难度选择:世界难度还没设定、且本玩家是房主/OP(单机房主无需开作弊)时,首次进入弹一次;选定后全局锁定,其他人永不弹
+            if (cfg.enableDifficultySelect && !com.yongye.system.DifficultyManager.isSet()
+                    && (pl.hasPermissionLevel(2) || server.isSingleplayer())) {
                 ServerPlayNetworking.send(pl, new com.yongye.network.OpenDifficultyPayload());
             }
         });
