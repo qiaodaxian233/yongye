@@ -44,8 +44,12 @@ public final class DynamicScaling {
         double diffMult = com.yongye.system.DifficultyManager.mobMult();
 
         // —— 血量对位:目标 = 玩家每击攻击 × 期望击杀次数 × 难度,只增不减 ——
+        // m147:血量对位只在「困难」及以上才开;适中/简单/游玩(含未设定→按适中)不再按玩家攻击拔血,
+        //       避免普通难度怪被堆成肉盾打不过。伤害对位未受此门约束(玩家未点名改它),仍照旧难度倍率。
+        boolean hpScalingOn = com.yongye.system.DifficultyManager.getLevel()
+                >= com.yongye.item.GameDifficulty.HARD.ordinal();
         EntityAttributeInstance hpInst = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
-        if (hpInst != null && targetHits > 0 && pAtk > 0) {
+        if (hpScalingOn && hpInst != null && targetHits > 0 && pAtk > 0) {
             double curHp = hpInst.getValue();
             double targetHp = pAtk * targetHits * diffMult;
             if (curHp > 0 && targetHp > curHp) {

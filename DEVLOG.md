@@ -1276,3 +1276,21 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **待编译验证**：1.21 数据驱动附魔取等级——`world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.SWEEPING_EDGE).orElse(null)` ＋ `EnchantmentHelper.getLevel(RegistryEntry, ItemStack)`；若 `get(...)` 报错改 `getOrThrow(...)`,`getEntry` 返回类型按 IDEA 提示调。`getNonSpectatingEntities`/`takeKnockback`/`isTeammate`/`squaredDistanceTo` 为标准 API。待本地 `./gradlew build`。
 - 新文件 +1(tag JSON,非 Java)；改 1 个 Java；无配置变更、configVersion 不变。
 - **镐子不显示**：经查**不是本 mod**——未注册任何镐(仅 loot 表引用原版钻石镐)、未覆盖任何原版物品模型(`assets/minecraft` 下无 `models/`)、无任何碰物品渲染的 mixin(客户端 mixin 仅 HUD/标题/粒子)。疑外部资源包或渲染 mod(Sodium/Iris/光影),待作者确认「不显示」的具体现象(缺失紫块/手中看不见/栏里没了)再定。
+
+## 里程碑 147 — 「按玩家攻击拔怪物血量」只在困难及以上开启(普通打不过修复)
+- **需求**:动态对位里「根据玩家攻击拔高怪物血量」这套,现在普通难度也在跑,导致普通也打不过(怪被堆成肉盾)。要求**只在「困难」及以上才开**,普通及以下关掉。
+- **根因**:`DynamicScaling.scaleToNearestPlayer` 的血量对位段只受 config `enableDynamicMobScaling` 一个开关管、**不分难度**;普通(适中 NORMAL)同样按 `玩家攻击 × targetHits × diffMult` 把怪血往上堆,玩家越强怪越肉。`diffMult` 只改放大幅度、不会关掉缩放本身,所以低难度仍在拔血。
+- **关键澄清(踩坑纠正)**:本 mod 的难度**不是原版 `net.minecraft.world.Difficulty`**,而是自定义枚举 `com.yongye.item.GameDifficulty` 七档:0 游玩 / 1 简单 / 2 适中(NORMAL,默认/未设定按此) / 3 **困难(HARD)** / 4 地狱 / 5 深渊 / 6 永夜。所以「困难以上」＝ `ordinal >= 3`。最初设想的 `Difficulty.HARD` 是错的,查 `DifficultyManager` + `GameDifficulty` 后纠正。
+- **修法**:在血量对位段(原 46-56 行)之前加一道硬门:
+  ```java
+  boolean hpScalingOn = com.yongye.system.DifficultyManager.getLevel()
+          >= com.yongye.item.GameDifficulty.HARD.ordinal();
+  ...
+  if (hpScalingOn && hpInst != null && targetHits > 0 && pAtk > 0) { ... }
+  ```
+  仅 HARD/HELL/ABYSS/ETERNAL 才按攻击拔血;PLAY/EASY/NORMAL 及**未设定**(`getLevel()` 返回 -1 < 3 → 按「适中」处理)都不拔血。
+- **范围**:门加在方法**内部**血量段,一处改动同时覆盖两个调用点 —— `MobEnhancementHandler`(普通怪强化)与 `MobBossHandler`(BOSS 化)。与现有 `enableDynamicMobScaling` 自检同一风格。
+- **未动伤害段**:伤害对位段(58-68 行,按玩家最大生命拔高怪物伤害)**未受此门约束** —— 用户只点名「血量」,没提伤害,不擅自扩范围,仍照旧 `diffMult` 缩放。若也要按难度门控,需作者另行确认。
+- 静态自检:`DynamicScaling.java` 花括号 7/7、圆括号 42/42 配平;`DifficultyManager.getLevel()` 返回 `int` 真实存在;`GameDifficulty.HARD` 常量存在;两处新引用走全限定名(同既有 `mobMult()` 风格),无需补 import。
+- **无「待编译验证」点**:本轮全部使用 repo 既有 / 标准 API —— `getLevel()` 返回 int、`HARD.ordinal()` 标准枚举方法、`int >= int` 比较,**没有引入任何新接口或 yarn 敏感点**,比 m141-m146 干净。仍待本地 `./gradlew build` 走一遍总验(因前几轮 m141-m146 的待验证点尚未在本地编译过)。
+- 无新文件(改 1 个现有 `DynamicScaling.java`);无配置变更、configVersion 不变(仍 7)。
