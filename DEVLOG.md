@@ -1343,3 +1343,17 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:`LootHandler` 括号 {}34/34·()235/235 配平;`DifficultyManager.mobMult()` 返回 `double`、同包无需 import;新字段 `enableDifficultyLootBonus`/`difficultyLootFloor` 定义↔引用一致。
 - **无「待编译验证」点**:全用 repo 既有/标准 API。
 - 改 `LootHandler.java` + `YongyeConfig.java`(本轮新增难度奖励 2 字段;并顺带定义 m151 细柱传送的 3 字段);**configVersion 7→8**。
+
+## 里程碑 151 — 细柱兜底传送(修「单格高柱躲正上方」僵尸上不去)
+- **现象**:玩家用 1×1 高柱躲在怪正上方,僵尸既搭不上去也传不上去。
+- **根因(三条上去的路全卡)**:
+  - 搭柱(`mobPillarUp`)+ 挖墙都卡 `ProgressionManager.canMobsDig`(第 5 天才解锁),第 5 天前根本不搭。
+  - 现有「卡住传送」即便条件满足,`teleportNear` 是去**玩家四周找有实心地面的落脚点**——玩家站 1×1 细柱顶时,四周同高度全空气、底下无实心块 → 找不到落点 → 传送失败。
+  - 爬墙需「精英/BOSS/永夜≥3」,普通怪前中期不触发。
+- **改法**:加一条**独立兜底传送** `pursuitTeleportPillarCheese`(默认开),触发 = 玩家水平距离 ≤ `pillarCheeseMaxHorizontal`(2.5,近乎正上方)**且** 高出 ≥ `pillarCheeseMinHeight`(4.0)**且** 持续无进展达 `pursuitStuckTicks`(3s)。满足则 `teleportOntoPlayer` 直接把怪传到**玩家所在格**(站玩家脚下方块=柱顶),**不找地面、不依赖墙/解锁日**。
+  - 放在现有传送之后、挖墙之前;先给搭塔/爬墙 3 秒机会(`pillarCheeseMinHeight` 4 略高于搭塔触发的 3 格),仍上不去才兜底。
+  - 复用 `STUCK` 卡住跟踪 + `pursuitMaxTeleportsPerTick` 限流;带 `!anchor`(世界之锚仍可免疫,同其它传送)。
+- **新辅助 `teleportOntoPlayer`**:与 `teleportNear` 区别 = 不在四周找地面,直接 `refreshPositionAndAngles(player.getX/Y/Z)`,清速度/落距 + 双端末影传送粒子/音效。
+- 静态自检:`PursuitHandler` 括号 {}41/41·()271/271 配平;用到的 `hasVehicle/stopRiding/spawnParticles/getNavigation/refreshPositionAndAngles/playSound` 等全在本文件已用过;`dx/dz/wallAhead` 均在前文已算、作用域内;新字段定义↔引用一致。
+- **无「待编译验证」点**:全用 repo 既有/标准 API。
+- 改 `PursuitHandler.java`(配置 3 字段已在 m150 随 configVersion 8 一并加入)。

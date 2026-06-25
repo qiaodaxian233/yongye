@@ -130,6 +130,29 @@ public final class PursuitHandler {
                         }
                     }
 
+                    // —— 高柱兜底(m151):玩家近乎正上方且高出阈值、怪长时间拉不近 → 直接传到玩家所在格 ——
+                    // 专治玩家用 1×1 细柱躲正上方:此时玩家四周同高度全空气、底下无实心块,
+                    // teleportNear 找不到落脚点而失败;这里不找地面、不依赖墙/解锁日,直接落到玩家脚下方块(柱顶)。
+                    // 触发要求"持续无进展达 pursuitStuckTicks",先给搭塔/爬墙留出机会再兜底。
+                    if (!anchor && cfg.pursuitTeleportPillarCheese) {
+                        double horiz = Math.sqrt(dx * dx + dz * dz);
+                        double dyUp = player.getY() - mob.getY();
+                        double pcDistSq = mob.squaredDistanceTo(player);
+                        double[] pcSt = STUCK.computeIfAbsent(mob, k -> new double[]{pcDistSq, mob.age});
+                        if (pcDistSq < pcSt[0] - 0.5) { pcSt[0] = pcDistSq; pcSt[1] = mob.age; }
+                        boolean pcStuckLong = mob.age - pcSt[1] > cfg.pursuitStuckTicks;
+                        if (horiz <= cfg.pillarCheeseMaxHorizontal && dyUp >= cfg.pillarCheeseMinHeight && pcStuckLong) {
+                            if (teleportsThisTick < cfg.pursuitMaxTeleportsPerTick
+                                    && teleportOntoPlayer(world, mob, player)) {
+                                teleportsThisTick++;
+                                pcSt[0] = mob.squaredDistanceTo(player);
+                                pcSt[1] = mob.age;
+                                mob.setTarget(player);
+                                continue; // 本 tick 不再挖/爬
+                            }
+                        }
+                    }
+
                     // —— 挖墙 ——
                     if (!anchor && wallAhead) {
                         double maxHardness = boss ? cfg.digMaxHardnessBoss
@@ -223,6 +246,26 @@ public final class PursuitHandler {
             }
         }
         return false;
+    }
+
+    /**
+     * 高柱兜底专用传送:直接把怪传到玩家所在格(站到玩家脚下方块=柱顶上)。
+     * 与 teleportNear 不同——不在玩家四周找可站立地面,因此玩家站 1×1 细柱顶(四周无实心块)时也能上去。
+     */
+    private static boolean teleportOntoPlayer(ServerWorld world, MobEntity mob, ServerPlayerEntity player) {
+        if (mob.hasVehicle()) mob.stopRiding();
+        world.spawnParticles(ParticleTypes.PORTAL, mob.getX(), mob.getBodyY(0.5), mob.getZ(),
+                20, 0.3, 0.5, 0.3, 0.4);
+        mob.getNavigation().stop();
+        mob.refreshPositionAndAngles(player.getX(), player.getY(), player.getZ(), mob.getYaw(), mob.getPitch());
+        mob.setVelocity(Vec3d.ZERO);
+        mob.velocityModified = true;
+        mob.fallDistance = 0.0f;
+        world.spawnParticles(ParticleTypes.PORTAL, player.getX(), player.getY() + 0.5, player.getZ(),
+                20, 0.3, 0.5, 0.3, 0.4);
+        world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ENDERMAN_TELEPORT,
+                SoundCategory.HOSTILE, 0.8f, 1.0f);
+        return true;
     }
 
     /** 怪是否整只嵌在实心方块里(脚部或眼部所在方块会致憋闷)。 */
