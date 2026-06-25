@@ -44,10 +44,10 @@ public final class DynamicScaling {
         double diffMult = com.yongye.system.DifficultyManager.mobMult();
 
         // —— 血量对位:目标 = 玩家每击攻击 × 期望击杀次数 × 难度,只增不减 ——
-        // m147:血量对位只在「困难」及以上才开;适中/简单/游玩(含未设定→按适中)不再按玩家攻击拔血,
-        //       避免普通难度怪被堆成肉盾打不过。伤害对位未受此门约束(玩家未点名改它),仍照旧难度倍率。
-        boolean hpScalingOn = com.yongye.system.DifficultyManager.getLevel()
-                >= com.yongye.item.GameDifficulty.HARD.ordinal();
+        // m148:血量对位改为只在「永夜 V·灭世」(永夜等级 ≥ 5)才开。此前(m147)挂在世界难度「困难+」上仍太难;
+        //       改挂到「永夜等级」这条会随游戏推进/任务失败往上爬的线——前中期(永夜<5)怪不按攻击拔血,
+        //       只有世界沉入永夜 V 之后才开始堆血(永夜≥5 含其后「深渊 N 层」)。伤害对位仍未受此门约束(玩家未点名改它)。
+        boolean hpScalingOn = com.yongye.system.NightfallManager.getLevel() >= 5;  // 5 = 永夜 V·灭世
         EntityAttributeInstance hpInst = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
         if (hpScalingOn && hpInst != null && targetHits > 0 && pAtk > 0) {
             double curHp = hpInst.getValue();

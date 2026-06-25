@@ -1294,3 +1294,24 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:`DynamicScaling.java` 花括号 7/7、圆括号 42/42 配平;`DifficultyManager.getLevel()` 返回 `int` 真实存在;`GameDifficulty.HARD` 常量存在;两处新引用走全限定名(同既有 `mobMult()` 风格),无需补 import。
 - **无「待编译验证」点**:本轮全部使用 repo 既有 / 标准 API —— `getLevel()` 返回 int、`HARD.ordinal()` 标准枚举方法、`int >= int` 比较,**没有引入任何新接口或 yarn 敏感点**,比 m141-m146 干净。仍待本地 `./gradlew build` 走一遍总验(因前几轮 m141-m146 的待验证点尚未在本地编译过)。
 - 无新文件(改 1 个现有 `DynamicScaling.java`);无配置变更、configVersion 不变(仍 7)。
+
+## 里程碑 148 — 「按玩家攻击拔怪物血量」门控:世界难度 → 永夜等级 ≥ 5(永夜 V·灭世)
+- **需求**:m147 把血量对位挂在世界难度「困难+」上,作者反馈仍太难,改成「永夜5 才开启」。
+- **关键澄清(两套系统别混)**:「永夜5」指的是 `NightfallManager` 的**永夜等级 5**,不是 m147 用的世界难度 `GameDifficulty`。
+  - **永夜等级**(NightfallManager):0~5 有名 —— 0 昼夜正常 / 1 永夜 I·暗潮 / 2 永夜 II·猎杀 / 3 永夜 III·围城 / 4 永夜 IV·灾变 / **5 永夜 V·灭世**;>5 为「永夜·深渊 N 层」(N=level-5)。**随游戏推进 / 任务失败往上爬**,可赎夜降回。
+  - **世界难度**(GameDifficulty,m147 用的那个):游玩~永夜七档,**开局选一次、固定不变**。
+  - 用户说「永夜5 **才**开启」的「才」是「升到那一档才触发」——对应的是会爬的「永夜等级」线,不是固定的世界难度。故改挂永夜等级。
+- **修法**:把 m147 的门
+  ```java
+  boolean hpScalingOn = DifficultyManager.getLevel() >= GameDifficulty.HARD.ordinal();
+  ```
+  换成
+  ```java
+  boolean hpScalingOn = com.yongye.system.NightfallManager.getLevel() >= 5;  // 5 = 永夜 V·灭世
+  ```
+  前中期(永夜 < 5)怪不按攻击拔血;世界沉入永夜 V 之后(≥5,含其后「深渊 N 层」)才开始堆血。
+- **diffMult 保留不动**:第 44 行 `diffMult = DifficultyManager.mobMult()` 仍在 —— 那是「缩放**幅度**」倍率(开启后世界难度仍调放大多少),与「**是否**开启」的门是两码事,正确保留。
+- **未动伤害段**:伤害对位(58-68,按玩家血量拔怪伤)仍未受此门约束 —— 用户只点名「血量」。
+- 静态自检:`DynamicScaling.java` 花括号 7/7、圆括号 44/44 配平;`NightfallManager.getLevel()` 返回 `int` 真实存在;无 `GameDifficulty` 残留、无悬空 import(本就用全限定名)。
+- **无「待编译验证」点**:全用 repo 既有 / 标准 API(`getLevel()` int、`int >= int`),无新接口。仍待本地 `./gradlew build` 总验(m141-m146 待验证点尚未在本地编译过)。
+- 无新文件(改 1 个现有 `DynamicScaling.java`);无配置变更、configVersion 不变(仍 7)。
