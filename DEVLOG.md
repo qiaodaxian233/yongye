@@ -1204,3 +1204,11 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
   - 迁移:旧存档若有永夜之翼物品变无效;饰品栏鞘翅格的"滑翔"功能随之取消(本就只对永夜之翼生效)。
 - 静态自检:6 改动 Java 全配平;src 无 NIGHT_WING/NightWing 代码残留(仅余 AccessoryStorage/EquipmentEnhancer 两处无害注释);mixins.json/zh_cn.json 合法;三张精灵图有效。
 - 无新配置;configVersion 不变。
+
+## 里程碑 141 — 副手框贴图换正确比例（修 m140 副手框拉伸变形）
+- **问题**：m140 给副手框 `hotbar_offhand_left/right.png` 用的是 1254×1204 中心透明大图（与选中框三处同图、md5 相同）。该图比例 ≈1.04（近正方），而原版 `InGameHud` 把副手框 sprite 固定绘制到约 29×24（比例 ≈1.21），整张被 stretch 拉满 → 副手框相比选中框既整体偏大又被横向拉宽变形，即作者所说“副手框太大、别扭”。`offhand`/`selection` sprite 均无自定义渲染代码，纯走原版 `InGameHud`（grep 确认）。
+- **修法（纯资源，只改副手两张，选中框暂不动）**：换成作者新做的 145×120 副手专用图（比例 1.208 = 29:24，拉进副手框不变形）；并照原版偏移做 left/right 镜像——`left` 框靠左、右侧留白；`right` 框靠右、左侧留白。原版那侧留白（约 7px/29）是朝快捷栏一侧的间隔，框本体对准副手物品槽，故 left/right 不可居中（中途曾误改居中，经核对原版后已纠正）。
+- 文件：`src/main/resources/assets/minecraft/textures/gui/sprites/hud/hotbar_offhand_left.png`、`hotbar_offhand_right.png` 由 1254×1204 → 145×120。
+- 静态自检：两图均 145×120、比例 1.208；`left` 框靠左（右留白 32px）、`right` 框靠右（左留白 35px），偏移方向与原版一致；`git status` 仅这两文件变更；选中框 `hotbar_selection.png` 保持 1254×1204 不动（与副手蓝玻璃风格暂未统一，待后续定）。
+- 无 Java/配置改动；configVersion 不变。
+- 待作者本地 `./gradlew build` + 进游戏实测槽位/物品对齐（贴图类一律以实机为准）。
