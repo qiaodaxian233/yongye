@@ -1331,3 +1331,15 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 无新文件(改 4 个现有);configVersion 不变(改默认值,非加/删字段)。
 
 > **里程碑状态备注(m149 起)**:`build` 基线已对齐到 m148 本地编译通过。此前 DEVLOG 里 m121~m148 散落的「待编译验证」均已随 m148 的 BUILD SUCCESSFUL 落地,后续无需再回头补编;新里程碑若引入新接口仍照常标注。
+
+## 里程碑 150 — 难度高奖励也高(世界难度 → 掉落倍率)
+- **需求**:难度越高,奖励也越高(此前世界难度只让怪变强、**不**影响掉落)。
+- **现状**:`LootHandler` 只有动态爆率 `lm`(玩家越强掉率越低,反滚雪球)在乘概率掉落;世界难度 `GameDifficulty` 不参与掉落。
+- **改法**:引入难度奖励倍率 `dm = enableDifficultyLootBonus ? max(difficultyLootFloor, DifficultyManager.mobMult()) : 1.0`,挂**世界难度**(开局选的游玩~永夜,`mobMult` 0.5~6.0),保底 `difficultyLootFloor`(默认 **1.0** = 低难度不减奖励、只困难以上加成)。
+  - 概率掉落:把 `dm` 折进综合倍率 `lm = baseLm * dm` —— 下游 11 处 `*lm` 全自动含难度加成,无需逐处改。
+  - 精英必爆数量:`gm = (dynamicLootScaleGuaranteed ? baseLm : 1.0) * dm` —— 防滚雪球仍按 `baseLm` 缩减,难度加成单独乘且**不被 `dynamicLootScaleGuaranteed` 开关吞掉**。
+- **倍率幅度**:HARD ×1.6 / HELL ×2.5 / ABYSS ×4.0 / ETERNAL ×6.0(与怪物强度倍率同源)。ETERNAL 下掉落约 6×,部分概率掉落会超 1.0(必掉)——这是有意的「最高难度最丰厚」;嫌多可调低 `difficultyLootFloor` 或后续加帽。
+- **为何挂世界难度而非永夜等级**:永夜等级刚在 m148 用于怪血门控;且「难度高奖励高」语义就指开局选的那条世界难度线。
+- 静态自检:`LootHandler` 括号 {}34/34·()235/235 配平;`DifficultyManager.mobMult()` 返回 `double`、同包无需 import;新字段 `enableDifficultyLootBonus`/`difficultyLootFloor` 定义↔引用一致。
+- **无「待编译验证」点**:全用 repo 既有/标准 API。
+- 改 `LootHandler.java` + `YongyeConfig.java`(本轮新增难度奖励 2 字段;并顺带定义 m151 细柱传送的 3 字段);**configVersion 7→8**。

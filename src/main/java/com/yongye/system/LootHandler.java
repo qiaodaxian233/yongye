@@ -111,15 +111,20 @@ public final class LootHandler {
             Random r = entity.getRandom();
             boolean elite = entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_ELITE, false);
 
-            // —— 动态爆率:按击杀者强度算掉率倍率(玩家越强越低),乘进所有概率掉落,并缩减精英必爆数量 ——
-            double lm = (damageSource.getAttacker() instanceof ServerPlayerEntity killer)
+            // —— 动态爆率:按击杀者强度算掉率倍率(玩家越强越低) ——
+            double baseLm = (damageSource.getAttacker() instanceof ServerPlayerEntity killer)
                     ? PlayerPower.lootMultiplier(killer) : 1.0;
+            // —— 难度奖励(m150):世界难度越高掉落越丰厚;保底 difficultyLootFloor(默认 1.0 即低难度不减) ——
+            double dm = cfg.enableDifficultyLootBonus
+                    ? Math.max(cfg.difficultyLootFloor, DifficultyManager.mobMult()) : 1.0;
+            // 下文所有概率掉落用的综合倍率 = 动态爆率 × 难度奖励(因此每处 *lm 都自动含难度加成,无需逐处改)
+            double lm = baseLm * dm;
 
             if (elite) {
                 // —— 精英必爆套餐(m90):在下面的概率掉落之上额外保底,提高精英击杀收益 ——
                 if (cfg.eliteGuaranteedDrops) {
-                    // 动态缩减必爆数量(防滚雪球;可用 dynamicLootScaleGuaranteed 关闭)
-                    double gm = cfg.dynamicLootScaleGuaranteed ? lm : 1.0;
+                    // 动态缩减必爆数量(防滚雪球;可用 dynamicLootScaleGuaranteed 关闭)× 难度奖励(难度加成不受该开关约束)
+                    double gm = (cfg.dynamicLootScaleGuaranteed ? baseLm : 1.0) * dm;
                     int gShards   = (int) Math.round(cfg.eliteGuaranteedShards   * gm);
                     int gCrystals = (int) Math.round(cfg.eliteGuaranteedCrystals * gm);
                     int gBooks    = (int) Math.round(cfg.eliteGuaranteedSkillBooks * gm);

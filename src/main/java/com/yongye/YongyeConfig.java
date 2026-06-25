@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 7;
+    public static final int CURRENT_CONFIG_VERSION = 8;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -230,6 +230,10 @@ public class YongyeConfig {
     public double dynamicLootEnhanceWeight = 2.0;      // 强化等级在强度里的权重(1级强化 ≈ 几级技能书)
     public boolean dynamicLootScaleGuaranteed = true;  // 是否也按倍率缩减精英「必爆」的碎片/书数量(防滚雪球关键)
 
+    // ===== 难度奖励(m150:世界难度越高,掉落越丰厚——和动态爆率倍率并乘)=====
+    public boolean enableDifficultyLootBonus = true;   // 总开关:开后概率掉落与精英必爆数量都乘世界难度倍率
+    public double difficultyLootFloor = 1.0;           // 难度奖励倍率下限:取 max(此值, 世界难度mobMult)。1.0=低难度不减奖励,只有困难以上加成;设<1.0可让低难度也少掉
+
     // ===== 防卡死:全局怪量预算 + 传送限流 =====
     public int globalMaxHostilesNearby = 60;          // 玩家附近敌对生物总数上限,超了本 mod 不再额外刷怪
     public double globalHostileRadius = 28.0;         // 统计半径
@@ -350,6 +354,11 @@ public class YongyeConfig {
     public int pursuitStuckTicks = 60;          // 持续无进展多久判定卡住(tick,3s)
     public double pursuitTeleportRadius = 6.0;  // 传送落点距玩家半径
     public double pursuitTeleportMinDist = 3.0; // 距玩家小于此距离不传送(已贴脸)
+    /** 细柱兜底传送(m151:玩家用 1×1 高柱躲在正上方时,周围无落脚地面致普通传送失败——此项直接把怪传到玩家所在格)*/
+    public boolean pursuitTeleportPillarCheese = true; // 总开关
+    public double pillarCheeseMinHeight = 4.0;   // 玩家高出怪至少这么多格才判定为"躲高柱"(略高于搭塔触发的3格,先给搭塔/爬墙机会)
+    public double pillarCheeseMaxHorizontal = 2.5; // 玩家水平距离小于此值才算"正上方"(同搭塔)
+    // 触发还需"持续无进展达 pursuitStuckTicks";传送次数同样受 pursuitMaxTeleportsPerTick 限流
 
     // ============ 随机任务(文档第 9 章)============
     // ===== 职业系统 =====
