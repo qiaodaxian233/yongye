@@ -1247,3 +1247,17 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检：三文件括号配平；`LootMagnetHandler.register()` 无激活行；`enableLootMagnet` 默认 false；`.maxCount(99)` 残留 0、`.maxCount(16/1)` 各 2 保留。
 - **待编译验证**：仅注释一行 + 删 `.maxCount(99)` 调用，无新接口/无 yarn 敏感点，风险极低；待本地 `./gradlew build`。
 - 无新文件（改 3 个现有）；configVersion 不变（改默认值/去 maxCount，未加删字段）。
+
+## 里程碑 145 — 玩家皮肤僵尸BOSS（第一步：链路打通 + jiemoLI 打底）
+- **需求**：僵尸被 MobBoss BOSS 化时做成「玩家皮肤BOSS」——名牌「<在线玩家名> BOSS」、用该玩家皮肤渲染、每个在线玩家各刷一只自己皮肤的、融入现有 MobBoss 概率自然刷。
+- **分步**：动态「按玩家名取其在线官方皮肤」那个 API 仓库从没用过，单独放第二步 build 验证；**本步先把整条链路用 jiemoLI 打底跑通**（全复用现有范式，无新客户端 API，风险低）。
+- **复用的现成件**：`EliteSkinFeatureRenderer`（已挂在所有生物渲染器上、按名牌叠自定义皮肤）+ `MobBossHandler`（命名 / 红色 ServerBossBar / IS_MOB_BOSS）。僵尸模型 UV 与玩家皮肤 64×64 兼容，故僵尸直接贴玩家皮肤能显示（手臂为僵尸直臂，贴图对得上）。
+- **改动**：
+  - 资源：`jiemo_li.png`（作者上传的打底 / fallback 皮肤）→ `assets/yongye/textures/entity/`。
+  - `YongyeConfig`：新增 `enablePlayerSkinZombieBoss`（默认 true）；`CURRENT_CONFIG_VERSION` 6→7。
+  - `MobBossHandler`：新增 `SKIN_BOSS_OWNER` Map（每个在线玩家同时最多一只皮肤BOSS）+ `pickSkinTarget()`（取一个当前没有活皮肤BOSS的在线玩家，取前先清死项）+ `makeMobBoss()` 僵尸分支（选到玩家 → 名牌「<名> BOSS」+ 记 Map；否则走默认「【BOSS】 怪名」）；import `ZombieEntity`/`MinecraftServer`/`UUID`。
+  - `EliteSkinFeatureRenderer.textureFor()`：加分支 —— 僵尸 + 名牌 `endsWith(" BOSS")` 且非「【」开头 → 返回 `jiemo_li.png`。
+- **第二步（下一里程碑，本步 build 验证后做）**：把 `textureFor` 里的 `jiemo_li` 换成「按名牌里的玩家名查在线玩家皮肤 `Identifier`、拿不到再 fallback jiemoLI」——客户端取在线皮肤的 API（`ClientPlayNetworkHandler.getPlayerListEntry`→`SkinTextures`）仓库首次用，隔离验证。
+- 静态自检：三文件括号配平；`enablePlayerSkinZombieBoss`/`pickSkinTarget`/`SKIN_BOSS_OWNER` 定义↔引用一致；`ZombieEntity`/`MinecraftServer`/`UUID` import 齐；`jiemo_li.png` 就位。
+- **待编译验证**：`mob.getServer()`（`Entity.getServer()` @Nullable；若 build 报找不到，改 `mob.getWorld().getServer()`）、`getPlayerManager().getPlayerList()`、`getGameProfile().getName()` —— 多为仓库在用的标准 API，风险中低；待本地 `./gradlew build`。
+- 无新文件（改 3 个现有 + 1 张资源）；配置 +1、configVersion 6→7。

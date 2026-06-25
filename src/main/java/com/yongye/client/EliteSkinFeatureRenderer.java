@@ -57,6 +57,11 @@ public class EliteSkinFeatureRenderer<T extends Entity, M extends EntityModel<T>
         if (n.equals("HIM")) {
             return Identifier.of(Yongye.MOD_ID, "textures/entity/him.png");
         }
+        // m145:玩家皮肤僵尸BOSS —— 名牌形如「<玩家名> BOSS」(非「【BOSS】」开头),僵尸叠玩家皮肤。
+        // 本步先 fallback 到 jiemoLI;下一步改成按玩家名取其在线官方皮肤、拿不到再用 jiemoLI。
+        if (e instanceof ZombieEntity && n.endsWith(" BOSS") && !n.startsWith("【")) {
+            return Identifier.of(Yongye.MOD_ID, "textures/entity/jiemo_li.png");
+        }
         // 精英怪:按怪种选图
         if (n.contains("精英")) {
             String name;

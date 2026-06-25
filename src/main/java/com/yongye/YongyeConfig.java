@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 6;
+    public static final int CURRENT_CONFIG_VERSION = 7;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -118,6 +118,8 @@ public class YongyeConfig {
     public boolean enableMobBoss = true;
     public int mobBossStartDay = 10;             // 第几天起开始刷怪物BOSS(早于此天不刷)
     public double mobBossChance = 0.008;         // 每只普通怪生成时BOSS化的概率(低,作偶发精英BOSS)
+    // m145:僵尸BOSS化时,做成"玩家皮肤BOSS"——名牌「<在线玩家名> BOSS」、用该玩家皮肤渲染、每个在线玩家同时最多一只
+    public boolean enablePlayerSkinZombieBoss = true;
     public double mobBossHealthMultiplier = 25.0;
     public double mobBossAttackMultiplier = 6.0;
     public double mobBossSpeedMultiplier = 1.3;

@@ -14,7 +14,9 @@ import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.Monster;
+import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -26,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.WeakHashMap;
 
 /**
@@ -53,6 +56,9 @@ public final class MobBossHandler {
 
     // 每个怪物BOSS对应一条血条(WeakHashMap:怪被 GC 后自动清理)
     private static final Map<MobEntity, ServerBossBar> BARS = new WeakHashMap<>();
+
+    // m145:每个在线玩家(UUID)当前对应的"玩家皮肤僵尸BOSS"——保证每人同时最多一只,死亡/失效后才再分配给新僵尸
+    private static final Map<UUID, MobEntity> SKIN_BOSS_OWNER = new java.util.HashMap<>();
 
     public static void register() {
         // —— 生成时按概率 BOSS 化(第 mobBossStartDay 天起)——
@@ -117,6 +123,21 @@ public final class MobBossHandler {
         return count;
     }
 
+    /**
+     * m145:为「玩家皮肤僵尸BOSS」挑一个目标在线玩家 —— 返回当前没有活着皮肤BOSS的那个;全都已有则返回 null。
+     * 取之前先清掉 Map 里死的/已失效项,保证每个在线玩家同时最多一只自己皮肤的 BOSS。
+     */
+    private static ServerPlayerEntity pickSkinTarget(MobEntity mob) {
+        MinecraftServer server = mob.getServer();
+        if (server == null) return null;
+        SKIN_BOSS_OWNER.values().removeIf(b -> b == null || !b.isAlive());
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            MobEntity cur = SKIN_BOSS_OWNER.get(p.getUuid());
+            if (cur == null || !cur.isAlive()) return p;
+        }
+        return null;
+    }
+
     private static void makeMobBoss(MobEntity mob, YongyeConfig cfg) {
         mob.setAttached(ModAttachments.IS_MOB_BOSS, true);
         mob.setAttached(ModAttachments.IS_BOSS, true); // 继承全套 Boss 机制(能力/掉落/挖墙/反制)
@@ -134,8 +155,19 @@ public final class MobBossHandler {
         DynamicScaling.scaleToNearestPlayer(mob,
                 cfg.dynamicMobBossTargetHits, cfg.dynamicMobBossSurviveHits, cfg.dynamicMobScanRadius);
 
-        Text name = Text.literal("【BOSS】 ").formatted(Formatting.DARK_RED, Formatting.BOLD)
-                .append(mob.getType().getName());
+        // m145:僵尸优先做成"玩家皮肤BOSS" —— 名牌「<在线玩家名> BOSS」,客户端按此名牌叠该玩家皮肤
+        // (本步先 fallback 到 jiemoLI 皮肤;动态取在线玩家官方皮肤在下一步加)。每个在线玩家同时最多一只。
+        Text name;
+        ServerPlayerEntity skinTarget = (mob instanceof ZombieEntity && cfg.enablePlayerSkinZombieBoss)
+                ? pickSkinTarget(mob) : null;
+        if (skinTarget != null) {
+            name = Text.literal(skinTarget.getGameProfile().getName() + " BOSS")
+                    .formatted(Formatting.DARK_RED, Formatting.BOLD);
+            SKIN_BOSS_OWNER.put(skinTarget.getUuid(), mob);
+        } else {
+            name = Text.literal("【BOSS】 ").formatted(Formatting.DARK_RED, Formatting.BOLD)
+                    .append(mob.getType().getName());
+        }
         mob.setCustomName(name);
         mob.setCustomNameVisible(true);
 
