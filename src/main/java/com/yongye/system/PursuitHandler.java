@@ -9,6 +9,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.Monster;
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -145,6 +146,15 @@ public final class PursuitHandler {
                             if (teleportsThisTick < cfg.pursuitMaxTeleportsPerTick
                                     && teleportOntoPlayer(world, mob, player)) {
                                 teleportsThisTick++;
+                                // 把玩家从细柱上撞下去:水平冲量(柱仅1格宽,中等力度即可推出边缘坠落)+ 轻微上抬脱离柱顶;
+                                // 玩家移动是客户端权威,必须显式发 EntityVelocityUpdateS2CPacket 速度才真正生效。pillarCheeseKnockback=0 可关。
+                                if (cfg.pillarCheeseKnockback > 0) {
+                                    double ang = mob.getRandom().nextDouble() * Math.PI * 2;
+                                    double kb = cfg.pillarCheeseKnockback;
+                                    player.setVelocity(Math.cos(ang) * kb, 0.2, Math.sin(ang) * kb);
+                                    player.velocityModified = true;
+                                    player.networkHandler.sendPacket(new EntityVelocityUpdateS2CPacket(player));
+                                }
                                 pcSt[0] = mob.squaredDistanceTo(player);
                                 pcSt[1] = mob.age;
                                 mob.setTarget(player);

@@ -1357,3 +1357,12 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:`PursuitHandler` 括号 {}41/41·()271/271 配平;用到的 `hasVehicle/stopRiding/spawnParticles/getNavigation/refreshPositionAndAngles/playSound` 等全在本文件已用过;`dx/dz/wallAhead` 均在前文已算、作用域内;新字段定义↔引用一致。
 - **无「待编译验证」点**:全用 repo 既有/标准 API。
 - 改 `PursuitHandler.java`(配置 3 字段已在 m150 随 configVersion 8 一并加入)。
+
+## 里程碑 152 — 细柱传送后把玩家撞下柱(m151 续:光传上去人还能继续躲)
+- **需求**:单格高柱躲正上方、僵尸上不去时,僵尸 TP 到人旁边后要**把人撞下去**(否则只是传上柱顶,玩家照样站着躲)。
+- **改法**:在 m151 的细柱兜底传送成功(`teleportOntoPlayer` 返回 true)之后,给**玩家**一个水平冲量把他从 1×1 柱顶推下去——
+  - `player.setVelocity(cos(ang)*kb, 0.2, sin(ang)*kb)`(随机水平方向 + 轻微上抬脱离柱顶),`kb = pillarCheeseKnockback`(默认 0.6,柱仅 1 格宽足以推出边缘坠落;设 0 则只传不撞=回退 m151 行为)。
+  - **关键**:玩家移动是客户端权威,服务端改 `setVelocity` 不会自动同步——必须显式 `player.networkHandler.sendPacket(new EntityVelocityUpdateS2CPacket(player))` 速度才真正在客户端生效;另置 `velocityModified=true`。
+- 静态自检:`PursuitHandler` 括号 {}42/42·()280/280 配平;新字段 `pillarCheeseKnockback` 定义↔引用一致;import 已加。
+- **待编译验证(本轮唯一)**:`EntityVelocityUpdateS2CPacket` 是仓库首次使用的 S2C 包——`new EntityVelocityUpdateS2CPacket(player)`(读实体速度)+ `ServerPlayerEntity.networkHandler`(`ServerPlayNetworkHandler`)`.sendPacket(...)` 均为 1.21.1 标准用法(仓库客户端侧已用 `mc.player.networkHandler.sendCommand`,字段同名),风险低但首用故标注;build 报错(如包路径/方法名)贴来即修。
+- 改 `PursuitHandler.java`(import +1、击退段)+ `YongyeConfig.java`(新增 `pillarCheeseKnockback`),**configVersion 8→9**。

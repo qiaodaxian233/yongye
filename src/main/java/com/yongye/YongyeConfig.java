@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 8;
+    public static final int CURRENT_CONFIG_VERSION = 9;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -358,6 +358,7 @@ public class YongyeConfig {
     public boolean pursuitTeleportPillarCheese = true; // 总开关
     public double pillarCheeseMinHeight = 4.0;   // 玩家高出怪至少这么多格才判定为"躲高柱"(略高于搭塔触发的3格,先给搭塔/爬墙机会)
     public double pillarCheeseMaxHorizontal = 2.5; // 玩家水平距离小于此值才算"正上方"(同搭塔)
+    public double pillarCheeseKnockback = 0.6;   // 传上柱后把玩家从柱上撞下去的水平冲量强度(0=只传不撞;柱仅1格宽,0.6 足以推出边缘坠落)
     // 触发还需"持续无进展达 pursuitStuckTicks";传送次数同样受 pursuitMaxTeleportsPerTick 限流
 
     // ============ 随机任务(文档第 9 章)============
