@@ -25,6 +25,20 @@ public final class StartingKitHandler {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity p = handler.player;
             YongyeConfig cfg = YongyeConfig.get();
+
+            // 开局口粮(m143):每人首次进入发 N 个面包;独立开关/标记,放在背包逻辑之前
+            // (背包那段在未装 Sophisticated Backpacks 时会 return,放后面会被一起跳过)
+            if (cfg.giveStartingFood && cfg.startingFoodCount > 0
+                    && !p.getAttachedOrElse(ModAttachments.GOT_STARTING_FOOD, false)) {
+                int remain = cfg.startingFoodCount;
+                while (remain > 0) {
+                    int n = Math.min(remain, 64);
+                    p.giveItemStack(new ItemStack(Items.BREAD, n));   // 64 一组,超出自动拆叠
+                    remain -= n;
+                }
+                p.setAttached(ModAttachments.GOT_STARTING_FOOD, true);
+            }
+
             if (!cfg.giveStartingBackpack) return;
             if (p.getAttachedOrElse(ModAttachments.GOT_STARTING_KIT, false)) return; // 每人只发一次
 

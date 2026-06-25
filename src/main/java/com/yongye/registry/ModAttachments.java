@@ -176,6 +176,14 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_welcome_books"));
 
+    /** GOT_STARTING_FOOD: 是否已领取开局口粮(面包),每人只发一次(死亡保留,避免刷取)。 */
+    public static final AttachmentType<Boolean> GOT_STARTING_FOOD =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_starting_food"));
+
     /** LOST_WEAPON_ENHANCE: 被夺且未找回的武器强化等级(供 /yongye recover 转移到新武器,损失 1/3)。 */
     public static final AttachmentType<Integer> LOST_WEAPON_ENHANCE =
             AttachmentRegistry.<Integer>builder()

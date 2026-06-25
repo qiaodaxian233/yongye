@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 5;
+    public static final int CURRENT_CONFIG_VERSION = 6;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -502,6 +502,11 @@ public class YongyeConfig {
 
     // ============ 开局两本书(m122:每人首次进入发《永夜·缘起》+《幸存者手册》)============
     public boolean giveWelcomeBooks = true;
+
+    // ============ 开局口粮(m143:每人首次进入发 N 个面包)============
+    public boolean giveStartingFood = true;
+    /** 开局赠送的面包数量(0 = 不发);默认 20,超过 64 自动拆成多组。 */
+    public int startingFoodCount = 20;
 
     // ============ 高血量反制(文档第 17 章)============
     public boolean enableHighHpCounter = true;

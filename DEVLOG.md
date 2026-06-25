@@ -1226,3 +1226,15 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **待编译验证**：全部 `ctx.fill(int,int,int,int,int)` ＋ 基本算术，标准 API 仓库大量在用，无 yarn 映射敏感点，风险极低；待本地 `./gradlew build` ＋ 进游戏实测观感。
 - 预览（mockup，非实机）：`docs/hud/m142_preview.png`。HUD 另有 方案B（青蓝外发光）/ 方案C（去大底衬极简）可选，待作者看 A 实机后再定。
 - 无配置变更；configVersion 不变。
+
+## 里程碑 143 — 开局口粮（首次进入发 20 个面包）
+- **需求**：玩家出生（首次进入）给 20 个面包。
+- **实现（套用 `StartingKitHandler`「首次发一次」范式，无新文件）**：
+  - `YongyeConfig`：新增 `giveStartingFood`（默认 true）+ `startingFoodCount`（默认 20，0=不发）；`CURRENT_CONFIG_VERSION` 5→6。
+  - `ModAttachments`：新增 `GOT_STARTING_FOOD`（persistent BOOL + initializer false + copyOnDeath），每人只发一次、死亡保留→重生不再发，照 `GOT_STARTING_KIT` 模板。
+  - `StartingKitHandler`：`ServerPlayConnectionEvents.JOIN` 里、**背包逻辑之前**加发放段（背包在未装 Sophisticated Backpacks 时会 `return`，放后面会被一起跳过）；`startingFoodCount>0` 且未领取则发，按 64 一组拆叠 `new ItemStack(Items.BREAD, n)`，发完打 `GOT_STARTING_FOOD` 标记。
+- 语义：每人**首次进入发一次**，死后重生不再补发（和开局背包/欢迎书一致）。若要改成「每次重生都发」需另走 `AFTER_RESPAWN`、不打一次性标记。
+- 迁移：旧 `yongye.json` 缺这两个键 → GSON 保留代码初值（true/20），无「旧值盖新默认」问题；configVersion 自动对齐到 6。
+- 静态自检：三文件括号配平；`GOT_STARTING_FOOD`/`giveStartingFood`/`startingFoodCount` 定义↔引用一致；`Items.BREAD`、`ItemStack`、`ModAttachments` 均已 import。
+- **待编译验证**：`giveItemStack`、`new ItemStack(Items.BREAD,int)`、附件 `getAttachedOrElse/setAttached` 全是仓库在用的标准 API，无新接口/无 yarn 敏感点，风险极低；待本地 `./gradlew build`。
+- 无新文件（改 3 个现有）；配置 +2、configVersion 5→6。
