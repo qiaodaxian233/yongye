@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "yongye:chaos_blade",
+    "yongye:class_weapon_assassin",
+    "yongye:class_weapon_swordsman",
+    "yongye:class_weapon_tank",
+    "yongye:class_weapon_warlock",
+    "yongye:class_weapon_warrior"
+  ]
+}

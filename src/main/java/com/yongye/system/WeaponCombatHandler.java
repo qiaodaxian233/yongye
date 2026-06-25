@@ -4,16 +4,23 @@ import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import com.yongye.item.WeaponQuality;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.World;
 
 /**
  * 强化武器暴击:玩家用强化武器近战命中时,按武器品质的暴击率掷骰;
@@ -45,6 +52,12 @@ public final class WeaponCombatHandler {
                 if (heal > 0f) player.heal(heal);
             }
 
+            // —— 横扫之刃:自定义武器非 SwordItem,原版横扫不触发,这里手搓 ——
+            // 武器附了横扫之刃 + 蓄满 + 在地面 + 非疾跑时,对周围敌人补一圈 AOE(尊重攻速,连点不横扫)
+            if (charged && player.isOnGround() && !player.isSprinting()) {
+                trySweep(player, world, target, weapon);
+            }
+
             // 仅在攻击基本蓄满时才可暴击(连点刷子不吃暴击,尊重攻速)
             if (!charged) return ActionResult.PASS;
 
@@ -69,5 +82,50 @@ public final class WeaponCombatHandler {
         });
 
         Yongye.LOGGER.info("[永夜] 武器暴击系统已挂载");
+    }
+
+    /**
+     * 手搓横扫:读武器上的「横扫之刃」等级,对主目标周围的敌人补一圈 AOE。
+     * 仅给本 mod 自定义武器用(它们 extends Item、非 SwordItem,吃不到原版横扫);
+     * 原版剑不会进这里(调用前已 isWeapon 过滤),不会双重横扫。
+     */
+    private static void trySweep(PlayerEntity player, World world, LivingEntity target, ItemStack weapon) {
+        // 待编译验证:1.21 数据驱动附魔取等级——注册表查 SWEEPING_EDGE 条目 + EnchantmentHelper.getLevel(RegistryEntry, ItemStack)。
+        // 若 get(...) 报错可改 getOrThrow(...);若 getEntry 返回类型不符按 IDEA 提示调。
+        RegistryEntry<Enchantment> sweeping = world.getRegistryManager()
+                .get(RegistryKeys.ENCHANTMENT)
+                .getEntry(Enchantments.SWEEPING_EDGE)
+                .orElse(null);
+        if (sweeping == null) return;
+        int level = EnchantmentHelper.getLevel(sweeping, weapon);
+        if (level <= 0) return;
+
+        // 横扫伤害 = 1 + 攻击力 * level/(level+1),贴近原版横扫之刃手感
+        double atk = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        float sweepDmg = 1.0f + (float) atk * (level / (level + 1.0f));
+
+        float yawRad = player.getYaw() * ((float) Math.PI / 180f);
+        boolean hit = false;
+        for (LivingEntity nearby : world.getNonSpectatingEntities(LivingEntity.class,
+                target.getBoundingBox().expand(1.0, 0.25, 1.0))) {
+            if (nearby == player || nearby == target) continue;
+            if (player.isTeammate(nearby)) continue;
+            if (player.squaredDistanceTo(nearby) >= 9.0) continue;
+            nearby.takeKnockback(0.4,
+                    (double) MathHelper.sin(yawRad),
+                    (double) -MathHelper.cos(yawRad));
+            nearby.damage(world.getDamageSources().playerAttack(player), sweepDmg);
+            hit = true;
+        }
+
+        if (hit && world instanceof ServerWorld sw) {
+            double dx = -MathHelper.sin(yawRad);
+            double dz = MathHelper.cos(yawRad);
+            sw.spawnParticles(ParticleTypes.SWEEP_ATTACK,
+                    player.getX() + dx, player.getBodyY(0.5), player.getZ() + dz,
+                    0, dx, 0.0, dz, 0.0);
+            sw.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.0f, 1.0f);
+        }
     }
 }

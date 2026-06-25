@@ -1261,3 +1261,18 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检：三文件括号配平；`enablePlayerSkinZombieBoss`/`pickSkinTarget`/`SKIN_BOSS_OWNER` 定义↔引用一致；`ZombieEntity`/`MinecraftServer`/`UUID` import 齐；`jiemo_li.png` 就位。
 - **待编译验证**：`mob.getServer()`（`Entity.getServer()` @Nullable；若 build 报找不到，改 `mob.getWorld().getServer()`）、`getPlayerManager().getPlayerList()`、`getGameProfile().getName()` —— 多为仓库在用的标准 API，风险中低；待本地 `./gradlew build`。
 - 无新文件（改 3 个现有 + 1 张资源）；配置 +1、configVersion 6→7。
+
+## 里程碑 146 — 横扫之刃对自定义武器生效（B方案：手搓横扫 + 补 enchantable/sword 标签）
+- **问题**：武器附「横扫之刃」没效果；作者疑「是不是没给标签」。
+- **根因（两层，标签只是其一）**：
+  - `ChaosBladeItem` / `ClassWeaponItem` **都是 `extends Item`，不是 `SwordItem`**。1.21.1 的横扫在 `PlayerEntity.attack()` 里判 `主手物品 instanceof SwordItem` 才发动 → 普通 `Item` 永不横扫；横扫之刃只是「放大横扫伤害」的附魔,没有横扫这一下就没东西可放大 ＝ 看着没效果。
+  - `minecraft:sweeping_edge` 的 `supported_items` ＝ `#minecraft:enchantable/sword`,武器不在该标签里 → 附魔台/铁砧根本附不上(只能 `/enchant` 硬塞,塞上也只挂个名)。
+  - 故**补标签解决「附得上」,但解决不了「有效果」**——横扫开关在 SwordItem,标签管不到。
+- **修法（B：不重构武器类,避开 SwordItem 构造 + 属性冲突）**：
+  - `WeaponCombatHandler` 已有 `AttackEntityCallback`,在**暴击门槛之前**(横扫不依赖暴击)加 `trySweep()`：蓄满 + 在地面 + 非疾跑时,读武器横扫之刃等级,对主目标周围 `LivingEntity` 补一圈 AOE,伤害 ＝ `1 + 攻击力 × level/(level+1)`(贴近原版手感),带击退 + `SWEEP_ATTACK` 粒子 + 横扫音效。
+  - 只给本 mod 武器(调用前已 `isWeapon` 过滤,它们非 SwordItem,不与原版双重横扫)。
+  - 新建 `data/minecraft/tags/item/enchantable/sword.json`(`replace:false` 追加 6 把武器：`chaos_blade` + 5 职业武器),让横扫之刃附得上。
+- 静态自检：`WeaponCombatHandler` 花括号 10/10、圆括号 104/104 配平；`trySweep` 定义/调用各 1；新 import(`Enchantment`/`EnchantmentHelper`/`Enchantments`/`RegistryKeys`/`RegistryEntry`/`MathHelper`/`World`)全被引用；tag JSON 合法。
+- **待编译验证**：1.21 数据驱动附魔取等级——`world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.SWEEPING_EDGE).orElse(null)` ＋ `EnchantmentHelper.getLevel(RegistryEntry, ItemStack)`；若 `get(...)` 报错改 `getOrThrow(...)`,`getEntry` 返回类型按 IDEA 提示调。`getNonSpectatingEntities`/`takeKnockback`/`isTeammate`/`squaredDistanceTo` 为标准 API。待本地 `./gradlew build`。
+- 新文件 +1(tag JSON,非 Java)；改 1 个 Java；无配置变更、configVersion 不变。
+- **镐子不显示**：经查**不是本 mod**——未注册任何镐(仅 loot 表引用原版钻石镐)、未覆盖任何原版物品模型(`assets/minecraft` 下无 `models/`)、无任何碰物品渲染的 mixin(客户端 mixin 仅 HUD/标题/粒子)。疑外部资源包或渲染 mod(Sodium/Iris/光影),待作者确认「不显示」的具体现象(缺失紫块/手中看不见/栏里没了)再定。
