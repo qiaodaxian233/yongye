@@ -54,7 +54,7 @@ public class YongyeConfig {
     public double setBonusNetherite = 40;
 
     // ============ 技能书(文档 13)============
-    public int skillBookMaxLevel = 65535;
+    public int skillBookMaxLevel = 1000000000;       // 技能书等级上限(10亿,与 m127 属性上限 10亿 对齐;int 上限约 21.4 亿,装得下)
     public double skillStealChancePerLevel = 0.005; // 抢夺技能每级 +0.5% 夺取概率
     public double skillStealMaxChance = 0.9;         // 抢夺概率上限
 

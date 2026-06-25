@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * 血量强化技能书。
- *  - 等级存放在 ItemStack 的 SKILL_LEVEL 组件中(V1 ~ V65535)。
+ *  - 等级存放在 ItemStack 的 SKILL_LEVEL 组件中(V1 ~ V10亿,上限取 skillBookMaxLevel)。
  *  - 右键"学习",将本书等级累加进玩家持久数据,并消耗一本。
  *  - 同级合成升级在 HealthBookCombineRecipe 中实现。
  */

@@ -101,7 +101,7 @@ public final class ModCommands {
                                 })))
 
                         .then(CommandManager.literal("book")
-                                .then(CommandManager.argument("level", IntegerArgumentType.integer(1, 65535)).executes(ctx -> {
+                                .then(CommandManager.argument("level", IntegerArgumentType.integer(1, 1000000000)).executes(ctx -> {
                                     ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
                                     p.giveItemStack(HealthSkillBookItem.create(IntegerArgumentType.getInteger(ctx, "level")));
                                     return 1;
@@ -127,7 +127,7 @@ public final class ModCommands {
 
                         .then(CommandManager.literal("skillbook")
                                 .then(CommandManager.argument("type", StringArgumentType.word())
-                                        .then(CommandManager.argument("level", IntegerArgumentType.integer(1, 65535)).executes(ctx -> {
+                                        .then(CommandManager.argument("level", IntegerArgumentType.integer(1, 1000000000)).executes(ctx -> {
                                             ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
                                             String tid = StringArgumentType.getString(ctx, "type");
                                             SkillType type = null;

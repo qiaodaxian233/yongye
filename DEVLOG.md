@@ -1315,3 +1315,19 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:`DynamicScaling.java` 花括号 7/7、圆括号 44/44 配平;`NightfallManager.getLevel()` 返回 `int` 真实存在;无 `GameDifficulty` 残留、无悬空 import(本就用全限定名)。
 - **无「待编译验证」点**:全用 repo 既有 / 标准 API(`getLevel()` int、`int >= int`),无新接口。仍待本地 `./gradlew build` 总验(m141-m146 待验证点尚未在本地编译过)。
 - 无新文件(改 1 个现有 `DynamicScaling.java`);无配置变更、configVersion 不变(仍 7)。
+
+## 里程碑 149 — 技能书等级上限 65535 → 10亿
+- **需求**:技能书 V1~65535 提到 V1~10亿(与 m127 把属性上限抬到 10亿 对齐)。
+- **坑(上限不止一处)**:
+  - `YongyeConfig.skillBookMaxLevel = 65535` —— 配置默认值。各处 clamp 都读它(`HealthSkillBookItem.create`/`SkillBookItem.create`+上限提示/`PlayerSkillManager`/`SkillEffectManager`/`SkillBookCombineRecipe`/`HealthBookCombineRecipe`),改这一处它们全自动跟。
+  - `ModCommands` **两处写死** `IntegerArgumentType.integer(1, 65535)` —— `/yongye book`(健康技能书)与 `/yongye skillbook`(职业技能书)。**只改配置不改命令,命令仍卡在 65535**。
+- **改法**:
+  - 配置默认 `65535 → 1000000000`(10亿)。
+  - 两处命令上限 `integer(1, 65535) → integer(1, 1000000000)`(`/yongye artifact` 的 `integer(1, 6)` 是神器等级,不动)。
+  - 两处注释(`Yongye.java` 顶部「V1~V65535」、`HealthSkillBookItem.java`「V1 ~ V65535」)改为「V1~V10亿,取 skillBookMaxLevel」。
+- **数据类型**:10亿 = 1,000,000,000 < int 上限 2,147,483,647,装得下;技能书等级喂进属性后,最终属性受 m127 的 10亿 上限钳制,不溢出。
+- 静态自检:4 文件(YongyeConfig/ModCommands/Yongye/HealthSkillBookItem)括号全配平;全仓库 `65535` 残留 0。
+- **build**:无新接口/无新符号,纯字面量 + 注释替换,风险极低。**注:上一里程碑 m148(689455a)作者本地 `./gradlew build` 已 BUILD SUCCESSFUL ✅** —— 这意味着 m141-m148 那一整串「待编译验证」点(含 m146 的 1.21 数据驱动附魔取等级 API、m145 的 `getServer/getPlayerList/getGameProfile`)**全部已编过、标记可清**;本轮只在已验证的基线上改字面量。
+- 无新文件(改 4 个现有);configVersion 不变(改默认值,非加/删字段)。
+
+> **里程碑状态备注(m149 起)**:`build` 基线已对齐到 m148 本地编译通过。此前 DEVLOG 里 m121~m148 散落的「待编译验证」均已随 m148 的 BUILD SUCCESSFUL 落地,后续无需再回头补编;新里程碑若引入新接口仍照常标注。
