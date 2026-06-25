@@ -1238,3 +1238,12 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检：三文件括号配平；`GOT_STARTING_FOOD`/`giveStartingFood`/`startingFoodCount` 定义↔引用一致；`Items.BREAD`、`ItemStack`、`ModAttachments` 均已 import。
 - **待编译验证**：`giveItemStack`、`new ItemStack(Items.BREAD,int)`、附件 `getAttachedOrElse/setAttached` 全是仓库在用的标准 API，无新接口/无 yarn 敏感点，风险极低；待本地 `./gradlew build`。
 - 无新文件（改 3 个现有）；配置 +2、configVersion 5→6。
+
+## 里程碑 144 — 关掉磁吸与材料/书堆叠（Sophisticated Backpacks 已自带）
+- **需求**：背包 mod（Sophisticated Backpacks）自带磁吸和堆叠升级，本 mod m120 加的那套（`LootMagnetHandler` 磁吸 + 材料/书 64→99 堆叠）重复，关掉。
+- **磁吸**：`Yongye` 主类注释掉 `LootMagnetHandler.register()` —— 直接不挂载、彻底失效。**注意**：仅把 `enableLootMagnet` 默认改 false 对老存档无效（`yongye.json` 已存 `true`，GSON 加载保留旧值盖新默认，那个老坑），所以走「停挂载」绕过；`enableLootMagnet` 默认同步改 false 并标注停用、当前无效、保留备查。
+- **堆叠**：`ModItems` 去掉 10 处 `.maxCount(99)`（8 种材料 + 血量技能书 + 职业技能书），回归原版默认 64；`.maxCount(16)`（护符/守护书）、`.maxCount(1)`（职业书/选职书）不动。
+- 影响：磁吸立即失效（不看配置）；老存档里已堆到 99 的材料不会丢，只是上限回 64、之后不能再堆过 64。
+- 静态自检：三文件括号配平；`LootMagnetHandler.register()` 无激活行；`enableLootMagnet` 默认 false；`.maxCount(99)` 残留 0、`.maxCount(16/1)` 各 2 保留。
+- **待编译验证**：仅注释一行 + 删 `.maxCount(99)` 调用，无新接口/无 yarn 敏感点，风险极低；待本地 `./gradlew build`。
+- 无新文件（改 3 个现有）；configVersion 不变（改默认值/去 maxCount，未加删字段）。

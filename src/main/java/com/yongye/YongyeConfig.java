@@ -387,7 +387,7 @@ public class YongyeConfig {
     public int itemCleanupFirstMinutes = 21;          // 服务器启动后多少分钟进行首次清理
     public int itemCleanupIntervalMinutes = 5;        // 之后每隔多少分钟清理一次
     // —— 战利品磁吸(只吸本 mod 贵重掉落物到玩家;原版杂物留给定时清理)——
-    public boolean enableLootMagnet = true;
+    public boolean enableLootMagnet = false;          // m144 停用(Sophisticated Backpacks 自带磁吸);注:已不再挂载 LootMagnetHandler,此开关当前无效,保留备查
     public double lootMagnetRadius = 8.0;             // 磁吸半径(格)
     // 刺客
     public double assassinBackstabBonus = 4.0;

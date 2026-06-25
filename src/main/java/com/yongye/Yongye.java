@@ -73,7 +73,9 @@ public class Yongye implements ModInitializer {
         com.yongye.system.MonkSystem.register();
         com.yongye.system.AntiCheeseHandler.register();
         com.yongye.system.ItemCleanupHandler.register();
-        com.yongye.system.LootMagnetHandler.register();
+        // m144 停掉磁吸挂载(Sophisticated Backpacks 自带磁吸,本 mod LootMagnetHandler 重复):
+        // 直接不挂载,彻底失效,不受老存档 yongye.json 里 enableLootMagnet 残留 true 的影响。要恢复就取消注释。
+        // com.yongye.system.LootMagnetHandler.register();
         com.yongye.system.TalentManager.register();
         com.yongye.system.ClassSkillHandler.register();
         MobEnhancementHandler.register();
