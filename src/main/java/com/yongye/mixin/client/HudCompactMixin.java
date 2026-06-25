@@ -57,9 +57,9 @@ public class HudCompactMixin {
         int left = mc.getWindow().getScaledWidth() / 2 - 91;
         int top  = mc.getWindow().getScaledHeight() - 44;
 
-        // 底衬:包住 等级行 + 血条 + 食物条 + 资源条;m139 改半透明蓝 + 左右对齐底部快捷栏(left..left+182)
+        // 底衬(m142 方案A 精致玻璃):2px 切角圆角 + 玻璃描边 + 顶亮底暗渐变;配色仍蓝系
         int totalH = BAR_H + GAP + MP_H + GAP + FOOD_H;
-        ctx.fill(left, top - 11, left + BAR_W, top + totalH + 2, 0xCC14406E);    // 半透明蓝底衬
+        yongye$panel(ctx, left, top - 11, BAR_W, totalH + 13, 0xCC1B5288, 0xCC0C2C50, 0xFF2E7AD0);
 
         // ===== 等级行(本命职业 Lv.X · 名)在血条正上方 =====
         String cls0 = ClientStats.className;
@@ -69,16 +69,20 @@ public class HudCompactMixin {
             ctx.drawTextWithShadow(tr, Text.literal(lvStr), left, top - 10, 0xFFFFD700);
         }
 
-        // ===== 血条(红色,所有职业统一)=====
-        ctx.fill(left, top, left + BAR_W, top + BAR_H, 0xFF3B0000);              // 深红底
+        // ===== 血条(红色,所有职业统一;m142 渐变+高光+末端光头)=====
+        ctx.fill(left, top, left + BAR_W, top + BAR_H, 0xFF3B0000);              // 深红底槽
+        ctx.fill(left, top, left + BAR_W, top + 1, 0x60000000);                 // 顶内阴影(凹陷感)
         float totalHp = maxHp + absHp;
         if (absHp > 0.5f) {
             int absEnd = (int)(BAR_W * Math.min(1f, (curHp + absHp) / totalHp));
             ctx.fill(left, top, left + absEnd, top + BAR_H, 0xFF806000);         // 金色吸收
         }
         int hpW = (int)(BAR_W * Math.max(0f, Math.min(1f, curHp / maxHp)));
-        ctx.fill(left, top, left + hpW, top + BAR_H, 0xFFCC1010);                // 鲜红血量
-        ctx.fill(left, top, left + hpW, top + 1, 0x40FFFFFF);                    // 高光
+        if (hpW > 0) {
+            yongye$gradV(ctx, left, top, hpW, BAR_H, 0xFFE83030, 0xFF8B0000);    // 红血量渐变(上亮下暗)
+            ctx.fill(left, top, left + hpW, top + 1, 0x90FFFFFF);                // 顶高光
+            if (hpW >= 2) ctx.fill(left + hpW - 2, top, left + hpW, top + BAR_H, 0xFFFF7070);  // 末端光头
+        }
 
         String hpStr = yongye$num(curHp) + " / " + yongye$num(maxHp)
                 + (absHp >= 0.5f ? "  +" + yongye$num(absHp) : "");
@@ -100,12 +104,10 @@ public class HudCompactMixin {
             ctx.drawTextWithShadow(tr, Text.literal(as), rx + 10, top, 0xFFB0C4FF);
         }
 
-        // ===== 食物条(黄色,血条正下方,所有职业统一)=====
+        // ===== 食物条(黄色,血条正下方;m142 渐变+高光+末端光头)=====
         int foodTop = top + BAR_H + GAP;
-        ctx.fill(left, foodTop, left + BAR_W, foodTop + FOOD_H, 0xFF332600);      // 深黄褐底
         int foodW = (int)(BAR_W * Math.max(0f, Math.min(1f, food / 20f)));
-        ctx.fill(left, foodTop, left + foodW, foodTop + FOOD_H, 0xFFE6C42A);      // 黄色填充
-        ctx.fill(left, foodTop, left + foodW, foodTop + 1, 0x66FFFFFF);           // 高光
+        yongye$bar(ctx, left, foodTop, BAR_W, FOOD_H, 0xFF332600, foodW, 0xFFF2D84E, 0xFFB89A1E, 0xFFFFF0A0);
         ctx.drawGuiTexture(FOOD, left + BAR_W + 6, foodTop - 1, 8, 8);
         ctx.drawTextWithShadow(tr, Text.literal(food + "/20"), left + BAR_W + 16, foodTop, 0xFFE6C42A);
 
@@ -115,6 +117,50 @@ public class HudCompactMixin {
         ci.cancel();
     }
 
+    /** 0xAARRGGBB 颜色线性插值(含 alpha)。 */
+    private static int yongye$lerp(int c1, int c2, float t) {
+        int a1 = (c1 >>> 24) & 255, r1 = (c1 >> 16) & 255, g1 = (c1 >> 8) & 255, b1 = c1 & 255;
+        int a2 = (c2 >>> 24) & 255, r2 = (c2 >> 16) & 255, g2 = (c2 >> 8) & 255, b2 = c2 & 255;
+        int a = (int)(a1 + (a2 - a1) * t), r = (int)(r1 + (r2 - r1) * t);
+        int g = (int)(g1 + (g2 - g1) * t), b = (int)(b1 + (b2 - b1) * t);
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    /** 垂直渐变填充(逐行 fill;top→bot)。 */
+    private static void yongye$gradV(DrawContext ctx, int x, int y, int w, int h, int top, int bot) {
+        if (w <= 0 || h <= 0) return;
+        for (int i = 0; i < h; i++) {
+            float t = h > 1 ? (float) i / (h - 1) : 0f;
+            ctx.fill(x, y + i, x + w, y + i + 1, yongye$lerp(top, bot, t));
+        }
+    }
+
+    /** 精致玻璃底衬:2px 切角 + 顶亮底暗渐变 + 玻璃描边 + 顶部内高光。 */
+    private static void yongye$panel(DrawContext ctx, int x, int y, int w, int h, int top, int bot, int edge) {
+        if (w <= 4 || h <= 4) return;
+        yongye$gradV(ctx, x, y + 2, w, h - 4, top, bot);          // 主体(满宽渐变)
+        ctx.fill(x + 2, y, x + w - 2, y + 2, top);                // 顶 2 行(切角缩进)
+        ctx.fill(x + 2, y + h - 2, x + w - 2, y + h, bot);        // 底 2 行(切角缩进)
+        ctx.fill(x + 2, y, x + w - 2, y + 1, edge);               // 上描边
+        ctx.fill(x + 2, y + h - 1, x + w - 2, y + h, edge);       // 下描边
+        ctx.fill(x, y + 2, x + 1, y + h - 2, edge);               // 左描边
+        ctx.fill(x + w - 1, y + 2, x + w, y + h - 2, edge);       // 右描边
+        ctx.fill(x + 3, y + 2, x + w - 3, y + 3, 0x40FFFFFF);      // 顶部内高光
+    }
+
+    /** 一根条:底槽 + 顶内阴影 + 渐变填充 + 顶高光 + 末端光头。 */
+    private static void yongye$bar(DrawContext ctx, int x, int y, int w, int h, int bg,
+                                   int fillW, int fTop, int fBot, int head) {
+        ctx.fill(x, y, x + w, y + h, bg);                         // 底槽
+        ctx.fill(x, y, x + w, y + 1, 0x60000000);                 // 顶内阴影
+        int fw = Math.max(0, Math.min(fillW, w));
+        if (fw > 0) {
+            yongye$gradV(ctx, x, y, fw, h, fTop, fBot);           // 渐变填充
+            ctx.fill(x, y, x + fw, y + 1, 0x90FFFFFF);            // 顶高光
+            if (fw >= 2) ctx.fill(x + fw - 2, y, x + fw, y + h, head);  // 末端光头
+        }
+    }
+
     private static void yongye$renderMpBar(DrawContext ctx, TextRenderer tr, int left, int top) {
         float mp = ClientStats.mp;
         String cls = ClientStats.className;
@@ -122,12 +168,10 @@ public class HudCompactMixin {
         int[] colors = yongye$mpColors(cls);
         if (colors == null) return;
 
-        ctx.fill(left, top, left + BAR_W, top + MP_H, colors[0]);
         int fillW = (int)(BAR_W * Math.max(0f, Math.min(1f, mp)));
-        if (fillW > 0) {
-            ctx.fill(left, top, left + fillW, top + MP_H, colors[1]);
-            ctx.fill(left, top, left + fillW, top + 1, colors[2]);
-        }
+        // m142:渐变+高光+末端光头(colors[0]底槽 / [1]填充主色 / [2]高光&光头)
+        yongye$bar(ctx, left, top, BAR_W, MP_H, colors[0],
+                   fillW, yongye$lerp(colors[1], colors[2], 0.35f), colors[1], colors[2]);
         String label = yongye$mpLabel(cls);
         if (!label.isEmpty()) {
             ctx.drawTextWithShadow(tr, Text.literal(label), left + BAR_W + 6, top - 2, 0xFFAAAAAA);

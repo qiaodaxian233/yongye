@@ -1212,3 +1212,17 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检：两图均 145×120、比例 1.208；`left` 框靠左（右留白 32px）、`right` 框靠右（左留白 35px），偏移方向与原版一致；`git status` 仅这两文件变更；选中框 `hotbar_selection.png` 保持 1254×1204 不动（与副手蓝玻璃风格暂未统一，待后续定）。
 - 无 Java/配置改动；configVersion 不变。
 - 待作者本地 `./gradlew build` + 进游戏实测槽位/物品对齐（贴图类一律以实机为准）。
+
+## 里程碑 142 — HUD 精致玻璃化（方案A：圆角＋描边＋渐变＋光头）
+- **动机**：作者觉得 HUD「太平、底衬笨重」。根因＝所有元素都是 `ctx.fill` 直角纯色矩形（底衬一大块 `0xCC14406E`、各条「底色＋1px高光」），无圆角/渐变/描边/发光。
+- **改法（纯渲染，`HudCompactMixin` 内，全部 `ctx.fill`，无贴图、无新接口）**：
+  - 底衬：`0xCC14406E` 直角块 → `yongye$panel()` ＝ 2px 切角圆角 ＋ 玻璃描边 `0xFF2E7AD0` ＋ 顶亮底暗渐变 `0xCC1B5288→0xCC0C2C50` ＋ 顶部内高光。
+  - 血条：纯红填充 → 渐变 `0xFFE83030→0xFF8B0000` ＋ 顶 1px 高光 ＋ 末端 2px 光头 `0xFFFF7070` ＋ 底槽顶内阴影；金色吸收层保留。
+  - 食物条 / 资源条：改用 `yongye$bar()` ＝ 底槽 ＋ 顶内阴影 ＋ 渐变填充 ＋ 顶高光 ＋ 末端光头。
+  - 新增辅助：`yongye$lerp`（颜色插值）/`yongye$gradV`（逐行渐变）/`yongye$panel`（玻璃底衬）/`yongye$bar`（单条）。
+- 配色基准不变（红血 / 黄食 / 蓝资源），只叠加玻璃质感层次；文字仍 `drawTextWithShadow`。
+- **顺带查明**：截图里快捷栏每格上方的紫色↓箭头不是本 mod —— 代码无此渲染（仅有指向灾厄核心的单个中上方箭头）、`hotbar.png` 也无（每格只左上角高光），来源应是作者另装的 mod / 资源包。
+- 静态自检：花括号 29/29、圆括号 208/208 配平；`lerp/gradV/panel/bar` 定义各 1、调用齐全；变量 `totalH/hpW/foodW/fillW/totalHp` 均在。
+- **待编译验证**：全部 `ctx.fill(int,int,int,int,int)` ＋ 基本算术，标准 API 仓库大量在用，无 yarn 映射敏感点，风险极低；待本地 `./gradlew build` ＋ 进游戏实测观感。
+- 预览（mockup，非实机）：`docs/hud/m142_preview.png`。HUD 另有 方案B（青蓝外发光）/ 方案C（去大底衬极简）可选，待作者看 A 实机后再定。
+- 无配置变更；configVersion 不变。
