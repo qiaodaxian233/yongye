@@ -96,6 +96,8 @@ public class Yongye implements ModInitializer {
         // 玩法系统(Phase 3:永夜 / 追杀 / 任务)
         NightfallManager.register();
         com.yongye.system.DifficultyManager.register();
+        com.yongye.system.WorldDoomManager.register();        // m155 世界崩塌(全局持久 ×100)
+        com.yongye.system.CreativeWatchHandler.register();     // m155 创造模式监听(反作弊 + 触发崩塌)
         com.yongye.system.PlayerUpkeepHandler.register();
         PursuitHandler.register();
         QuestManager.register();

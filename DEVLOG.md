@@ -1385,3 +1385,15 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:ClassManager {}45/45·()296/296、StartingKitHandler {}10/10·()43/43、ModAttachments {}3/3·()232/232、YongyeConfig {}33/33·()326/326 全配平;新字段/方法/import 齐(RegistryEntry 已 import、Item 已 import)。
 - **待编译验证(本轮唯一)**:`ItemStack.addEnchantment(RegistryEntry<Enchantment>, int)` 是仓库首次使用(1.21.1 标准方法,风险低);取附魔的 `getRegistryManager().get(...).getEntry(...)` 是 m146 已编译过的写法、`p.getRegistryManager()` 也在 AccessoryStorage 用过。build 报错(如 addEnchantment 签名)贴来即修。
 - 改 4 文件:ClassManager.java(武器附魔)、StartingKitHandler.java(两升级+giveById)、ModAttachments.java(新增 GOT_STARTING_UPGRADES)、YongyeConfig.java(开局升级2 id+开关+武器附魔3字段),**configVersion 9→10**。
+
+## 里程碑 155 — 创造模式监听(反作弊)+ 世界崩塌 ×100(确认后实现 m154 的创造那套)
+- **需求确认结果**:三问答清——① 第2次开创造强制改生存:**可设 ID 豁免,其余都管**;② 遇强则强×100:**全局永久**(触发后不再关);③ 触发物=**攻击强化技能书 + 稀有材料系列**(生命碎片/结晶/核心/血核/永夜尘/裂界残片/深渊魂晶/终焉精华,任一即可),并要**全服播报谁拿了啥导致世界崩塌、怪物全面×100**。矛盾化解:这其实是一套**反作弊陷阱**——非豁免玩家偷开创造抓强力物品就触发世界崩塌惩罚、第2次开创造踢回生存;管理员(豁免)可自由进创造测试、不触发陷阱。
+- **WorldDoomManager(新)**:仿 DifficultyManager 的世界级持久——静态 `doom` 存档 `yongye_doom.json`,SERVER_STARTED 读 / STOPPING 写,load() 先归位防跨世界残留。`trigger(server,玩家名,物品名)` 幂等(已崩塌直接返回):置 doom + 存档 + 全服深红粗体播报「<玩家> 触碰禁忌之物【<物品>】…怪物全面强化×N」+ 遍历 `server.getWorlds()` 的 `world.iterateEntities()` 对所有已加载 Monster 调 `MobEnhancementHandler.applyDoom`;另注册 ENTITY_LOAD:doom 期间新生成/加载的 Monster 也立即 applyDoom(独立于怪物增强开关与早返,保证"全面")。
+- **MobEnhancementHandler.applyDoom(public,新)**:加 ID_DOOM_HP/ATK,对单只怪 `addMultiplierTotal`(ADD_MULTIPLIED_TOTAL,叠在所有倍率之上)血量/攻击各 ×`doomMobMultiplier`(默认100)+ setHealth 补满;固定 ID 先 remove 再 add → 幂等,新怪 + 触发时批量调用都安全不叠加。
+- **CreativeWatchHandler(新)**:每 10tick 轮询各玩家游戏模式。豁免名单 `creativeExemptIds`(逗号/空格分隔、大小写不敏感,默认 qiaodaxian)内玩家完全跳过(但更新 LAST_MODE 基线)。非豁免:与 transient `LAST_MODE` 比对识别"刚进创造"(首次见到只记基线不计数);在创造中主手持禁忌之物且未崩塌→trigger;"刚进创造"且 `CREATIVE_ENTRIES`(持久 int,死亡保留,跨登录累计)+1 后 ≥2 且开关开→`changeGameMode(SURVIVAL)`+红字提示。
+- **触发物判定 isForbidden**:`ModItems.getSkillBook(SkillType.ATTACK)`(攻击强化技能书,SkillType 确有 ATTACK)或 8 种稀有材料之一(注:enhance 系统的 `isMaterial` 只认前4种,这里按用户"裂界残片这些都算"扩到全部8种,显式列举不走 isMaterial)。
+- **范围/恢复**:×100 既作用于已加载的怪(触发时遍历)也作用于之后的怪(ENTITY_LOAD);BOSS 是 Monster 同样覆盖,boss 倍率与 doom 倍率独立叠乘。永久=触发后无自动/玩家关闭途径(应需求);**人工恢复**唯一途径=停服删除/改写存档根目录 `yongye_doom.json` 的 doom 字段(没做命令,尊重"不再关";管理员豁免故不会误触发)。
+- **设计取舍说明**:把"豁免"同时用于"免强制生存"和"免触发陷阱"——这样管理员在创造里拿材料测试不会误把世界×100(否则全局永久不可逆,风险太大);若想要管理员手动触发崩塌做活动,再加命令。
+- 静态自检:6 文件括号全配平(WorldDoomManager {}22·()63、CreativeWatchHandler {}18·()67、MobEnhancementHandler {}15·()113、ModAttachments {}3·()242、YongyeConfig {}33·()332、Yongye {}6·()89);applyDoom/trigger/isDoom/CREATIVE_ENTRIES/4配置/2注册全对齐。
+- **无新接口、无「待编译验证」点**:iterateEntities/getWorlds/changeGameMode/interactionManager.getGameMode/getMainHandStack/ServerEntityEvents.ENTITY_LOAD/Codec.INT/addMultiplierTotal/getSkillBook 均为仓库已用且随 m148 编译通过的 API。
+- 改/增 6 文件:WorldDoomManager.java(新)、CreativeWatchHandler.java(新)、MobEnhancementHandler.java(+ID+applyDoom)、ModAttachments.java(+CREATIVE_ENTRIES)、YongyeConfig.java(+创造监听4字段)、Yongye.java(注册2系统),**configVersion 10→11**。

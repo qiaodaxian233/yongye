@@ -34,6 +34,8 @@ public final class MobEnhancementHandler {
     private static final Identifier ID_SCALE_ATK = Identifier.of(Yongye.MOD_ID, "mob_scale_atk");
     private static final Identifier ID_NIGHTFALL_HP = Identifier.of(Yongye.MOD_ID, "mob_nightfall_hp");
     private static final Identifier ID_NIGHTFALL_ATK = Identifier.of(Yongye.MOD_ID, "mob_nightfall_atk");
+    private static final Identifier ID_DOOM_HP = Identifier.of(Yongye.MOD_ID, "mob_doom_hp");
+    private static final Identifier ID_DOOM_ATK = Identifier.of(Yongye.MOD_ID, "mob_doom_atk");
 
     private static final List<RegistryEntry<net.minecraft.entity.effect.StatusEffect>> POTION_POOL = List.of(
             StatusEffects.SPEED,
@@ -130,6 +132,17 @@ public final class MobEnhancementHandler {
         inst.removeModifier(id);
         inst.addPersistentModifier(new EntityAttributeModifier(
                 id, multiplier - 1.0, EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+    }
+
+    /** m155 世界崩塌:把单只怪的血量与攻击各乘 doomMobMultiplier(默认×100),叠在所有其它倍率之上。
+     *  用固定 ID + removeModifier 先清再加,幂等可重复调用(新生成的怪 + 触发瞬间对已加载的怪批量调用都安全)。
+     *  public:供 WorldDoomManager 的 ENTITY_LOAD 监听(新怪)与触发时遍历已加载怪复用。 */
+    public static void applyDoom(MobEntity mob) {
+        double m = YongyeConfig.get().doomMobMultiplier;
+        if (m <= 1.0) return;
+        addMultiplierTotal(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_DOOM_HP, m);
+        addMultiplierTotal(mob, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_DOOM_ATK, m);
+        mob.setHealth(mob.getMaxHealth());
     }
 
     /** 乘法叠加(ADD_MULTIPLIED_TOTAL):在「基础+其它倍率」之上再乘,用于让永夜深渊层血量真正复利上涨而非被加法稀释。 */

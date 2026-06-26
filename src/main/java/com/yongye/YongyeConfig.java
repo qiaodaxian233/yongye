@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 10;
+    public static final int CURRENT_CONFIG_VERSION = 11;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -525,6 +525,16 @@ public class YongyeConfig {
     public boolean weaponStartingEnchants = true;
     public int weaponStartingLootingLevel = 3;
     public int weaponStartingFireAspectLevel = 2;
+
+    // ============ 创造模式监听 + 世界崩塌(m155)============
+    // 反作弊陷阱:非豁免玩家在创造里持有「禁忌之物」(攻击强化技能书 / 任一稀有材料)→ 触发世界崩塌(全怪 ×100,永久);
+    //            非豁免玩家第 2 次进入创造 → 强制改回生存。豁免名单里的玩家(默认含管理员)完全不受限、不触发陷阱。
+    public boolean enableCreativeWatch = true;
+    /** 豁免名单:逗号/空格分隔的玩家名(大小写不敏感)。名单内玩家可自由进创造测试,且不会触发世界崩塌。 */
+    public String creativeExemptIds = "qiaodaxian";
+    public boolean creativeForceSurvivalOnSecond = true;
+    /** 世界崩塌后所有怪物的血量/攻击倍率(×100)。触发后永久生效、玩家无法关闭;人工恢复需停服改存档 yongye_doom.json。 */
+    public double doomMobMultiplier = 100.0;
 
     // ============ 开局两本书(m122:每人首次进入发《永夜·缘起》+《幸存者手册》)============
     public boolean giveWelcomeBooks = true;

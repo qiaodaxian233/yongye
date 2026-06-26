@@ -193,6 +193,15 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_starting_upgrades"));
 
+    /** CREATIVE_ENTRIES(m155): 该玩家累计进入创造模式的次数(死亡保留,跨登录累计)。
+     *  非豁免玩家第 2 次进入创造即被强制改回生存(见 CreativeWatchHandler)。 */
+    public static final AttachmentType<Integer> CREATIVE_ENTRIES =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .initializer(() -> 0)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "creative_entries"));
+
     /** LOST_WEAPON_ENHANCE: 被夺且未找回的武器强化等级(供 /yongye recover 转移到新武器,损失 1/3)。 */
     public static final AttachmentType<Integer> LOST_WEAPON_ENHANCE =
             AttachmentRegistry.<Integer>builder()
