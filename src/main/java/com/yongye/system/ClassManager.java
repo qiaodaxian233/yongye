@@ -110,8 +110,11 @@ public final class ClassManager {
                 reg.getEntry(net.minecraft.enchantment.Enchantments.LOOTING).orElse(null);
         RegistryEntry<net.minecraft.enchantment.Enchantment> fire =
                 reg.getEntry(net.minecraft.enchantment.Enchantments.FIRE_ASPECT).orElse(null);
+        RegistryEntry<net.minecraft.enchantment.Enchantment> sweeping =
+                reg.getEntry(net.minecraft.enchantment.Enchantments.SWEEPING_EDGE).orElse(null);
         if (looting != null && cfg.weaponStartingLootingLevel > 0) w.addEnchantment(looting, cfg.weaponStartingLootingLevel);
         if (fire != null && cfg.weaponStartingFireAspectLevel > 0) w.addEnchantment(fire, cfg.weaponStartingFireAspectLevel);
+        if (sweeping != null && cfg.weaponStartingSweepingLevel > 0) w.addEnchantment(sweeping, cfg.weaponStartingSweepingLevel);
     }
 
     public static boolean learn(ServerPlayerEntity p, PlayerClass type) {

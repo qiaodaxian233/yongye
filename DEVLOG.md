@@ -1397,3 +1397,11 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:6 文件括号全配平(WorldDoomManager {}22·()63、CreativeWatchHandler {}18·()67、MobEnhancementHandler {}15·()113、ModAttachments {}3·()242、YongyeConfig {}33·()332、Yongye {}6·()89);applyDoom/trigger/isDoom/CREATIVE_ENTRIES/4配置/2注册全对齐。
 - **无新接口、无「待编译验证」点**:iterateEntities/getWorlds/changeGameMode/interactionManager.getGameMode/getMainHandStack/ServerEntityEvents.ENTITY_LOAD/Codec.INT/addMultiplierTotal/getSkillBook 均为仓库已用且随 m148 编译通过的 API。
 - 改/增 6 文件:WorldDoomManager.java(新)、CreativeWatchHandler.java(新)、MobEnhancementHandler.java(+ID+applyDoom)、ModAttachments.java(+CREATIVE_ENTRIES)、YongyeConfig.java(+创造监听4字段)、Yongye.java(注册2系统),**configVersion 10→11**。
+
+## 里程碑 156 — 开局礼包武器再加 横扫之刃(m154 续)
+- **需求**:开局发的职业武器在 抢夺III + 火焰附加II 基础上再加横扫之刃。
+- **改法**:`ClassManager.enchantStartingWeapon` 加一项——`reg.getEntry(Enchantments.SWEEPING_EDGE)` + `w.addEnchantment(sweeping, weaponStartingSweepingLevel)`;等级配置 `weaponStartingSweepingLevel`(默3=满级,0不附)。
+- **效果说明**:职业武器非 SwordItem,原版横扫不触发,但 **m146 的手搓横扫**(WeaponCombatHandler.trySweep)正是读武器上的横扫之刃等级来发 AOE——所以加这个附魔组件后,开局武器挥砍即享 m146 的横扫 AOE(m146 已随 m148 BUILD SUCCESSFUL)。范围同 m154:只作用「选职新发的那把」,已选职老玩家不追溯。
+- 静态自检:ClassManager {}45/45·()300/300、YongyeConfig {}33/33·()334/334 配平;SWEEPING_EDGE(m146 已用)+ 新字段引用一致。
+- 待编译验证:沿用 m154 的 `ItemStack.addEnchantment`(本轮未引入新接口,SWEEPING_EDGE 取法 m146 已编译过)。
+- 改 2 文件:ClassManager.java(+横扫)、YongyeConfig.java(+weaponStartingSweepingLevel),**configVersion 11→12**。

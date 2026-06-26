@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 11;
+    public static final int CURRENT_CONFIG_VERSION = 12;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -525,6 +525,8 @@ public class YongyeConfig {
     public boolean weaponStartingEnchants = true;
     public int weaponStartingLootingLevel = 3;
     public int weaponStartingFireAspectLevel = 2;
+    /** 横扫之刃等级(默认3=满级)。注:职业武器非 SwordItem,原版横扫不触发,但 m146 的手搓横扫(WeaponCombatHandler)会读此等级发 AOE。 */
+    public int weaponStartingSweepingLevel = 3;
 
     // ============ 创造模式监听 + 世界崩塌(m155)============
     // 反作弊陷阱:非豁免玩家在创造里持有「禁忌之物」(攻击强化技能书 / 任一稀有材料)→ 触发世界崩塌(全怪 ×100,永久);
