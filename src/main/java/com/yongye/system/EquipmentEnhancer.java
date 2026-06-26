@@ -190,6 +190,85 @@ public final class EquipmentEnhancer {
         return withLevel(equipment, getLevel(equipment) + delta);
     }
 
+    /**
+     * 把装备从 fromLevel 升到 fromLevel+1 的成功率(m158)。
+     *   level < enhanceFailStartLevel(默认1000):必成功(返回 1.0);
+     *   [start, end] 之间:从 100% 线性降到 enhanceFailEndRate(默认10%);
+     *   ≥ enhanceFailEndLevel:封底为 enhanceFailEndRate。
+     * 总开关 enableEnhanceFailure 关闭时恒为 1.0。
+     */
+    public static double successRate(int level) {
+        YongyeConfig c = YongyeConfig.get();
+        if (!c.enableEnhanceFailure) return 1.0;
+        if (level < c.enhanceFailStartLevel) return 1.0;
+        int span = c.enhanceFailEndLevel - c.enhanceFailStartLevel;
+        if (span <= 0) return c.enhanceFailEndRate;
+        double t = (double) (level - c.enhanceFailStartLevel) / span;
+        if (t > 1.0) t = 1.0;
+        double rate = 1.0 - t * (1.0 - c.enhanceFailEndRate);
+        return Math.max(c.enhanceFailEndRate, Math.min(1.0, rate));
+    }
+
+    /** attempt() 的结果。stack 为最终装备(碎裂时为 ItemStack.EMPTY)。 */
+    public static final class EnhanceResult {
+        public final ItemStack stack;
+        public final int startLevel, endLevel, succeeded, failed;
+        public final boolean broke;        // 装备是否碎裂(销毁)
+        public final boolean usedProtect;  // 本次是否消耗保护卷挡下了一次碎裂
+        EnhanceResult(ItemStack stack, int startLevel, int endLevel,
+                      int succeeded, int failed, boolean broke, boolean usedProtect) {
+            this.stack = stack; this.startLevel = startLevel; this.endLevel = endLevel;
+            this.succeeded = succeeded; this.failed = failed; this.broke = broke; this.usedProtect = usedProtect;
+        }
+    }
+
+    /**
+     * 逐级尝试强化 budget 次(m158)。失败只消耗本次预算、等级不变;等级 ≥ enhanceBreakLevel 的失败
+     * 有 enhanceBreakChance 概率令装备碎裂(stack=EMPTY、broke=true),除非玩家持有生效中的保护卷
+     * (ENHANCE_PROTECTED)——则消耗保护、挡下这次碎裂(usedProtect=true)。
+     * p 可为 null(无保护判定,用独立随机源)。材料由调用方在调用前一次性扣除。
+     */
+    public static EnhanceResult attempt(net.minecraft.server.network.ServerPlayerEntity p,
+                                        ItemStack equipment, int budget) {
+        YongyeConfig c = YongyeConfig.get();
+        int startLevel = getLevel(equipment);
+        if (budget < 0) budget = 0;
+        if (!c.enableEnhanceFailure) {
+            int end = startLevel + budget;
+            return new EnhanceResult(withLevel(equipment, end), startLevel, end, budget, 0, false, false);
+        }
+        net.minecraft.util.math.random.Random rng =
+                (p != null) ? p.getRandom() : net.minecraft.util.math.random.Random.create();
+        int level = startLevel, ok = 0, fail = 0, remain = budget;
+        boolean broke = false, usedProtect = false;
+        // 安全段(必成功)批量推进,避免大量 RNG 空转
+        if (level < c.enhanceFailStartLevel && remain > 0) {
+            int bulk = Math.min(remain, c.enhanceFailStartLevel - level);
+            level += bulk; remain -= bulk; ok += bulk;
+        }
+        while (remain > 0 && !broke) {
+            remain--;
+            if (rng.nextDouble() < successRate(level)) {
+                level++; ok++;
+            } else {
+                fail++;
+                if (level >= c.enhanceBreakLevel) {
+                    boolean prot = (p != null)
+                            && p.getAttachedOrElse(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
+                    if (prot) {
+                        p.setAttached(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
+                        usedProtect = true;
+                    } else if (rng.nextDouble() < c.enhanceBreakChance) {
+                        broke = true;
+                    }
+                }
+            }
+        }
+        ItemStack out = broke ? ItemStack.EMPTY : withLevel(equipment, level);
+        return new EnhanceResult(out, startLevel, level, ok, fail, broke, usedProtect);
+    }
+
+
     private static AttributeModifierSlot armorSlotOf(AttributeModifiersComponent base) {
         for (AttributeModifiersComponent.Entry e : base.modifiers()) {
             if (e.attribute().equals(EntityAttributes.GENERIC_ARMOR)) return e.slot();
@@ -236,12 +315,27 @@ public final class EquipmentEnhancer {
             ItemStack s = inv.getStack(i);
             if (!s.isEmpty() && isMaterial(s.getItem())) inv.setStack(i, ItemStack.EMPTY);
         }
-        ItemStack upgraded = addLevels(target, add);
-        inv.setStack(slot, upgraded);
+        EnhanceResult res = attempt(p, target, add);
+        if (res.broke) {
+            inv.setStack(slot, ItemStack.EMPTY);
+            p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(),
+                    net.minecraft.sound.SoundEvents.ENTITY_ITEM_BREAK,
+                    net.minecraft.sound.SoundCategory.PLAYERS, 1.0f, 0.7f);
+            p.sendMessage(net.minecraft.text.Text.literal(
+                    "强化失败!装备在 Lv." + res.startLevel + " 时碎裂了(成功 " + res.succeeded
+                    + " / 失败 " + res.failed + ")")
+                    .formatted(net.minecraft.util.Formatting.DARK_RED), true);
+            return;
+        }
+        inv.setStack(slot, res.stack);
         p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(),
                 net.minecraft.sound.SoundEvents.BLOCK_ANVIL_USE,
                 net.minecraft.sound.SoundCategory.PLAYERS, 0.7f, 1.2f);
-        p.sendMessage(net.minecraft.text.Text.literal("强化 +" + add + " 级,当前 Lv." + getLevel(upgraded)
-                + "(" + qualityOf(upgraded).cn + ")").formatted(net.minecraft.util.Formatting.GOLD), true);
+        StringBuilder msg = new StringBuilder("强化:成功 " + res.succeeded + " 级");
+        if (res.failed > 0) msg.append(" / 失败 ").append(res.failed).append(" 次");
+        msg.append(",当前 Lv.").append(res.endLevel).append("(").append(qualityOf(res.stack).cn).append(")");
+        if (res.usedProtect) msg.append(" [保护卷已抵挡碎裂]");
+        p.sendMessage(net.minecraft.text.Text.literal(msg.toString())
+                .formatted(net.minecraft.util.Formatting.GOLD), true);
     }
 }

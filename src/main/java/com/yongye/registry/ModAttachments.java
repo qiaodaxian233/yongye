@@ -250,6 +250,24 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "weapon_skill_lv"));
 
+    /** ENHANCE_PROTECTED(m158): 玩家已使用强化保护卷、待生效中——下一次「会碎裂的强化失败」将被抵挡并清除本标志。 */
+    public static final AttachmentType<Boolean> ENHANCE_PROTECTED =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL).initializer(() -> false).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "enhance_protected"));
+
+    /** SCROLL_KILLS(m159): 朝下一个保护卷累计的击杀数(每次兑换后扣除当前阈值,跨登录累计、死亡保留)。 */
+    public static final AttachmentType<Integer> SCROLL_KILLS =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "scroll_kills"));
+
+    /** SCROLL_EXCHANGES(m159): 已通过击杀兑换的保护卷个数;当前阈值 = protectScrollKillBase × 2^此值(翻倍)。 */
+    public static final AttachmentType<Integer> SCROLL_EXCHANGES =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "scroll_exchanges"));
+
     public static void init() {
         Yongye.LOGGER.info("[永夜] 数据附着已注册");
     }

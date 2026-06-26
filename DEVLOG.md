@@ -1411,3 +1411,19 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **修法**:改成仓库其它文件(MobEnhancementHandler/ItemCleanupHandler 等)用的正确路径 `net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents`。
 - **同时复核**:把 m155 两个新文件(WorldDoomManager/CreativeWatchHandler)的**全部 import 逐条**与仓库既有用法比对,确认无其它错路径(都有 proven 用法)。教训:新建文件除括号/符号外,还要核对 import 包路径,不能只静态数括号。
 - 改 1 文件:WorldDoomManager.java(仅 import 行),无逻辑/配置变更,configVersion 不变(仍12)。
+
+## 里程碑 158 — 强化失败/碎裂系统
+- **需求**:强化引入失败概率——≤1000 级必成功;1001 级起到 10000 级成功率线性下降,10000 级时仅 10%;超过 10000 级后,失败有概率令武器「碎裂」(销毁)。
+- **成功率曲线**(`EquipmentEnhancer.successRate(level)`):`level < enhanceFailStartLevel(1000)` 返回 1.0;`[start,end]` 区间内 `rate = 1 - t·(1-endRate)`(t=进度,endRate=0.10),≥end 封底 0.10。总开关 `enableEnhanceFailure` 关则恒 1.0。
+- **逐级尝试**(`attempt(player, equip, budget)` → `EnhanceResult`):安全段(<start)批量推进不空转 RNG;其后每级 `rng.nextDouble() < successRate(level)` 判定,成功 level+1、失败仅消耗本次预算且 level 不变;失败时若 `level ≥ enhanceBreakLevel(10000)`,先看玩家有无 `ENHANCE_PROTECTED`(有则消耗、挡下碎裂,usedProtect=true),否则按 `enhanceBreakChance(0.25)` 判碎裂(stack=EMPTY、broke=true,停止)。RNG 用 `p.getRandom()`,p 为 null 时 `Random.create()`。
+- **接入**:重写 `enhanceFromInventory`(背包强化)和 `EnhanceScreenHandler.applyUpgrade`(强化界面)都改用 `attempt()`;碎裂→清空装备槽 + `ENTITY_ITEM_BREAK` 音效 + 深红提示;否则发成功/失败/保护汇总。**材料无论成败都一次性全消耗**(碎裂时材料也作废)。命令 `withLevel`/合成 `addLevels` 等管理/确定性路径**不**接失败,保持原状。
+- **配置**:+`enableEnhanceFailure/enhanceFailStartLevel(1000)/enhanceFailEndLevel(10000)/enhanceFailEndRate(0.10)/enhanceBreakLevel(10000)/enhanceBreakChance(0.25)`;+附件 `ENHANCE_PROTECTED`(Bool,持久,死亡保留)。**configVersion 12→13**。
+- 静态自检:全改动文件括号配平;全用 repo 既有/标准 API(getRandom/Random.create/getAttachedOrElse/setAttached/ENTITY_ITEM_BREAK),无新接口、无待编译验证点。
+
+## 里程碑 159 — 强化保护卷(掉落/杀怪兑换 + 贴图)
+- **需求**:新增「强化保护卷」,使用后挡下「下一次会令装备碎裂的强化失败」;无法合成,仅怪物低概率掉落 + 杀怪数量自动兑换(每张 2000 击杀,每兑换 1 张后阈值翻倍);职业选择书换用户给的图,保护卷也加贴图。
+- **物品** `EnhanceProtectScrollItem`:右键 → 置 `ENHANCE_PROTECTED=true`、decrement(1)、附魔台音效 + 提示;已生效则拒绝重复使用。getName「强化保护卷」(LIGHT_PURPLE)+ tooltip。`ModItems` 注册 `enhance_protect_scroll`,`maxCount(16).rarity(RARE)`,**无合成 JSON = 不可合成**;加入创造栏(WARD_BOOK 之后)。
+- **获取** `ProtectScrollHandler`(`ServerLivingEntityEvents.AFTER_DEATH`,敌对怪被玩家击杀):① `protectScrollDropChance(0.002)` 概率直接掉一张;② `SCROLL_KILLS+1`,阈值 `= protectScrollKillBase(2000) << min(SCROLL_EXCHANGES,30)`(翻倍),达标则扣阈值、`offerOrDrop` 一张、`SCROLL_EXCHANGES+1`、升级音效 + 提示。
+- **配置**:+`enableProtectScroll/protectScrollDropChance(0.002)/protectScrollKillBase(2000)`;+附件 `SCROLL_KILLS/SCROLL_EXCHANGES`(Int,持久,死亡保留)。
+- **贴图**:两张用户图缩放 64×64 LANCZOS → `class_select_book.png`、`enhance_protect_scroll.png`;`class_select_book.json` 的 layer0 由 `minecraft:item/writable_book` 改为 `yongye:item/class_select_book`;新建 `enhance_protect_scroll.json`;双语言加 `enhance_protect_scroll` 条目。
+- 静态自检:全改动/新文件括号配平、JSON 校验通过;新文件 import 逐条比对(`ServerLivingEntityEvents` 同 LootHandler 路径、`appendTooltip` 签名同 WardBookItem);全用 proven API(offerOrDrop/setToDefaultPickupDelay/ENTITY_PLAYER_LEVELUP/Rarity.RARE),无待编译验证点。

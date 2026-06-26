@@ -72,7 +72,7 @@ public class EnhanceScreenHandler extends ScreenHandler {
         return EquipmentEnhancer.getLevel(input.getStack(EQUIP_SLOT));
     }
 
-    /** 服务端执行升级:消耗全部材料,按 数量×单值 给装备加等级。 */
+    /** 服务端执行升级:消耗全部材料,逐级 RNG 强化(m158:可能失败/碎裂,有保护卷可挡)。 */
     public void applyUpgrade(PlayerEntity player) {
         if (player.getWorld().isClient) return;
         ItemStack equip = input.getStack(EQUIP_SLOT);
@@ -81,9 +81,28 @@ public class EnhanceScreenHandler extends ScreenHandler {
         if (mat.isEmpty() || !EquipmentEnhancer.isMaterial(mat.getItem())) return;
         int add = mat.getCount() * EquipmentEnhancer.materialValue(mat.getItem());
         if (add <= 0) return;
-        ItemStack upgraded = EquipmentEnhancer.addLevels(equip, add);
-        input.setStack(EQUIP_SLOT, upgraded);
-        input.setStack(MAT_SLOT, ItemStack.EMPTY); // 整组材料全部消耗
+        net.minecraft.server.network.ServerPlayerEntity sp =
+                (player instanceof net.minecraft.server.network.ServerPlayerEntity s) ? s : null;
+        EquipmentEnhancer.EnhanceResult res = EquipmentEnhancer.attempt(sp, equip, add);
+        input.setStack(MAT_SLOT, ItemStack.EMPTY); // 整组材料全部消耗(成败都耗)
+        if (res.broke) {
+            input.setStack(EQUIP_SLOT, ItemStack.EMPTY);
+            if (sp != null) {
+                sp.getWorld().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                        net.minecraft.sound.SoundEvents.ENTITY_ITEM_BREAK,
+                        net.minecraft.sound.SoundCategory.PLAYERS, 1.0f, 0.7f);
+                sp.sendMessage(net.minecraft.text.Text.literal(
+                        "强化失败!装备在 Lv." + res.startLevel + " 时碎裂了")
+                        .formatted(net.minecraft.util.Formatting.DARK_RED), true);
+            }
+        } else {
+            input.setStack(EQUIP_SLOT, res.stack);
+            if (sp != null && (res.failed > 0 || res.usedProtect)) {
+                String m = "强化:成功 " + res.succeeded + " / 失败 " + res.failed + ",当前 Lv." + res.endLevel;
+                if (res.usedProtect) m += " [保护卷已抵挡碎裂]";
+                sp.sendMessage(net.minecraft.text.Text.literal(m).formatted(net.minecraft.util.Formatting.GOLD), true);
+            }
+        }
         sendContentUpdates();
     }
 

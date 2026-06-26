@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 12;
+    public static final int CURRENT_CONFIG_VERSION = 13;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -179,6 +179,23 @@ public class YongyeConfig {
     public int enhanceCrystalValue = 10;           // 生命结晶 = +10 级
     public int enhanceCoreValue = 100;             // 生命核心 = +100 级
     public int enhanceBloodCoreValue = 1000;       // 灾变血核 = +1000 级
+
+    // —— m158:强化失败/碎裂 ——
+    // 逐级 RNG:等级 < enhanceFailStartLevel(默认1000)必成功;此后成功率从 100% 线性降到
+    // enhanceFailEndLevel(默认10000)处的 enhanceFailEndRate(默认0.10=10%),并以该值封底。
+    // 失败只消耗本次材料、等级不变;等级 ≥ enhanceBreakLevel(默认10000)时,失败有 enhanceBreakChance
+    // 概率使装备「碎裂」(直接销毁),除非已用强化保护卷(见下,挡一次碎裂)。
+    public boolean enableEnhanceFailure = true;
+    public int enhanceFailStartLevel = 1000;       // 此级之前(含)强化必成功,从下一级开始可能失败
+    public int enhanceFailEndLevel = 10000;        // 成功率降到底的等级
+    public double enhanceFailEndRate = 0.10;       // enhanceFailEndLevel 及以上的成功率(封底)
+    public int enhanceBreakLevel = 10000;          // 达到此级后,失败可能令装备碎裂
+    public double enhanceBreakChance = 0.25;       // 碎裂概率(仅在 ≥enhanceBreakLevel 的失败上判定;有保护卷则免)
+
+    // —— m159:强化保护卷(无法合成,仅怪物掉落 + 杀怪自动兑换)——
+    public boolean enableProtectScroll = true;
+    public double protectScrollDropChance = 0.002; // 敌对怪死亡掉落保护卷的概率(很低)
+    public int protectScrollKillBase = 2000;       // 杀怪兑换:首个需 2000 击杀,每兑换 1 个后阈值翻倍(2000→4000→8000…)
 
     // ===== 主动武器技能(按品质解锁,按键触发) =====
     public boolean enableWeaponSkills = true;
