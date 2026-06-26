@@ -31,6 +31,7 @@ public final class ModItemGroups {
             // 技能书:放几本不同等级方便测试
             entries.add(ModItems.CHAOS_BLADE);
             entries.add(ModItems.WARD_BOOK);
+            entries.add(ModItems.ENHANCE_PROTECT_SCROLL);
             for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
                 entries.add(ModItems.getClassBook(c));
             }

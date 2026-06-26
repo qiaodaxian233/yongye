@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "yongye:item/class_select_book"
+    "layer0": "yongye:item/enhance_protect_scroll"
   }
 }

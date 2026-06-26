@@ -6,6 +6,7 @@ import com.yongye.item.ChaosBladeItem;
 import com.yongye.item.ArtifactType;
 import com.yongye.item.ClassBookItem;
 import com.yongye.item.ClassWeaponItem;
+import com.yongye.item.EnhanceProtectScrollItem;
 import com.yongye.item.TankShieldItem;
 import com.yongye.item.PlayerClass;
 import com.yongye.item.HealthSkillBookItem;
@@ -38,6 +39,10 @@ public final class ModItems {
     // —— 职业选择书:右键开全职业选择界面,选定本命职业(取代旧的登录强制弹窗) ——
     public static final Item CLASS_SELECT_BOOK = register("class_select_book",
             new com.yongye.item.ClassSelectBookItem(new Item.Settings().maxCount(1)));
+
+    // —— 强化保护卷(m159):右键使用,挡下一次强化失败导致的碎裂。无法合成,仅掉落/杀怪兑换 ——
+    public static final Item ENHANCE_PROTECT_SCROLL = register("enhance_protect_scroll",
+            new EnhanceProtectScrollItem(new Item.Settings().maxCount(16).rarity(Rarity.RARE)));
 
     public static final Item CHAOS_BLADE = register("chaos_blade",
             new ChaosBladeItem(new Item.Settings()

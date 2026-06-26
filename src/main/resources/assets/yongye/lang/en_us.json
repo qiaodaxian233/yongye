@@ -23,6 +23,7 @@
   "item.yongye.skill_book.steal": "Plunder Skill Book",
   "item.yongye.skill_book.steal.desc": "On hit, chance (scales with level) to steal the mob's held item",
   "item.yongye.ward_book": "Ward Enchant Book",
+  "item.yongye.enhance_protect_scroll": "Enhancement Protection Scroll",
   "item.yongye.ward_book.desc": "Right-click with a weapon in the other hand to make it immune to elite disarm",
   "item.yongye.skill_book.satiety.desc": "Continuously restores hunger; higher level = rarely hungry",
   "item.yongye.skill_book.attack.desc": "Increases attack damage (+0.5 per level)",

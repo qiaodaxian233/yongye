@@ -92,6 +92,7 @@ public class Yongye implements ModInitializer {
         EliteHandler.register();
         ArmorHealthHandler.register();
         LootHandler.register();
+        com.yongye.system.ProtectScrollHandler.register();    // m159 强化保护卷:掉落 + 杀怪兑换
 
         // 玩法系统(Phase 3:永夜 / 追杀 / 任务)
         NightfallManager.register();
