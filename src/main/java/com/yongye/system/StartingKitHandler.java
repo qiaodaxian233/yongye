@@ -39,6 +39,17 @@ public final class StartingKitHandler {
                 p.setAttached(ModAttachments.GOT_STARTING_FOOD, true);
             }
 
+            // 开局背包升级(m154):高级磁铁 + 高级喂食,各发一个;独立标记,老玩家下次登录也能补发。
+            // 软依赖:按 id 查到才发,查不到(未装 Sophisticated Backpacks / id 写错)静默跳过;两个都没发成功才不打标记。
+            if (cfg.giveStartingUpgrades
+                    && !p.getAttachedOrElse(ModAttachments.GOT_STARTING_UPGRADES, false)) {
+                boolean gaveMagnet  = giveById(p, cfg.startingMagnetUpgradeItem);
+                boolean gaveFeeding = giveById(p, cfg.startingFeedingUpgradeItem);
+                if (gaveMagnet || gaveFeeding) {
+                    p.setAttached(ModAttachments.GOT_STARTING_UPGRADES, true);
+                }
+            }
+
             if (!cfg.giveStartingBackpack) return;
             if (p.getAttachedOrElse(ModAttachments.GOT_STARTING_KIT, false)) return; // 每人只发一次
 
@@ -52,5 +63,14 @@ public final class StartingKitHandler {
             p.setAttached(ModAttachments.GOT_STARTING_KIT, true);
         });
         Yongye.LOGGER.info("[永夜] 开局赠礼系统已挂载");
+    }
+
+    /** 软依赖按 id 发一个物品:解析 id → 注册表查 → 查到且非空气则发一个并返回 true,否则返回 false(静默,不崩)。 */
+    private static boolean giveById(ServerPlayerEntity p, String idStr) {
+        Identifier id = Identifier.tryParse(idStr);
+        Item item = id != null ? Registries.ITEM.get(id) : null;
+        if (item == null || item == Items.AIR) return false;
+        p.giveItemStack(new ItemStack(item));
+        return true;
     }
 }

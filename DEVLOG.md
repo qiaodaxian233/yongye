@@ -1376,3 +1376,12 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **诚实交代**:这是 yongye 实打实的 bug 已修;但存档是幸运方块整合包+下界,幸运方块自身也可能刷怪,日志无法 100% 切割两者占比——本次只摁住 yongye 这边的份额。已在老存档地图上累积的怪本修清不掉(玩家 `/kill @e` 即可),修复只防再次爆炸 + 靠原版远距离 despawn 渐渐清理。
 - 静态自检:`NightfallHordeHandler` 括号 {}8/8·()89/89 配平;`globalMaxHostilesNearby`/`globalHostileRadius` 配置存在;`Box`/`MobEntity`/`Monster` import 齐全。全用既有 API/配置,无新接口、无「待编译验证」点。
 - 改 `NightfallHordeHandler.java`(仅 1 个 Java 文件),无配置变更,configVersion 不变(仍 9)。
+
+## 里程碑 154 — 开局礼包:职业武器带附魔 + 两个背包升级(创造模式那套另谈)
+- **需求(本轮只做明确部分)**:开局礼包修改——① 选职发的职业武器自带 抢夺III + 火焰附加II;② 开局发 Sophisticated Backpacks 的「高级磁铁升级」+「高级喂食升级」。(用户同条消息还提了"检测创造模式→拿永夜技能书+强化→开遇强则强×100"和"第二次开创造改生存",那部分触发物品/×100语义/与创造的内在矛盾都没说清,留作下一步确认,未动。)
+- **职业武器附魔**:`ClassManager.chooseStartingClass` 发武器处(line 91)改为先建 stack→`enchantStartingWeapon`→再 give。附魔走 m146 同款注册表写法(`p.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.LOOTING/FIRE_ASPECT).orElse(null)`,m146 已 BUILD SUCCESSFUL),`stack.addEnchantment(entry, level)` 写入;等级走配置 `weaponStartingLootingLevel`(3)/`weaponStartingFireAspectLevel`(2),开关 `weaponStartingEnchants`。Looting/FireAspect 由原版按武器附魔组件结算、不依赖 SwordItem(与横扫不同,无 instanceof 门),非剑类职业武器也生效。
+- **两个背包升级**:`StartingKitHandler` 加独立块(放在背包 `return` 之前),软依赖按 id 查到才发——`giveById(p, id)` 解析→`Registries.ITEM.get`→查到非空气则发、否则静默跳过不崩。id 走配置 `startingMagnetUpgradeItem`(默 `sophisticatedbackpacks:advanced_magnet_upgrade`)/`startingFeedingUpgradeItem`(默 `sophisticatedbackpacks:advanced_feeding_upgrade`),开关 `giveStartingUpgrades`。用**独立**附件 `GOT_STARTING_UPGRADES`(persistent BOOL+copyOnDeath,照 GOT_STARTING_FOOD 模板),不复用 GOT_STARTING_KIT——这样已进过服的老玩家下次登录也能补发这两个升级。两个都没发成功才不打标记(装上 mod / 改对 id 后下次登录可补发)。
+- **作用范围/局限**:武器附魔只作用于「选职时发放的那把」(开局礼包语义);已选过职业、武器早已到手的老玩家**不会**追溯附魔——要覆盖老玩家需另加一次性登录补发(待定);要让所有职业武器实例(合成/掉落)都带附魔也是另一处 hook(待定)。背包升级 id 是按图里合成表名的最可能值,若发现没发到多半是 id 不对,改配置即可(软依赖不崩)。
+- 静态自检:ClassManager {}45/45·()296/296、StartingKitHandler {}10/10·()43/43、ModAttachments {}3/3·()232/232、YongyeConfig {}33/33·()326/326 全配平;新字段/方法/import 齐(RegistryEntry 已 import、Item 已 import)。
+- **待编译验证(本轮唯一)**:`ItemStack.addEnchantment(RegistryEntry<Enchantment>, int)` 是仓库首次使用(1.21.1 标准方法,风险低);取附魔的 `getRegistryManager().get(...).getEntry(...)` 是 m146 已编译过的写法、`p.getRegistryManager()` 也在 AccessoryStorage 用过。build 报错(如 addEnchantment 签名)贴来即修。
+- 改 4 文件:ClassManager.java(武器附魔)、StartingKitHandler.java(两升级+giveById)、ModAttachments.java(新增 GOT_STARTING_UPGRADES)、YongyeConfig.java(开局升级2 id+开关+武器附魔3字段),**configVersion 9→10**。

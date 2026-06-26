@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 9;
+    public static final int CURRENT_CONFIG_VERSION = 10;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -512,6 +512,20 @@ public class YongyeConfig {
     /** 开局赠送的物品 id。默认 Sophisticated Backpacks 的下界合金背包;软依赖:未装该 mod 则自动跳过。 */
     public String startingBackpackItem = "sophisticatedbackpacks:netherite_backpack";
 
+    // ============ 开局背包升级(m154:每人首次进入发 高级磁铁 + 高级喂食 两个升级)============
+    // 软依赖 Sophisticated Backpacks:按 id 在物品注册表查到才发,查不到(未装该 mod / id 写错)静默跳过、不崩。
+    // 若发现没发到,多半是 id 不对——直接在这里改成正确 id 即可(无需改代码),物品名见游戏内 F3+H 或合成表。
+    public boolean giveStartingUpgrades = true;
+    public String startingMagnetUpgradeItem = "sophisticatedbackpacks:advanced_magnet_upgrade";
+    public String startingFeedingUpgradeItem = "sophisticatedbackpacks:advanced_feeding_upgrade";
+
+    // ============ 开局职业武器附魔(m154:选职发的武器自带 抢夺III + 火焰附加II)============
+    // 仅作用于「选职时发放的那把」职业武器(开局礼包语义);改等级即可,0=不附该项。
+    // 注:Looting/FireAspect 由原版按武器附魔组件结算,不依赖 SwordItem(与横扫不同),非剑类职业武器也生效。
+    public boolean weaponStartingEnchants = true;
+    public int weaponStartingLootingLevel = 3;
+    public int weaponStartingFireAspectLevel = 2;
+
     // ============ 开局两本书(m122:每人首次进入发《永夜·缘起》+《幸存者手册》)============
     public boolean giveWelcomeBooks = true;
 
@@ -519,6 +533,7 @@ public class YongyeConfig {
     public boolean giveStartingFood = true;
     /** 开局赠送的面包数量(0 = 不发);默认 20,超过 64 自动拆成多组。 */
     public int startingFoodCount = 20;
+
 
     // ============ 高血量反制(文档第 17 章)============
     public boolean enableHighHpCounter = true;

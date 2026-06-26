@@ -184,6 +184,15 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_starting_food"));
 
+    /** GOT_STARTING_UPGRADES: 是否已领取开局背包升级(高级磁铁 + 高级喂食),每人只发一次(死亡保留)。
+     *  独立于 GOT_STARTING_KIT —— 这样已进过服的老玩家下次登录仍能补发这两个升级。 */
+    public static final AttachmentType<Boolean> GOT_STARTING_UPGRADES =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .initializer(() -> false)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_starting_upgrades"));
+
     /** LOST_WEAPON_ENHANCE: 被夺且未找回的武器强化等级(供 /yongye recover 转移到新武器,损失 1/3)。 */
     public static final AttachmentType<Integer> LOST_WEAPON_ENHANCE =
             AttachmentRegistry.<Integer>builder()

@@ -88,12 +88,30 @@ public final class ClassManager {
         p.setAttached(ModAttachments.STARTING_CLASS_CHOSEN, true);
         applyClasses(p);
         if (YongyeConfig.get().startingClassGiveWeapon && c != PlayerClass.MONK) {
-            p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getClassWeapon(c)));
+            net.minecraft.item.ItemStack w = new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getClassWeapon(c));
+            enchantStartingWeapon(p, w);   // m154:开局武器带 抢夺III + 火焰附加II
+            p.giveItemStack(w);
         }
         p.sendMessage(Text.literal("你选择了本命职业【" + c.cn + "】,出生即生效!").formatted(Formatting.GOLD), false);
         com.yongye.network.YongyeNet.sendStats(p);   // 同步职业到客户端(背包显示用)
         com.yongye.network.YongyeNet.sendTalents(p); // 同步天赋状态(天赋面板即时显示该职业,不用重进)
         return true;
+    }
+
+    /** m154:给开局发放的职业武器附上 抢夺III + 火焰附加II(等级走配置,0 则不附该项)。
+     *  注册表取附魔走 m146 同款写法(get(RegistryKeys.ENCHANTMENT).getEntry(...).orElse(null),已 BUILD SUCCESSFUL);
+     *  附魔以组件写入,Looting/FireAspect 由原版按武器附魔组件结算,不依赖 SwordItem(与横扫不同,无 instanceof 门)。 */
+    private static void enchantStartingWeapon(ServerPlayerEntity p, net.minecraft.item.ItemStack w) {
+        YongyeConfig cfg = YongyeConfig.get();
+        if (!cfg.weaponStartingEnchants) return;
+        var reg = p.getRegistryManager().get(net.minecraft.registry.RegistryKeys.ENCHANTMENT);
+        if (reg == null) return;
+        RegistryEntry<net.minecraft.enchantment.Enchantment> looting =
+                reg.getEntry(net.minecraft.enchantment.Enchantments.LOOTING).orElse(null);
+        RegistryEntry<net.minecraft.enchantment.Enchantment> fire =
+                reg.getEntry(net.minecraft.enchantment.Enchantments.FIRE_ASPECT).orElse(null);
+        if (looting != null && cfg.weaponStartingLootingLevel > 0) w.addEnchantment(looting, cfg.weaponStartingLootingLevel);
+        if (fire != null && cfg.weaponStartingFireAspectLevel > 0) w.addEnchantment(fire, cfg.weaponStartingFireAspectLevel);
     }
 
     public static boolean learn(ServerPlayerEntity p, PlayerClass type) {
