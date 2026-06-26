@@ -1405,3 +1405,9 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:ClassManager {}45/45·()300/300、YongyeConfig {}33/33·()334/334 配平;SWEEPING_EDGE(m146 已用)+ 新字段引用一致。
 - 待编译验证:沿用 m154 的 `ItemStack.addEnchantment`(本轮未引入新接口,SWEEPING_EDGE 取法 m146 已编译过)。
 - 改 2 文件:ClassManager.java(+横扫)、YongyeConfig.java(+weaponStartingSweepingLevel),**configVersion 11→12**。
+
+## 里程碑 157 — 热修 m155 build 报错:ServerEntityEvents 错包路径
+- **报错**:`./gradlew build` 失败,`WorldDoomManager.java:5 找不到符号 ServerEntityEvents`——我把 import 写成了 `net.fabricmc.fabric.api.entity.event.v1.ServerEntityEvents`(不存在该路径下的此类)。
+- **修法**:改成仓库其它文件(MobEnhancementHandler/ItemCleanupHandler 等)用的正确路径 `net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents`。
+- **同时复核**:把 m155 两个新文件(WorldDoomManager/CreativeWatchHandler)的**全部 import 逐条**与仓库既有用法比对,确认无其它错路径(都有 proven 用法)。教训:新建文件除括号/符号外,还要核对 import 包路径,不能只静态数括号。
+- 改 1 文件:WorldDoomManager.java(仅 import 行),无逻辑/配置变更,configVersion 不变(仍12)。

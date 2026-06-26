@@ -2,7 +2,7 @@ package com.yongye.system;
 
 import com.google.gson.Gson;
 import com.yongye.Yongye;
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.Monster;
