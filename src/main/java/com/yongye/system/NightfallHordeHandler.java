@@ -43,10 +43,21 @@ public final class NightfallHordeHandler {
                 if (!(player.getWorld() instanceof ServerWorld world)) continue;
                 if (ArtifactManager.getActiveLevel(player, com.yongye.item.ArtifactType.WORLD_ANCHOR) > 0) continue;
 
+                // 全局怪量预算:玩家附近(globalHostileRadius)敌对生物总数已达上限就不再补刷。
+                // m153:此前尸潮只统计 nightfallHordeRadius 框内的怪(existing),玩家高频传送时旧怪被甩在原地、
+                //       不再计数 → 每个新落点又补满 target,旧怪在地图上无限累积(下界+多人互相传送实测刷到数万只拖崩 TPS)。
+                //       这里复用硬核同款全局预算(globalMaxHostilesNearby/globalHostileRadius)作总量硬闸,与单点 target 双保险。
+                Box gbox = player.getBoundingBox().expand(cfg.globalHostileRadius);
+                int globalHostiles = world.getEntitiesByClass(MobEntity.class, gbox,
+                        m -> m.isAlive() && m instanceof Monster).size();
+                if (globalHostiles >= cfg.globalMaxHostilesNearby) continue;
+
                 Box box = player.getBoundingBox().expand(cfg.nightfallHordeRadius);
                 int existing = world.getEntitiesByClass(MobEntity.class, box,
                         m -> m.isAlive() && m instanceof Monster).size();
                 int want = Math.min(cfg.nightfallHordeBatch, target - existing);
+                // 别一次补过全局预算余量,避免单 tick 把总量顶到上限后下一批继续涌
+                want = Math.min(want, cfg.globalMaxHostilesNearby - globalHostiles);
                 if (want <= 0) continue;
 
                 int spawned = 0;

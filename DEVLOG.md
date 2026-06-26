@@ -1366,3 +1366,13 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:`PursuitHandler` 括号 {}42/42·()280/280 配平;新字段 `pillarCheeseKnockback` 定义↔引用一致;import 已加。
 - **待编译验证(本轮唯一)**:`EntityVelocityUpdateS2CPacket` 是仓库首次使用的 S2C 包——`new EntityVelocityUpdateS2CPacket(player)`(读实体速度)+ `ServerPlayerEntity.networkHandler`(`ServerPlayNetworkHandler`)`.sendPacket(...)` 均为 1.21.1 标准用法(仓库客户端侧已用 `mc.player.networkHandler.sendCommand`,字段同名),风险低但首用故标注;build 报错(如包路径/方法名)贴来即修。
 - 改 `PursuitHandler.java`(import +1、击退段)+ `YongyeConfig.java`(新增 `pillarCheeseKnockback`),**configVersion 8→9**。
+
+## 里程碑 153 — 修永夜尸潮实体爆炸(下界多人传送刷到数万只拖崩 TPS)
+- **现象**:玩家上传崩溃日志,`/kill` 杀死实体数 7477 → 8899 → 43622 → 49835 持续暴涨,服务端 `Can't keep up! Running 40652ms or 813 ticks behind` 最终三人全部 `lost connection` 掉线。存档「幸运方块单方块生存」,崩溃时在下界 `the_nether_128`,3 名玩家(qiaodaxian/wuyainhe/FK_GK)在高频互相传送。
+- **根因**:`NightfallHordeHandler`(永夜尸潮,永夜≥1 时每 40tick 在每个玩家 `nightfallHordeRadius`=24 格内补刷至 `target=min(base100×永夜, max200)`)**只统计那 24 格框内的怪(existing)、没有任何全局实体上限**。尸潮怪出生即 `setTarget(player)` 锁定玩家;玩家一传送,统计框跟着人走,**老的几百只怪被甩在原地、不再计入 existing → 新落点 existing≈0 又补满 target → 反复传送,旧怪在地图上无限累积**。再叠动态对位把怪拔成肉盾(杀不动)+第 10 天起 `mobBossChance` 部分 BOSS 化 + BOSS 召唤小怪,日志满屏「进入狂暴」即这群怪的下游表现。
+- 对比:硬核 `HardcoreSurvivalHandler.ambushSpawn` 有 `globalMaxHostilesNearby`(60)/`globalHostileRadius`(28)的全局怪量预算闸;**尸潮完全没有这道闸**。
+- **修法**:尸潮 per-player 循环里(锚石检查之后、existing 统计之前)复用硬核同款全局预算——`gbox=expand(globalHostileRadius)` 统计 Monster 数,`globalHostiles >= globalMaxHostilesNearby` 则 `continue`;并把 `want` 再 `min(globalMaxHostilesNearby − globalHostiles)`,防单 tick 把总量顶过上限后下一批继续涌。总量硬闸 ~60/玩家,与单点 `target` 双保险。
+- 注意:全局上限(60)比单点 `target`(200)更紧,生效后尸潮实际被钳在 ~60/玩家;要更密的潮请调 `globalMaxHostilesNearby`,而非 `nightfallHordeMax`。
+- **诚实交代**:这是 yongye 实打实的 bug 已修;但存档是幸运方块整合包+下界,幸运方块自身也可能刷怪,日志无法 100% 切割两者占比——本次只摁住 yongye 这边的份额。已在老存档地图上累积的怪本修清不掉(玩家 `/kill @e` 即可),修复只防再次爆炸 + 靠原版远距离 despawn 渐渐清理。
+- 静态自检:`NightfallHordeHandler` 括号 {}8/8·()89/89 配平;`globalMaxHostilesNearby`/`globalHostileRadius` 配置存在;`Box`/`MobEntity`/`Monster` import 齐全。全用既有 API/配置,无新接口、无「待编译验证」点。
+- 改 `NightfallHordeHandler.java`(仅 1 个 Java 文件),无配置变更,configVersion 不变(仍 9)。
