@@ -1443,3 +1443,19 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **内容**(9 节):①三条铁律(不装懂不臆想 / 话少 / 沙箱会清先 push 落盘)②环境能做不能做(沙箱编不了 Fabric→新 API 标待编译验证、画不了 UV 皮肤图集、push 靠作者 PAT)③开工前核对(先确认远端 HEAD 别重复造轮子——m158/m159 曾因落旧快照整套重做)④mod 易混点(GameDifficulty 世界难度 7 档自定义枚举 ≠ 原版 Difficulty、世界难度 vs 永夜等级两套系统、怪血 4 层叠加、改机制找全入口、刷怪 handler 需全局上限、GSON 旧值盖新默认 + configVersion)⑤必查 API(新文件 import 路径逐条比对仓库既有=m157 ServerEntityEvents 错包路径教训、1.21.x getMiningSpeedMultiplier→getMiningSpeed、附魔取等级 proven 套路、setVelocity 需 EntityVelocityUpdateS2CPacket 同步)⑥贴图装法(LANCZOS 插画 / NEAREST 像素、64×64、UV 皮肤不能 GPT 平面图)⑦交活前自查清单⑧提交推送规矩(yongye-dev 身份 / PAT 一次性不写 config / 导 patch 兜底)⑨收尾沟通模板。
 - 自查:frontmatter YAML 校验通过;HANDOVER 顶部加指针指向 SKILL.md。
 - **纯文档,无代码 / 配置改动,configVersion 不变(仍 13)**。改 `SKILL.md`(新)+ `HANDOVER.md`(加指针)+ `DEVLOG.md`。
+
+## 里程碑 162 — 自定义末影龙 BOSS · Stage 1(GeckoLib 前置 + 第一个自定义实体)
+- **需求**:用户买的「真正的末影龙」(转龙核 DragonCore + MythicMobs 包)替换末影龙。
+- **关键澄清**:该包是 **Bukkit 服务端生态**——DragonCore 客户端渲染 + MythicMobs 服务端怪(`Type: HUSK` 套龙模型的地面近战 BOSS,**不是**原版飞行末影龙)。模型是**基岩 geometry**(`toro_ender_dragon.geo.json` format 1.12.0 / 57 骨骼 / 2048² 贴图)+ 基岩动画。服务端 YAML 在 Fabric 全废;贴图 UV 是给自定义模型的,不能单换原版 `dragon.png`(会糊)。→ **唯一出路:GeckoLib + 自写渲染。**
+- **用户决定**:GeckoLib(MIT 开源)用 **JiJ 嵌进 mod**(玩家不单独装);「替换原版 + 新可召唤 BOSS」两个都要,**先做地基(新可召唤实体)build 绿了再加替换原版**。
+- **本轮 Stage 1**:
+  - 构建:`build.gradle` 加 GeckoLib maven(`dl.cloudsmith.io/public/geckolib3/geckolib/maven`,`includeGroupByRegex software.bernie.*`)+ `modImplementation` + `include`(JiJ);`gradle.properties` +`geckolib_version=4.8.3`(1.21.1 最新);`fabric.mod.json` depends +`geckolib>=4.0.0`。
+  - 资源:放 GeckoLib 约定路径 `assets/yongye/geo/`、`animations/`、`textures/entity/`(动画用 rar 里那份全集,含 idle/walk)。
+  - 实体:`ToroEnderDragonEntity extends HostileEntity implements GeoEntity`(属性血500/攻20/速0.28/击退抗1/索敌48;基础近战 AI;单 controller `move`:移动→walk 否则 idle;`GeckoLibUtil.createInstanceCache`)。
+  - 注册:`ModEntities`(`EntityType.Builder.create(::new, MONSTER).dimensions(6,5).build(KEY)` + `FabricDefaultAttributeRegistry`),主类 `onInitialize` 加 `ModEntities.init()`。
+  - 客户端:`ToroEnderDragonModel extends GeoModel`(指三资源)+ `ToroEnderDragonRenderer extends GeoEntityRenderer`;`YongyeClient` 加 `EntityRendererRegistry.register`。
+  - 召唤:`/yongye dragon` 在玩家处生成(测试用)。
+- **待编译验证(整体)**:全新前置 + 第一个自定义实体,沙箱编不了 Fabric。**最高危 = GeckoLib 内部 import 路径**(4.5 迁过包;写的是 `software.bernie.geckolib.{animatable.GeoEntity, animatable.instance.AnimatableInstanceCache, animation.AnimatableManager/AnimationController/RawAnimation, model.GeoModel, renderer.GeoEntityRenderer, util.GeckoLibUtil}`——build 报「package 不存在 / cannot find symbol」就按 IntelliJ 自动导入修,把报错贴来我改准)。其次:1.21.1 `EntityType.Builder.build(RegistryKey)` 签名、`EntityType.create`/属性名。
+- 静态自检:7 个改动/新建 .java 括号全配平;3 个 JSON(fabric.mod.json + geo + animation)合法。
+- **configVersion 不变(仍 13)**。
+- **遗留**:Stage 2 替换原版末影龙本体(GeoReplacedEntity + 渲染替换);Stage 3 BOSS 技能/血条/平衡。均待 Stage 1 本地 build 绿后再做。

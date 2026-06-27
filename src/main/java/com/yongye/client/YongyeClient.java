@@ -50,6 +50,11 @@ public class YongyeClient implements ClientModInitializer {
                 (entityType, entityRenderer, registrationHelper, context) ->
                         registrationHelper.register(new EliteSkinFeatureRenderer(entityRenderer)));
 
+        // 自定义末影龙 BOSS 的 GeckoLib 渲染器
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.TORO_ENDER_DRAGON,
+                com.yongye.client.render.ToroEnderDragonRenderer::new);
+
         // 接收服务端成长数据
         ClientPlayNetworking.registerGlobalReceiver(StatsPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.update(payload.health(), payload.levels(), payload.className())));

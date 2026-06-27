@@ -12,6 +12,12 @@ base {
 
 repositories {
     maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+    // GeckoLib(MIT 开源动画库,渲染基岩模型+动画用)
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content { includeGroupByRegex("software\\.bernie.*") }
+    }
     mavenCentral()
 }
 
@@ -20,6 +26,11 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // GeckoLib:modImplementation 让 Loom 把它重映射到本项目的 yarn 映射;
+    // include 把它的 jar 嵌进本 mod(Jar-in-Jar),玩家只装本 mod 即可,GeckoLib 自动随之加载。
+    modImplementation "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
+    include "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
 }
 
 processResources {

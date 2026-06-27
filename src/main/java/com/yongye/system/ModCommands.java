@@ -30,6 +30,23 @@ public final class ModCommands {
                 dispatcher.register(CommandManager.literal("yongye")
                         .requires(s -> s.hasPermissionLevel(2))
 
+                        // 召唤自定义末影龙 BOSS(测试用):/yongye dragon
+                        .then(CommandManager.literal("dragon").executes(ctx -> {
+                            net.minecraft.server.network.ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            if (p == null) {
+                                ctx.getSource().sendError(Text.literal("只能由玩家执行"));
+                                return 0;
+                            }
+                            net.minecraft.server.world.ServerWorld w = p.getServerWorld();
+                            com.yongye.entity.ToroEnderDragonEntity dragon =
+                                    new com.yongye.entity.ToroEnderDragonEntity(com.yongye.registry.ModEntities.TORO_ENDER_DRAGON, w);
+                            dragon.refreshPositionAndAngles(p.getX(), p.getY(), p.getZ(), p.getYaw(), 0.0f);
+                            w.spawnEntity(dragon);
+                            ctx.getSource().sendFeedback(() ->
+                                    Text.literal("已召唤末影龙 BOSS").formatted(Formatting.DARK_PURPLE), false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("nightfall")
                                 .then(CommandManager.literal("status").executes(ctx -> {
                                     ctx.getSource().sendFeedback(() ->
