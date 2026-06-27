@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 13;
+    public static final int CURRENT_CONFIG_VERSION = 14;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -594,6 +594,14 @@ public class YongyeConfig {
     public int nightfallHordeBatch = 10;          // 每批最多新刷数(平滑爬升,避免瞬刷卡顿)
     public double nightfallHordeRadius = 24.0;     // 在玩家周围多大范围刷/统计
     public double nightfallHordeMinDistance = 8.0; // 刷怪点距玩家最小距离
+
+    // 野生末影龙 BOSS:第 N 天起有几率在玩家头顶高空刷出(会飞、追杀,跟末地那条差不多)
+    public boolean enableWildDragonSpawn = true;
+    public int wildDragonMinDay = 10;                 // 第几天起才可能刷(游戏天数)
+    public double wildDragonSpawnChance = 0.05;       // 每次检定的刷出概率
+    public int wildDragonCheckIntervalTicks = 6000;   // 每隔多少 tick 检定一次(6000=5分钟)
+    public int wildDragonMaxAlive = 1;                // 全服同时存活上限(稀有 BOSS 事件)
+    public double wildDragonSpawnHeight = 28.0;       // 在玩家上方多少格高空生成
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

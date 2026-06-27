@@ -87,6 +87,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.StartingKitHandler.register();
         com.yongye.system.WelcomeBookHandler.register();
         com.yongye.system.NightfallHordeHandler.register();
+        com.yongye.system.WildDragonSpawnHandler.register();   // m165 野生末影龙:第N天起高空几率刷出
         com.yongye.system.SurvivalRankHandler.register();
         com.yongye.system.NightfallWeatherHandler.register();
         com.yongye.system.NightfallVisionHandler.register();

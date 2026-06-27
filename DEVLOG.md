@@ -1481,3 +1481,20 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **注意**:替换的是**渲染器(客户端外观)**,原版龙的实体/AI/血条/技能全在服务端,不受影响。龙是多部件实体,GeckoLib 整体渲一个模型、原版部件碰撞箱服务端照常。
 - **遗留**:自建可召唤龙(`ToroEnderDragonEntity` / `/yongye dragon`)仍是无血条无技能的地面近战怪——本轮没碰它,只接管了末地原版龙。
 - **改 4 文件**(3 新 .java + YongyeClient 注册),**configVersion 不变(仍 13)**。
+
+## 里程碑 165 — 自建末影龙改成会飞 + 第10天起几率刷出(承 m163 遗留 Stage3)
+- **需求**:`/yongye dragon` 那条自建龙(`ToroEnderDragonEntity`,m162 起是地面近战 `HostileEntity`)要会飞、有 AI 寻路、不在地上走、跟末地那条差不多;并在第 10 天后有几率自动刷出来。
+- **① 飞行化**(改 `ToroEnderDragonEntity`):
+  - 不换基类(仍 `HostileEntity`,保留敌对属性/索敌)。构造里 `this.moveControl = new FlightMoveControl(this, 20, true)`(第三参 `true` = 无重力;官方文档明确「用 FlightMoveControl 的实体无重力」)+ `setNoGravity(true)` 双保险。
+  - 重写 `createNavigation(World)` 返回 `new BirdNavigation(this, world)`(**裸构造,不调可能随版本改名的 setter**,压低 build 风险)。
+  - `initGoals` 去掉 `WanderAroundFarGoal`(地面游荡),只留 `MeleeAttackGoal`(走飞行导航,在 3D 里追玩家、俯冲攻击,不会落地走)+ `LookAtEntityGoal`/`LookAroundGoal` + `RevengeGoal`/`ActiveTargetGoal`。
+  - 属性 +`GENERIC_FLYING_SPEED 0.8`(原版蜜蜂同款),`FOLLOW_RANGE` 48→64;重写 `handleFallDamage` 返 false。
+  - GeckoLib 动画从 idle/walk 换成 `fly_idle`(悬停)/`fly_walk`(移动)——动画文件确有这两条;渲染器/模型不动。
+- **② 野生刷怪**(新 `WildDragonSpawnHandler`,仿 `NightfallHordeHandler`):
+  - `ServerTickEvents` 每 `wildDragonCheckIntervalTicks`(默 6000=5min)检定一次。
+  - 复用 m155 proven 的 `getWorlds()`/`iterateEntities()` 数全服存活龙,≥`wildDragonMaxAlive`(默 1,稀有 BOSS 事件)就跳过。
+  - 收集 生存/冒险 + 在 `ServerWorld` + `ProgressionManager.gameDay(world) >= wildDragonMinDay`(默 10) 的玩家,按 `wildDragonSpawnChance`(默 0.05)全服一次检定;中则在随机合法玩家上方 `wildDragonSpawnHeight`(默 28)格高空(±16 水平偏移、clamp 到 topY-4)`spawnEntity` + `setTarget(player)` 出生即俯冲追杀 + 全服深紫播报。
+- **静态自检**:两文件括号配平;飞行 import 包路径标准(`FlightMoveControl`=`net.minecraft.entity.ai.control` 经 yarn 文档确认,`BirdNavigation`/`EntityNavigation`=`net.minecraft.entity.ai.pathing`);handler 全用 proven API(`iterateEntities`/`getWorlds`、`getPlayerManager().broadcast(Text,false)`、`gameDay(World)`、`interactionManager.getGameMode()`),`ProgressionManager` 同包免 import。
+- **待编译验证(本轮)**:全是**原版 yarn 飞行 API**(非 GeckoLib、非新库),且多为原版蜜蜂同款——`FlightMoveControl(this,20,true)` 三参构造、`new BirdNavigation(MobEntity,World)`、`createNavigation` 重写、`EntityAttributes.GENERIC_FLYING_SPEED`、`handleFallDamage(float,float,DamageSource)` 返 boolean、`setNoGravity`、`getTopY()`。沙箱编不了 Fabric 故标,把握高。
+- **注意**:飞行龙俯冲攻击地面玩家时会降到近地面,但走的是飞行移动不是走路(符合「不在地上走」)。
+- **新增 1 文件**(`WildDragonSpawnHandler`)+ 改 `ToroEnderDragonEntity`/`YongyeConfig`(+6 字段)/`Yongye`(注册),**configVersion 13→14**。
