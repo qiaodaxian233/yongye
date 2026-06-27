@@ -1466,3 +1466,18 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
   2. **`EntityType.Builder.build()` 签名**:本映射版本要 `String` 不是 `RegistryKey`。改 `.build("toro_ender_dragon")`(`TORO_ENDER_DRAGON_KEY` 仍用于 `Registry.register` 的 identifier)。
 - **好消息**:GeckoLib 的 import 路径**本身全解析成功**——`ToroEnderDragonModel` 只报「使用/覆盖了已过时的 API」**警告**(非错误),证明 `software.bernie.geckolib.*` 包路径(animatable/animation/model/renderer/util)写对了。`GeoModel.getModelResource(T)` 等是 deprecated 但仍可用(警告不阻断 build;若渲染异常再换非过时签名)。
 - 改 `build.gradle`(exclude)+ `ModEntities.java`(build String)。静态括号配平。configVersion 不变(仍 13)。待用户重新 `./gradlew build` 验证。
+
+## 里程碑 164 — GeckoLib 接管原版末影龙渲染(只换皮,飞行/血条/技能全保留)
+- **需求**:用户嫌自建龙不会飞、没血条、没技能;要「替换末地原版龙本体」,技能用原版的就行。
+- **判断(关键)**:不给自建地面龙补飞行/血条/技能(那等于把原版白送的全部重写一遍),**反过来——留原版末地龙实体一字节不碰,只把它的「渲染器」换成夜绿龙模型**。这样飞行、BOSS 血条、龙息、水晶回血、阶段、死亡演出全部原样保留,一次性解决三个抱怨。
+- **版本敏感 API 核查**:GeckoLib 最新 main 分支(v5,配 1.21.5+ 的 render-state 系统)的 `GeoReplacedEntityRenderer` 是**三泛型**(`T,E,R extends EntityRenderState & GeoRenderState`),与本项目 **v4.8.3 / MC 1.21.1** 不符,照 v5 写必挂。改去 `geckolib-examples` 的 **Multiloader-1.21.1 分支**(对症 v4/1.21.1)curl 拉 ReplacedCreeper 三件套真实源码,逐字核对钉死签名。
+- **实现(3 新文件)**:
+  1. `entity/ToroDragonReplacement` `implements GeoReplacedEntity` —— **独立轻量对象,不是实体,原版龙不碰**。`registerControllers` 单 controller 恒循环 `fly`(动画文件确有 fly;原版龙永远在飞);`getReplacingEntityType()` 返 `EntityType.ENDER_DRAGON`。
+  2. `client/render/ToroDragonReplacementModel` extends `GeoModel<ToroDragonReplacement>` —— 复用 m162 已在仓库的同套 `toro_ender_dragon.{geo,png,animation}` 资源,不重复放。
+  3. `client/render/ToroDragonReplaceRenderer` extends `GeoReplacedEntityRenderer<EnderDragonEntity, ToroDragonReplacement>`(两泛型:原版实体 + 替身)。构造 `super(ctx, new model, new animatable)` + `shadowRadius 2.5`。yarn 的 `EntityRendererFactory.Context`。
+  - `YongyeClient.onInitializeClient` 加 `EntityRendererRegistry.register(EntityType.ENDER_DRAGON, ToroDragonReplaceRenderer::new)` 覆盖原版龙渲染器。
+- **静态自检**:三新文件括号全配平;GeckoLib import 逐条比对——`GeoReplacedEntity` 与已编过的 `GeoEntity` 同包(`...animatable`),`AnimatableInstanceCache/Manager/Controller/RawAnimation/GeckoLibUtil` 与 m162 逐字一致,`GeoModel` 同 m162 模型,`GeoReplacedEntityRenderer` 与已编过的 `GeoEntityRenderer` 同包(`...renderer`)。
+- **待编译验证(本轮唯一)**:两个真正新类 `GeoReplacedEntity`/`GeoReplacedEntityRenderer` + `getReplacingEntityType()` 签名——已用 v4/1.21.1 官方示例源码逐字核对,但沙箱编不了 Fabric 故标。yarn 名 `EnderDragonEntity`(`net.minecraft.entity.boss.dragon`)/`EntityType.ENDER_DRAGON`/`EntityRendererFactory.Context` 均标准。
+- **注意**:替换的是**渲染器(客户端外观)**,原版龙的实体/AI/血条/技能全在服务端,不受影响。龙是多部件实体,GeckoLib 整体渲一个模型、原版部件碰撞箱服务端照常。
+- **遗留**:自建可召唤龙(`ToroEnderDragonEntity` / `/yongye dragon`)仍是无血条无技能的地面近战怪——本轮没碰它,只接管了末地原版龙。
+- **改 4 文件**(3 新 .java + YongyeClient 注册),**configVersion 不变(仍 13)**。

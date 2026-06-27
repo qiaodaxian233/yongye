@@ -55,6 +55,12 @@ public class YongyeClient implements ClientModInitializer {
                 com.yongye.registry.ModEntities.TORO_ENDER_DRAGON,
                 com.yongye.client.render.ToroEnderDragonRenderer::new);
 
+        // 【m164】用 GeckoLib 接管原版末影龙的渲染:只换外观模型,飞行/血条/龙息/水晶/阶段/死亡全保留。
+        // 这里覆盖原版 ENDER_DRAGON 的渲染器即可,不碰实体本身。
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                net.minecraft.entity.EntityType.ENDER_DRAGON,
+                com.yongye.client.render.ToroDragonReplaceRenderer::new);
+
         // 接收服务端成长数据
         ClientPlayNetworking.registerGlobalReceiver(StatsPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.update(payload.health(), payload.levels(), payload.className())));
