@@ -141,6 +141,11 @@ public class DebugScreen extends Screen {
                             new Btn("长门降临", "yongye painboss"),
                             new Btn("灾厄核心", "yongye core"),
                     }),
+                    new Section("新怪召唤(就在脚下)", new Btn[]{
+                            new Btn("末影龙 BOSS", "yongye dragon"),
+                            new Btn("精英·毒液蜘蛛", "yongye venomspider"),
+                            new Btn("BOSS·红蜘蛛", "yongye redspider"),
+                    }),
             }),
             // —— 掉率(loot)——
             new Page("掉率", new Section[]{
