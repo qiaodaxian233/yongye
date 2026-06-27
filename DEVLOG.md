@@ -1427,3 +1427,12 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **配置**:+`enableProtectScroll/protectScrollDropChance(0.002)/protectScrollKillBase(2000)`;+附件 `SCROLL_KILLS/SCROLL_EXCHANGES`(Int,持久,死亡保留)。
 - **贴图**:两张用户图缩放 64×64 LANCZOS → `class_select_book.png`、`enhance_protect_scroll.png`;`class_select_book.json` 的 layer0 由 `minecraft:item/writable_book` 改为 `yongye:item/class_select_book`;新建 `enhance_protect_scroll.json`;双语言加 `enhance_protect_scroll` 条目。
 - 静态自检:全改动/新文件括号配平、JSON 校验通过;新文件 import 逐条比对(`ServerLivingEntityEvents` 同 LootHandler 路径、`appendTooltip` 签名同 WardBookItem);全用 proven API(offerOrDrop/setToDefaultPickupDelay/ENTITY_PLAYER_LEVELUP/Rarity.RARE),无待编译验证点。
+
+## 里程碑 160 — 装入 GPT 生成的职业书 / 灾厄核心贴图(填占位)
+- **需求**:此前用户喊「贴图占位没做」。用户按之前提供的提示词用 GPT 生成 6 本职业书 + 灾厄核心方块贴图,本轮装入替换占位。
+- **来源澄清(重要)**:本轮 uploads 的 `下载__2_.zip` 装的是 **GPT 生图**(7 张 1254×1254:6 张 RGBA 书 + 1 张 RGB 灾厄核心),**不是** DragonCore dagger 模型。上一轮装着「夜绿武器套装」dagger 的沙箱已重置丢失,所以「刺客→dagger 3D 样板」本轮**没做**——要接需用户重新上传 DragonCore 资源包。
+- **装法**:6 本书各缩 64×64(LANCZOS,保留 alpha)覆盖 `textures/item/class_book_{assassin,warlock,tank,warrior,swordsman,monk}.png`(原为拿 `skill_book_attack` 凑的占位、6 张 md5 完全相同=六书长一样);灾厄核心缩 64×64(原 16×16 占位,RGB 不带透明,方块填满正方形)覆盖 `textures/block/catastrophe_core.png`(MC 支持 HD 方块贴图)。
+- **徽记→职业映射**(按图中徽记识别,无歧义):匕首/暗影→刺客、发光骷髅→术士、骑士盾→坦克、战斧→战士、交叉双剑→剑客、拳套/念珠→武僧。
+- **无需改 model/代码**:`models/item/class_book_*.json` + `blockstates`/`models/block`/`models/item` 的 `catastrophe_core.json` 路径都已指 `yongye:...`,替换贴图文件即生效。已核实真在用:`class_book_*` 由 `ModItems.CLASS_BOOKS`(每 PlayerClass 一个 `ClassBookItem`,选职发)、`catastrophe_core` 由 `ModBlocks.CATASTROPHE_CORE` + `CatastropheCoreManager` 放置。
+- **纯资源覆盖,无 Java/配置改动,configVersion 不变(仍 13)**。缩到 64×64 后 NEAREST 放大复核,7 张徽记肉眼仍清晰可辨。
+- **遗留占位**:精英怪皮肤 `elite_creeper/skeleton/spider/witch` 仍纯色占位(它们是 UV 皮肤图集 64×32/64×64,不适合 GPT 平面图——要么皮肤编辑器手改,要么把原版皮肤发来程序化染色);`accessory_gui` 饰品栏背景待按真实槽位坐标程序化画。
