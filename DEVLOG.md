@@ -1436,3 +1436,10 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **无需改 model/代码**:`models/item/class_book_*.json` + `blockstates`/`models/block`/`models/item` 的 `catastrophe_core.json` 路径都已指 `yongye:...`,替换贴图文件即生效。已核实真在用:`class_book_*` 由 `ModItems.CLASS_BOOKS`(每 PlayerClass 一个 `ClassBookItem`,选职发)、`catastrophe_core` 由 `ModBlocks.CATASTROPHE_CORE` + `CatastropheCoreManager` 放置。
 - **纯资源覆盖,无 Java/配置改动,configVersion 不变(仍 13)**。缩到 64×64 后 NEAREST 放大复核,7 张徽记肉眼仍清晰可辨。
 - **遗留占位**:精英怪皮肤 `elite_creeper/skeleton/spider/witch` 仍纯色占位(它们是 UV 皮肤图集 64×32/64×64,不适合 GPT 平面图——要么皮肤编辑器手改,要么把原版皮肤发来程序化染色);`accessory_gui` 饰品栏背景待按真实槽位坐标程序化画。
+
+## 里程碑 161 — 新增 SKILL.md(项目踩坑 / 避雷 / API 核查 / 自查手册)
+- **需求**:作者要求把这个项目实打实踩过的坑、要避开的写法、要查证的 API、能做不能做的、收尾自查,固化成一个 `SKILL.md`。明确**不是固化开发流程**,目的只是「别让作者再因同样错误难受一遍」。
+- **放置**:仓库根目录 `SKILL.md`(与 HANDOVER/DEVLOG 并排)→ 每次重拉仓库它就跟着回来,治「沙箱重置后又踩同一个坑」。带 Claude skill 标准 frontmatter(`name: yongye-mod` + `description`),也可直接丢进 skills 目录用。
+- **内容**(9 节):①三条铁律(不装懂不臆想 / 话少 / 沙箱会清先 push 落盘)②环境能做不能做(沙箱编不了 Fabric→新 API 标待编译验证、画不了 UV 皮肤图集、push 靠作者 PAT)③开工前核对(先确认远端 HEAD 别重复造轮子——m158/m159 曾因落旧快照整套重做)④mod 易混点(GameDifficulty 世界难度 7 档自定义枚举 ≠ 原版 Difficulty、世界难度 vs 永夜等级两套系统、怪血 4 层叠加、改机制找全入口、刷怪 handler 需全局上限、GSON 旧值盖新默认 + configVersion)⑤必查 API(新文件 import 路径逐条比对仓库既有=m157 ServerEntityEvents 错包路径教训、1.21.x getMiningSpeedMultiplier→getMiningSpeed、附魔取等级 proven 套路、setVelocity 需 EntityVelocityUpdateS2CPacket 同步)⑥贴图装法(LANCZOS 插画 / NEAREST 像素、64×64、UV 皮肤不能 GPT 平面图)⑦交活前自查清单⑧提交推送规矩(yongye-dev 身份 / PAT 一次性不写 config / 导 patch 兜底)⑨收尾沟通模板。
+- 自查:frontmatter YAML 校验通过;HANDOVER 顶部加指针指向 SKILL.md。
+- **纯文档,无代码 / 配置改动,configVersion 不变(仍 13)**。改 `SKILL.md`(新)+ `HANDOVER.md`(加指针)+ `DEVLOG.md`。
