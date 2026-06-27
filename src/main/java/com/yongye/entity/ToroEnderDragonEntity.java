@@ -5,7 +5,6 @@ import net.minecraft.entity.ai.control.FlightMoveControl;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.ai.goal.RevengeGoal;
 import net.minecraft.entity.ai.pathing.BirdNavigation;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
@@ -65,8 +64,9 @@ public class ToroEnderDragonEntity extends HostileEntity implements GeoEntity {
 
     @Override
     protected void initGoals() {
-        // 近战追击走飞行导航,在 3D 空间里追玩家并俯冲攻击(无地面游荡 goal,不会落地走)。
-        this.goalSelector.add(1, new MeleeAttackGoal(this, 1.0, true));
+        // 近战追击走飞行导航,在 3D 空间里追玩家并俯冲攻击;攻击距离用 DragonAttackGoal 拉远(可配)。
+        this.goalSelector.add(1, new DragonAttackGoal(this, 1.0, true,
+                com.yongye.YongyeConfig.get().dragonAttackReach));
         this.goalSelector.add(3, new LookAtEntityGoal(this, PlayerEntity.class, 32.0f));
         this.goalSelector.add(4, new LookAroundGoal(this));
         this.targetSelector.add(1, new RevengeGoal(this));

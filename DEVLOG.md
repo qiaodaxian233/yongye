@@ -1498,3 +1498,13 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **待编译验证(本轮)**:全是**原版 yarn 飞行 API**(非 GeckoLib、非新库),且多为原版蜜蜂同款——`FlightMoveControl(this,20,true)` 三参构造、`new BirdNavigation(MobEntity,World)`、`createNavigation` 重写、`EntityAttributes.GENERIC_FLYING_SPEED`、`handleFallDamage(float,float,DamageSource)` 返 boolean、`setNoGravity`、`getTopY()`。沙箱编不了 Fabric 故标,把握高。
 - **注意**:飞行龙俯冲攻击地面玩家时会降到近地面,但走的是飞行移动不是走路(符合「不在地上走」)。
 - **新增 1 文件**(`WildDragonSpawnHandler`)+ 改 `ToroEnderDragonEntity`/`YongyeConfig`(+6 字段)/`Yongye`(注册),**configVersion 13→14**。
+
+## 里程碑 166 — 末影龙攻击距离拉远(可配)
+- **需求**:自建龙(`/yongye dragon`)现在要贴到身上才打,太近;要攻击距离远一些。
+- **原因**:m165 用的 `MeleeAttackGoal`,触发攻击的判定距离 `getSquaredMaxAttackDistance` 按体型算、不可直接配。
+- **修法**:新建 `DragonAttackGoal extends MeleeAttackGoal`,覆盖 `protected double getSquaredMaxAttackDistance(LivingEntity entity)` 返回 `reach² + 目标宽度`。原版 Vindicator/守卫者就是靠子类覆盖这个方法改攻击距离的;`tryAttack` 直接结算伤害、不做距离二次判定,所以放大判定距离 = 攻击距离变远。
+- `ToroEnderDragonEntity.initGoals` 把 `new MeleeAttackGoal(this, 1.0, true)` 换成 `new DragonAttackGoal(this, 1.0, true, YongyeConfig.get().dragonAttackReach)`(撤掉 MeleeAttackGoal import,DragonAttackGoal 同包免 import)。
+- 配置 +`dragonAttackReach`(默 16 格,可调,越大越远处就能打到)。
+- **静态自检**:`DragonAttackGoal{}3·()4` + `ToroEnderDragonEntity{}10·()40` 配平;无残留 MeleeAttackGoal 代码引用;`getSquaredMaxAttackDistance(LivingEntity)` / `MeleeAttackGoal(PathAwareEntity,double,boolean)` 签名经 yarn 文档确认,`this`(HostileEntity→PathAwareEntity)合法;`getWidth()` 标准。
+- **待编译验证**:`getSquaredMaxAttackDistance` 覆盖(yarn 文档确认、把握高,沙箱编不了故标)。
+- **新增 1 文件**(`DragonAttackGoal`)+ 改 `ToroEnderDragonEntity`/`YongyeConfig`(+1 字段),**configVersion 14→15**。
