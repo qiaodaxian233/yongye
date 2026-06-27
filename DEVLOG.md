@@ -1508,3 +1508,19 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **静态自检**:`DragonAttackGoal{}3·()4` + `ToroEnderDragonEntity{}10·()40` 配平;无残留 MeleeAttackGoal 代码引用;`getSquaredMaxAttackDistance(LivingEntity)` / `MeleeAttackGoal(PathAwareEntity,double,boolean)` 签名经 yarn 文档确认,`this`(HostileEntity→PathAwareEntity)合法;`getWidth()` 标准。
 - **待编译验证**:`getSquaredMaxAttackDistance` 覆盖(yarn 文档确认、把握高,沙箱编不了故标)。
 - **新增 1 文件**(`DragonAttackGoal`)+ 改 `ToroEnderDragonEntity`/`YongyeConfig`(+1 字段),**configVersion 14→15**。
+
+## 里程碑 167 — 新增两只动画蜘蛛(精英·毒液蜘蛛 + BOSS·红蜘蛛,GeckoLib,Stage1)
+- **需求**:用户传 `毒液蜘蛛.zip`/`红蜘蛛.zip`(各 = 基岩 geo 1.12.0 模型 + 基岩 1.8.0 动画 + 512² 贴图),挑一个当精英、一个当 BOSS,都带动作。
+- **分配**:红蜘蛛 22 骨骼/29 动画(climbup/climbdown/roarrally/smashbelow/stab/swipe/egglay/cocoon/jumpfly… 明显 BOSS)→ **BOSS**;毒液蜘蛛 13 骨骼/6 动画(waiting/walking/meleehit/die/body/venomspit 精简)→ **精英**。
+- **坑**:两模型内部 identifier 都叫 `geometry.spiderboss`(撞名)→ 装入时各改成 `geometry.venom_spider`/`geometry.red_spider`(只改几何名、不动骨骼名,动画照常匹配),避免 GeckoLib 几何缓存冲突。
+- **路子**:与龙(m162)同款已验证的 GeckoLib,且**扩展原版 `SpiderEntity`**(白嫖爬墙 + 蜘蛛 AI;yarn 文档确认 `SpiderEntity(EntityType<? extends SpiderEntity>,World)`/`static createSpiderAttributes()`/`initGoals()`/`createNavigation()`)。按龙的分阶段法,**本轮 Stage1 = 能召唤 + 渲染 + 基础动画**;刷怪(精英/BOSS 怎么出)下一轮。
+- **实现**:
+  - 资源装 `assets/yongye/{geo,animations,textures/entity}/{venom_spider,red_spider}.*`。
+  - `VenomSpiderEntity`(extends SpiderEntity implements GeoEntity,血80/攻10/速0.32/索敌32,控制器 move:isMoving→walking 否则 waiting)+ `RedSpiderEntity`(同结构,血400/攻18/速0.34/击退抗0.8/索敌48)。
+  - 各 `GeoModel`(显式路径)+ `GeoEntityRenderer`(shadowRadius 毒 1.0/红 1.6)。
+  - `ModEntities` 注册 `VENOM_SPIDER`(dim 1.6×1.0)/`RED_SPIDER`(dim 3.0×1.8)+ 各 `FabricDefaultAttributeRegistry`。
+  - `YongyeClient` 注册两渲染器;`ModCommands` 加 `/yongye venomspider`、`/yongye redspider` 召唤(仿 `/yongye dragon`)。
+- **静态自检**:9 文件括号全配平(含 ModCommands 727/727)+ 4 新 JSON 合法 + 蜘蛛 GeckoLib import 与已编过的龙逐字一致(`animatable.GeoEntity`/`model.GeoModel`/`renderer.GeoEntityRenderer`)。
+- **待编译验证(本轮)**:`SpiderEntity` 扩展(`createSpiderAttributes`/构造,yarn 文档确认、把握高)+ 两套基岩 geo 能否被 GeckoLib 渲(同龙格式)。沙箱编不了 Fabric 故标。
+- **遗留**:Stage2 = 精英/BOSS 怎么刷出(接 `EliteHandler`/`MobBossHandler` 或新刷怪 handler)、BOSS 血条、把模型自带的 stab/roar/smash 等攻击动画按 AI 触发——均待 Stage1 build 绿 + 实机确认模型动画对了再做。
+- **新增 8 文件**(2 实体 + 2 模型 + 2 渲染器 + 资源 6 个)+ 改 `ModEntities`/`YongyeClient`/`ModCommands`,**configVersion 不变(仍 15)**。

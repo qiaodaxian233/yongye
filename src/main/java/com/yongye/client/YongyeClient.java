@@ -61,6 +61,14 @@ public class YongyeClient implements ClientModInitializer {
                 net.minecraft.entity.EntityType.ENDER_DRAGON,
                 com.yongye.client.render.ToroDragonReplaceRenderer::new);
 
+        // 【m167】精英·毒液蜘蛛 / BOSS·红蜘蛛 的 GeckoLib 渲染器
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.VENOM_SPIDER,
+                com.yongye.client.render.VenomSpiderRenderer::new);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.RED_SPIDER,
+                com.yongye.client.render.RedSpiderRenderer::new);
+
         // 接收服务端成长数据
         ClientPlayNetworking.registerGlobalReceiver(StatsPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.update(payload.health(), payload.levels(), payload.className())));

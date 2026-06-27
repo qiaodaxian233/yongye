@@ -47,6 +47,34 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        // 召唤精英·毒液蜘蛛(测试用):/yongye venomspider
+                        .then(CommandManager.literal("venomspider").executes(ctx -> {
+                            net.minecraft.server.network.ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendError(Text.literal("只能由玩家执行")); return 0; }
+                            net.minecraft.server.world.ServerWorld w = p.getServerWorld();
+                            com.yongye.entity.VenomSpiderEntity e =
+                                    new com.yongye.entity.VenomSpiderEntity(com.yongye.registry.ModEntities.VENOM_SPIDER, w);
+                            e.refreshPositionAndAngles(p.getX(), p.getY(), p.getZ(), p.getYaw(), 0.0f);
+                            w.spawnEntity(e);
+                            ctx.getSource().sendFeedback(() ->
+                                    Text.literal("已召唤精英·毒液蜘蛛").formatted(Formatting.GREEN), false);
+                            return 1;
+                        }))
+
+                        // 召唤 BOSS·红蜘蛛(测试用):/yongye redspider
+                        .then(CommandManager.literal("redspider").executes(ctx -> {
+                            net.minecraft.server.network.ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendError(Text.literal("只能由玩家执行")); return 0; }
+                            net.minecraft.server.world.ServerWorld w = p.getServerWorld();
+                            com.yongye.entity.RedSpiderEntity e =
+                                    new com.yongye.entity.RedSpiderEntity(com.yongye.registry.ModEntities.RED_SPIDER, w);
+                            e.refreshPositionAndAngles(p.getX(), p.getY(), p.getZ(), p.getYaw(), 0.0f);
+                            w.spawnEntity(e);
+                            ctx.getSource().sendFeedback(() ->
+                                    Text.literal("已召唤 BOSS·红蜘蛛").formatted(Formatting.RED), false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("nightfall")
                                 .then(CommandManager.literal("status").executes(ctx -> {
                                     ctx.getSource().sendFeedback(() ->
