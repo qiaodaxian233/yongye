@@ -26,7 +26,7 @@ public final class ModEntities {
                     EntityType.Builder.create(ToroEnderDragonEntity::new, SpawnGroup.MONSTER)
                             // 体型先给个大致值(模型很大),进游戏看碰撞箱再调
                             .dimensions(6.0f, 5.0f)
-                            .build(TORO_ENDER_DRAGON_KEY));
+                            .build("toro_ender_dragon"));
 
     public static void init() {
         FabricDefaultAttributeRegistry.register(TORO_ENDER_DRAGON, ToroEnderDragonEntity.createDragonAttributes());

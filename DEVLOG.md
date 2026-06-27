@@ -1459,3 +1459,10 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 静态自检:7 个改动/新建 .java 括号全配平;3 个 JSON(fabric.mod.json + geo + animation)合法。
 - **configVersion 不变(仍 13)**。
 - **遗留**:Stage 2 替换原版末影龙本体(GeoReplacedEntity + 渲染替换);Stage 3 BOSS 技能/血条/平衡。均待 Stage 1 本地 build 绿后再做。
+
+## 里程碑 163 — 热修 m162 build 报错(GeckoLib 接入后 100 错)
+- **根因两条**:
+  1. **GeckoLib 拽进自带的 fabric-api 传递依赖**,与项目 `fabric_version`(0.105.0)冲突 → 全项目 `getAttachedOrElse`/`setAttached`(fabric-api 数据附件 API)解析失败。那几十个文件(TalentManager/ClassManager/EliteHandler…)的报错**全是这一个根因**,不是文件本身坏。修:`build.gradle` 给 geckolib 的 `modImplementation` 加 `exclude group: "net.fabricmc.fabric-api"`,只用项目自己的 fabric-api。
+  2. **`EntityType.Builder.build()` 签名**:本映射版本要 `String` 不是 `RegistryKey`。改 `.build("toro_ender_dragon")`(`TORO_ENDER_DRAGON_KEY` 仍用于 `Registry.register` 的 identifier)。
+- **好消息**:GeckoLib 的 import 路径**本身全解析成功**——`ToroEnderDragonModel` 只报「使用/覆盖了已过时的 API」**警告**(非错误),证明 `software.bernie.geckolib.*` 包路径(animatable/animation/model/renderer/util)写对了。`GeoModel.getModelResource(T)` 等是 deprecated 但仍可用(警告不阻断 build;若渲染异常再换非过时签名)。
+- 改 `build.gradle`(exclude)+ `ModEntities.java`(build String)。静态括号配平。configVersion 不变(仍 13)。待用户重新 `./gradlew build` 验证。

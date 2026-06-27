@@ -29,7 +29,11 @@ dependencies {
 
     // GeckoLib:modImplementation 让 Loom 把它重映射到本项目的 yarn 映射;
     // include 把它的 jar 嵌进本 mod(Jar-in-Jar),玩家只装本 mod 即可,GeckoLib 自动随之加载。
-    modImplementation "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
+    // exclude fabric-api:GeckoLib 会拽进它自带的 fabric-api 版本,与本项目 fabric_version 冲突,
+    //   导致全项目 getAttachedOrElse/setAttached(数据附件 API)解析失败。排除后只用本项目的 fabric-api。
+    modImplementation("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}") {
+        exclude group: "net.fabricmc.fabric-api"
+    }
     include "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
 }
 
