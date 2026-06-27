@@ -5,11 +5,11 @@ import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.mob.PathAwareEntity;
 
 /**
- * 末影龙专用近战 goal:覆盖 MeleeAttackGoal 的「最大攻击判定距离」,让它能从更远处出手,
- * 不必贴到身上才打(原版 Vindicator/守卫者也是靠子类覆盖这个方法来改攻击距离的)。
+ * 末影龙专用近战 goal:覆盖 MeleeAttackGoal 的「canAttack」判定,让它能从更远处出手。
  *
- * <p>reach 以「格」为单位;父类用平方距离比较,故返回 reach²(再加目标宽度让大目标也合理)。
- * tryAttack 直接结算伤害,不做距离二次判定,所以这里放大判定距离即等于「攻击距离变远」。
+ * <p>Minecraft 1.21 重构了近战 AI:getSquaredMaxAttackDistance 已被移除,
+ * 取而代之的是 canAttack(LivingEntity target) → boolean。
+ * reach 以「格」为单位,判定距离 = reach² + target.getWidth() 以兼容宽体目标。
  */
 public class DragonAttackGoal extends MeleeAttackGoal {
 
@@ -21,7 +21,9 @@ public class DragonAttackGoal extends MeleeAttackGoal {
     }
 
     @Override
-    protected double getSquaredMaxAttackDistance(LivingEntity entity) {
-        return this.reach * this.reach + entity.getWidth();
+    protected boolean canAttack(LivingEntity target) {
+        double squaredDist = this.mob.squaredDistanceTo(target);
+        double maxSqDist = this.reach * this.reach + target.getWidth();
+        return squaredDist <= maxSqDist;
     }
 }
