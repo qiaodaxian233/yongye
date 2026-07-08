@@ -80,6 +80,14 @@ public class YongyeClient implements ClientModInitializer {
                 com.yongye.registry.ModEntities.GIANT_CRAB,
                 com.yongye.client.render.GiantCrabRenderer::new);
 
+        // 【m172/m173】BOSS·阿努比斯 / 小怪·阿努比斯恶灵 的 GeckoLib 渲染器
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.ANUBIS,
+                com.yongye.client.render.AnubisRenderer::new);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.ANUBIS_WRAITH,
+                com.yongye.client.render.AnubisWraithRenderer::new);
+
         // 接收服务端成长数据
         ClientPlayNetworking.registerGlobalReceiver(StatsPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.update(payload.health(), payload.levels(), payload.className())));

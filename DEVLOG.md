@@ -1558,3 +1558,19 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - 注意:所有 geo identifier 均为 `geometry.unknown` / `geometry.lr_* - Converted`,装入时必须逐个改名(steve/unknown 撞名教训 ×3)。
 - 待与作者对齐玩法(多阶段 BOSS?恶灵当召唤物?水晶塔当场景机制?)后,照凤凰/死亡法师的 Stage 分法实装。
 - 纯资源暂存,无代码/配置改动,**configVersion 不变(仍 15)**。
+
+## 里程碑 172 — 实装 BOSS·阿努比斯(GeckoLib,Stage1:召唤 + 渲染 + 血条 + 基础动画)
+- 用户重传 `DragonCore.zip` 并说「继续」→ 把 m171 暂存的阿努比斯包开工实装;玩法尚未与作者对齐,先按既定套路做 Stage1(主体形态当地面 BOSS),多阶段设计留 Stage2。
+- **素材**(取自仓库 `docs/staging/dragoncore_anubis/`,原件不动):identifier `geometry.unknown` → **`geometry.anubis`**;主体 33 骨 / 256²(声明=实际)/ 14 动画(idle, sitting, get_up, walk, run, death, melee1-3, spell1-2, stun, stun_hit, rage);`hitbox` 骨是**纯 pivot 无 cubes**(不能当尺寸用)→ dims 取整体包围盒 宽 2.44 / 高 6.43 → `dimensions(2.5f, 6.4f)`。
+- **`AnubisEntity`**:与 m170 死亡法师逐字同模板(近战 Stage1 AI 组 + 凋灵同款血条挂法 + isMoving 切 idle/walk);血 800 / 攻 28 / 速 0.3 / 击退抗 1.0 / 索敌 64;血条 = **蓝条金字**(埃及蓝金,`BossBar.Color.BLUE` + `Formatting.GOLD`)。
+- `/yongye anubis` + debug 刷怪页按钮 + 渲染器 shadowRadius 1.6 + lang 双语。
+- 本轮**零新 API 面**:新文件 import 与覆盖点全部与 m169/m170 已在树的代码逐字一致(静态自检脚本核过),编译风险仅剩 m169/m170 那批共同的「待编译验证」点。
+- **遗留(Stage2)**:开场 sitting(坐姿雕像)→ get_up 起身、追击切 run、melee1-3 / spell1-2 / stun+stun_hit / rage 按 AI 触发、death 播完再移除;**二形态**(32 骨与主体 32/32 同名 → 可直接共用主体动画文件,换 geo+贴图即可)与阶段切换;召唤恶灵;水晶塔场景机制;49 段 ogg 接 sounds.json(需首次注册 SoundEvent,新 API 面,单独立项)。
+- 新增 3 Java + 3 资源 + 改 ModEntities/YongyeClient/ModCommands/DebugScreen/双语 lang,**configVersion 不变(仍 15)**。
+
+## 里程碑 173 — 实装小怪·阿努比斯恶灵(未来当阿努比斯召唤物)
+- 同包木乃伊小怪:19 骨 / 64²(声明=实际)/ 4 动画(idle, walk, attack1, attack2)+ 单独的「恶灵出生」动画文件(留作召唤登场演出);identifier → `geometry.anubis_wraith`。
+- **大坑(已写进实体类注释)**:模型几何建在原点**下方约 2 格**(y ∈ [-2.04, -0.06]),靠每条动画里 torso 根骨 position +29~31 单位抬回地面(walk 的 29↔31 起伏 = 悬浮感)。所以 ① 动画控制器必须**常驻**播 idle/walk,没动画在播就整只沉进地里;② 千万别去「修正」geo 的 Y 坐标,会和动画位移叠加飞到天上。静止时脚底比地面低约 0.1 格,当幽浮效果,违和再调。
+- **`AnubisWraithEntity`**:召唤物级(血 40 / 攻 8 / 速 0.35 / 索敌 24,无血条);dims 1.0×1.9(视觉高度);`/yongye wraith` + debug 按钮 + shadowRadius 0.6 + lang 双语。
+- **遗留**:attack1/2 按 AI 触发、出生动画当召唤演出、由阿努比斯 Stage2 召唤接线、要不要改成会飘(现走地面)。
+- 新增 3 Java + 3 资源 + 改同 m172 四文件与双语 lang,**configVersion 不变(仍 15)**。

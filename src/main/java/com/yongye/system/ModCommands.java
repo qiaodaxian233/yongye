@@ -117,6 +117,34 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        // 召唤 BOSS·阿努比斯(测试用):/yongye anubis
+                        .then(CommandManager.literal("anubis").executes(ctx -> {
+                            net.minecraft.server.network.ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendError(Text.literal("只能由玩家执行")); return 0; }
+                            net.minecraft.server.world.ServerWorld w = p.getServerWorld();
+                            com.yongye.entity.AnubisEntity e =
+                                    new com.yongye.entity.AnubisEntity(com.yongye.registry.ModEntities.ANUBIS, w);
+                            e.refreshPositionAndAngles(p.getX(), p.getY(), p.getZ(), p.getYaw(), 0.0f);
+                            w.spawnEntity(e);
+                            ctx.getSource().sendFeedback(() ->
+                                    Text.literal("已召唤 BOSS·阿努比斯").formatted(Formatting.GOLD), false);
+                            return 1;
+                        }))
+
+                        // 召唤小怪·阿努比斯恶灵(测试用):/yongye wraith
+                        .then(CommandManager.literal("wraith").executes(ctx -> {
+                            net.minecraft.server.network.ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendError(Text.literal("只能由玩家执行")); return 0; }
+                            net.minecraft.server.world.ServerWorld w = p.getServerWorld();
+                            com.yongye.entity.AnubisWraithEntity e =
+                                    new com.yongye.entity.AnubisWraithEntity(com.yongye.registry.ModEntities.ANUBIS_WRAITH, w);
+                            e.refreshPositionAndAngles(p.getX(), p.getY(), p.getZ(), p.getYaw(), 0.0f);
+                            w.spawnEntity(e);
+                            ctx.getSource().sendFeedback(() ->
+                                    Text.literal("已召唤小怪·阿努比斯恶灵").formatted(Formatting.GRAY), false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("nightfall")
                                 .then(CommandManager.literal("status").executes(ctx -> {
                                     ctx.getSource().sendFeedback(() ->

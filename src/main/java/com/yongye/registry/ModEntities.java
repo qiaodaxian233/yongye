@@ -1,6 +1,8 @@
 package com.yongye.registry;
 
 import com.yongye.Yongye;
+import com.yongye.entity.AnubisEntity;
+import com.yongye.entity.AnubisWraithEntity;
 import com.yongye.entity.DeathMageEntity;
 import com.yongye.entity.FirePhoenixEntity;
 import com.yongye.entity.GiantCrabEntity;
@@ -82,6 +84,26 @@ public final class ModEntities {
                             .dimensions(3.0f, 1.5f)
                             .build("giant_crab"));
 
+    // BOSS·阿努比斯(m172;DragonCore 包主体形态)
+    public static final RegistryKey<EntityType<?>> ANUBIS_KEY =
+            RegistryKey.of(RegistryKeys.ENTITY_TYPE, Identifier.of(Yongye.MOD_ID, "anubis"));
+    public static final EntityType<AnubisEntity> ANUBIS =
+            Registry.register(Registries.ENTITY_TYPE, ANUBIS_KEY.getValue(),
+                    EntityType.Builder.create(AnubisEntity::new, SpawnGroup.MONSTER)
+                            // 模型整体包围盒宽 2.44 / 高 6.43 格(hitbox 骨是纯 pivot 没尺寸);进游戏再调
+                            .dimensions(2.5f, 6.4f)
+                            .build("anubis"));
+
+    // 小怪·阿努比斯恶灵(m173;未来给阿努比斯当召唤物)
+    public static final RegistryKey<EntityType<?>> ANUBIS_WRAITH_KEY =
+            RegistryKey.of(RegistryKeys.ENTITY_TYPE, Identifier.of(Yongye.MOD_ID, "anubis_wraith"));
+    public static final EntityType<AnubisWraithEntity> ANUBIS_WRAITH =
+            Registry.register(Registries.ENTITY_TYPE, ANUBIS_WRAITH_KEY.getValue(),
+                    EntityType.Builder.create(AnubisWraithEntity::new, SpawnGroup.MONSTER)
+                            // 视觉高约 1.9 格(几何在原点下方、靠动画抬升,详见实体类注释);进游戏再调
+                            .dimensions(1.0f, 1.9f)
+                            .build("anubis_wraith"));
+
     public static void init() {
         FabricDefaultAttributeRegistry.register(TORO_ENDER_DRAGON, ToroEnderDragonEntity.createDragonAttributes());
         FabricDefaultAttributeRegistry.register(VENOM_SPIDER, VenomSpiderEntity.createVenomSpiderAttributes());
@@ -89,6 +111,8 @@ public final class ModEntities {
         FabricDefaultAttributeRegistry.register(FIRE_PHOENIX, FirePhoenixEntity.createFirePhoenixAttributes());
         FabricDefaultAttributeRegistry.register(DEATH_MAGE, DeathMageEntity.createDeathMageAttributes());
         FabricDefaultAttributeRegistry.register(GIANT_CRAB, GiantCrabEntity.createGiantCrabAttributes());
-        Yongye.LOGGER.info("[永夜] 自定义实体已注册:toro_ender_dragon / venom_spider / red_spider / fire_phoenix / death_mage / giant_crab");
+        FabricDefaultAttributeRegistry.register(ANUBIS, AnubisEntity.createAnubisAttributes());
+        FabricDefaultAttributeRegistry.register(ANUBIS_WRAITH, AnubisWraithEntity.createAnubisWraithAttributes());
+        Yongye.LOGGER.info("[永夜] 自定义实体已注册:toro_ender_dragon / venom_spider / red_spider / fire_phoenix / death_mage / giant_crab / anubis / anubis_wraith");
     }
 }
