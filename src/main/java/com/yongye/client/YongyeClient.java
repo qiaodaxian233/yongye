@@ -69,6 +69,17 @@ public class YongyeClient implements ClientModInitializer {
                 com.yongye.registry.ModEntities.RED_SPIDER,
                 com.yongye.client.render.RedSpiderRenderer::new);
 
+        // 【m169】BOSS·浴火凤凰 / 【m170】BOSS·死亡法师、精英·巨型螃蟹 的 GeckoLib 渲染器
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.FIRE_PHOENIX,
+                com.yongye.client.render.FirePhoenixRenderer::new);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.DEATH_MAGE,
+                com.yongye.client.render.DeathMageRenderer::new);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.GIANT_CRAB,
+                com.yongye.client.render.GiantCrabRenderer::new);
+
         // 接收服务端成长数据
         ClientPlayNetworking.registerGlobalReceiver(StatsPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.update(payload.health(), payload.levels(), payload.className())));

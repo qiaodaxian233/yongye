@@ -75,6 +75,48 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        // 召唤 BOSS·浴火凤凰(测试用):/yongye phoenix —— 飞行 BOSS,出生在头顶 6 格高空
+                        .then(CommandManager.literal("phoenix").executes(ctx -> {
+                            net.minecraft.server.network.ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendError(Text.literal("只能由玩家执行")); return 0; }
+                            net.minecraft.server.world.ServerWorld w = p.getServerWorld();
+                            com.yongye.entity.FirePhoenixEntity e =
+                                    new com.yongye.entity.FirePhoenixEntity(com.yongye.registry.ModEntities.FIRE_PHOENIX, w);
+                            e.refreshPositionAndAngles(p.getX(), p.getY() + 6.0, p.getZ(), p.getYaw(), 0.0f);
+                            w.spawnEntity(e);
+                            ctx.getSource().sendFeedback(() ->
+                                    Text.literal("已召唤 BOSS·浴火凤凰").formatted(Formatting.GOLD), false);
+                            return 1;
+                        }))
+
+                        // 召唤 BOSS·死亡法师(测试用):/yongye deathmage
+                        .then(CommandManager.literal("deathmage").executes(ctx -> {
+                            net.minecraft.server.network.ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendError(Text.literal("只能由玩家执行")); return 0; }
+                            net.minecraft.server.world.ServerWorld w = p.getServerWorld();
+                            com.yongye.entity.DeathMageEntity e =
+                                    new com.yongye.entity.DeathMageEntity(com.yongye.registry.ModEntities.DEATH_MAGE, w);
+                            e.refreshPositionAndAngles(p.getX(), p.getY(), p.getZ(), p.getYaw(), 0.0f);
+                            w.spawnEntity(e);
+                            ctx.getSource().sendFeedback(() ->
+                                    Text.literal("已召唤 BOSS·死亡法师").formatted(Formatting.DARK_PURPLE), false);
+                            return 1;
+                        }))
+
+                        // 召唤精英·巨型螃蟹(测试用):/yongye giantcrab
+                        .then(CommandManager.literal("giantcrab").executes(ctx -> {
+                            net.minecraft.server.network.ServerPlayerEntity p = ctx.getSource().getPlayer();
+                            if (p == null) { ctx.getSource().sendError(Text.literal("只能由玩家执行")); return 0; }
+                            net.minecraft.server.world.ServerWorld w = p.getServerWorld();
+                            com.yongye.entity.GiantCrabEntity e =
+                                    new com.yongye.entity.GiantCrabEntity(com.yongye.registry.ModEntities.GIANT_CRAB, w);
+                            e.refreshPositionAndAngles(p.getX(), p.getY(), p.getZ(), p.getYaw(), 0.0f);
+                            w.spawnEntity(e);
+                            ctx.getSource().sendFeedback(() ->
+                                    Text.literal("已召唤精英·巨型螃蟹").formatted(Formatting.GREEN), false);
+                            return 1;
+                        }))
+
                         .then(CommandManager.literal("nightfall")
                                 .then(CommandManager.literal("status").executes(ctx -> {
                                     ctx.getSource().sendFeedback(() ->

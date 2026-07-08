@@ -78,5 +78,11 @@
   "item.yongye.class_weapon_warlock": "Class Weapon: Souldevourer Staff",
   "item.yongye.class_weapon_swordsman": "Class Weapon: Glimmerblade",
   "item.yongye.tank_shield": "Class Shield: Bastion Aegis",
-  "key.yongye.ultimate": "Class Ultimate"
+  "key.yongye.ultimate": "Class Ultimate",
+  "entity.yongye.toro_ender_dragon": "Ender Dragon Boss",
+  "entity.yongye.venom_spider": "Venom Spider",
+  "entity.yongye.red_spider": "Red Spider",
+  "entity.yongye.fire_phoenix": "Fire Phoenix",
+  "entity.yongye.death_mage": "Death Mage",
+  "entity.yongye.giant_crab": "Giant Crab"
 }

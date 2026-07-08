@@ -1524,3 +1524,30 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **待编译验证(本轮)**:`SpiderEntity` 扩展(`createSpiderAttributes`/构造,yarn 文档确认、把握高)+ 两套基岩 geo 能否被 GeckoLib 渲(同龙格式)。沙箱编不了 Fabric 故标。
 - **遗留**:Stage2 = 精英/BOSS 怎么刷出(接 `EliteHandler`/`MobBossHandler` 或新刷怪 handler)、BOSS 血条、把模型自带的 stab/roar/smash 等攻击动画按 AI 触发——均待 Stage1 build 绿 + 实机确认模型动画对了再做。
 - **新增 8 文件**(2 实体 + 2 模型 + 2 渲染器 + 资源 6 个)+ 改 `ModEntities`/`YongyeClient`/`ModCommands`,**configVersion 不变(仍 15)**。
+
+## 里程碑 168 — 热修 DragonAttackGoal 适配 1.21 近战 AI + debug 菜单新怪召唤分组(补记)
+- MC 1.21 移除了 `MeleeAttackGoal.getSquaredMaxAttackDistance(LivingEntity)`,m166 的覆盖点编译报错;改为覆盖 `canAttack(LivingEntity)` 返 `squaredDistanceTo <= reach² + target.getWidth()`,逻辑等价。
+- debug 菜单「刷怪」页新增「新怪召唤」分组:末影龙 BOSS / 精英·毒液蜘蛛 / BOSS·红蜘蛛 三按钮(等同手敲 `/yongye dragon|venomspider|redspider`)。
+- 两笔已随 `cc58899` / `b0b7ef7` 推送,本条为补记(当轮沙箱在写 DEVLOG 前重置)。**作者 build 报错点只剩该覆盖方法 = m167 全量其余代码已过编译**,m162-167 各「待编译验证」点基本可视为清零。
+- 改 2 文件(DragonAttackGoal / DebugScreen),无配置变更,**configVersion 不变(仍 15)**。
+
+## 里程碑 169 — 新增 BOSS·浴火凤凰(GeckoLib,Stage1:召唤 + 渲染 + 血条 + 基础动画)
+- **需求**:用户传 `二.zip`(基岩 geo 1.12.0 + 基岩 1.8.0 动画 ×10 + 1024×512 贴图),新增 BOSS。
+- **素材**:identifier `geometry.phoenixec` → **`geometry.fire_phoenix`**(照 m167 只改几何名、不动骨骼名);动画 10 条 = flapping / beam / divestart / dive / divestop / eggfold / eggunfold / flappingup / spiralend / firetornado;模型 21 骨,`hitbox` 骨 51×53×51 单位(`"uv": {}` 不渲染,照红蜘蛛保留)→ `dimensions(3.2f, 3.3f)`。
+- **实体 `FirePhoenixEntity`**(HostileEntity + GeoEntity):**飞行**照 m165 龙——`FlightMoveControl(this,20,true)` + `setNoGravity(true)` + `BirdNavigation` 裸构造 + `handleFallDamage` 返 false;AI = `DragonAttackGoal`(reach 常量 8,m168 已修 canAttack)+ LookAt/LookAround + Revenge/ActiveTarget;血 650 / 攻 24 / 速 0.3 / 飞速 0.9 / 击退抗 1.0 / 索敌 64。
+- **自带金色 BOSS 血条**:原版凋灵同款——`onStartedTrackingBy`/`onStoppedTrackingBy(ServerPlayerEntity)` 增删观众(despawn/换维度/卸载都走停止追踪,不留残条),`tick()` 里自计数器每 10t `setPercent`(钳制写法照 MobBossHandler);血条名走 `getType().getName()`(lang 已补)。
+- 注册 `.makeFireImmune()`(浴火:免疫火/岩浆);`/yongye phoenix` 召唤(出生头顶 +6 格,飞行 BOSS 不卡地);debug 刷怪页按钮;渲染器 shadowRadius 2.2;动画控制器恒循环 flapping(飞行生物无站桩 idle)。
+- **lang**:补 `entity.yongye.fire_phoenix`,并顺带补齐龙 / 双蜘蛛缺失的实体名条目(此前血条 / 死亡讯息会显示裸翻译键)。
+- **待编译验证(本轮)**:`onStartedTrackingBy` / `onStoppedTrackingBy` / `tick()` 覆盖、`EntityType.Builder.makeFireImmune()`——均已在 FabricMC/yarn 1.21.1 官方 mapping 逐条查到(method_5837 / method_5742 / method_19947),沙箱编不了 Fabric 故标,把握高。
+- **遗留(Stage2)**:beam / dive 三段 / firetornado / eggfold(浴火重生:濒死收蛋→无敌→重生半血一次)按 AI 触发;自然刷怪;与 MobBossHandler 0.8% 二次 BOSS 化的豁免。
+- 新增 3 Java(实体/模型/渲染器)+ 3 资源 + 改 ModEntities/YongyeClient/ModCommands/DebugScreen/双语 lang,**configVersion 不变(仍 15)**。
+
+## 里程碑 170 — 新增 BOSS·死亡法师 + 精英·巨型螃蟹(GeckoLib,Stage1)
+- **需求**:用户传 `死亡法师.zip` / `巨型螃蟹.zip` 继续加怪;分配照 m167 数据法——死亡法师 15 动画(idle/walk/fall/hurt×2/cast×3/attack×3/attackmelee×2/shockwave1/death)→ **BOSS**,巨型螃蟹 9 动画(idle/walk/snip/threeslam/toss/death/crabrave 等)→ **精英**。
+- **坑**:两模型 identifier 分别是 **`geometry.steve` / `geometry.unknown`**(比 m167 撞名更危险的通用默认名)→ 装入改 `geometry.death_mage` / `geometry.giant_crab`。
+- 死亡法师贴图 512² 但 geo 声明 128²(4× 同布局导出);GeckoLib 按声明尺寸归一化 UV,无需改——实机若 UV 错位再处理。
+- **`DeathMageEntity`**:HostileEntity + GeoEntity,Stage1 近战(MeleeAttackGoal + WanderAroundFarGoal + LookAt/LookAround + Revenge/ActiveTarget,照 m162 龙 Stage1 AI 组);血 500 / 攻 20 / 速 0.3 / 击退抗 0.6 / 索敌 48;**紫色 ServerBossBar**(与凤凰同款凋灵挂法);dims 1.0×2.2(人形,整体包围盒 2.3 含法袍/手臂)。**`GiantCrabEntity`**:同结构、无血条(精英定位同毒液蜘蛛);血 120 / 攻 12 / 速 0.28 / 击退抗 0.5 / 索敌 32;dims 3.0×1.5(`hitbox` 骨 44×24×48)。
+- `/yongye deathmage`、`/yongye giantcrab` + debug 按钮;渲染器 shadowRadius 0.8 / 1.4;lang 双语补两实体名;动画控制器 = isMoving→walk 否则 idle(两模型的 idle/walk 文件里本就 loop:true)。
+- **待编译验证(本轮)**:`WanderAroundFarGoal`(FabricMC/yarn 1.21.1 官方 mapping 已核 class_1394;原版通用游荡 goal,m162 曾用、m165 撤,当前树首用故标)+ 血条覆盖点同 m169。
+- **遗留(Stage2)**:法师 cast/shockwave、螃蟹 snip/threeslam/toss 按 AI 触发;death 动画播完再移除;刷怪接入(精英接 EliteHandler?BOSS 接哪条线待定)。
+- 新增 6 Java + 6 资源 + 改同 m169 四文件与双语 lang,**configVersion 不变(仍 15)**。

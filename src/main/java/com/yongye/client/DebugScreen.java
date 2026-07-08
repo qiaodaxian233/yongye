@@ -145,6 +145,9 @@ public class DebugScreen extends Screen {
                             new Btn("末影龙 BOSS", "yongye dragon"),
                             new Btn("精英·毒液蜘蛛", "yongye venomspider"),
                             new Btn("BOSS·红蜘蛛", "yongye redspider"),
+                            new Btn("BOSS·浴火凤凰", "yongye phoenix"),
+                            new Btn("BOSS·死亡法师", "yongye deathmage"),
+                            new Btn("精英·巨型螃蟹", "yongye giantcrab"),
                     }),
             }),
             // —— 掉率(loot)——

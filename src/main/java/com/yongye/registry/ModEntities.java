@@ -1,6 +1,9 @@
 package com.yongye.registry;
 
 import com.yongye.Yongye;
+import com.yongye.entity.DeathMageEntity;
+import com.yongye.entity.FirePhoenixEntity;
+import com.yongye.entity.GiantCrabEntity;
 import com.yongye.entity.RedSpiderEntity;
 import com.yongye.entity.ToroEnderDragonEntity;
 import com.yongye.entity.VenomSpiderEntity;
@@ -48,10 +51,44 @@ public final class ModEntities {
                             .dimensions(3.0f, 1.8f)
                             .build("red_spider"));
 
+    // BOSS·浴火凤凰(m169;免疫火/岩浆)
+    public static final RegistryKey<EntityType<?>> FIRE_PHOENIX_KEY =
+            RegistryKey.of(RegistryKeys.ENTITY_TYPE, Identifier.of(Yongye.MOD_ID, "fire_phoenix"));
+    public static final EntityType<FirePhoenixEntity> FIRE_PHOENIX =
+            Registry.register(Registries.ENTITY_TYPE, FIRE_PHOENIX_KEY.getValue(),
+                    EntityType.Builder.create(FirePhoenixEntity::new, SpawnGroup.MONSTER)
+                            // 体型按模型自带 hitbox 骨骼(51×53×51 单位 ≈ 3.2×3.3 格);进游戏再调
+                            .dimensions(3.2f, 3.3f)
+                            .makeFireImmune()
+                            .build("fire_phoenix"));
+
+    // BOSS·死亡法师(m170)
+    public static final RegistryKey<EntityType<?>> DEATH_MAGE_KEY =
+            RegistryKey.of(RegistryKeys.ENTITY_TYPE, Identifier.of(Yongye.MOD_ID, "death_mage"));
+    public static final EntityType<DeathMageEntity> DEATH_MAGE =
+            Registry.register(Registries.ENTITY_TYPE, DEATH_MAGE_KEY.getValue(),
+                    EntityType.Builder.create(DeathMageEntity::new, SpawnGroup.MONSTER)
+                            // 人形体型(模型整体包围盒 ≈ 2.3 宽含法袍/手臂,取身体 1.0×2.2);进游戏再调
+                            .dimensions(1.0f, 2.2f)
+                            .build("death_mage"));
+
+    // 精英·巨型螃蟹(m170)
+    public static final RegistryKey<EntityType<?>> GIANT_CRAB_KEY =
+            RegistryKey.of(RegistryKeys.ENTITY_TYPE, Identifier.of(Yongye.MOD_ID, "giant_crab"));
+    public static final EntityType<GiantCrabEntity> GIANT_CRAB =
+            Registry.register(Registries.ENTITY_TYPE, GIANT_CRAB_KEY.getValue(),
+                    EntityType.Builder.create(GiantCrabEntity::new, SpawnGroup.MONSTER)
+                            // 体型按模型自带 hitbox 骨骼(44×24×48 单位 ≈ 3.0×1.5 格);进游戏再调
+                            .dimensions(3.0f, 1.5f)
+                            .build("giant_crab"));
+
     public static void init() {
         FabricDefaultAttributeRegistry.register(TORO_ENDER_DRAGON, ToroEnderDragonEntity.createDragonAttributes());
         FabricDefaultAttributeRegistry.register(VENOM_SPIDER, VenomSpiderEntity.createVenomSpiderAttributes());
         FabricDefaultAttributeRegistry.register(RED_SPIDER, RedSpiderEntity.createRedSpiderAttributes());
-        Yongye.LOGGER.info("[永夜] 自定义实体已注册:toro_ender_dragon / venom_spider / red_spider");
+        FabricDefaultAttributeRegistry.register(FIRE_PHOENIX, FirePhoenixEntity.createFirePhoenixAttributes());
+        FabricDefaultAttributeRegistry.register(DEATH_MAGE, DeathMageEntity.createDeathMageAttributes());
+        FabricDefaultAttributeRegistry.register(GIANT_CRAB, GiantCrabEntity.createGiantCrabAttributes());
+        Yongye.LOGGER.info("[永夜] 自定义实体已注册:toro_ender_dragon / venom_spider / red_spider / fire_phoenix / death_mage / giant_crab");
     }
 }
