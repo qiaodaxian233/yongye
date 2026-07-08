@@ -1551,3 +1551,10 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **待编译验证(本轮)**:`WanderAroundFarGoal`(FabricMC/yarn 1.21.1 官方 mapping 已核 class_1394;原版通用游荡 goal,m162 曾用、m165 撤,当前树首用故标)+ 血条覆盖点同 m169。
 - **遗留(Stage2)**:法师 cast/shockwave、螃蟹 snip/threeslam/toss 按 AI 触发;death 动画播完再移除;刷怪接入(精英接 EliteHandler?BOSS 接哪条线待定)。
 - 新增 6 Java + 6 资源 + 改同 m169 四文件与双语 lang,**configVersion 不变(仍 15)**。
+
+## 里程碑 171 — 暂存 DragonCore·阿努比斯 BOSS 资源包进仓库(防沙箱丢失)
+- 用户传 `DragonCore.zip`(1.2MB / 129 文件)= **完整阿努比斯多形态 BOSS 资源包**:主体 33 骨 14 动画(idle/sitting/get_up/walk/run/death/melee1-3/spell1-2/stun…)+ 二形态(512²)+ 恶灵小怪(4 动画)+ 水晶塔(+出生/射线)+ 恢复血量/环绕鬼火/踩踏特效/二形态斩等特效模型 + 49 段 ogg 音效 + `controller.yml`(DragonCore 触发配置,Fabric 不能用但可当动画/音效触发说明书)。
+- 沙箱每轮清空 → 本轮先**原样存进 `docs/staging/dragoncore_anubis/`**(含 `说明.md` 盘点),未实装、不进 mod 资源路径、不影响 build。
+- 注意:所有 geo identifier 均为 `geometry.unknown` / `geometry.lr_* - Converted`,装入时必须逐个改名(steve/unknown 撞名教训 ×3)。
+- 待与作者对齐玩法(多阶段 BOSS?恶灵当召唤物?水晶塔当场景机制?)后,照凤凰/死亡法师的 Stage 分法实装。
+- 纯资源暂存,无代码/配置改动,**configVersion 不变(仍 15)**。
