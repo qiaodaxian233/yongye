@@ -1780,3 +1780,36 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **无新 API 面**:本轮零首用类(m179 那批 BossBarHud/TranslatableTextContent/accessor 名待作者 build 一并验)。
 - **预览**:docs/hud/m180_bossbar_preview.png(三新框大档 + 名字落位,已复核)。
 - 新增 18 贴图 + 改 BossBarStyleMixin/RedSpiderEntity/PainBossHandler,无配置变更 **configVersion 不变(仍 18)**。
+
+## 里程碑 181 — 血条画框全套换用户高清素材:HD 贴图 + 缩放绘制(修「压缩太狠看不清」)+ 新增僵尸框
+- **需求**:用户重做并上传全部 8 对画框素材(狗头.zip,每对=框 + 血条同画布对齐分层,已抠图),
+  点名「素材别压缩太狠,压缩完都看不清了」。
+- **根因**:m179 管线把贴图**预缩放到 GUI 逻辑像素**(大档框宽仅 ~262px)再 1:1 绘制,
+  实机 GUI scale 2~4 时被引擎放大 2~4 倍(且 MC 默认最近邻采样)必然糊——压缩发生在管线里,
+  素材本身 1700~2200px 宽的细节全被丢掉了。
+- **新管线(贴图三件套 × 8)**:
+  - 每 boss 三张:`{key}_frame.png`(框,压顶)/ `{key}_fill.png`(血条)/ `{key}_back.png`
+    (空槽底 = 血条压暗 ×0.22,掉血露出熄灭槽);槽宽统一钉死 **728px = 大档 182 的 4 倍**
+    (GUI scale 4 下 1:1 原生分辨率,scale 2 仅 2× 缩小),LANCZOS 缩放 + **alpha 颜色扩散**
+    (不透明像素颜色向透明区扩 8 轮,防双线性采样晕边)。
+  - 每张 PNG 配 `.png.mcmeta` `{"texture":{"blur":true,"clamp":true}}` 开双线性过滤
+    (原版 mojangstudios.png.mcmeta 同款资源元数据机制),缩小平滑不锯齿。
+  - 42 张旧预压贴图删除,换 24 PNG + 24 mcmeta,共 4.5MB。
+- **BossBarStyleMixin 重写**:
+  - 绘制换 **11 参缩放版 drawTexture**(id,x,y,w,h,u,v,regionW,regionH,texW,texH)——
+    已从 FabricMC/yarn 1.21.1 官方 mapping 逐字核对(method_25293,ARG 顺序一致);
+    血条按百分比裁 = 贴图区域宽与屏幕宽同比例缩,不变形。
+  - 几何改成「贴图像素一份定义 + 档位缩放因子」:屏幕尺寸 = 贴图像素 × (SLOT_W[档]/728),
+    三档共用同一套贴图,Geo[3] 数组 ×7 换 Style ×8,常量少一半。
+  - **绘制顺序改为 底→血条→框压顶**(顺应用户素材分层:蛛网/中央宝石/佩恩零印等装饰
+    本就该盖在血条上;m178~m180 框在底、装饰会被血条盖住)。
+  - 牌匾中心逐张放大目检定位(狗头/凤凰自动检测偏低,人工微调到牌匾正中);
+    佩恩框顶是轮回眼徽记非牌匾 → 名字仍悬浮框顶(pcy=-1)。
+  - **新增僵尸框**:字面量名「xx BOSS」后缀(m145 玩家皮肤僵尸BOSS,本体是僵尸)→ 僵尸框;
+    「【BOSS】」前缀(其余怪物BOSS版)→ 苦力怕框——原来两类同用苦力怕框,现在分开。
+  - 堆叠/自动降档/require=0 兜底/翻译键识别全承 m179/m180 不变。
+- **待编译验证**:11 参 drawTexture 仓库首用(官方 mapping 逐字核对,把握高);
+  mcmeta blur 是纯资源机制零编译面。
+- **预览**:docs/hud/m181_bossbar_preview.png(GUI scale 3 模拟:新管线三条堆叠 vs
+  m180 旧管线同倍率对比,清晰度差距一目了然;名字落位/佩恩悬浮已复核)。
+- 重写 1 mixin + 换 48 资源文件(删 42 旧),无 Java 文件增减、无配置变更 **configVersion 不变(仍 18)**。

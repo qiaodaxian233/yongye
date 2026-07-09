@@ -14,22 +14,25 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * BOSS 血条画框 + 自适应布局(m179,重写 m178):
- * 接管 {@code BossBarHud.render(DrawContext)} 整个血条堆叠——
+ * BOSS 血条画框 + 自适应布局(m181,重写 m179/m180 贴图管线):
  * <ul>
- *   <li><b>专属画框</b>:阿努比斯(胡狼紫焰)/ 浴火凤凰(凤翼金焰)/ 末影龙(双龙首魔能,
- *       同时覆盖自建龙与原版末地龙战)/ 怪物BOSS版(苦力怕酸浊框,按「【BOSS】」前缀 /
- *       「 BOSS」后缀的字面量名匹配)。其余血条(法师/任务计时/原版凋灵…)原版逻辑照画。</li>
- *   <li><b>真实高度堆叠</b>(修 m178 重叠):画框按各自实际高度推进游标,框间留 11px;
- *       首条画框自动下压防止顶部被屏幕裁切(m178 实机截图两大坑一次修掉)。</li>
- *   <li><b>怪多自动缩小</b>:按当前画框条数选尺寸档——≤2 大档(槽宽182=原版等长)、
- *       3~4 中档(136)、≥5 小档(100);三档贴图均预缩放到 GUI 像素,
- *       全程只用仓库 proven 的 9 参 drawTexture 1:1 绘制。</li>
+ *   <li><b>高清贴图 + 缩放绘制</b>(修「压缩太狠看不清」):m179 把贴图预压到 GUI 逻辑像素
+ *       (大档框宽仅 ~262px),实机 GUI scale 2~4 会再放大 2~4 倍必然糊。现在贴图保留
+ *       槽宽 728px(= 大档 182 的 4 倍,GUI scale 4 下 1:1 原生),绘制改用 11 参缩放版
+ *       {@code drawTexture(id,x,y,w,h,u,v,regionW,regionH,texW,texH)}(yarn 1.21.1 官方
+ *       mapping method_25293 已核),配合每张贴图旁的 .mcmeta {"texture":{"blur":true,
+ *       "clamp":true}}(原版 mojangstudios.png.mcmeta 同款机制)开双线性过滤,缩小平滑
+ *       不锯齿。三档共用同一套贴图,按档位算缩放因子——42 张预压贴图换成 8 boss × 3 张。</li>
+ *   <li><b>三层绘制</b>(顺应用户新素材「血条/框分离」的分层关系):空槽底(压暗血条,
+ *       掉血露出熄灭槽)→ 血条(按百分比横向裁)→ 框压顶(蛛网/中央宝石等装饰盖在血条上,
+ *       m178~m180 是框在底、装饰会被血条盖住)。</li>
+ *   <li><b>专属画框</b>:阿努比斯 / 浴火凤凰 / 末影龙(自建龙 + 原版末地龙战)/ 红蜘蛛 /
+ *       死亡法师 / 长门·佩恩(无牌匾,名字悬浮框顶)/ 玩家皮肤僵尸BOSS(「xx BOSS」后缀,
+ *       m145 那套,本体是僵尸 → 新僵尸框)/ 其余怪物BOSS版(「【BOSS】」前缀 → 苦力怕框)。
+ *       其余血条(任务计时/原版凋灵…)原版逻辑照画。</li>
+ *   <li><b>真实高度堆叠 + 怪多自动缩小</b>(承 m179):画框按实际高度推进游标留 11px 缝,
+ *       首条自动下压防顶裁;画框条数 ≤2 大档(槽宽182)/ 3~4 中档(136)/ ≥5 小档(100)。</li>
  * </ul>
- *
- * <p><b>识别</b>:优先按血条名翻译键(entity.yongye.anubis / fire_phoenix / toro_ender_dragon /
- * entity.minecraft.ender_dragon —— 原版龙战血条名即龙实体名),再按字面量前后缀兜底(怪物BOSS版)。
- * 名字文本不拦、由本 mixin 照原版画在牌匾中心(画框牌匾都已是空牌/抹字)。
  *
  * <p><b>安全</b>:render 注入 require=0 —— 不挂则整套回退原版血条不崩;
  * BossBarHudAccess 的 @Accessor/@Invoker 名字错误会在本地 build 期被 mixin AP 报出。
@@ -38,38 +41,35 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BossBarHud.class)
 public abstract class BossBarStyleMixin {
 
-    /** 画框几何(全 GUI 像素):框宽高 / 槽偏移 xy / 槽高 / 槽宽 / 牌匾中心 y。 */
-    private record Geo(Identifier frame, Identifier fill,
-                       int fw, int fh, int sx, int sy, int sh, int slotW, int pcy) {}
+    /** 三档血条槽的屏幕(GUI 逻辑)宽度:大 = 原版血条等长。 */
+    private static final int[] SLOT_W = {182, 136, 100};
 
-    private static Geo[] yongye$tiers(String boss, int[][] v) {
-        Geo[] out = new Geo[3];
-        String[] t = {"l", "m", "s"};
-        for (int i = 0; i < 3; i++) {
-            out[i] = new Geo(
-                    Identifier.of("yongye", "textures/gui/bossbar/" + boss + "_frame_" + t[i] + ".png"),
-                    Identifier.of("yongye", "textures/gui/bossbar/" + boss + "_fill_" + t[i] + ".png"),
-                    v[i][0], v[i][1], v[i][2], v[i][3], v[i][4], v[i][5], v[i][6]);
-        }
-        return out;
+    /**
+     * 画框几何,全部是<b>贴图像素</b>(生成脚本输出,与 PNG 一一对应):
+     * 框宽高 / 槽偏移 xy / 槽宽高 / 牌匾中心 y(-1 = 无牌匾,名字悬浮框顶上方)。
+     * 屏幕尺寸 = 贴图像素 × (SLOT_W[档位] / sw)。
+     */
+    private record Style(Identifier frame, Identifier back, Identifier fill,
+                         int fw, int fh, int sx, int sy, int sw, int sh, int pcy) {}
+
+    private static Style yongye$style(String key, int fw, int fh, int sx, int sy, int sw, int sh, int pcy) {
+        String base = "textures/gui/bossbar/" + key;
+        return new Style(
+                Identifier.of("yongye", base + "_frame.png"),
+                Identifier.of("yongye", base + "_back.png"),
+                Identifier.of("yongye", base + "_fill.png"),
+                fw, fh, sx, sy, sw, sh, pcy);
     }
 
-    // 生成脚本输出的几何常量(fw,fh,sx,sy,sh,slotW,pcy),与贴图像素一一对应
-    private static final Geo[] ANUBIS = yongye$tiers("anubis",
-            new int[][]{{262, 57, 40, 30, 12, 182, 22}, {196, 43, 30, 22, 9, 136, 17}, {144, 31, 22, 17, 7, 100, 12}});
-    private static final Geo[] PHOENIX = yongye$tiers("phoenix",
-            new int[][]{{286, 62, 52, 31, 15, 182, 25}, {214, 46, 39, 23, 11, 136, 18}, {157, 34, 29, 17, 8, 100, 14}});
-    private static final Geo[] DRAGON = yongye$tiers("dragon",
-            new int[][]{{327, 93, 73, 47, 17, 182, 29}, {244, 69, 54, 35, 12, 136, 22}, {180, 51, 40, 26, 9, 100, 16}});
-    private static final Geo[] CREEPER = yongye$tiers("creeper",
-            new int[][]{{277, 63, 44, 24, 15, 182, 23}, {207, 47, 33, 18, 11, 136, 17}, {152, 34, 24, 13, 8, 100, 12}});
-    private static final Geo[] SPIDER = yongye$tiers("spider",
-            new int[][]{{255, 116, 37, 39, 12, 182, 18}, {191, 87, 27, 29, 9, 136, 14}, {140, 64, 20, 22, 7, 100, 10}});
-    private static final Geo[] DEATH_MAGE = yongye$tiers("deathmage2",
-            new int[][]{{278, 57, 48, 29, 15, 182, 21}, {208, 42, 36, 21, 11, 136, 15}, {153, 31, 27, 16, 8, 100, 11}});
-    /** 佩恩框没有名字牌匾 → pcy=-4 让名字悬浮在框顶上方。 */
-    private static final Geo[] PAIN = yongye$tiers("pain",
-            new int[][]{{312, 95, 72, 43, 23, 182, -4}, {233, 71, 54, 32, 17, 136, -4}, {171, 52, 40, 24, 12, 100, -4}});
+    // 几何常量由贴图生成脚本输出(见 DEVLOG m181),与 PNG 像素一一对应
+    private static final Style ANUBIS  = yongye$style("anubis",  1055, 229, 163, 132, 728, 51, 85);
+    private static final Style PHOENIX = yongye$style("phoenix", 1102, 241, 188,  97, 728, 86, 89);
+    private static final Style DRAGON  = yongye$style("dragon",  1154, 333, 214, 173, 728, 56, 105);
+    private static final Style SPIDER  = yongye$style("spider",  1245, 568, 258, 194, 728, 54, 102);
+    private static final Style MAGE    = yongye$style("mage",    1084, 222, 179, 102, 728, 54, 77);
+    private static final Style PAIN    = yongye$style("pain",    1131, 345, 217, 147, 728, 91, -1);
+    private static final Style CREEPER = yongye$style("creeper", 1112, 252, 192,  74, 728, 89, 61);
+    private static final Style ZOMBIE  = yongye$style("zombie",  1166, 389, 215, 173, 728, 55, 112);
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true, require = 0)
     private void yongye$layout(DrawContext ctx, CallbackInfo ci) {
@@ -89,38 +89,52 @@ public abstract class BossBarStyleMixin {
         int tier = customCount <= 2 ? 0 : (customCount <= 4 ? 1 : 2);
 
         TextRenderer tr = MinecraftClient.getInstance().textRenderer;
-        int screenW = ctx.getScaledWindowWidth();
-        int cx = screenW / 2;
+        int cx = ctx.getScaledWindowWidth() / 2;
         int j = 12; // 游标语义与原版一致:名字画在 j-9、原版条画在 j
 
         for (ClientBossBar bar : bars.values()) {
-            Geo[] style = yongye$styleOf(bar);
+            Style st = yongye$styleOf(bar);
             Text name = bar.getName();
             int tw = tr.getWidth(name);
-            if (style != null) {
-                Geo g = style[tier];
-                j = Math.max(j, g.pcy + 6);                 // 首条防顶部裁切
-                int fx0 = cx - g.fw / 2;
-                int fy0 = j - 4 - g.pcy;                    // 牌匾中心对准名字行中心(≈ j-4.5)
-                ctx.drawTexture(g.frame, fx0, fy0, 0, 0, g.fw, g.fh, g.fw, g.fh);
+            if (st != null) {
+                float s = SLOT_W[tier] / (float) st.sw;          // 贴图像素 → 屏幕像素
+                int fw = Math.round(st.fw * s), fh = Math.round(st.fh * s);
+                int ox = Math.round(st.sx * s), oy = Math.round(st.sy * s);
+                int slotW = SLOT_W[tier], slotH = Math.max(1, Math.round(st.sh * s));
+                int pc = st.pcy < 0 ? -4 : Math.round(st.pcy * s); // -4 = 名字悬浮框顶(佩恩)
+
+                j = Math.max(j, pc + 6);                          // 首条防顶部裁切
+                int fx0 = cx - fw / 2;
+                int fy0 = j - 4 - pc;                             // 牌匾中心对准名字行中心(≈ j-4.5)
+
+                // ① 空槽底(压暗血条,掉血露出熄灭槽)
+                ctx.drawTexture(st.back, fx0 + ox, fy0 + oy, slotW, slotH,
+                        0f, 0f, st.sw, st.sh, st.sw, st.sh);
+                // ② 血条按百分比横向裁(贴图区域与屏幕宽同比例缩,不变形)
                 float pct = Math.max(0f, Math.min(1f, bar.getPercent()));
-                int w = Math.round(g.slotW * pct);
-                if (w > 0) {
-                    ctx.drawTexture(g.fill, fx0 + g.sx, fy0 + g.sy, 0, 0, w, g.sh, g.slotW, g.sh);
+                int w = Math.round(slotW * pct);
+                int rw = Math.round(st.sw * pct);
+                if (w > 0 && rw > 0) {
+                    ctx.drawTexture(st.fill, fx0 + ox, fy0 + oy, w, slotH,
+                            0f, 0f, rw, st.sh, st.sw, st.sh);
                 }
+                // ③ 框压顶(装饰盖在血条上)
+                ctx.drawTexture(st.frame, fx0, fy0, fw, fh,
+                        0f, 0f, st.fw, st.fh, st.fw, st.fh);
+
                 ctx.drawTextWithShadow(tr, name, cx - tw / 2, j - 9, 0xFFFFFF);
-                j = fy0 + g.fh + 11;                        // 按真实框高推进(修重叠)
+                j = fy0 + fh + 11;                                // 按真实框高推进(防重叠)
             } else {
                 acc.yongye$renderVanillaBar(ctx, cx - 91, j, bar);
                 ctx.drawTextWithShadow(tr, name, cx - tw / 2, j - 9, 0xFFFFFF);
-                j += 10 + tr.fontHeight;                    // 原版步进
+                j += 10 + tr.fontHeight;                          // 原版步进
             }
-            if (j >= ctx.getScaledWindowHeight() / 2) break; // 画框高,上限放宽到半屏(原版1/3)
+            if (j >= ctx.getScaledWindowHeight() / 2) break;      // 上限半屏(原版1/3)
         }
     }
 
-    /** 识别血条画框:先翻译键(语言无关),再字面量前后缀兜底(怪物BOSS版)。 */
-    private static Geo[] yongye$styleOf(ClientBossBar bar) {
+    /** 识别血条画框:先翻译键(语言无关),再字面量前后缀兜底。 */
+    private static Style yongye$styleOf(ClientBossBar bar) {
         Text name = bar.getName();
         if (name == null) return null;
         if (name.getContent() instanceof TranslatableTextContent t) {
@@ -128,14 +142,15 @@ public abstract class BossBarStyleMixin {
             if ("entity.yongye.anubis".equals(key)) return ANUBIS;
             if ("entity.yongye.fire_phoenix".equals(key)) return PHOENIX;
             if ("entity.yongye.red_spider".equals(key)) return SPIDER;
-            if ("entity.yongye.death_mage".equals(key)) return DEATH_MAGE;
+            if ("entity.yongye.death_mage".equals(key)) return MAGE;
             if ("entity.yongye.toro_ender_dragon".equals(key)) return DRAGON;
             if ("entity.minecraft.ender_dragon".equals(key)) return DRAGON; // 原版末地龙战
             return null;
         }
         String s = name.getString();
-        if (s.contains("佩恩")) return PAIN;                                   // 长门·佩恩(字面量名「佩恩·天道」)
-        if (s.startsWith("【BOSS】") || s.endsWith(" BOSS")) return CREEPER;  // 怪物BOSS版(字面量名)
+        if (s.contains("佩恩")) return PAIN;              // 长门·佩恩(字面量名「佩恩·天道」)
+        if (s.endsWith(" BOSS")) return ZOMBIE;           // 玩家皮肤僵尸BOSS(m145,本体是僵尸)
+        if (s.startsWith("【BOSS】")) return CREEPER;     // 其余怪物BOSS版(字面量名)
         return null;
     }
 }
