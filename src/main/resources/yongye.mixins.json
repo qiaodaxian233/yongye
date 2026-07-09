@@ -11,7 +11,8 @@
   "client": [
     "client.HudCompactMixin",
     "client.TitleScreenMixin",
-    "client.ParticleReducerMixin"
+    "client.ParticleReducerMixin",
+    "client.BossBarStyleMixin"
   ],
   "injectors": {
     "defaultRequire": 1

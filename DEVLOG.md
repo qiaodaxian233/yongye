@@ -1697,3 +1697,26 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
   横向纹理均匀(勿在条身放会被裁切破坏的图案/文字)、background 暗 progress 亮。
 - **待实机验证**:HD 精灵在 BossBarHud 的比例映射观感(机制为资源包通行做法,把握高;若显示异常把截图发来调)。
 - 纯资源:新增 14 张 PNG + 1 张预览,无 Java/配置改动,**configVersion 不变(仍 18)**。
+
+## 里程碑 178 — 阿努比斯/凤凰专属华丽血条画框(用户 GPT 图实装,客户端 mixin)
+- **需求**:用户嫌血条难看,GPT 生成两条像素风画框(胡狼首紫焰石框 + 凤首金翼火焰框,已抠透明)并上传,要求用上。
+- **判断**:这种带装饰头/BOSS 牌匾的画框**不能走 m177 的精灵覆盖**——精灵是 182×5 纯条、按颜色全局生效、
+  装饰会被压扁;必须自定义渲染 = 拦 `BossBarHud.renderBossBar`(单条血条的底槽+填充绘制)按条识别绘制。
+- **素材加工(PIL,量取靠网格图人工读坐标)**:每条拆两张——
+  ① `*_frame.png` = 整框,槽内替换成 亮度×0.25 的熄灭暗色(天然空血底槽),**牌匾上烘焙死的「BOSS」金字抹掉**
+  (逐行取字左侧 8px 牌匾像素横向延展,保留竖向明暗不出色块;第一版平涂色块+bbox 量窄露「SS」已修);
+  ② `*_fill.png` = 槽内岩浆/火焰截条。**全部预缩放到目标 GUI 像素**(槽宽统一 182=原版等长):
+  anubis_frame 262×57(槽 40,30 高12 / 牌匾cy22)+ fill 182×12;phoenix_frame 286×62(槽 52,31 高15 / 牌匾cy25)+ fill 182×15。
+  预缩放的意义 = 渲染全程只用仓库 proven 的 **9 参 drawTexture** 1:1 画,绕开 11 参缩放签名风险。
+- **新 mixin `client/BossBarStyleMixin`**:@Inject HEAD cancellable 拦 renderBossBar(DrawContext,int,int,BossBar);
+  按血条名**翻译键**识别(服务端名=getType().getName() 序列化后仍是 translatable,键 entity.yongye.anubis /
+  fire_phoenix,与客户端语言无关);命中→画框(中心=x+91 对齐)→按 getPercent() 裁填充→cancel。
+  **原版名字文本不拦**:画框垂直定位取 fy0=y-4-牌匾cy,让空牌匾中心正对名字行(y-9 起高 9)——
+  金色实体名正好落牌匾上当名字牌(预览已模拟复核)。`require=0`:目标方法若名字/签名不符则静默不挂,
+  血条回退 m177 玻璃条不崩游戏。法师/BOSS版/原版血条不受影响(键不匹配直接放行)。
+- **待编译/启动验证**:`BossBarHud`(client.gui.hud 包,同 InGameHud proven 路径,类名首用)、
+  `TranslatableTextContent.getKey()`(标准 yarn 首用)、@Inject 目标 renderBossBar 描述符(启动日志看是否挂上;
+  没挂=回退玻璃条,把日志贴来改描述符)。BossBar/DrawContext/Identifier/drawTexture 9 参全 proven。
+- **已知取舍**:进度中途裁切右端直角(原版同);两 BOSS 同屏时原版堆叠步进 19px 小于框高,框体轻微交叠(稀有,违和再议)。
+- **预览**:docs/hud/m178_custom_bossbar_preview.png(70%/25% 血量 + 名字落位模拟,已肉眼复核)。
+- 新增 1 mixin + 4 贴图 + 改 yongye.mixins.json,无配置变更 **configVersion 不变(仍 18)**。
