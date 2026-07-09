@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 17;
+    public static final int CURRENT_CONFIG_VERSION = 18;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -631,6 +631,32 @@ public class YongyeConfig {
     public int anubisCheckIntervalTicks = 6000;
     /** 全服同时存活上限(稀有 BOSS 事件)。 */
     public int anubisMaxAlive = 1;
+
+    // ============ m176:五只新怪自然刷怪(红蛛/法师/凤凰=稀有BOSS事件,毒蛛/螃蟹=精英压力) ============
+    /** 新怪自然刷怪总开关(不含阿努比斯,它走 m175 独立开关)。 */
+    public boolean enableCustomMobSpawns = true;
+    /** 每隔多少 tick 检定一次(1200=1分钟;BOSS/精英共用该节拍,各自概率独立)。 */
+    public int customMobCheckIntervalTicks = 1200;
+    /** BOSS·红蜘蛛:第几天起 / 每次检定概率 / 全服存活上限。 */
+    public int redSpiderMinDay = 12;
+    public double redSpiderSpawnChance = 0.012;
+    public int redSpiderMaxAlive = 1;
+    /** BOSS·死亡法师:第几天起 / 每次检定概率 / 全服存活上限。 */
+    public int deathMageMinDay = 14;
+    public double deathMageSpawnChance = 0.010;
+    public int deathMageMaxAlive = 1;
+    /** BOSS·浴火凤凰:第几天起 / 每次检定概率 / 全服存活上限(高空刷出)。 */
+    public int phoenixMinDay = 16;
+    public double phoenixSpawnChance = 0.008;
+    public int phoenixMaxAlive = 1;
+    /** 精英·毒液蜘蛛:第几天起 / 逐玩家每次检定概率 / 玩家附近48格同类上限。 */
+    public int venomSpiderMinDay = 4;
+    public double venomSpiderSpawnChance = 0.06;
+    public int venomSpiderMaxNearby = 2;
+    /** 精英·巨型螃蟹:第几天起 / 逐玩家每次检定概率 / 玩家附近48格同类上限。 */
+    public int giantCrabMinDay = 6;
+    public double giantCrabSpawnChance = 0.05;
+    public int giantCrabMaxNearby = 1;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

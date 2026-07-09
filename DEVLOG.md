@@ -1636,3 +1636,32 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **注意**:`/yongye anubis` 命令召唤不受天数门槛限制(测试用途保留);天数门槛只管自然降临。
 - 新增 1 文件(AnubisSpawnHandler)+ 改 5 文件(AnubisEntity/YongyeConfig(+5 字段)/Yongye/MobBossHandler/EliteHandler),
   **configVersion 16→17**。
+
+## 里程碑 176 — 五只新怪自然刷怪接入(收 m167/m169/m170 的「刷怪接入」遗留)
+- **需求**:用户「继续做别的」→ 按守则挑收益最大能闭环的方向:毒液蜘蛛/红蜘蛛/浴火凤凰/死亡法师/巨型螃蟹
+  五只至今只能命令召唤,游戏里根本不会出现——本轮统一接入自然刷怪,买的模型真正进玩法。
+- **新 `CustomMobSpawnHandler`**,单 ServerTick 监听、每 `customMobCheckIntervalTicks`(默 1200=1min)一个节拍,两条线:
+  - **BOSS 线**(`rollBoss`,照 m175 阿努比斯模板逐字):红蜘蛛(第12天/0.012/地表)、
+    死亡法师(第14天/0.010/地表)、浴火凤凰(第16天/0.008/**玩家上方24格高空**,飞行 BOSS 照 m165 龙的 clamp topY-4 写法);
+    各自全服存活上限(默 1)+ 天数门槛 + 全服一次概率检定 + 出生锁定随机合法玩家 + 各自配色的全服播报。
+  - **精英线**(`rollElite`):毒液蜘蛛(第4天/0.06/附近上限2)、巨型螃蟹(第6天/0.05/附近上限1);
+    逐玩家独立检定,落点=玩家附近 14~28 格地表;附近 48 格同类上限防扎堆;
+    **过 m153 全局敌对预算闸**(globalMaxHostilesNearby/globalHostileRadius,尸潮实体爆炸教训,表达式逐字复用)。
+- **精英白嫖掉落/经验**:精英线出生打 `IS_ELITE` 附件——检查确认 LootHandler 精英掉落档(line 112)与
+  BonusXpHandler 精英经验档(line 33)都只读该附件;而 EliteHandler 的 ELITES 追踪(光环/技能/词缀)
+  因 m175 命名空间豁免排在 IS_ELITE 恢复分支**之前**,不会挂上不兼容的原版精英包装。
+  两只精英从此有真·精英掉落,不再白打。BOSS 三只暂无专属掉落表(见遗留)。
+- **实体工厂**:私有 `Factory` 接口直接走各实体 proven 构造器
+  (与 ModCommands 召唤处同签名,ModCommands 用全限定名写法、m167/m169/m170 已随作者 build 验证),
+  刻意规避 `EntityType.create` 的跨版本签名差异。
+- **静态自检**:3 文件括号全配平(CustomMobSpawnHandler {}11·()145 / YongyeConfig {}33·()365 / Yongye {}6·()96);
+  17 个新配置字段 + 2 个复用字段定义↔引用全一致;
+  23 条 import 逐条与 AnubisSpawnHandler/NightfallHordeHandler/MobBossHandler/EliteHandler 比对全 ✓;
+  5 个实体构造器签名与实体类声明逐字核对(SpiderEntity 泛型界满足)。
+- **无新「待编译验证」点**:全部 API(iterateEntities/getWorlds/getTopY/Heightmap/getEntitiesByClass/
+  setAttached/setTarget/broadcast/getBoundingBox().expand)均仓库已编过用法;
+  `Class.isInstance` 为标准 Java。
+- **遗留**:三只 BOSS 的专属掉落表(接 BossHandler 档或单独表,涉及 IS_BOSS 会连带 BossAbilityHandler
+  能力叠加,需与作者对齐再做);凤凰浴火重生/法师施法/螃蟹钳击等技能动画按 AI 触发(各 Stage2);
+  蜘蛛系是否也进夜晚尸潮池。
+- 新增 1 文件(CustomMobSpawnHandler)+ 改 YongyeConfig(+17 字段)/Yongye(注册),**configVersion 17→18**。
