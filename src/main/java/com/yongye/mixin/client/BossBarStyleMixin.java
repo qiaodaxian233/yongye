@@ -149,25 +149,18 @@ public abstract class BossBarStyleMixin {
             Text label = yongye$label(g);
             yongye$drawScaled(ctx, tr, label, cx - tr.getWidth(label) * ts / 2f, nameCy - 4.5f * ts, ts, 0xFFFFFF);
 
-            // m187:血量数字——显示在名字下方,用金色小字
-            float hpY = nameCy + 4.0f * ts;       // 名字中心下方
+            // m187/m188:血量数字画在血条槽正中(MMO 惯例;m187 初版画名字下方与牌匾名重叠已修)
+            float slotCx = fx(cx, fw) + ox + slotW / 2f;
+            float slotCy = fy0 + oy + slotH / 2f;
             float hpScale = 0.78f * ts;
-            if (groupHp != null && groupHp[1] > 0) {
-                String hpStr = yongye$fmtHp(groupHp[0]) + " / " + yongye$fmtHp(groupHp[1]);
-                Text hpText = Text.literal(hpStr);
-                yongye$drawScaled(ctx, tr, hpText,
-                        cx - tr.getWidth(hpText) * hpScale / 2f,
-                        hpY - 4.5f * hpScale,
-                        hpScale, 0xFFCC00);
-            } else {
-                // 兜底:显示百分比
-                String pctStr = Math.round(pct * 100) + "%";
-                Text pctText = Text.literal(pctStr);
-                yongye$drawScaled(ctx, tr, pctText,
-                        cx - tr.getWidth(pctText) * hpScale / 2f,
-                        hpY - 4.5f * hpScale,
-                        hpScale, 0xFFCC00);
-            }
+            String hpStr = (groupHp != null && groupHp[1] > 0)
+                    ? yongye$fmtHp(groupHp[0]) + " / " + yongye$fmtHp(groupHp[1])
+                    : Math.round(pct * 100) + "%"; // 兜底:无 HP 数据显示百分比
+            Text hpText = Text.literal(hpStr);
+            yongye$drawScaled(ctx, tr, hpText,
+                    slotCx - tr.getWidth(hpText) * hpScale / 2f,
+                    slotCy - 4.5f * hpScale,
+                    hpScale, 0xFFFFFF);
 
             // 成分标注(怪物BOSS版/玩家BOSS混名组)
             String ann = yongye$annotation(g);
@@ -191,13 +184,13 @@ public abstract class BossBarStyleMixin {
             int tw = tr.getWidth(name);
             ctx.drawTextWithShadow(tr, name, cx - tw / 2, j, 0xFFFFFF);
             acc.yongye$renderVanillaBar(ctx, cx - 91, j + 9, bar);
-            // 百分比(原版条没有 HP 数据)
+            // m188:数字覆画在原版条正中(条 j+9..j+14,文字上缘 j+7 上下对称跨条)
             long[] hp = yongye$parseHp(bar);
             String sub = hp != null && hp[1] > 0
                     ? yongye$fmtHp(hp[0]) + " / " + yongye$fmtHp(hp[1])
                     : Math.round(bar.getPercent() * 100) + "%";
-            ctx.drawTextWithShadow(tr, Text.literal(sub), cx - tr.getWidth(sub) / 2, j + 11, 0xFFCC00);
-            j += 30;
+            ctx.drawTextWithShadow(tr, Text.literal(sub), cx - tr.getWidth(sub) / 2, j + 7, 0xFFFFFF);
+            j += 26;
             if (j >= halfH) return;
         }
     }
@@ -245,8 +238,8 @@ public abstract class BossBarStyleMixin {
 
     /** 紧凑血量格式:≥1亿 显示 X.X亿 / ≥1万 显示 X.X万 / 其余原值。 */
     private static String yongye$fmtHp(long n) {
-        if (n >= 100_000_000L) return String.format("%.1f亿", n / 1e8);
-        if (n >= 10_000L)      return String.format("%.1f万", n / 1e4);
+        if (n >= 100_000_000L) return String.format(java.util.Locale.ROOT, "%.1f亿", n / 1e8);
+        if (n >= 10_000L)      return String.format(java.util.Locale.ROOT, "%.1f万", n / 1e4);
         return String.valueOf(n);
     }
 
@@ -282,7 +275,7 @@ public abstract class BossBarStyleMixin {
         // 字面量:用 rawName 避免 ‖ 干扰
         String s = yongye$rawName(bar);
         if (s.contains("佩恩"))        return PAIN;
-        if (s.contains(" BOSS") && !s.contains("【BOSS】")) return ZOMBIE;
+        if (s.endsWith(" BOSS"))       return ZOMBIE;
         if (s.startsWith("【BOSS】"))   return CREEPER;
         return null;
     }
@@ -293,7 +286,7 @@ public abstract class BossBarStyleMixin {
         if (name.getContent() instanceof TranslatableTextContent t) return t.getKey();
         String s = yongye$rawName(bar);
         if (s.contains("佩恩"))        return "yongye:pain";
-        if (s.contains(" BOSS") && !s.contains("【BOSS】")) return "yongye:zombie_group";
+        if (s.endsWith(" BOSS"))       return "yongye:zombie_group";
         return "yongye:creeper_group";
     }
 

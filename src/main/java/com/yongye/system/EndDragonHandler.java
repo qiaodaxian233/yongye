@@ -99,7 +99,7 @@ public final class EndDragonHandler {
             if (++tick < 20) return;
             tick = 0;
             YongyeConfig cfg = YongyeConfig.get();
-            if (!cfg.enableEndDragonBuff || cfg.endDragonRegenPercent <= 0) return;
+            if (!cfg.enableEndDragonBuff) return; // m188:regenPercent<=0 只关回血,血条数字照更
             ServerWorld end = server.getWorld(World.END);
             if (end == null) {
                 if (!QUIET_SECONDS.isEmpty()) { QUIET_SECONDS.clear(); LAST_HEALTH.clear(); }
@@ -115,7 +115,7 @@ public final class EndDragonHandler {
                 int quiet = QUIET_SECONDS.getOrDefault(id, 0);
                 // 掉血(阈值 0.5;10 亿量级 float 最小步进 ~64,任何有效伤害都触发)→ 计时归零
                 quiet = (prev != null && cur < prev - 0.5f) ? 0 : quiet + 1;
-                if (quiet >= Math.max(1, cfg.endDragonRegenDelaySeconds)) {
+                if (cfg.endDragonRegenPercent > 0 && quiet >= Math.max(1, cfg.endDragonRegenDelaySeconds)) {
                     float max = dragon.getMaxHealth();
                     if (cur < max) {
                         cur = Math.min(max, cur + (float) (max * cfg.endDragonRegenPercent / 100.0));

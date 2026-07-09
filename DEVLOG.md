@@ -1914,27 +1914,6 @@ GeckoLib 会按 deathTime 施加 90° 侧翻(普通生物死亡倒地),与原版
 **改动**:仅 ToroDragonReplaceRenderer(+1 import +1 覆写);无配置变更,configVersion 仍 19。
 
 
-## m187 · 2025 · 所有血条加血量数字显示
-
-**问题**:血条只显示进度条,看不到实际数字;10亿血的末地龙进度条跌一点点看不出来伤害。
-
-**实现**:协议层「服务端嵌入 + 客户端解析」:
-- 服务端(7处):AnubisEntity/FirePhoenixEntity/DeathMageEntity/RedSpiderEntity/
-  ToroEnderDragonEntity/MobBossHandler/PainBossHandler 的每 tick 血条刷新处,
-  在 setPercent 前调用 setName 把 `‖当前/最大`(Unicode U+2016 分隔,整数)拼进血条名末尾。
-- 末地原版龙(EndDragonHandler):新增 `EnderDragonFightAccessor` mixin 暴露
-  EnderDragonFight.bossBar 字段(待编译验证);在每秒龙循环里更新血条名。
-- 客户端(BossBarStyleMixin):新增 `yongye$parseHp` 解析 ‖ 后缀 → `long[]{cur,max}`;
-  `yongye$fmtHp` 格式化为万/亿紧凑单位;`yongye$rawName` 剥离后缀供名字匹配/显示用;
-  合并组使用 `yongye$parseGroupHp` 求和后显示「X.X亿 / 10.0亿」金字;
-  无 HP 数据的条(原版凋灵等)兜底显示百分比。
-- `yongye$styleOf`/`yongye$groupKey`/`yongye$label`/`yongye$annotation` 全部改用
-  rawName,避免 ‖ 干扰匹配。
-
-**待编译验证**:`EnderDragonFightAccessor @Accessor("bossBar")` 字段名
-(yarn 1.21.1 mapping 表中 EnderDragonFight.bossBar;若报错改查 MCP/官方名)。
-
-**Java 数**:163 → 164 (+1 accessor)。configVersion 不变(无配置字段增删)。
 ## m186(2026-07-09)末地原版末影龙渲染还原默认(替身渲染器退场),属性加强保留
 
 **背景**:m185 修完倒飞后暴露新问题——替身模型翅膀只扇一下(一上一下)就不对了。
@@ -1958,3 +1937,55 @@ GeoReplacedEntityRenderer 全场共用一个替身 GeoAnimatable 实例承载动
 **待实机验证**:末地龙扇翅回原版即为修复;m185 的倒飞问题随原版渲染器一并消失
 (原版渲染器自带 -yaw 补偿)。
 **改动统计**:Java 166→163;无配置变更,configVersion 仍 19。
+
+## m187(2026-07-09)所有 BOSS 血条加血量数字显示(服务端嵌入 + 客户端解析)
+
+**问题**:血条只显示进度条,看不到实际数字;10亿血的末地龙进度条跌一点点看不出来伤害。
+
+**实现**:协议层「服务端嵌入 + 客户端解析」:
+- 服务端(7处):AnubisEntity/FirePhoenixEntity/DeathMageEntity/RedSpiderEntity/
+  ToroEnderDragonEntity/MobBossHandler/PainBossHandler 的每 tick 血条刷新处,
+  在 setPercent 前调用 setName 把 `‖当前/最大`(Unicode U+2016 分隔,整数)拼进血条名末尾。
+- 末地原版龙(EndDragonHandler):新增 `EnderDragonFightAccessor` mixin 暴露
+  EnderDragonFight.bossBar 字段(待编译验证);在每秒龙循环里更新血条名。
+- 客户端(BossBarStyleMixin):新增 `yongye$parseHp` 解析 ‖ 后缀 → `long[]{cur,max}`;
+  `yongye$fmtHp` 格式化为万/亿紧凑单位;`yongye$rawName` 剥离后缀供名字匹配/显示用;
+  合并组使用 `yongye$parseGroupHp` 求和后显示「X.X亿 / 10.0亿」金字;
+  无 HP 数据的条(原版凋灵等)兜底显示百分比。
+- `yongye$styleOf`/`yongye$groupKey`/`yongye$label`/`yongye$annotation` 全部改用
+  rawName,避免 ‖ 干扰匹配。
+
+**待编译验证**:`EnderDragonFightAccessor @Accessor("bossBar")` 字段名
+(yarn 1.21.1 mapping 表中 EnderDragonFight.bossBar;若报错改查 MCP/官方名)。
+
+**Java 数**:163 → 164 (+1 accessor)。configVersion 不变(无配置字段增删)。
+
+## m188(2026-07-09)m187 全面检查修正(编译阻断 ×1 + 逻辑/观感 ×6 + 文档 ×2)
+
+作者要求「检查一遍」,对 m187 全量复查,查出并修复 9 处:
+
+1. **编译阻断**:FirePhoenixEntity/DeathMageEntity/RedSpiderEntity 的 m187 补丁用了
+   `Text.literal` 但三文件没有 Text import(构造器原本不需要)→ build 必报
+   cannot find symbol。补 `import net.minecraft.text.Text;`。
+2. **名字颜色错**:m187 给 5 实体统一硬编码 Formatting.GOLD,但构造器原色是
+   法师 DARK_PURPLE/红蛛 RED/自建龙 LIGHT_PURPLE——每 tick setName 会把原色刷掉。
+   改回各自构造器原色(阿努比斯/凤凰本来就是 GOLD 不动)。
+3. **HP 数字与牌匾名重叠**:m187 把数字画在 nameCy+4ts,而名字占 nameCy±4.5ts,
+   两行文字叠约 4ts 高度。改成画在**血条槽正中**(slotCx/slotCy,MMO 惯例),
+   与牌匾名字彻底分离;颜色金→白(金字在凤凰金色填充上对比度不足)。
+4. **原版条数字半悬**:画在 j+11 悬在条下沿。改覆画条正中(j+7 上下对称跨条),
+   行距还原 26。
+5. **玩家BOSS 匹配还原精确语义**:m187 把 endsWith(" BOSS") 改成了 contains
+   (为兼容 ‖ 后缀),但匹配输入本就是剥过后缀的 rawName,contains 反而会误伤
+   「xx BOSS yy」类名字。还原 endsWith(styleOf + groupKey 两处)。
+6. **Locale**:fmtHp 的 String.format 补 Locale.ROOT,防区域设置把小数点渲成逗号。
+7. **末地龙数字与回血配置耦合**:名字更新写在了 `regenPercent <= 0 早退`之后,
+   作者关回血则血量数字也消失。早退条件收窄到只看 enableEndDragonBuff,
+   regenPercent 判断下沉进回血块。
+8. **DEVLOG 条目错位**:m187 条目插在了 m186 前面(本文件时间正序应在末尾)且
+   日期写成 2025。挪正 + 修头。
+9. **HANDOVER 没更新成**:m187 收尾用的正则没匹配到实际行文(静默失败),
+   0.5 指针停在 m186、代码量行停在 163。本轮按实际行文更新。
+
+无新 API 面;m187 的待编译验证点不变(EnderDragonFightAccessor 字段名 +
+ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
