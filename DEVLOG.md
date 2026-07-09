@@ -1854,3 +1854,38 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
   isDead=false 应跳过该分支,需实测复活是否流畅)。
 - 新增 EndDragonHandler + 改 NightfallHordeHandler/MobEnhancementHandler(+applyEndHordeBuff)/
   ModAttachments(+2)/YongyeConfig(+9 字段)/Yongye(注册)**configVersion 18→19**。
+
+
+## m184(2026-07-09)BOSS 血条同类合并 ×N + 名字落位全量校准(重写 BossBarStyleMixin 布局层)
+
+**背景**:实机截图两问题——① 5 只 BOSS 同屏 5 根框铺满上半屏;② 名字没落在牌匾上
+(小档下尤其明显,字浮在框顶外)。用户点名「BOSS 太多就用一个血条,旁边显示有多少个
+什么 BOSS 怪」,并要求所有 BOSS 检查一遍。
+
+**同类合并**(核心新特性):
+- 画框条按组键合并:翻译键各自成组(阿努比斯/凤凰/龙/蜘蛛/法师,自建龙与原版龙战两个
+  键=两组不跨并),佩恩一组,「【BOSS】」前缀怪物BOSS版一组,「xx BOSS」玩家皮肤BOSS一组。
+- 组内 ≥2 只 → 一根条:血量取组内**平均**,牌匾名带「×N」;同名条本无法区分,合并零信息损失。
+- 混名组(怪物BOSS版/玩家BOSS)加**成分标注**:框右侧小字(0.8×档位字号,琥珀色
+  0xFFCC66)如「僵尸×3 骷髅×2」,>3 种缩略「等N种」;右侧超屏自动换左侧。
+- 尺寸档改按**合并后行数**定(≤2大/3~4中/≥5小)——合并让行数=类型数,实战基本停在大/中档。
+
+**名字落位修复**(根因两条):
+- ① 文字恒 9px 不随档缩:小档框仅 ~35px 高,9px 字盖到框顶装饰,视觉=浮在框外。
+  → 文字按档缩放 1.0/0.85/0.7(MatrixStack push/translate/scale,TitleScreenMixin 同款 proven)。
+- ② int 取整逐级累积 + 游标语义借用原版「名字行在条上方」:→ 布局改「框顶=游标」,
+  名字以浮点精确对齐牌匾中心 nameCy = fy0 + pcy*s,文字顶 = nameCy - 4.5*ts。
+- **8 框牌匾全量刻度尺校准**(逐张贴图加像素尺人工目检):凤凰 89→86、蜘蛛 52→58、
+  苦力怕 61→57、僵尸 112→97;阿努比斯 85/龙 105/法师 77 核对无误;佩恩仍无牌匾(-1),
+  名字悬浮框顶上方且行内预留名字高度(首条不再顶裁)。
+
+**布局语义简化**:原版条(任务计时/原版凋灵)排在全部画框组之后照原版画法(名字行+
+@Invoker 原样条),不再与画框穿插;半屏上限保留。record 私有字段同外部类直取合法
+(m181 同款已 build proven);嵌套 static Group 类只是数据壳(Style record 先例)。
+
+**静态自检**:括号三类全配平;yongye$* 符号定义↔引用一致;accessor 签名与调用逐字核对。
+**预览**:docs/hud/m184_bossbar_preview.png(左=投诉场景合并后 3 行中档,右=8 类同屏
+小档压力测试)已人工复核——零重叠、名字全落牌匾、佩恩悬浮、成分标注在框右。
+**待编译验证**:无新 API 面(MatrixStack 缩放/drawTextWithShadow/11参drawTexture 全 proven)。
+**待实机验证**:合并条的平均血量观感;成分标注在 GUI scale 4 窄屏下的左右换位。
+**改动**:BossBarStyleMixin 重写(156→261 行);无配置变更,configVersion 不变(仍 19)。
