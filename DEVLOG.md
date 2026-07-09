@@ -1720,3 +1720,37 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **已知取舍**:进度中途裁切右端直角(原版同);两 BOSS 同屏时原版堆叠步进 19px 小于框高,框体轻微交叠(稀有,违和再议)。
 - **预览**:docs/hud/m178_custom_bossbar_preview.png(70%/25% 血量 + 名字落位模拟,已肉眼复核)。
 - 新增 1 mixin + 4 贴图 + 改 yongye.mixins.json,无配置变更 **configVersion 不变(仍 18)**。
+
+## 里程碑 179 — BOSS 血条布局接管:修重叠 + 自动降档缩放 + 新增末影龙/苦力怕画框(重写 m178)
+- **需求**:实机截图两只 BOSS 同屏画框严重交叠、首条框顶被屏幕裁切;新给两张框图——图2 龙首魔能框=末影龙、
+  图3 苦力怕酸浊框;要求「自动设计高度、怪太多自动调整大小」。
+- **根因**:m178 只拦单条绘制,堆叠游标仍走原版 `+19px/条`,而画框高 57~62px → 必叠;
+  且首条框顶 `y-4-牌匾cy` 为负 → 出屏。
+- **修法 = 接管整个 render**:
+  - 新 `client/BossBarHudAccess`(@Accessor bossBars + @Invoker renderBossBar,照仓库既有
+    ClampedEntityAttributeAccessor / EntityFlagInvoker 范式);成员名已用 FabricMC 官方 yarn 1.21 javadoc
+    逐字核对(`private void renderBossBar(DrawContext,int,int,BossBar)` 两重载之一 + `bossBars` 字段);
+    **名字若不符会在本地 build 期被 mixin AP 直接报错,不会带病进游戏**。
+  - `BossBarStyleMixin` 重写:@Inject render HEAD cancellable(require=0,不挂整套回退原版不崩);
+    无画框条→提前 return 走原版零开销;有→cancel 自排:画框条按**真实框高+11px** 推进游标(修重叠),
+    首条 `j=max(j, 牌匾cy+6)` 防顶裁,原版条(法师紫条/任务/凋灵…)调 @Invoker 照原版画+原版 19px 步进,
+    名字文本全部由本 mixin 按原版位置画(正落空牌匾);上限从 1/3 屏放宽到 1/2 屏。
+  - **自动降档**:按当前画框条数选档——≤2 大(槽宽182=原版等长)/ 3~4 中(136)/ ≥5 小(100);
+    **三档贴图全部预缩放到 GUI 像素**(4 BOSS×3 档×2 张=24 PNG,替换 m178 旧 4 张),
+    渲染全程仍只用 proven 9 参 drawTexture 1:1。
+- **新画框**:龙框(art 2111×598,槽 x[470,1645] y[306,412],空牌匾 cy190)→ 匹配
+  `entity.yongye.toro_ender_dragon` **和** `entity.minecraft.ender_dragon`(原版末地龙战血条名=龙实体名);
+  苦力怕框(art 1720×390,槽 x[275,1405] y[150,240],cy140)→ 匹配**字面量**名
+  「【BOSS】」前缀 / 「 BOSS」后缀 = MobBossHandler 的怪物BOSS版血条(含玩家皮肤 BOSS);
+  识别顺序 = 翻译键优先(「末影龙 BOSS」的 lang 值以 " BOSS" 结尾但其键先命中龙框,不串)。
+  两新图牌匾本就是空的无需抹字;四图统一做 alpha<45 清边(抠图毛边噪点)。
+- **顺手补齐**:`ToroEnderDragonEntity` 一直没血条(m164 只接管了原版龙渲染)——
+  本轮加凋灵同款血条块(与凤凰/阿努比斯逐字一致,已编译通过),自建龙从此有龙框血条。
+- **测量法**:行像素总量定槽带 + 带内列密度最长连续段定槽宽(避开龙首红眼干扰),
+  叠加校验图肉眼复核后人工微调;坐标网格图归档 /home/claude(沙箱会清,量取结果已固化进常量)。
+- **待编译/启动验证**:BossBarHud/ClientBossBar/TranslatableTextContent 三个标准 yarn 类首用;
+  @Accessor("bossBars")/@Invoker("renderBossBar") 名字(build 期 AP 校验);render 注入点(require=0 兜底)。
+  drawTexture 9参/drawTextWithShadow/getScaledWindowWidth 全 proven/标准。
+- **预览**:docs/hud/m179_bossbar_preview.png(左=龙/苦力怕大档,右=三 BOSS 同屏中档堆叠模拟,已复核不重叠)。
+- 新增 1 accessor + 重写 1 mixin + 24 贴图(删旧4)+ 改 ToroEnderDragonEntity/mixins.json,
+  无配置变更 **configVersion 不变(仍 18)**。

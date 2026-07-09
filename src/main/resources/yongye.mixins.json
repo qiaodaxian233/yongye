@@ -12,6 +12,7 @@
     "client.HudCompactMixin",
     "client.TitleScreenMixin",
     "client.ParticleReducerMixin",
+    "client.BossBarHudAccess",
     "client.BossBarStyleMixin"
   ],
   "injectors": {

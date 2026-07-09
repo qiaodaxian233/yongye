@@ -10,9 +10,13 @@ import net.minecraft.entity.ai.pathing.BirdNavigation;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Formatting;
 import net.minecraft.world.World;
 
 // GeckoLib 4.x —— 与 m162/m164 已编过的实体同包(切勿改包路径)。
@@ -37,6 +41,36 @@ public class ToroEnderDragonEntity extends HostileEntity implements GeoEntity {
     private static final RawAnimation FLY_MOVE = RawAnimation.begin().thenLoop("fly_walk");
 
     private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
+
+    /** BOSS 血条(m179 补:此前自建龙一直没有血条;凋灵同款挂法,与凤凰/阿努比斯逐字一致,已编译通过)。 */
+    private final ServerBossBar bossBar = new ServerBossBar(
+            this.getType().getName().copy().formatted(Formatting.LIGHT_PURPLE),
+            BossBar.Color.PURPLE, BossBar.Style.PROGRESS);
+
+    /** 血条百分比刷新计数器。 */
+    private int barRefreshTicker = 0;
+
+    @Override
+    public void onStartedTrackingBy(ServerPlayerEntity player) {
+        super.onStartedTrackingBy(player);
+        this.bossBar.addPlayer(player);
+    }
+
+    @Override
+    public void onStoppedTrackingBy(ServerPlayerEntity player) {
+        super.onStoppedTrackingBy(player);
+        this.bossBar.removePlayer(player);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!this.getWorld().isClient && ++this.barRefreshTicker >= 10) {
+            this.barRefreshTicker = 0;
+            float max = this.getMaxHealth();
+            this.bossBar.setPercent(max > 0 ? Math.max(0f, Math.min(1f, this.getHealth() / max)) : 0f);
+        }
+    }
 
     public ToroEnderDragonEntity(EntityType<? extends HostileEntity> type, World world) {
         super(type, world);
