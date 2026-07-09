@@ -65,9 +65,9 @@ public abstract class BossBarStyleMixin {
     private static final Style ANUBIS  = yongye$style("anubis",  1055, 229, 163, 132, 728, 51, 85);
     private static final Style PHOENIX = yongye$style("phoenix", 1102, 241, 188,  97, 728, 86, 89);
     private static final Style DRAGON  = yongye$style("dragon",  1154, 333, 214, 173, 728, 56, 105);
-    private static final Style SPIDER  = yongye$style("spider",  1245, 568, 258, 194, 728, 54, 102);
+    private static final Style SPIDER  = yongye$style("spider",  1180, 239, 226, 100, 728, 29, 52);
     private static final Style MAGE    = yongye$style("mage",    1084, 222, 179, 102, 728, 54, 77);
-    private static final Style PAIN    = yongye$style("pain",    1131, 345, 217, 147, 728, 91, -1);
+    private static final Style PAIN    = yongye$style("pain",    1122, 219, 197,  88, 728, 67, -1);
     private static final Style CREEPER = yongye$style("creeper", 1112, 252, 192,  74, 728, 89, 61);
     private static final Style ZOMBIE  = yongye$style("zombie",  1166, 389, 215, 173, 728, 55, 112);
 
