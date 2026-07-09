@@ -1601,3 +1601,38 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
   AnubisEntity 新引用 import 全部与仓库已用代码逐条核对(`StatusEffectInstance`/`StatusEffects`←ClassSkillHandler、`EntityVelocityUpdateS2CPacket`←PursuitHandler、`ParticleTypes`←NightfallWeatherHandler、`ServerWorld`←NightfallHordeHandler、`Text`←WorldDoomManager、`Box`←NightfallHordeHandler,全 ✓);7 个新配置字段定义↔引用一致。
 - **待编译验证**:`bossBar.setColor(BossBar.Color.RED)`(仓库首次 setColor 调用;ServerBossBar 标准方法,把握高;其余全仓库 proven API)。
 - 改 2 文件:`AnubisEntity.java`(Stage2 全量重写)、`YongyeConfig.java`(+7 字段)**configVersion 15→16**。
+
+## 里程碑 175 — 阿努比斯改第 10 天起自然降临 + 属性大幅拔高 + 自定义 BOSS 豁免二次 BOSS 化/精英化(检查产出)
+- **需求**:用户「这个 BOSS 应该是十天后才会出现的。属性应该很高。你做检查吧」。
+- **① 自然降临(新 `AnubisSpawnHandler`)**:逐字照 m165 `WildDragonSpawnHandler` 模板——
+  `ServerTickEvents` 每 `anubisCheckIntervalTicks`(默 6000=5min)检定;
+  全服存活数 ≥`anubisMaxAlive`(默 1)跳过(复用 m155 proven 的 getWorlds()/iterateEntities());
+  收集 生存/冒险 + `ProgressionManager.gameDay ≥ anubisMinDay`(默 **10**)的玩家,
+  按 `anubisSpawnChance`(默 0.03)全服一次检定;中则在随机合法玩家附近 12~24 格
+  **地表**(`getTopY(Heightmap.Type.WORLD_SURFACE)`,PainBossHandler/尸潮同款 proven 写法,
+  与龙的高空生成不同——阿努比斯是地面 BOSS)刷出 + `setTarget(player)` 出生即锁定 +
+  全服金字粗体播报「黄沙翻涌——永恒的裁判者·阿努比斯降临人间」。`Yongye.java` 挂载注册。
+- **② 属性大幅拔高**(`createAnubisAttributes`):血 800→**8000**、攻 28→**80**(提为常量 `BASE_ATTACK`)、
+  新增 **护甲 20 + 韧性 10**(`GENERIC_ARMOR`/`GENERIC_ARMOR_TOUGHNESS`,TankShieldItem 等 proven),
+  击退抗 1.0/索敌 64 不变;狂怒后攻击同步改 `BASE_ATTACK×1.5`=120(原硬编码 40 作废)、速度 0.3→0.45 不变;
+  法术伤害默认 30→45。定位=明显高于凤凰(650/24)/死亡法师(500/20)一个档位的顶级世界 BOSS;
+  出生还会再吃 MobEnhancementHandler 进度缩放 + DynamicScaling 玩家攻击对位(只增不减),
+  后期不会被玩家百万攻秒杀——这两层缩放**有意保留**不豁免。
+- **③ 检查产出:自定义 BOSS 豁免**(m169 遗留豁免本轮落地):
+  检查发现 `MobBossHandler`(0.8% BOSS 化)与 `EliteHandler`(精英化)的 ENTITY_LOAD 门
+  只判 `instanceof Monster`——yongye 全部自定义实体(阿努比斯/凤凰/法师/龙/双蜘蛛/螃蟹/恶灵)
+  都会中招:BOSS 化=叠第二根红血条+改名【BOSS】与自带蓝金血条打架,精英化=光环/皮肤/词缀全不兼容。
+  修法=两处门各加一行 `Yongye.MOD_ID.equals(Registries.ENTITY_TYPE.getId(mob.getType()).getNamespace())` 则 return
+  (`Registries.ENTITY_TYPE` ModEntities proven、`getId().getNamespace()` LootMagnetHandler proven,全限定名免 import 变更)。
+  连带效果:阿努比斯召的恶灵也不会被精英化。
+- **静态自检**:6 文件括号全配平(AnubisSpawnHandler {}8·()77 / AnubisEntity {}30·()216 /
+  YongyeConfig {}33·()361 / Yongye {}6·()94 / MobBossHandler {}25·()181 / EliteHandler {}62·()518);
+  AnubisSpawnHandler 全部 import 逐条与 WildDragonSpawnHandler/NightfallHordeHandler 比对 ✓;
+  5 新配置字段定义↔引用一致;BASE_ATTACK 定义↔引用一致,旧硬编码值残留 0;
+  EliteHandler 豁免确认落在 ENTITY_LOAD 概率门(非 makeNearbyElite 测试命令处)。
+- **无新「待编译验证」点**:本轮全部 API(getTopY/Heightmap/iterateEntities/getWorlds/broadcast/
+  Registries.ENTITY_TYPE.getId/getNamespace/GENERIC_ARMOR/GENERIC_ARMOR_TOUGHNESS/setBaseValue)均仓库已编过用法。
+  (m174 的 `bossBar.setColor` 待验证项仍在,待作者本轮一起 build。)
+- **注意**:`/yongye anubis` 命令召唤不受天数门槛限制(测试用途保留);天数门槛只管自然降临。
+- 新增 1 文件(AnubisSpawnHandler)+ 改 5 文件(AnubisEntity/YongyeConfig(+5 字段)/Yongye/MobBossHandler/EliteHandler),
+  **configVersion 16→17**。

@@ -66,6 +66,9 @@ public final class MobBossHandler {
             YongyeConfig cfg = YongyeConfig.get();
             if (!cfg.enableMobBoss) return;
             if (!(entity instanceof MobEntity mob) || !(entity instanceof Monster)) return;
+            // m175:yongye 自定义 BOSS/召唤物(阿努比斯/凤凰/法师/龙/蜘蛛/恶灵…)自带血条与定位,
+            // 不再二次 BOSS 化(否则叠第二根红血条 + 被改名【BOSS】)。m169 遗留豁免,本轮落地。
+            if (Yongye.MOD_ID.equals(net.minecraft.registry.Registries.ENTITY_TYPE.getId(mob.getType()).getNamespace())) return;
             if (BossHandler.isBoss(mob)) return;                              // 原版 Boss 不碰
             if (mob.getAttachedOrElse(ModAttachments.IS_PAIN, false)) return;
             if (mob.getAttachedOrElse(ModAttachments.IS_HIM, false)) return;

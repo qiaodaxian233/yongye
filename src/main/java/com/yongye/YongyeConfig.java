@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 16;
+    public static final int CURRENT_CONFIG_VERSION = 17;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -612,13 +612,25 @@ public class YongyeConfig {
     /** 法术 AoE 半径(格)。 */
     public double anubisSpellRadius = 6.0;
     /** 法术 AoE 魔法伤害量。 */
-    public double anubisSpellDamage = 30.0;
+    public double anubisSpellDamage = 45.0;
     /** 恶灵召唤冷却(tick)。 */
     public int anubisSummonCooldownTicks = 600;
     /** 同场恶灵数量上限(超过不再召唤)。 */
     public int anubisMaxWraiths = 4;
     /** 触发恶灵召唤的 HP 阈值(比例;HP 低于该值才召唤)。 */
     public double anubisSummonHealthThreshold = 0.75;
+
+    // ============ m175:阿努比斯自然降临(第 N 天起地表刷出) ============
+    /** 阿努比斯自然降临总开关。 */
+    public boolean enableAnubisSpawn = true;
+    /** 第几天起才可能降临(游戏天数)。 */
+    public int anubisMinDay = 10;
+    /** 每次检定的降临概率。 */
+    public double anubisSpawnChance = 0.03;
+    /** 每隔多少 tick 检定一次(6000=5分钟)。 */
+    public int anubisCheckIntervalTicks = 6000;
+    /** 全服同时存活上限(稀有 BOSS 事件)。 */
+    public int anubisMaxAlive = 1;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

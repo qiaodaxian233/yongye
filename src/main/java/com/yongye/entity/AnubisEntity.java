@@ -96,11 +96,21 @@ public class AnubisEntity extends HostileEntity implements GeoEntity {
         super(type, world);
     }
 
-    /** 旗舰级 BOSS 属性(Stage2 狂怒后会临时提升速度/攻击)。 */
+    /** 狂怒后攻击基础值(= BASE_ATTACK × 1.5;与 createAnubisAttributes 保持同源)。 */
+    private static final double BASE_ATTACK = 80.0;
+
+    /**
+     * 旗舰级 BOSS 属性(m175 大幅拔高:第 10 天起自然降临的顶级世界 BOSS,
+     * 明显高于凤凰 650/24 和死亡法师 500/20 一个档位;
+     * 出生还会再吃 MobEnhancementHandler 进度缩放 + DynamicScaling 玩家对位,只增不减)。
+     * Stage2 狂怒后临时提升速度/攻击。
+     */
     public static DefaultAttributeContainer.Builder createAnubisAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 800.0)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 28.0)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 8000.0)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, BASE_ATTACK)
+                .add(EntityAttributes.GENERIC_ARMOR, 20.0)
+                .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 10.0)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0)
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 64.0);
@@ -183,11 +193,12 @@ public class AnubisEntity extends HostileEntity implements GeoEntity {
     private void triggerRage() {
         this.rageTriggered = true;
 
-        // 属性提升
+        // 属性提升(基于 m175 新基础值:速度 0.3→0.45,攻击 80→120;
+        // setBaseValue 只改基础值,MobEnhancement/DynamicScaling 挂的修饰符不受影响照常叠乘)
         var speedAttr = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speedAttr != null) speedAttr.setBaseValue(0.45);
         var atkAttr = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-        if (atkAttr != null) atkAttr.setBaseValue(40.0);
+        if (atkAttr != null) atkAttr.setBaseValue(BASE_ATTACK * 1.5);
 
         // 血条改红(待编译验证:仓库首次调用 setColor,标准 API)
         this.bossBar.setColor(BossBar.Color.RED);

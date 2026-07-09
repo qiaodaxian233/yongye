@@ -195,6 +195,8 @@ public final class EliteHandler {
             YongyeConfig cfg = YongyeConfig.get();
             if (!cfg.enableElite) return;
             if (!(entity instanceof MobEntity mob) || !(entity instanceof Monster)) return;
+            // m175:yongye 自定义 BOSS/召唤物不参与精英化(自带定位/血条,与精英光环·皮肤·词缀不兼容)。
+            if (Yongye.MOD_ID.equals(net.minecraft.registry.Registries.ENTITY_TYPE.getId(mob.getType()).getNamespace())) return;
             if (BossHandler.isBoss(mob)) return;
             if (mob.getAttachedOrElse(ModAttachments.IS_BOSS, false)) return; // 已是(怪物)BOSS版,不再精英化
             if (mob.getAttachedOrElse(ModAttachments.IS_PAIN, false)) return;
