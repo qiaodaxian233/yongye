@@ -1813,3 +1813,44 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **预览**:docs/hud/m181_bossbar_preview.png(GUI scale 3 模拟:新管线三条堆叠 vs
   m180 旧管线同倍率对比,清晰度差距一目了然;名字落位/佩恩悬浮已复核)。
 - 重写 1 mixin + 换 48 资源文件(删 42 旧),无 Java 文件增减、无配置变更 **configVersion 不变(仍 18)**。
+
+## 里程碑 182 — 长门/红蜘蛛画框换用户重制素材
+- **需求**:用户重画两套(图1/2=长门,图3/4=蜘蛛,同画布对齐分层),m181 管线原样重跑。
+- 新蜘蛛框:紧凑横幅(去掉旧版垂坠链饰,框高 568→239 贴图px,省一半屏占),顶部空牌匾
+  自动检测+目检 pcy=52(缩放前77);血条变细(sh 54→29)红紫双色电浆。
+- 新长门框:血条撑满整个中央槽(高 67)、轮回眼徽记居中框顶、底部零印;仍无名字牌匾
+  → 名字继续悬浮框顶(pcy=-1)。
+- 几何常量随管线输出更新(SPIDER/PAIN 两行),6 张贴图覆盖;三档/blur/绘制顺序全承 m181 不动。
+- **预览**:docs/hud/m182_bossbar_preview.png(scale3 模拟,名字落位/掉血槽底已复核)。
+- 改 1 mixin 常量 + 换 6 资源,无配置变更 configVersion 不变(仍 18,与 m183 合并升 19)。
+
+## 里程碑 183 — 末地末影龙终局化(10亿血/三命/脱战回血)+ 末地尸潮增强 + 尸潮排查答疑
+- **尸潮排查(用户问「一键永夜2尸潮没来,跟创造有关系吗」)**:有——NightfallHordeHandler
+  逐玩家刷怪循环开头就跳过 CREATIVE/SPECTATOR(设计如此:尸潮只围生存/冒险玩家蜂拥,
+  管理员开创造调试不会被怪海淹)。切生存/冒险即验,代码无 bug 本轮不改该逻辑。
+- **末地末影龙强化(新 EndDragonHandler,应需求)**:
+  - **10 亿血+高防**:ENTITY_LOAD 对末地维度 EnderDragonEntity 挂持久属性修饰(照
+    MobEnhancementHandler removeModifier+addPersistentModifier 幂等套路):生命补到
+    endDragonHealth(默 1.0E9 = m127 属性上限装满)、护甲 +40 / 韧性 +20(近原版减伤 80% 上限,
+    「防御你看着办」的落点);首次强化才回满(END_DRAGON_BUFFED 附件门,重载不重复回血);
+    原版龙战(水晶回血/龙息/传送门)全保留,m164 换的只是渲染器不冲突。
+  - **三条命**:ServerLivingEntityEvents.ALLOW_DEATH 拦死亡(生命归零、死亡处理前回调,
+    返 false 取消,回调内满血复活)——已用命数存龙实体持久附件 DRAGON_LIVES_USED,
+    < endDragonLives-1 时消耗一命+全服深紫播报剩余命数,最后一命走原版死亡演出;
+    水晶重召新龙命数从 0 起。
+  - **脱战回血**:每 20t 遍历末地 iterateEntities 找龙,血量对比检测掉血(阈值 0.5;
+    10 亿量级 float 步进 ~64 任何有效伤害必触发,m127 已论证),连续 endDragonRegenDelaySeconds
+    (默 30)秒没掉血且未满 → 每秒回 endDragonRegenPercent(默 1)% 最大生命(=每秒 1000 万,
+    DPS 低于此磨不死,逼持续输出);复活重置计时,map 按存活龙 retainAll 清残留。
+  - 只作用末地原版龙;自建 ToroEnderDragonEntity 不受影响。
+- **末地尸潮增强(应需求「尸潮末地会增强」)**:NightfallHordeHandler 两处——
+  末地目标怪量 ×endHordeTargetMultiplier(默 1.5,仍受 m153 全局预算硬闸);
+  末地刷出的怪经 MobEnhancementHandler 新公共方法 applyEndHordeBuff 额外血/攻
+  ×endHordeStatMultiplier(默 2.0,固定 ID 幂等叠在常规增强上,照 applyDoom 模板)。
+  尸潮本就无维度门(末地也刷,落点走 WORLD_SURFACE 主岛可用),本轮只加增强。
+- **待编译验证**:ALLOW_DEATH 仓库首用(同类 ALLOW_DAMAGE 已在 ClassSkillHandler 编过,
+  同一事件类的兄弟字段,把握高)+ server.getWorld(World.END)(标准方法首用);
+  **待实机验证**:龙死亡拦截语义(龙的死亡演出由自身 DYING 阶段接管,取消死亡+满血后
+  isDead=false 应跳过该分支,需实测复活是否流畅)。
+- 新增 EndDragonHandler + 改 NightfallHordeHandler/MobEnhancementHandler(+applyEndHordeBuff)/
+  ModAttachments(+2)/YongyeConfig(+9 字段)/Yongye(注册)**configVersion 18→19**。

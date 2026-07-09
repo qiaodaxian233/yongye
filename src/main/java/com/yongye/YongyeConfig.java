@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 18;
+    public static final int CURRENT_CONFIG_VERSION = 19;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -657,6 +657,24 @@ public class YongyeConfig {
     public int giantCrabMinDay = 6;
     public double giantCrabSpawnChance = 0.05;
     public int giantCrabMaxNearby = 1;
+
+    // ============ m183:末地末影龙强化 + 末地尸潮增强 ============
+    /** 末地末影龙强化总开关(10亿血/高防/三命/脱战回血;不影响自建龙)。 */
+    public boolean enableEndDragonBuff = true;
+    /** 末影龙最大生命(默认 10 亿 = m127 属性上限,正好装满)。 */
+    public double endDragonHealth = 1.0E9;
+    /** 末影龙护甲 / 护甲韧性(40+20 接近原版减伤公式 80% 上限)。 */
+    public double endDragonArmor = 40.0;
+    public double endDragonToughness = 20.0;
+    /** 末影龙总命数(3 = 死两次满血复活,第三次才真死;≤1 = 关闭多命)。 */
+    public int endDragonLives = 3;
+    /** 连续多少秒没掉血后开始回血。 */
+    public int endDragonRegenDelaySeconds = 30;
+    /** 脱战后每秒回复最大生命的百分比(1.0 = 每秒 1% = 每秒 1000 万)。 */
+    public double endDragonRegenPercent = 1.0;
+    /** 末地尸潮:目标怪量倍率 / 刷出怪的血攻额外倍率(都只在末地生效)。 */
+    public double endHordeTargetMultiplier = 1.5;
+    public double endHordeStatMultiplier = 2.0;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

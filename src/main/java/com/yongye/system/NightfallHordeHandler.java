@@ -15,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.World;
 
 /**
  * 永夜尸潮:永夜 ≥1 时,在每个玩家周围持续补刷敌对怪,维持高密度蜂拥。
@@ -55,7 +56,11 @@ public final class NightfallHordeHandler {
                 Box box = player.getBoundingBox().expand(cfg.nightfallHordeRadius);
                 int existing = world.getEntitiesByClass(MobEntity.class, box,
                         m -> m.isAlive() && m instanceof Monster).size();
-                int want = Math.min(cfg.nightfallHordeBatch, target - existing);
+                // m183 末地增强:尸潮在末地目标怪量 ×endHordeTargetMultiplier(仍受全局预算硬闸)
+                int localTarget = world.getRegistryKey() == World.END
+                        ? (int) Math.ceil(target * Math.max(1.0, cfg.endHordeTargetMultiplier))
+                        : target;
+                int want = Math.min(cfg.nightfallHordeBatch, localTarget - existing);
                 // 别一次补过全局预算余量,避免单 tick 把总量顶到上限后下一批继续涌
                 want = Math.min(want, cfg.globalMaxHostilesNearby - globalHostiles);
                 if (want <= 0) continue;
@@ -87,6 +92,8 @@ public final class NightfallHordeHandler {
         if (mob == null) return false;
         mob.refreshPositionAndAngles(x + 0.5, y, z + 0.5, r.nextFloat() * 360, 0);
         world.spawnEntity(mob);
+        // m183 末地增强:末地尸潮怪在常规增强(ENTITY_LOAD 已随 spawnEntity 生效)之上再叠一档血/攻
+        if (world.getRegistryKey() == World.END) MobEnhancementHandler.applyEndHordeBuff(mob);
         mob.setTarget(player); // 出生即锁定该玩家,直接蜂拥追杀
         return true;
     }

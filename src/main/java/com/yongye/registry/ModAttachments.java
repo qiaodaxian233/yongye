@@ -268,6 +268,18 @@ public final class ModAttachments {
                     .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "scroll_exchanges"));
 
+    /** 末地末影龙已烧掉的命数(m183 三条命;挂在龙实体上持久,水晶重召的新龙从 0 开始)。 */
+    public static final AttachmentType<Integer> DRAGON_LIVES_USED =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "dragon_lives_used"));
+
+    /** 末地末影龙已完成首次强化(m183;门住"重载再补满血",属性修饰本身幂等不用门)。 */
+    public static final AttachmentType<Boolean> END_DRAGON_BUFFED =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL).initializer(() -> false)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "end_dragon_buffed"));
+
     public static void init() {
         Yongye.LOGGER.info("[永夜] 数据附着已注册");
     }

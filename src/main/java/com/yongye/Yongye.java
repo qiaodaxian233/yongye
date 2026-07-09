@@ -14,6 +14,7 @@ import com.yongye.system.BossHandler;
 import com.yongye.system.BossAbilityHandler;
 import com.yongye.system.CatastropheCoreManager;
 import com.yongye.system.EliteHandler;
+import com.yongye.system.EndDragonHandler;
 import com.yongye.system.HardcoreSurvivalHandler;
 import com.yongye.system.HimJumpscareHandler;
 import com.yongye.system.HighHpCounterHandler;
@@ -116,6 +117,7 @@ public class Yongye implements ModInitializer {
         WeaponCombatHandler.register();
         WeaponSkillManager.init();
         HardcoreSurvivalHandler.register();
+        EndDragonHandler.register();  // m183 末地末影龙强化(10亿血/三命/脱战回血)
         ModSounds.init();
         HimJumpscareHandler.register();
         com.yongye.network.YongyeNet.register();

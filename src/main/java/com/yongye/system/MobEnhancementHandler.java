@@ -36,6 +36,8 @@ public final class MobEnhancementHandler {
     private static final Identifier ID_NIGHTFALL_ATK = Identifier.of(Yongye.MOD_ID, "mob_nightfall_atk");
     private static final Identifier ID_DOOM_HP = Identifier.of(Yongye.MOD_ID, "mob_doom_hp");
     private static final Identifier ID_DOOM_ATK = Identifier.of(Yongye.MOD_ID, "mob_doom_atk");
+    private static final Identifier ID_ENDHORDE_HP = Identifier.of(Yongye.MOD_ID, "mob_endhorde_hp");
+    private static final Identifier ID_ENDHORDE_ATK = Identifier.of(Yongye.MOD_ID, "mob_endhorde_atk");
 
     private static final List<RegistryEntry<net.minecraft.entity.effect.StatusEffect>> POTION_POOL = List.of(
             StatusEffects.SPEED,
@@ -142,6 +144,18 @@ public final class MobEnhancementHandler {
         if (m <= 1.0) return;
         addMultiplierTotal(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_DOOM_HP, m);
         addMultiplierTotal(mob, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_DOOM_ATK, m);
+        mob.setHealth(mob.getMaxHealth());
+    }
+
+    /**
+     * 末地尸潮增强(m183):尸潮刷在末地的怪额外血/攻 ×endHordeStatMultiplier,
+     * 叠在常规增强(ENTITY_LOAD)之上。固定 ID 幂等,照 applyDoom 同款。
+     */
+    public static void applyEndHordeBuff(MobEntity mob) {
+        double m = YongyeConfig.get().endHordeStatMultiplier;
+        if (m <= 1.0) return;
+        addMultiplierTotal(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_ENDHORDE_HP, m);
+        addMultiplierTotal(mob, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_ENDHORDE_ATK, m);
         mob.setHealth(mob.getMaxHealth());
     }
 
