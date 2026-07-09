@@ -107,6 +107,9 @@ public final class PainBossHandler {
                     return true;
                 }
                 float max = mob.getMaxHealth();
+                // m187:佩恩血量嵌入血条名
+                bar.setName(Text.literal(NAME).formatted(Formatting.DARK_RED)
+                        .append(Text.literal("\u2016" + (int)mob.getHealth() + "/" + (int)max)));
                 bar.setPercent(max > 0 ? Math.max(0f, Math.min(1f, mob.getHealth() / max)) : 0f);
                 for (ServerPlayerEntity sp : server.getPlayerManager().getPlayerList()) {
                     boolean near = sp.getWorld() == mob.getWorld() && sp.squaredDistanceTo(mob) < 64 * 64;

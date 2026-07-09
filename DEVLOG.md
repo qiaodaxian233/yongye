@@ -1914,6 +1914,27 @@ GeckoLib 会按 deathTime 施加 90° 侧翻(普通生物死亡倒地),与原版
 **改动**:仅 ToroDragonReplaceRenderer(+1 import +1 覆写);无配置变更,configVersion 仍 19。
 
 
+## m187 · 2025 · 所有血条加血量数字显示
+
+**问题**:血条只显示进度条,看不到实际数字;10亿血的末地龙进度条跌一点点看不出来伤害。
+
+**实现**:协议层「服务端嵌入 + 客户端解析」:
+- 服务端(7处):AnubisEntity/FirePhoenixEntity/DeathMageEntity/RedSpiderEntity/
+  ToroEnderDragonEntity/MobBossHandler/PainBossHandler 的每 tick 血条刷新处,
+  在 setPercent 前调用 setName 把 `‖当前/最大`(Unicode U+2016 分隔,整数)拼进血条名末尾。
+- 末地原版龙(EndDragonHandler):新增 `EnderDragonFightAccessor` mixin 暴露
+  EnderDragonFight.bossBar 字段(待编译验证);在每秒龙循环里更新血条名。
+- 客户端(BossBarStyleMixin):新增 `yongye$parseHp` 解析 ‖ 后缀 → `long[]{cur,max}`;
+  `yongye$fmtHp` 格式化为万/亿紧凑单位;`yongye$rawName` 剥离后缀供名字匹配/显示用;
+  合并组使用 `yongye$parseGroupHp` 求和后显示「X.X亿 / 10.0亿」金字;
+  无 HP 数据的条(原版凋灵等)兜底显示百分比。
+- `yongye$styleOf`/`yongye$groupKey`/`yongye$label`/`yongye$annotation` 全部改用
+  rawName,避免 ‖ 干扰匹配。
+
+**待编译验证**:`EnderDragonFightAccessor @Accessor("bossBar")` 字段名
+(yarn 1.21.1 mapping 表中 EnderDragonFight.bossBar;若报错改查 MCP/官方名)。
+
+**Java 数**:163 → 164 (+1 accessor)。configVersion 不变(无配置字段增删)。
 ## m186(2026-07-09)末地原版末影龙渲染还原默认(替身渲染器退场),属性加强保留
 
 **背景**:m185 修完倒飞后暴露新问题——替身模型翅膀只扇一下(一上一下)就不对了。

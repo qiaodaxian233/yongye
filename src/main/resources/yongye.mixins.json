@@ -6,7 +6,8 @@
   "mixins": [
     "ClampedEntityAttributeAccessor",
     "TankDefenseMixin",
-    "EntityFlagInvoker"
+    "EntityFlagInvoker",
+    "EnderDragonFightAccessor"
   ],
   "client": [
     "client.HudCompactMixin",

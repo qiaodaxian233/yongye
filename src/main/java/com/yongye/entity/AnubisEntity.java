@@ -152,6 +152,9 @@ public class AnubisEntity extends HostileEntity implements GeoEntity {
         if (++this.barRefreshTicker >= 10) {
             this.barRefreshTicker = 0;
             float max = this.getMaxHealth();
+            // m187:血量数字嵌入血条名(‖当前/最大)→ 客户端解析显示
+            this.bossBar.setName(this.getType().getName().copy().formatted(Formatting.GOLD)
+                    .append(Text.literal("\u2016" + (int)this.getHealth() + "/" + (int)max)));
             this.bossBar.setPercent(max > 0 ? Math.max(0f, Math.min(1f, this.getHealth() / max)) : 0f);
         }
 

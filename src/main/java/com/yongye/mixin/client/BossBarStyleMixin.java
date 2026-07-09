@@ -19,49 +19,37 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * BOSS 血条画框 + 自适应布局(m184,重写 m181 布局层,贴图管线不变):
+ * BOSS 血条画框 + 自适应布局 + 血量数字显示(m187):
  * <ul>
- *   <li><b>同类 BOSS 合并成一根血条</b>(修「BOSS 太多满屏框」):同一类型的多只 BOSS
- *       (同翻译键 / 同为怪物BOSS版 / 同为玩家皮肤BOSS)合并为一根画框条,血量取组内
- *       平均,牌匾名字带「×N」计数;怪物BOSS版 / 玩家BOSS 这类组内名字各异的,再在
- *       框旁边画一行小字成分标注(如「僵尸×3 骷髅×2」,超过 3 种缩略成「等N种」),
- *       放不下右侧自动换到左侧。同名的两根条本来就无法区分,合并零信息损失。</li>
- *   <li><b>名字随档缩放 + 浮点对中</b>(修「字没放到正确的位置」):m181 文字恒 9px、
- *       int 取整对齐——小档下框只剩 ~35px 高,9px 大字盖到框顶装饰上,视觉=浮在框外。
- *       现在文字按档位缩放(大 1.0 / 中 0.85 / 小 0.7,MatrixStack push/translate/
- *       scale 与 TitleScreenMixin 同款 proven 写法),并以浮点精确对齐牌匾中心。</li>
- *   <li><b>牌匾中心全量校准</b>(逐张贴图加刻度尺人工复核):凤凰 89→86、蜘蛛 52→58、
- *       苦力怕 61→57、僵尸 112→97;阿努比斯/龙/法师核对无误;佩恩仍无牌匾名字悬浮框顶。</li>
- *   <li><b>布局语义简化</b>:画框组按「框顶 = 游标」排版,名字画进框内牌匾,不再借用
- *       原版「名字行在条上方」的游标语义;原版条(任务计时/原版凋灵…)排在所有画框
- *       组之后照原版画法。三层绘制(槽底→血条→框压顶)/高清缩放 drawTexture/mcmeta
- *       双线性全承 m181。</li>
- *   <li><b>自动降档</b>:合并后的<b>行数</b> ≤2 大档(槽宽182)/ 3~4 中档(136)/ ≥5 小档(100)。
- *       合并让行数=类型数,实战绝大多数时候停留在大/中档。</li>
+ *   <li><b>血量数字</b>(m187 新增):服务端把「‖当前/最大」嵌进血条名后缀;客户端解析后
+ *       显示「X.X亿 / 10.0亿」金字,格式化为万/亿紧凑单位。不含 ‖ 的条(原版凋灵等)
+ *       兜底显示百分比。</li>
+ *   <li><b>同类 BOSS 合并成一根血条</b>(m184):组内血量求和,牌匾名带「×N」。</li>
+ *   <li><b>名字随档缩放 + 浮点对中</b>(m184):按档位缩放文字(大1.0/中0.85/小0.7)。</li>
+ *   <li><b>牌匾中心全量校准</b>(m184 m181):8 框逐张刻度尺人工复核。</li>
+ *   <li><b>自动降档</b>:合并后行数 ≤2 大档(槽宽182)/3~4 中档(136)/≥5 小档(100)。</li>
  * </ul>
  *
- * <p><b>安全</b>:render 注入 require=0——不挂则整套回退原版血条不崩;嵌套 record/类
- * 只是数据壳(同文件 Style record 自 m178 起 proven);无画框条时提前 return 零开销。
+ * <p><b>安全</b>:render 注入 require=0——不挂则整套回退原版血条不崩。
  */
 @Mixin(BossBarHud.class)
 public abstract class BossBarStyleMixin {
 
     /** 三档血条槽的屏幕(GUI 逻辑)宽度:大 = 原版血条等长。 */
     private static final int[] SLOT_W = {182, 136, 100};
-    /** 三档名字缩放:小档下 9px 原字比牌匾还高,必须随档缩。 */
+    /** 三档名字缩放。 */
     private static final float[] TEXT_SCALE = {1.0f, 0.85f, 0.7f};
     /** 画框行间距(屏幕像素)。 */
     private static final int ROW_GAP = 11;
 
     /**
-     * 画框几何,全部是<b>贴图像素</b>(生成脚本输出,与 PNG 一一对应):
+     * 画框几何,全部是<b>贴图像素</b>:
      * 框宽高 / 槽偏移 xy / 槽宽高 / 牌匾中心 y(-1 = 无牌匾,名字悬浮框顶上方)。
-     * 屏幕尺寸 = 贴图像素 × (SLOT_W[档位] / sw)。
      */
     private record Style(Identifier frame, Identifier back, Identifier fill,
                          int fw, int fh, int sx, int sy, int sw, int sh, int pcy) {}
 
-    /** 同类合并组:样式 + 组内成员(保持服务端下发顺序)。 */
+    /** 同类合并组。 */
     private static final class Group {
         final Style st;
         final List<ClientBossBar> members = new ArrayList<>();
@@ -93,7 +81,7 @@ public abstract class BossBarStyleMixin {
         var bars = acc.yongye$getBossBars();
         if (bars.isEmpty()) return;
 
-        // ① 分组:画框条按组键合并(保持下发顺序),原版条另存
+        // ① 分组:画框条按组键合并,原版条另存
         LinkedHashMap<String, Group> groups = new LinkedHashMap<>();
         List<ClientBossBar> vanilla = new ArrayList<>();
         for (ClientBossBar bar : bars.values()) {
@@ -101,10 +89,10 @@ public abstract class BossBarStyleMixin {
             if (st == null) { vanilla.add(bar); continue; }
             groups.computeIfAbsent(yongye$groupKey(bar), k -> new Group(st)).members.add(bar);
         }
-        if (groups.isEmpty()) return; // 一根画框条都没有 → 交回原版(零开销路径)
+        if (groups.isEmpty()) return;
         ci.cancel();
 
-        // ② 尺寸档按合并后的行数定:≤2 大 / 3~4 中 / ≥5 小
+        // ② 尺寸档按合并后的行数定
         int tier = groups.size() <= 2 ? 0 : (groups.size() <= 4 ? 1 : 2);
         float ts = TEXT_SCALE[tier];
 
@@ -118,28 +106,36 @@ public abstract class BossBarStyleMixin {
         for (Group g : groups.values()) {
             Style st = g.st;
             int n = g.members.size();
-            float s = SLOT_W[tier] / (float) st.sw;          // 贴图像素 → 屏幕像素
+            float s = SLOT_W[tier] / (float) st.sw;
             int fw = Math.round(st.fw * s), fh = Math.round(st.fh * s);
             int ox = Math.round(st.sx * s), oy = Math.round(st.sy * s);
             int slotW = SLOT_W[tier], slotH = Math.max(1, Math.round(st.sh * s));
 
-            int fy0;       // 框顶
-            float nameCy;  // 名字中心线(浮点,精确对牌匾)
+            int fy0;
+            float nameCy;
             if (st.pcy >= 0) {
                 fy0 = j;
                 nameCy = fy0 + st.pcy * s;
-            } else {       // 佩恩:无牌匾,名字悬浮框顶上方,先给名字留高
+            } else {
                 int nameH = Math.round(9 * ts) + 3;
                 fy0 = j + nameH;
                 nameCy = j + (9 * ts) / 2f;
             }
 
-            // 槽底(掉血露出熄灭槽)→ 血条按组平均百分比横向裁 → 框压顶
+            // 槽底 → 血条(合并求和) → 框压顶
             ctx.drawTexture(st.back, fx(cx, fw) + ox, fy0 + oy, slotW, slotH,
                     0f, 0f, st.sw, st.sh, st.sw, st.sh);
-            float pct = 0f;
-            for (ClientBossBar b : g.members) pct += b.getPercent();
-            pct = Math.max(0f, Math.min(1f, pct / n));
+
+            // m187:有 HP 数据时按实际比算填充,否则用百分比平均
+            long[] groupHp = yongye$parseGroupHp(g);
+            float pct;
+            if (groupHp != null && groupHp[1] > 0) {
+                pct = Math.max(0f, Math.min(1f, (float) groupHp[0] / groupHp[1]));
+            } else {
+                float sum = 0f;
+                for (ClientBossBar b : g.members) sum += b.getPercent();
+                pct = Math.max(0f, Math.min(1f, sum / n));
+            }
             int w = Math.round(slotW * pct);
             int rw = Math.round(st.sw * pct);
             if (w > 0 && rw > 0) {
@@ -149,41 +145,67 @@ public abstract class BossBarStyleMixin {
             ctx.drawTexture(st.frame, fx(cx, fw), fy0, fw, fh,
                     0f, 0f, st.fw, st.fh, st.fw, st.fh);
 
-            // 名字(带 ×N)缩放画在牌匾中心;成分标注画在框旁
+            // 名字(带 ×N,已剥离 ‖hp 后缀)
             Text label = yongye$label(g);
             yongye$drawScaled(ctx, tr, label, cx - tr.getWidth(label) * ts / 2f, nameCy - 4.5f * ts, ts, 0xFFFFFF);
+
+            // m187:血量数字——显示在名字下方,用金色小字
+            float hpY = nameCy + 4.0f * ts;       // 名字中心下方
+            float hpScale = 0.78f * ts;
+            if (groupHp != null && groupHp[1] > 0) {
+                String hpStr = yongye$fmtHp(groupHp[0]) + " / " + yongye$fmtHp(groupHp[1]);
+                Text hpText = Text.literal(hpStr);
+                yongye$drawScaled(ctx, tr, hpText,
+                        cx - tr.getWidth(hpText) * hpScale / 2f,
+                        hpY - 4.5f * hpScale,
+                        hpScale, 0xFFCC00);
+            } else {
+                // 兜底:显示百分比
+                String pctStr = Math.round(pct * 100) + "%";
+                Text pctText = Text.literal(pctStr);
+                yongye$drawScaled(ctx, tr, pctText,
+                        cx - tr.getWidth(pctText) * hpScale / 2f,
+                        hpY - 4.5f * hpScale,
+                        hpScale, 0xFFCC00);
+            }
+
+            // 成分标注(怪物BOSS版/玩家BOSS混名组)
             String ann = yongye$annotation(g);
             if (ann != null) {
                 Text at = Text.literal(ann);
                 float as = 0.8f * ts;
                 float aw = tr.getWidth(at) * as;
                 float ax = fx(cx, fw) + fw + 4;
-                if (ax + aw > screenW - 2) ax = fx(cx, fw) - 4 - aw; // 右边放不下换左边
+                if (ax + aw > screenW - 2) ax = fx(cx, fw) - 4 - aw;
                 if (ax < 2) ax = 2;
                 yongye$drawScaled(ctx, tr, at, ax, fy0 + oy + slotH / 2f - 4.5f * as, as, 0xFFCC66);
             }
 
-            j = fy0 + fh + ROW_GAP; // 按真实框高推进(防重叠)
-            if (j >= halfH) return; // 上限半屏
+            j = fy0 + fh + ROW_GAP;
+            if (j >= halfH) return;
         }
 
-        // ④ 原版条(任务计时/原版凋灵…)排在画框组之后,照原版画法
+        // ④ 原版条排在画框组之后
         for (ClientBossBar bar : vanilla) {
-            Text name = bar.getName();
+            Text name = yongye$cleanName(bar);
             int tw = tr.getWidth(name);
             ctx.drawTextWithShadow(tr, name, cx - tw / 2, j, 0xFFFFFF);
             acc.yongye$renderVanillaBar(ctx, cx - 91, j + 9, bar);
-            j += 26;
+            // 百分比(原版条没有 HP 数据)
+            long[] hp = yongye$parseHp(bar);
+            String sub = hp != null && hp[1] > 0
+                    ? yongye$fmtHp(hp[0]) + " / " + yongye$fmtHp(hp[1])
+                    : Math.round(bar.getPercent() * 100) + "%";
+            ctx.drawTextWithShadow(tr, Text.literal(sub), cx - tr.getWidth(sub) / 2, j + 11, 0xFFCC00);
+            j += 30;
             if (j >= halfH) return;
         }
     }
 
-    /** 框左边缘(框居中于屏幕)。 */
-    private static int fx(int cx, int fw) {
-        return cx - fw / 2;
-    }
+    /** 框左边缘。 */
+    private static int fx(int cx, int fw) { return cx - fw / 2; }
 
-    /** MatrixStack 缩放画字(TitleScreenMixin 同款 proven 写法),x/y 为屏幕像素、文字左上角。 */
+    /** MatrixStack 缩放画字。 */
     private static void yongye$drawScaled(DrawContext ctx, TextRenderer tr, Text text,
                                           float x, float y, float scale, int color) {
         ctx.getMatrices().push();
@@ -193,26 +215,108 @@ public abstract class BossBarStyleMixin {
         ctx.getMatrices().pop();
     }
 
-    /** 组的牌匾名:单只 = 原名;多只 = 「类型名 ×N」(混名组用统一类型名)。 */
+    // ===== HP 解析 =====
+
+    /** 从血条名的 ‖cur/max 后缀解析血量;解析失败返回 null。 */
+    private static long[] yongye$parseHp(ClientBossBar bar) {
+        String s = bar.getName().getString();
+        int idx = s.indexOf('\u2016'); // ‖
+        if (idx < 0) return null;
+        String[] parts = s.substring(idx + 1).split("/", 2);
+        if (parts.length < 2) return null;
+        try {
+            return new long[]{Long.parseLong(parts[0].trim()), Long.parseLong(parts[1].trim())};
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /** 合并组 HP 求和;任意成员缺失 HP 则返回 null。 */
+    private static long[] yongye$parseGroupHp(Group g) {
+        long sumCur = 0, sumMax = 0;
+        for (ClientBossBar b : g.members) {
+            long[] hp = yongye$parseHp(b);
+            if (hp == null) return null;
+            sumCur += hp[0];
+            sumMax += hp[1];
+        }
+        return new long[]{sumCur, sumMax};
+    }
+
+    /** 紧凑血量格式:≥1亿 显示 X.X亿 / ≥1万 显示 X.X万 / 其余原值。 */
+    private static String yongye$fmtHp(long n) {
+        if (n >= 100_000_000L) return String.format("%.1f亿", n / 1e8);
+        if (n >= 10_000L)      return String.format("%.1f万", n / 1e4);
+        return String.valueOf(n);
+    }
+
+    /** 从血条名的字符串中剥去 ‖hp 后缀,返回纯名字字符串。 */
+    private static String yongye$rawName(ClientBossBar bar) {
+        String s = bar.getName().getString();
+        int idx = s.indexOf('\u2016');
+        return idx >= 0 ? s.substring(0, idx) : s;
+    }
+
+    /** 返回剥去 ‖hp 后缀的干净 Text(用于显示)。 */
+    private static Text yongye$cleanName(ClientBossBar bar) {
+        String raw = yongye$rawName(bar);
+        return Text.literal(raw);
+    }
+
+    // ===== 样式识别 =====
+
+    /** 识别血条画框;先翻译键,再字面量前后缀(均基于 rawName,不含 ‖ 后缀)。 */
+    private static Style yongye$styleOf(ClientBossBar bar) {
+        Text name = bar.getName();
+        if (name == null) return null;
+        if (name.getContent() instanceof TranslatableTextContent t) {
+            String key = t.getKey();
+            if ("entity.yongye.anubis".equals(key))           return ANUBIS;
+            if ("entity.yongye.fire_phoenix".equals(key))     return PHOENIX;
+            if ("entity.yongye.red_spider".equals(key))       return SPIDER;
+            if ("entity.yongye.death_mage".equals(key))       return MAGE;
+            if ("entity.yongye.toro_ender_dragon".equals(key)) return DRAGON;
+            if ("entity.minecraft.ender_dragon".equals(key))  return DRAGON;
+            return null;
+        }
+        // 字面量:用 rawName 避免 ‖ 干扰
+        String s = yongye$rawName(bar);
+        if (s.contains("佩恩"))        return PAIN;
+        if (s.contains(" BOSS") && !s.contains("【BOSS】")) return ZOMBIE;
+        if (s.startsWith("【BOSS】"))   return CREEPER;
+        return null;
+    }
+
+    /** 合并组键。 */
+    private static String yongye$groupKey(ClientBossBar bar) {
+        Text name = bar.getName();
+        if (name.getContent() instanceof TranslatableTextContent t) return t.getKey();
+        String s = yongye$rawName(bar);
+        if (s.contains("佩恩"))        return "yongye:pain";
+        if (s.contains(" BOSS") && !s.contains("【BOSS】")) return "yongye:zombie_group";
+        return "yongye:creeper_group";
+    }
+
+    /** 组的牌匾名:单只 = 剥 hp 后的原名;多只 = 「类型名 ×N」。 */
     private static Text yongye$label(Group g) {
         int n = g.members.size();
-        Text first = g.members.get(0).getName();
-        if (n == 1) return first;
+        String firstName = yongye$rawName(g.members.get(0));
+        if (n == 1) return Text.literal(firstName);
         String base;
         if (g.st == CREEPER) base = "BOSS怪";
         else if (g.st == ZOMBIE) base = "玩家BOSS";
-        else base = first.getString();
+        else base = firstName;
         return Text.literal(base + " ×" + n);
     }
 
-    /** 混名组(怪物BOSS版/玩家BOSS)合并后的成分标注:「僵尸×3 骷髅×2」,>3 种缩略。 */
+    /** 混名组成分标注;使用 rawName 避免 ‖ 混入。 */
     private static String yongye$annotation(Group g) {
         if (g.members.size() < 2 || (g.st != CREEPER && g.st != ZOMBIE)) return null;
         LinkedHashMap<String, Integer> comp = new LinkedHashMap<>();
         for (ClientBossBar b : g.members) {
-            String nm = b.getName().getString();
+            String nm = yongye$rawName(b);
             if (nm.startsWith("【BOSS】")) nm = nm.substring("【BOSS】".length());
-            if (nm.endsWith(" BOSS")) nm = nm.substring(0, nm.length() - " BOSS".length());
+            if (nm.contains(" BOSS"))    nm = nm.replace(" BOSS", "");
             nm = nm.trim();
             if (nm.isEmpty()) nm = "?";
             comp.merge(nm, 1, Integer::sum);
@@ -226,36 +330,5 @@ public abstract class BossBarStyleMixin {
             shown++;
         }
         return sb.toString();
-    }
-
-    /** 识别血条画框:先翻译键(语言无关),再字面量前后缀兜底。 */
-    private static Style yongye$styleOf(ClientBossBar bar) {
-        Text name = bar.getName();
-        if (name == null) return null;
-        if (name.getContent() instanceof TranslatableTextContent t) {
-            String key = t.getKey();
-            if ("entity.yongye.anubis".equals(key)) return ANUBIS;
-            if ("entity.yongye.fire_phoenix".equals(key)) return PHOENIX;
-            if ("entity.yongye.red_spider".equals(key)) return SPIDER;
-            if ("entity.yongye.death_mage".equals(key)) return MAGE;
-            if ("entity.yongye.toro_ender_dragon".equals(key)) return DRAGON;
-            if ("entity.minecraft.ender_dragon".equals(key)) return DRAGON; // 原版末地龙战
-            return null;
-        }
-        String s = name.getString();
-        if (s.contains("佩恩")) return PAIN;              // 长门·佩恩(字面量名「佩恩·天道」)
-        if (s.endsWith(" BOSS")) return ZOMBIE;           // 玩家皮肤僵尸BOSS(m145,本体是僵尸)
-        if (s.startsWith("【BOSS】")) return CREEPER;     // 其余怪物BOSS版(字面量名)
-        return null;
-    }
-
-    /** 合并组键:同键的条并成一根。翻译键各自成组;佩恩/玩家BOSS/怪物BOSS版各按类别成组。 */
-    private static String yongye$groupKey(ClientBossBar bar) {
-        Text name = bar.getName();
-        if (name.getContent() instanceof TranslatableTextContent t) return t.getKey();
-        String s = name.getString();
-        if (s.contains("佩恩")) return "yongye:pain";
-        if (s.endsWith(" BOSS")) return "yongye:zombie_group";
-        return "yongye:creeper_group";
     }
 }

@@ -11,7 +11,10 @@ import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
+import net.minecraft.entity.boss.dragon.EnderDragonFight;
+import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.server.world.ServerWorld;
+import com.yongye.mixin.EnderDragonFightAccessor;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -121,6 +124,15 @@ public final class EndDragonHandler {
                 }
                 QUIET_SECONDS.put(id, quiet);
                 LAST_HEALTH.put(id, cur);
+                // m187:末地龙血量嵌入血条名(‖当前/最大),每秒刷新
+                EnderDragonFight fight = end.getEnderDragonFight();
+                if (fight != null) {
+                    ServerBossBar dragonBar = ((EnderDragonFightAccessor) fight).yongye$getBossBar();
+                    if (dragonBar != null) {
+                        dragonBar.setName(dragon.getDisplayName().copy()
+                                .append(Text.literal("\u2016" + (int)cur + "/" + (int)dragon.getMaxHealth())));
+                    }
+                }
             }
             // 清掉已死亡/消失的龙(避免旧条目残留)
             QUIET_SECONDS.keySet().retainAll(seen);
