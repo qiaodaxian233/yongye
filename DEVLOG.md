@@ -1574,3 +1574,30 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **`AnubisWraithEntity`**:召唤物级(血 40 / 攻 8 / 速 0.35 / 索敌 24,无血条);dims 1.0×1.9(视觉高度);`/yongye wraith` + debug 按钮 + shadowRadius 0.6 + lang 双语。
 - **遗留**:attack1/2 按 AI 触发、出生动画当召唤演出、由阿努比斯 Stage2 召唤接线、要不要改成会飘(现走地面)。
 - 新增 3 Java + 3 资源 + 改同 m172 四文件与双语 lang,**configVersion 不变(仍 15)**。
+
+## 里程碑 174 — 阿努比斯 Stage2:狂怒系统 + 法术 AoE + 恶灵召唤 + 更丰富动画
+- **需求**:用户说「继续」,依 m173 遗留说明推进阿努比斯 Stage2(玩法阶段化 + 召唤机制)。
+- **动画状态机(纯同步数据推断,无 DataTracker)**:
+  满血且静止 → `sitting`(刚生成雕像感);
+  死亡 → `death`(thenPlayAndHold 定格);
+  移动时恒为 `run`(大型 BOSS 奔跑压迫感);
+  狂怒(<50% HP)且静止 → `rage` 循环;
+  其余 → `idle`。
+  Stage3 可用 DataTracker byte 加入 melee1-3/spell1-2 精确动画同步。
+- **狂怒触发(`triggerRage`,一次性)**:
+  HP 首降到 `anubisRageHealthThreshold`(默 0.5)阈值以下触发:
+  ① 属性提升:速度 0.3→0.45、攻击 28→40;
+  ② 血条改红(`bossBar.setColor(BossBar.Color.RED)`,**待编译验证**:仓库首次 setColor 调用,标准 API);
+  ③ 14 格内玩家 AoE 击退+失明(60t)+EntityVelocityUpdateS2CPacket 同步(照 m152);
+  ④ 大烟雾+火焰粒子效果;
+  ⑤ 全服红字粗体播报「阿努比斯陷入狂怒」。
+- **法术 AoE(`castSpell`)**:每 `anubisSpellCooldownTicks`(默 300t=15s)在有目标时施放;
+  魔法 AoE(半径 `anubisSpellRadius`=6、伤害 `anubisSpellDamage`=30)+ 爆炸/暴击粒子;
+  狂怒后冷却减半(最短 60t);spell1/spell2 按 `spellIndex` 轮换(动画 Stage3 再接)。
+- **恶灵召唤(`summonWraiths`)**:每 `anubisSummonCooldownTicks`(默 600t=30s)在 HP<`anubisSummonHealthThreshold`(0.75)时召唤;
+  先统计 32 格内已有恶灵,补足至 `anubisMaxWraiths`(4)上限;
+  环绕 3.5 格半径等间隔出生 + 继承攻击目标 + PORTAL 粒子。
+- **静态自检**:AnubisEntity {}30/30·()212/212 配平;YongyeConfig {}33/33·()配平;
+  AnubisEntity 新引用 import 全部与仓库已用代码逐条核对(`StatusEffectInstance`/`StatusEffects`←ClassSkillHandler、`EntityVelocityUpdateS2CPacket`←PursuitHandler、`ParticleTypes`←NightfallWeatherHandler、`ServerWorld`←NightfallHordeHandler、`Text`←WorldDoomManager、`Box`←NightfallHordeHandler,全 ✓);7 个新配置字段定义↔引用一致。
+- **待编译验证**:`bossBar.setColor(BossBar.Color.RED)`(仓库首次 setColor 调用;ServerBossBar 标准方法,把握高;其余全仓库 proven API)。
+- 改 2 文件:`AnubisEntity.java`(Stage2 全量重写)、`YongyeConfig.java`(+7 字段)**configVersion 15→16**。
