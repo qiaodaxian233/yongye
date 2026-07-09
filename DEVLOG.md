@@ -1665,3 +1665,13 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
   能力叠加,需与作者对齐再做);凤凰浴火重生/法师施法/螃蟹钳击等技能动画按 AI 触发(各 Stage2);
   蜘蛛系是否也进夜晚尸潮池。
 - 新增 1 文件(CustomMobSpawnHandler)+ 改 YongyeConfig(+17 字段)/Yongye(注册),**configVersion 17→18**。
+
+### 编译验证记录(m174~m176 全量,含 m169/m170 残留项)
+- 作者本地 `./gradlew build` **BUILD SUCCESSFUL** ✅(Fabric Loom 1.7.4,1m37s),仅剩「使用或覆盖了已过时的 API」警告(= m163 已知的 GeoModel deprecated 警告,不阻断、无需处理)。
+- 至此以下「待编译验证」点**全部清零**:
+  m169(onStartedTrackingBy / onStoppedTrackingBy / tick() 覆盖 / makeFireImmune)、
+  m170(WanderAroundFarGoal)、m172/m173(与 m169/m170 共享点)、
+  m174(bossBar.setColor);m175/m176 本就零新 API 面。
+- **余下均为实机验证项**:阿努比斯狂怒(血条变红/提速/AoE 击退)/法术粒子/恶灵召唤/坐姿动画、
+  阿努比斯与五只新怪的自然刷怪(天数门槛/播报/凤凰高空出生)、毒蛛/螃蟹的精英级掉落与经验、
+  自定义怪不再被二次 BOSS 化/精英化。
