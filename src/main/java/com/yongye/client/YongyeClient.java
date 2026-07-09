@@ -55,11 +55,11 @@ public class YongyeClient implements ClientModInitializer {
                 com.yongye.registry.ModEntities.TORO_ENDER_DRAGON,
                 com.yongye.client.render.ToroEnderDragonRenderer::new);
 
-        // 【m164】用 GeckoLib 接管原版末影龙的渲染:只换外观模型,飞行/血条/龙息/水晶/阶段/死亡全保留。
-        // 这里覆盖原版 ENDER_DRAGON 的渲染器即可,不碰实体本身。
-        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
-                net.minecraft.entity.EntityType.ENDER_DRAGON,
-                com.yongye.client.render.ToroDragonReplaceRenderer::new);
+        // 【m186】原版末影龙渲染还原默认:m164 曾用 GeckoLib 替身接管原版龙外观,但
+        // GeoReplacedEntityRenderer 的替身动画在原版龙身上表现异常(翅膀只扇一下就停,
+        // m185 修完朝向后暴露)。按作者决定:末地原版龙恢复原版模型/动画,m183 的属性
+        // 加强(10亿血/三命/脱战回血,全在服务端 EndDragonHandler)不受影响照常生效;
+        // 自建 BOSS 龙(TORO_ENDER_DRAGON)继续用上面的 GeckoLib 渲染器。
 
         // 【m167】精英·毒液蜘蛛 / BOSS·红蜘蛛 的 GeckoLib 渲染器
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(

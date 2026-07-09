@@ -1912,3 +1912,28 @@ yarn 开发环境重映射为 MatrixStack 是 loom 标准行为但本仓库无�
 GeckoLib 会按 deathTime 施加 90° 侧翻(普通生物死亡倒地),与原版龙升天演出叠加的观感
 ——若违和下轮覆写 getDeathMaxRotation 归零。
 **改动**:仅 ToroDragonReplaceRenderer(+1 import +1 覆写);无配置变更,configVersion 仍 19。
+
+
+## m186(2026-07-09)末地原版末影龙渲染还原默认(替身渲染器退场),属性加强保留
+
+**背景**:m185 修完倒飞后暴露新问题——替身模型翅膀只扇一下(一上一下)就不对了。
+GeoReplacedEntityRenderer 全场共用一个替身 GeoAnimatable 实例承载动画状态,替身自身
+不 tick、动画进度与原版龙的实体状态对不上,扇翅循环表现异常;继续在替身架构上修
+性价比低。作者拍板:**末地原版龙恢复原版模型/动画,自建 BOSS 龙保留 GeckoLib 外观,
+末地龙只保留属性加强**。
+
+**改动**(全是减法):
+- YongyeClient 删原版 ENDER_DRAGON 的渲染器覆盖注册(m164 引入)——Fabric 不注册即回
+  原版 EnderDragonEntityRenderer,模型/扇翅/龙息/死亡升天演出全回原版。
+- 删 3 个 Java:ToroDragonReplaceRenderer(含 m185 的 yaw+180 补丁,随架构一起退场)、
+  ToroDragonReplacementModel、ToroDragonReplacement(替身 GeoAnimatable)。
+- **不动**:EndDragonHandler(m183 的 10亿血/护甲/三命/脱战回血,纯服务端属性挂载,
+  与渲染无关照常生效);自建龙 ToroEnderDragonEntity 三件套;血条画框 mixin 里
+  entity.minecraft.ender_dragon → 龙框的映射(HUD 样式,与实体模型无关,原版龙战
+  照旧套华丽龙框)。toro_ender_dragon 的 geo/贴图/动画资源仍被自建龙使用,保留。
+
+**静态自检**:YongyeClient 括号配平;全仓库 ToroDragonReplace 零残留引用。
+**待编译验证**:无(纯删除+注释,零新 API)。
+**待实机验证**:末地龙扇翅回原版即为修复;m185 的倒飞问题随原版渲染器一并消失
+(原版渲染器自带 -yaw 补偿)。
+**改动统计**:Java 166→163;无配置变更,configVersion 仍 19。
