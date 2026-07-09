@@ -17,6 +17,8 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.HuskEntity;
@@ -61,6 +63,8 @@ public final class PainBossHandler {
     }
 
     private static final Map<UUID, PainState> STATES = new HashMap<>();
+    /** m180:佩恩 BOSS 血条(此前长门一直没血条;客户端画框按「佩恩·天道」字面量名匹配)。 */
+    private static final Map<MobEntity, ServerBossBar> PAIN_BARS = new HashMap<>();
     private static int tick = 0;
 
     /** 当前存活的长门(全局唯一);null 表示不存在。 */
@@ -84,9 +88,32 @@ public final class PainBossHandler {
                 Box box = p.getBoundingBox().expand(48);
                 for (MobEntity m : world.getEntitiesByClass(MobEntity.class, box,
                         e -> e.isAlive() && e.getAttachedOrElse(ModAttachments.IS_PAIN, false))) {
-                    if (seen.add(m)) tickPain(world, m, now);
+                    if (seen.add(m)) {
+                        tickPain(world, m, now);
+                        // m180:确保血条已挂(名字=「佩恩·天道」字面量,客户端专属画框按其匹配)
+                        PAIN_BARS.computeIfAbsent(m, k -> new ServerBossBar(
+                                Text.literal(NAME).formatted(Formatting.DARK_RED),
+                                BossBar.Color.RED, BossBar.Style.PROGRESS));
+                    }
                 }
             }
+
+            // m180:血条刷新 + 观众同步 + 死亡/卸载清理(照 MobBossHandler 同款,随 10 tick 节流)
+            PAIN_BARS.entrySet().removeIf(en -> {
+                MobEntity mob = en.getKey();
+                ServerBossBar bar = en.getValue();
+                if (mob == null || !mob.isAlive() || mob.isRemoved()) {
+                    bar.clearPlayers();
+                    return true;
+                }
+                float max = mob.getMaxHealth();
+                bar.setPercent(max > 0 ? Math.max(0f, Math.min(1f, mob.getHealth() / max)) : 0f);
+                for (ServerPlayerEntity sp : server.getPlayerManager().getPlayerList()) {
+                    boolean near = sp.getWorld() == mob.getWorld() && sp.squaredDistanceTo(mob) < 64 * 64;
+                    if (near) bar.addPlayer(sp); else bar.removePlayer(sp);
+                }
+                return false;
+            });
         });
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {

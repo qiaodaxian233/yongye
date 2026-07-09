@@ -1754,3 +1754,29 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 - **预览**:docs/hud/m179_bossbar_preview.png(左=龙/苦力怕大档,右=三 BOSS 同屏中档堆叠模拟,已复核不重叠)。
 - 新增 1 accessor + 重写 1 mixin + 24 贴图(删旧4)+ 改 ToroEnderDragonEntity/mixins.json,
   无配置变更 **configVersion 不变(仍 18)**。
+
+## 里程碑 180 — 再接三张专属血条画框:红蜘蛛 / 死亡法师 / 长门·佩恩(顺手补两条缺失血条)
+- **需求**:用户再传三张 GPT 画框——蜘蛛首魔能框(→BOSS·红蜘蛛)、紫焰死灵框(→BOSS·死亡法师)、
+  佩恩·天道框(→长门 BOSS,Rinnegan+晓袍元素);归属按画面意象判定并在回复中言明,不符可换绑。
+- **顺手补两条缺失血条(检查产出)**:
+  - **红蜘蛛**:m167 起就是 BOSS 却一直没血条(当时遗留)——补凋灵同款血条块
+    (与凤凰/阿努比斯/龙逐字一致,已编译通过),红条,名字键 entity.yongye.red_spider。
+  - **长门·佩恩**:同样没血条——PainBossHandler 加 `PAIN_BARS`(HashMap)+ 10 tick 节流内
+    `computeIfAbsent` 附挂(名=`Text.literal("佩恩·天道")`)+ `entrySet().removeIf` 一遍完成
+    刷新/64 格观众同步/死亡·卸载清理(照 MobBossHandler 同款,clearPlayers/setPercent/
+    addPlayer/removePlayer 全 proven);重启后认领已加载长门时血条随 tick 自动重挂。
+- **画框接入**(沿用 m179 全套管线):三图各拆 frame(槽内=亮度×0.25 熄灭底槽)+ fill,
+  alpha<45 清抠图毛边,三档预缩放(槽宽 182/136/100)= 18 张新 PNG;
+  测量=蜘蛛/法师牌匾本就是空的无需抹字,槽位网格图人工量取 + 左右对称校验
+  (蜘蛛 art1672×763 槽 x[240,1432] y[257,334] 牌匾cy120;法师 art1729×353 槽 x[300,1430] y[178,268] cy128;
+  佩恩 art1706×520 槽 x[395,1390] y[235,358])。
+- **佩恩框特殊处理**:图上没有名字牌匾(顶部中央是轮回眼徽记)→ 几何表 pcy=-4,
+  名字**悬浮在框顶上方**(天空底+阴影,可读;预览已复核)。
+- **匹配规则新增**:翻译键 red_spider / death_mage(排在键判定区);
+  字面量 `contains("佩恩")` → 佩恩框,**排在苦力怕的【BOSS】/『 BOSS』规则之前**(佩恩名不含二者本无冲突,防御性排序)。
+- **静态自检**:3 改动 Java 括号全配平(mixin {}42·()98 / RedSpider {}11·()47 / PainBossHandler {}54·()451);
+  18 张贴图尺寸与几何常量逐一比对一致;血条块与凤凰逐字 proven;佩恩补丁 4 个 bar API 全在
+  MobBossHandler proven;lang 两键在。贴图文件名 deathmage2(法师实体资源已占用 death_mage 前缀,避免混淆)。
+- **无新 API 面**:本轮零首用类(m179 那批 BossBarHud/TranslatableTextContent/accessor 名待作者 build 一并验)。
+- **预览**:docs/hud/m180_bossbar_preview.png(三新框大档 + 名字落位,已复核)。
+- 新增 18 贴图 + 改 BossBarStyleMixin/RedSpiderEntity/PainBossHandler,无配置变更 **configVersion 不变(仍 18)**。

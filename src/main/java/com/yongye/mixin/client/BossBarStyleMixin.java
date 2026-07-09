@@ -63,6 +63,13 @@ public abstract class BossBarStyleMixin {
             new int[][]{{327, 93, 73, 47, 17, 182, 29}, {244, 69, 54, 35, 12, 136, 22}, {180, 51, 40, 26, 9, 100, 16}});
     private static final Geo[] CREEPER = yongye$tiers("creeper",
             new int[][]{{277, 63, 44, 24, 15, 182, 23}, {207, 47, 33, 18, 11, 136, 17}, {152, 34, 24, 13, 8, 100, 12}});
+    private static final Geo[] SPIDER = yongye$tiers("spider",
+            new int[][]{{255, 116, 37, 39, 12, 182, 18}, {191, 87, 27, 29, 9, 136, 14}, {140, 64, 20, 22, 7, 100, 10}});
+    private static final Geo[] DEATH_MAGE = yongye$tiers("deathmage2",
+            new int[][]{{278, 57, 48, 29, 15, 182, 21}, {208, 42, 36, 21, 11, 136, 15}, {153, 31, 27, 16, 8, 100, 11}});
+    /** 佩恩框没有名字牌匾 → pcy=-4 让名字悬浮在框顶上方。 */
+    private static final Geo[] PAIN = yongye$tiers("pain",
+            new int[][]{{312, 95, 72, 43, 23, 182, -4}, {233, 71, 54, 32, 17, 136, -4}, {171, 52, 40, 24, 12, 100, -4}});
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true, require = 0)
     private void yongye$layout(DrawContext ctx, CallbackInfo ci) {
@@ -120,11 +127,14 @@ public abstract class BossBarStyleMixin {
             String key = t.getKey();
             if ("entity.yongye.anubis".equals(key)) return ANUBIS;
             if ("entity.yongye.fire_phoenix".equals(key)) return PHOENIX;
+            if ("entity.yongye.red_spider".equals(key)) return SPIDER;
+            if ("entity.yongye.death_mage".equals(key)) return DEATH_MAGE;
             if ("entity.yongye.toro_ender_dragon".equals(key)) return DRAGON;
             if ("entity.minecraft.ender_dragon".equals(key)) return DRAGON; // 原版末地龙战
             return null;
         }
         String s = name.getString();
+        if (s.contains("佩恩")) return PAIN;                                   // 长门·佩恩(字面量名「佩恩·天道」)
         if (s.startsWith("【BOSS】") || s.endsWith(" BOSS")) return CREEPER;  // 怪物BOSS版(字面量名)
         return null;
     }
