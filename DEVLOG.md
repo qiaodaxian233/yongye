@@ -1889,3 +1889,26 @@ m121 给 `ClassWeaponItem`/`ChaosBladeItem` override 的 `getMiningSpeedMultipli
 **待编译验证**:无新 API 面(MatrixStack 缩放/drawTextWithShadow/11参drawTexture 全 proven)。
 **待实机验证**:合并条的平均血量观感;成分标注在 GUI scale 4 窄屏下的左右换位。
 **改动**:BossBarStyleMixin 重写(156→261 行);无配置变更,configVersion 不变(仍 19)。
+
+
+## m185(2026-07-09)修「末地末影龙倒着飞」:替换渲染器 yaw 补 180°
+
+**病根**(一处一行,但因果链值得记):原版末影龙是全 MC 唯一一只「朝向反着存」的实体——
+它的 bodyYaw 与飞行方向恒差 180°(Notch 的原始龙模型就是反着建的,原版
+EnderDragonEntityRenderer 用 rotate(-yaw) 补偿,普通生物是 rotate(180-yaw),二者恰差 180°)。
+m164 把原版龙渲染器换成 GeckoLib GeoReplacedEntityRenderer 后,GeckoLib 按普通生物
+mulPose(YP, 180f - rotationYaw) 转(已拉 GeckoLib 4.8 branch-1.21.1 官方源码逐字核对
+GeoReplacedEntityRenderer#applyRotations),原版龙于是尾巴朝前倒飞。自建龙
+ToroEnderDragonEntity 是正常 yaw 语义,走 ToroEnderDragonRenderer,一直没事——所以
+只有末地这只原版龙反着。
+
+**修法**:ToroDragonReplaceRenderer 覆写 applyRotations,yaw + 180f 再交父类,恰好抵消。
+
+**待编译验证**:覆写签名 6 参版(animatable=替身对象/MatrixStack/ageInTicks/rotationYaw/
+partialTick/nativeScale)——依据 GeckoLib 4.8 源码(5 参版已 @Deprecated),PoseStack 在
+yarn 开发环境重映射为 MatrixStack 是 loom 标准行为但本仓库无先例;若报
+「method does not override」贴报错即改。
+**待实机验证**:①转向/俯冲时机身朝向是否全程正确;②最终死亡演出(第三条命)期间
+GeckoLib 会按 deathTime 施加 90° 侧翻(普通生物死亡倒地),与原版龙升天演出叠加的观感
+——若违和下轮覆写 getDeathMaxRotation 归零。
+**改动**:仅 ToroDragonReplaceRenderer(+1 import +1 覆写);无配置变更,configVersion 仍 19。
