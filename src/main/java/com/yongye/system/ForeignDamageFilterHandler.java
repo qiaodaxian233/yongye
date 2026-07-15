@@ -138,9 +138,10 @@ public final class ForeignDamageFilterHandler {
     }
 
     /**
-     * 判定「这次对怪物的伤害 / 死亡是否来自外模组」。三路信号,任一判为外来即返回 true:
+     * 判定「这次对怪物的伤害 / 死亡是否来自外模组」。四路信号,任一判为外来即返回 true:
      * <ol>
-     *   <li><b>伤害类型命名空间</b>(如 avaritia:infinity)——【待编译验证】getTypeRegistryEntry() 为 yarn 1.21.1 官方 mapping;</li>
+     *   <li><b>伤害类型命名空间</b>(如 avaritia:infinity / tacz:bullet)——【待编译验证】getTypeRegistryEntry() 为 yarn 1.21.1 官方 mapping;</li>
+     *   <li><b>直接来源实体</b>(枪械子弹 / 投射物本体,如 tacz 的子弹实体)命名空间——【待编译验证】getSource();</li>
      *   <li>玩家出手 → 造成伤害的<b>武器</b>(伤害源武器栈,拿不到兜底主手)的命名空间;</li>
      *   <li>非玩家实体出手 → <b>攻击者实体类型</b>命名空间(外模组召唤物 / 炮塔)。</li>
      * </ol>
@@ -150,6 +151,15 @@ public final class ForeignDamageFilterHandler {
         // (1) 伤害类型命名空间【待编译验证:getTypeRegistryEntry()】
         if (!isAllowedNamespace(cfg, damageTypeNamespace(source))) return true;
 
+        // (2) 直接来源实体(m192):枪械子弹 / 外模组投射物本体——即便攻击者(射手)判不出也拦。
+        //     【待编译验证】getSource() = yarn 官方 mapping(直接实体);玩家本体不在此判(走下面武器分支)。
+        Entity direct = source.getSource();
+        if (direct != null && !(direct instanceof PlayerEntity)
+                && !isAllowedNamespace(cfg, Registries.ENTITY_TYPE.getId(direct.getType()).getNamespace())) {
+            return true;
+        }
+
+        // (3) 攻击者:玩家看武器 / 非玩家看实体类型
         Entity attacker = source.getAttacker();
         if (attacker == null) return false;   // 无攻击者 + 原版伤害类型 = 环境伤害,不算外来
 

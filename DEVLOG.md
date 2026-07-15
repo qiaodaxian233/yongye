@@ -2034,3 +2034,17 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **零配置变更**:复用 m189 的 `enableForeignDamageFilter` 总开关,**configVersion 仍 21**,不触发老存档版本不一致提示。
 - 静态自检:花括号 19/19、圆括号 123/123、方括号 1/1 全配平;无未使用 import;私有方法定义 {isForeignToMonster, damageTypeNamespace, isAllowedNamespace, taunt} 与调用一致。
 - 改 1 文件:`ForeignDamageFilterHandler`(重写:双事件 + 统一判定 + 血量快照)。
+
+## 里程碑 192 — 外模组伤害过滤加固:纳入「直接来源实体」判定(枪械子弹场景)
+- **触发**:作者问「如果是别的模组呢,枪械?」——核实主流枪械模组 TaCZ(Timeless and Classics Zero)源码。
+- **核实结论**(`EntityKineticBullet` / `ModDamageTypes`):
+  - TaCZ 用**自定义伤害类型** `tacz:bullet` / `tacz:bullet_ignore_armor` / `tacz:bullet_void`(命名空间 `tacz`);
+  - 伤害经 `parts.hitPart().hurt(source, dmg)` 走 `damage()`——**不像 AvaritiaNeo 无限剑那样 setHealth(0)+die() 绕过**(它只把 `invulnerableTime=0` 以允许爆头连击);
+  - 伤害源由 `ModDamageTypes.Sources.bullet(registryAccess, directCause, getOwner(), ...)` 构造,directCause 可能是**子弹实体本体**,attacker(getAttacker)则是射手。
+  - ⇒ **m191 已能拦 TaCZ**:伤害类型命名空间 `tacz` 直接判外来;退一步射手主手也是 `tacz:` 的枪。
+- **加固(m192)**:为覆盖「某些枪械可能用**原版伤害类型** + 只挂子弹实体、不挂射手」的漏网场景,`isForeignToMonster` 新增**第 (2) 路信号——直接来源实体** `source.getSource()`:非玩家的直接来源实体(子弹/投射物)命名空间不在白名单即判外来。玩家本体不在此判(走武器分支)。现四路信号:①伤害类型命名空间 ②直接来源实体 ③玩家武器 ④非玩家攻击者实体类型,任一外来即拦。
+- **不误伤**:原版箭=`minecraft:arrow`(放行)、玩家近战 getSource=玩家本体(跳过)、外模组子弹实体=外来(拦);vanilla 环境伤害无直接实体(getSource=null,跳过)。
+- **待编译验证**:新增 `DamageSource.getSource()`(yarn 官方 mapping,直接实体;长期稳定 API,风险低)。连同 m191 的 getTypeRegistryEntry 一并本地验。
+- **零配置变更**,configVersion 仍 21。静态自检:花括号 20/20、圆括号 130/130、方括号 1/1;无未用 import;私有方法四个定义↔调用一致。
+- 改 1 文件:`ForeignDamageFilterHandler`(isForeignToMonster 增第 2 路信号 + javadoc 同步)。
+- **残留(记录在案,均非 TaCZ 问题,待实测按需补)**:①爆炸类弹药(RPG/榴弹)若走 `minecraft:explosion` 且未把射手记为爆炸源实体→与原版 TNT 无法区分会漏(TaCZ 有传 getOwner,能拦);②燃烧弹点燃后的**持续燃烧**按 `minecraft:on_fire` 无攻击者→漏(直击已拦);③特殊弹附加的中毒/凋灵等 DoT 按原版伤害类型 tick→漏;④极个别直接 `entity.discard()/remove()` 强删的武器→连 ALLOW_DEATH 都绕过。这些要堵需按具体模组再定,不宜一刀切(否则误伤原版 TNT/火/毒)。
