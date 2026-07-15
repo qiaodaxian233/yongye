@@ -2091,3 +2091,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 静态自检:handler 花括号 23/23 圆括号 152/152、mixin 3/3·9/9、mixins.json 合法且已登记;无未用 import。零配置变更 configVersion 仍 21。
 - 改 3 文件:`ForeignDamageFilterHandler`(+tryBlockForeignDeath,② 重构)、新增 `mixin/MonsterDeathGuardMixin`、`yongye.mixins.json`(登记)。
 - **要实机验(关键)**:①务必 `./gradlew build` 重新构建、用新包(排除跑旧包);②启动日志应有 `[永夜] 怪物伤害来源检测已挂载(伤害+死亡双拦...)`,且无 MonsterDeathGuardMixin 注入失败告警;③拿无限剑左键/右键砍怪→应打不死(回血+嘲讽)。若仍被秒,基本只剩"Fabric 版用 remove()/discard() 而非 die()"这一可能,届时再加 remove 守卫。
+
+## 里程碑 196 — 修「新存档直接是永夜 I」+ 排查不追人/血条对不上(部分)
+- **新存档=永夜1(真 bug,已修)**:`NightfallManager.level` 是 **static** 字段;`load()`(SERVER_STARTED)只在状态文件存在时覆盖它,新存档无文件时**什么都不做**→ 残留上一个世界在内存里的等级。表现:先在世界A升到永夜1、退主菜单再建世界B,B 直接显示「永夜 I·暗潮」。修:`load()` 的 else 分支把 `level=0; secondsInNightfall=0` 归零。
+- **不追人(排查结论:AI 是写了的,非"没写")**:FirePhoenix/Anubis/DeathMage/GiantCrab/Wraith/ToroDragon 的 initGoals 都有 `ActiveTargetGoal(PlayerEntity)`+攻击 goal;RedSpider/VenomSpider extends SpiderEntity 未重写 initGoals=**继承原版蜘蛛完整 AI**;另有 PursuitHandler 在永夜时让怪主动锁定玩家+挖墙/爬墙/传送。故"不追人"更可能是情境问题:①**创造/旁观模式**下 ActiveTargetGoal 本就不锁玩家(原版行为);②蜘蛛类**白天不主动**(原版行为,永夜锁夜后才凶);③PursuitHandler 锁定**仅永夜≥1** 才生效。待作者给复现(生存/白天黑夜/哪只/是否 debug 刷出)再定。若要 BOSS 无视昼夜恒追,可给 RedSpider 显式重写 initGoals 加不受光照约束的 ActiveTargetGoal。
+- **血条「BOSS怪 ×12」名字/框对不上(诊断:是 m184 合并设计,分组有瑕疵)**:BossBarStyleMixin 的 groupKey 把"非佩恩、名字不以\" BOSS\"结尾"的一律归入 `creeper_group`,label 多只时显示「BOSS怪 ×N」+成分标注「僵尸×10 尸壳×2」——这是 m184「同类合并+成分标注」的**预期行为**,但 boss 化的原版僵尸/尸壳因命名没落进 zombie_group、被塞进 creeper 框,观感"对不上"。属分组规则瑕疵,修需动 m184~188 血条系统,待作者确认要不要按真实怪型分组/换框再改。
+- 改 1 文件:`NightfallManager`(load 归零)。零配置变更 configVersion 仍 21。

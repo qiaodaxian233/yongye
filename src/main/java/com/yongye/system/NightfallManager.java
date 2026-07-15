@@ -132,6 +132,11 @@ public final class NightfallManager {
             if (savePath != null && Files.exists(savePath)) {
                 State s = GSON.fromJson(Files.readString(savePath), State.class);
                 if (s != null) level = Math.max(0, Math.min(effectiveCap(), s.level));
+            } else {
+                // m196:新存档没有状态文件——必须把静态 level 归零,否则会残留上一个世界的等级
+                // (level 是 static,退到主菜单再建新世界时不会自动重置),导致新存档直接是「永夜 I」。
+                level = 0;
+                secondsInNightfall = 0;
             }
         } catch (IOException | RuntimeException e) {
             Yongye.LOGGER.error("[永夜] 读取永夜状态失败", e);
