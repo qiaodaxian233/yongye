@@ -1989,3 +1989,15 @@ GeoReplacedEntityRenderer 全场共用一个替身 GeoAnimatable 实例承载动
 
 无新 API 面;m187 的待编译验证点不变(EnderDragonFightAccessor 字段名 +
 ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
+
+## 里程碑 189 — 怪物伤害来源检测:外模组伤害不作数,只认原版 + 永夜武器
+- **需求**(作者原话):「新增一个怪物伤害检测。如果是别的MOD造成的伤害不作数。只认原版和永夜MOD的武器造成的伤害」。
+- 新 `ForeignDamageFilterHandler`,挂 `ServerLivingEntityEvents.ALLOW_DAMAGE`(挂载写法照 ClassSkillHandler 既有用法):
+  - 只对**怪物**(`instanceof Monster`,判法同 LootHandler/MobEnhancementHandler)生效;玩家/动物/村民不受影响。
+  - **无攻击者**的环境伤害(摔落/岩浆/药水残留/`/kill`)一律放行——原版机制不动。
+  - **玩家出手**:看造成伤害的武器命名空间——1.21 `source.getWeaponStack()` 伤害源自带武器栈(近战/弹射物都填),拿不到就兜底主手;空手 = `minecraft:air` 照常有效。非 `minecraft`/`yongye`/白名单 → **伤害整个取消** + action bar 提示「外来模组武器对怪物无效」(可关)。
+  - **非玩家攻击者**(外模组召唤物/宠物/炮塔):看攻击者实体类型命名空间(写法逐字同 EliteHandler/MobBossHandler 的自家怪判定)。原版狼/铁傀儡/怪物内斗不受影响。
+- 配置 +3,**configVersion 19→20**:`enableForeignDamageFilter`(默认开)/ `foreignDamageFilterHint`(默认开)/ `foreignDamageFilterExtraNamespaces`(逗号分隔额外放行命名空间,默认空)。
+- **有意取舍(已写进类注释)**:手持外模组武器期间,职业技能反伤这类「借玩家名义」的伤害同样判无效(伤害源武器=主手,与「拿外模组武器这刀不算」一致);借玩家名义、空手也能打伤害的外模组法术会被当空手放行——要堵死得再查伤害类型命名空间,等实测确有需要再加。
+- **待编译验证**:仅 `DamageSource.getWeaponStack()`(FabricMC/yarn 1.21.1 官方 mapping 已核 = method_60948,仓库首用);其余 import 与调用全部有在树先例(静态自检脚本逐条核过)。
+- 改 3 文件:新 handler + YongyeConfig(字段+版本)+ Yongye 挂载。

@@ -115,6 +115,7 @@ public class Yongye implements ModInitializer {
         HighHpCounterHandler.register();
         SkillEffectManager.register();
         WeaponCombatHandler.register();
+        com.yongye.system.ForeignDamageFilterHandler.register(); // m189 怪物伤害来源检测(只认原版+永夜武器)
         WeaponSkillManager.init();
         HardcoreSurvivalHandler.register();
         EndDragonHandler.register();  // m183 末地末影龙强化(10亿血/三命/脱战回血)

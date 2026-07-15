@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 19;
+    public static final int CURRENT_CONFIG_VERSION = 20;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -675,6 +675,14 @@ public class YongyeConfig {
     /** 末地尸潮:目标怪量倍率 / 刷出怪的血攻额外倍率(都只在末地生效)。 */
     public double endHordeTargetMultiplier = 1.5;
     public double endHordeStatMultiplier = 2.0;
+
+    // ============ m189:怪物伤害来源检测(外模组伤害不作数) ============
+    /** 总开关:怪物受到的伤害只认原版 / 永夜来源;外模组武器与外模组召唤物的伤害一律无效。 */
+    public boolean enableForeignDamageFilter = true;
+    /** 伤害被判无效时,给玩家 action bar 提示(不刷聊天栏)。 */
+    public boolean foreignDamageFilterHint = true;
+    /** 额外放行的模组命名空间(逗号分隔,如 "somemod,othermod");minecraft 与 yongye 始终放行。 */
+    public String foreignDamageFilterExtraNamespaces = "";
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;
