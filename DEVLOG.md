@@ -2078,3 +2078,16 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **无需改 json**:`fabric.mod.json` 的 `"icon": "assets/yongye/icon.png"` 路径不变,仅替换文件本身。
 - **备注**:源图四角为纯黑(RGB 无透明),Mod Menu 里会显示成黑底方形中的圆形徽标;若要四角透明呈纯圆形,可另做一版 alpha 抠圆(待作者确认再动,不擅自改设计)。
 - 零代码 / 零配置变更,configVersion 仍 21。改 1 资源文件:`assets/yongye/icon.png`。
+
+## 里程碑 195 — 真正修好无限剑秒杀:自写 onDeath mixin(m191 的 ALLOW_DEATH 设计错误)
+- **现象**:作者反馈 m191~194 全上了,AvaritiaNeo「寰宇支配之剑」(无限剑)**仍直接秒杀怪物**。
+- **根因(查 Fabric 官方文档确认)**:`ServerLivingEntityEvents.ALLOW_DEATH` 的触发点是 **`LivingEntity.damage()` 里的致死判定**,并<b>不是</b>挂在 `onDeath()` 上。无限剑击杀链 = `hurt(MAX); setHealth(0); die();`:
+  1. `hurt(MAX)` 被 ① ALLOW_DAMAGE 取消 → 根本走不到 damage() 的致死判定 → **② ALLOW_DEATH 从未触发**;
+  2. `setHealth(0)+die()` 直接调 `onDeath()`,完全绕过 `damage()`。
+  ⇒ 我 m191 的 ② 对这种秒杀是**空的**(设计基于"ALLOW_DEATH 挂 onDeath"的错误假设),这才是一直"直接秒杀"的真因。API 都能编(getTypeRegistryEntry/getSource/onDeath 均已核官方 yarn 文档存在),不是没编译进去。
+- **修复**:自写 **`MonsterDeathGuardMixin` 直接 `@Inject` 到 `LivingEntity.onDeath(DamageSource)` HEAD(cancellable, require=0)**。所有死亡(含直接 die())都汇流到 onDeath,故在此拦:外来致死 → 回血 + `ci.cancel()`。判定/回血集中在新公开方法 `ForeignDamageFilterHandler.tryBlockForeignDeath(mob, source)`(复用四路 isForeignToMonster + 血量快照)。② ALLOW_DEATH 重构为委托同一方法,降级为"damage 致死路径"的次要网(对外来其实走不到,留着无害)。
+- **签名核实**:`LivingEntity.onDeath(DamageSource)` 在 1.21.x 全程为单参(无 ServerWorld),mixin 注入对得上;`require=0` 兜底(万一映射不符则静默跳过不崩)。
+- **现四层防线**:⓪ AttackEntityCallback(近战手持前置)/ ① ALLOW_DAMAGE(伤害)/ ② ALLOW_DEATH(damage 致死路径,次要)/ **③ onDeath mixin(直接击杀兜底,本轮关键)**。
+- 静态自检:handler 花括号 23/23 圆括号 152/152、mixin 3/3·9/9、mixins.json 合法且已登记;无未用 import。零配置变更 configVersion 仍 21。
+- 改 3 文件:`ForeignDamageFilterHandler`(+tryBlockForeignDeath,② 重构)、新增 `mixin/MonsterDeathGuardMixin`、`yongye.mixins.json`(登记)。
+- **要实机验(关键)**:①务必 `./gradlew build` 重新构建、用新包(排除跑旧包);②启动日志应有 `[永夜] 怪物伤害来源检测已挂载(伤害+死亡双拦...)`,且无 MonsterDeathGuardMixin 注入失败告警;③拿无限剑左键/右键砍怪→应打不死(回血+嘲讽)。若仍被秒,基本只剩"Fabric 版用 remove()/discard() 而非 die()"这一可能,届时再加 remove 守卫。

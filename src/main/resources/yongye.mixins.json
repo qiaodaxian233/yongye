@@ -7,7 +7,8 @@
     "ClampedEntityAttributeAccessor",
     "TankDefenseMixin",
     "EntityFlagInvoker",
-    "EnderDragonFightAccessor"
+    "EnderDragonFightAccessor",
+    "MonsterDeathGuardMixin"
   ],
   "client": [
     "client.HudCompactMixin",

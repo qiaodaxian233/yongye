@@ -135,29 +135,42 @@ public final class ForeignDamageFilterHandler {
             return false;
         });
 
-        // ② 死亡路径(m191 修复):AvaritiaNeo 无限剑这类「setHealth(0)+die() 绕过 damage()」的秒杀,
-        //    ① 拦不住,必须在死亡回调里拦。返回 false 取消死亡并把血抬回(回调内必须让血 >0,套路照 EndDragonHandler 三命)。
-        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
-            YongyeConfig cfg = YongyeConfig.get();
-            if (!cfg.enableForeignDamageFilter) return true;
-            if (!(entity instanceof Monster)) return true;
-            if (!isForeignToMonster(cfg, source)) return true;     // 原版/永夜致死正常演出
-
-            // 复原血量:优先用同一 tick 的伤害快照(保留此前合法伤害),否则兜底满血。
-            long now = entity.getWorld().getTime();
-            HpSnapshot snap = PRE_KILL_HP.remove(entity.getUuid());
-            float restore = (snap != null && now - snap.tick() <= 2 && snap.health() > 0f)
-                    ? snap.health() : entity.getMaxHealth();
-            entity.setHealth(Math.max(1.0f, restore));
-
-            // 嘲讽照旧(冷却自动与 ① 去重,一刀只响一次);action bar 提示不重发,免同 tick 闪烁。
-            if (cfg.foreignDamageTaunt && source.getAttacker() instanceof ServerPlayerEntity sp) {
-                taunt(cfg, entity, sp);
-            }
-            return false;
-        });
+        // ② 死亡路径(次要网):ServerLivingEntityEvents.ALLOW_DEATH 只在 **damage() 的致死判定** 处触发,
+        //    而不是挂在 onDeath() 上。外模组伤害已被 ① 取消,一般走不到这里;它只对「未经 ① 取消却致死」的
+        //    边缘情形兜底。**无限剑那种 setHealth(0)+die() 直接绕过 damage() 的秒杀,靠 MonsterDeathGuardMixin
+        //    直接挂 onDeath() 才拦得住(m195)。** 逻辑统一走 tryBlockForeignDeath。
+        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) ->
+                !tryBlockForeignDeath(entity, source));   // 返回 false 才取消死亡
 
         Yongye.LOGGER.info("[永夜] 怪物伤害来源检测已挂载(伤害+死亡双拦,外模组伤害/秒杀均不作数)");
+    }
+
+    /**
+     * m195:怪物「因外模组来源死亡」时的统一拦截——供 {@code MonsterDeathGuardMixin}(挂 onDeath)与 ② ALLOW_DEATH 共用。
+     * 返回 {@code true} = 应取消这次死亡(调用方 {@code ci.cancel()} / ALLOW_DEATH 返回 false);内部已把血抬回并补嘲讽。
+     *
+     * <p>为什么必须有 mixin:Fabric 的 ALLOW_DEATH 只在 {@code damage()} 的致死判定处触发,而无限剑的击杀是
+     * {@code setHealth(0); die();} 直接调 {@code onDeath()},完全绕过 {@code damage()}——所以只有直接挂
+     * {@code onDeath()} 的 mixin 调本方法,才拦得住这种秒杀。
+     */
+    public static boolean tryBlockForeignDeath(LivingEntity mob, DamageSource source) {
+        YongyeConfig cfg = YongyeConfig.get();
+        if (!cfg.enableForeignDamageFilter) return false;
+        if (!(mob instanceof Monster)) return false;
+        if (!isForeignToMonster(cfg, source)) return false;   // 原版/永夜致死 → 放行正常死亡
+
+        // 复原血量:优先用同一 tick 的伤害快照(保留此前合法伤害),否则兜底满血。
+        long now = mob.getWorld().getTime();
+        HpSnapshot snap = PRE_KILL_HP.remove(mob.getUuid());
+        float restore = (snap != null && now - snap.tick() <= 2 && snap.health() > 0f)
+                ? snap.health() : mob.getMaxHealth();
+        mob.setHealth(Math.max(1.0f, restore));
+
+        // 嘲讽(冷却自动与 ①/⓪ 去重,一刀只响一次)。
+        if (cfg.foreignDamageTaunt && source.getAttacker() instanceof ServerPlayerEntity sp) {
+            taunt(cfg, mob, sp);
+        }
+        return true;
     }
 
     /**
