@@ -2018,3 +2018,19 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **零新 API 面**:`sendMessage(Text,boolean)` / `getName().copy()` / `getRandom()` / `world.getTime()` 全部有在树先例;
   静态自检两文件括号配平、3 新字段定义↔引用一致、taunt 定义/调用各 1。
 - 改 2 文件:ForeignDamageFilterHandler(台词池+冷却+发话)+ YongyeConfig(3 字段+版本 21)。
+
+## 里程碑 191 — 外模组伤害过滤:修「秒杀类武器仍能杀怪」(AvaritiaNeo 无限剑绕过 damage())
+- **现象**(作者反馈):装 AvaritiaNeo-Fabric,用「无限剑」照样能把怪物打死,m189 的过滤器没拦住。
+- **根因**(核实 AvaritiaNeo 源码 `ItemInfinitySword.hurtEnemy`/`onLeftClickEntity`):它的击杀链是
+  `entity.hurt(源, Float.MAX); entity.setHealth(0); entity.die(源);`——**后两句直接改血 / 直接触发死亡,压根不走 `damage()`**。
+  m189 只挂了 `ServerLivingEntityEvents.ALLOW_DAMAGE`,只能拦第一句 `hurt()`(伤害数字/击退没了),
+  可 `setHealth(0)+die()` 照样把怪弄死——事件够不着。弓箭(`EntityInfinityArrow`)则走 `hurt()`+自定义伤害类型 `avaritia:infinity`,原本靠武器命名空间也能拦,但攻击者判不出时会漏。
+- **修复(双拦 + 伤害类型信号)**:
+  1. **新增 `ALLOW_DEATH` 拦截**:怪物因外模组来源死亡时,返回 false 取消死亡并把血抬回(回调内必须让血 >0,套路照 `EndDragonHandler` 三命复活)。这是堵 `setHealth(0)+die()` 秒杀的关键。
+  2. **判定统一进 `isForeignToMonster(cfg, source)`**,`ALLOW_DAMAGE`/`ALLOW_DEATH` 共用;三路信号任一为外来即拦:①**伤害类型命名空间**(新增,如 `avaritia:infinity`)②玩家武器命名空间(伤害源武器栈,兜底主手)③非玩家攻击者实体类型命名空间。无攻击者+原版伤害类型=环境伤害照放(不让怪对摔落/岩浆免疫)。
+  3. **血量复原用快照**:秒杀链里 `hurt()`(→①记 `HpSnapshot{tick,血}`)紧接着 `setHealth(0)+die()`(→②读快照),同 tick 完成;复原优先用快照值(保留此前的合法伤害),取不到兜底满血。record `HpSnapshot` + `Map<UUID,HpSnapshot> PRE_KILL_HP`。
+- **行为**:外模组武器/秒杀彻底打不死永夜的怪(被强杀会回血复活,刻意为之);嘲讽冷却天然去重两路重复触发,action bar 提示只在伤害路径发一次免同 tick 闪烁。
+- **待编译验证**:仅一处新 API——`DamageSource.getTypeRegistryEntry().getKey().map(k->k.getValue().getNamespace())`(yarn 1.21.1 官方 mapping,仓库首用)。`getWeaponStack()` 为 m189 已在用。若这行报错,删 `damageTypeNamespace()` helper 及其调用即可,核心双拦对 AvaritiaNeo 仍生效(靠武器主手命名空间)。
+- **零配置变更**:复用 m189 的 `enableForeignDamageFilter` 总开关,**configVersion 仍 21**,不触发老存档版本不一致提示。
+- 静态自检:花括号 19/19、圆括号 123/123、方括号 1/1 全配平;无未使用 import;私有方法定义 {isForeignToMonster, damageTypeNamespace, isAllowedNamespace, taunt} 与调用一致。
+- 改 1 文件:`ForeignDamageFilterHandler`(重写:双事件 + 统一判定 + 血量快照)。

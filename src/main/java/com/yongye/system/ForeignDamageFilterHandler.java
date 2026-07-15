@@ -5,6 +5,7 @@ import com.yongye.YongyeConfig;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -21,24 +22,32 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 怪物伤害来源检测(m189)——外模组伤害不作数,只认原版和永夜的武器。
+ * 怪物伤害来源检测(m189 起)——外模组伤害不作数,只认原版和永夜的武器。
  *
  * <p>规则(只对「怪物」= Monster 生效,玩家/动物/村民不受影响):
  * <ul>
- *   <li>无攻击者的环境伤害(摔落 / 岩浆 / 仙人掌 / 药水残留 / {@code /kill})一律放行——那是原版机制。</li>
- *   <li>攻击者是<b>玩家</b>:看造成这次伤害的<b>武器</b>(1.21 伤害源自带武器栈,拿不到就兜底主手物品)。
- *       命名空间是 {@code minecraft} / {@code yongye}(或配置里额外放行的)才作数,否则伤害整个取消,
- *       并给玩家 action bar 提示(可关)。空手 = {@code minecraft:air},照常有效。</li>
- *   <li>攻击者是<b>非玩家实体</b>(外模组的召唤物 / 宠物 / 炮塔等):看攻击者实体类型的命名空间,同样只认
+ *   <li>无攻击者的原版环境伤害(摔落 / 岩浆 / 仙人掌 / 药水残留 / {@code /kill})一律放行。</li>
+ *   <li>攻击者是<b>玩家</b>:看造成这次伤害的<b>武器</b>(1.21 伤害源自带武器栈,拿不到就兜底主手)。
+ *       命名空间是 {@code minecraft} / {@code yongye}(或配置额外放行的)才作数,否则伤害整个取消,
+ *       action bar 提示 + 怪物开口嘲讽(均可关)。空手 = {@code minecraft:air},照常有效。</li>
+ *   <li>攻击者是<b>非玩家实体</b>(外模组召唤物 / 宠物 / 炮塔):看攻击者实体类型的命名空间,同样只认
  *       原版 / 永夜 / 白名单。原版狼、铁傀儡、怪物内斗不受影响。</li>
+ *   <li>另看<b>伤害类型命名空间</b>(如 AvaritiaNeo 的 {@code avaritia:infinity}):外模组自定义伤害类型
+ *       即便攻击者判不出,也按外来处理。</li>
  * </ul>
+ *
+ * <p><b>m191 关键修复——秒杀类武器绕过 {@code damage()} 的问题</b>:
+ * 经核实 AvaritiaNeo「无限剑」的击杀链是
+ * {@code entity.hurt(源, Float.MAX); entity.setHealth(0); entity.die(源);}——
+ * 后两句<b>直接改血 / 直接触发死亡,根本不走 {@code damage()}</b>,所以只挂 {@code ALLOW_DAMAGE} 拦不住
+ * (伤害那句被我取消了,可怪照样被 setHealth(0)+die() 弄死)。故本类<b>同时挂 {@code ALLOW_DEATH}</b>:
+ * 怪物因外模组来源死亡时取消死亡,并把血抬回(套路照 {@link EndDragonHandler} 三命复活;回调内必须把血弄到 &gt;0)。
  *
  * <p>已知取舍(有意为之 / 记录在案):
  * <ul>
- *   <li>玩家<b>手持外模组武器</b>期间,连职业技能反伤这类「借玩家名义」的伤害也会被判无效
- *       (伤害源武器 = 主手)——与「拿外模组武器这刀就不算」的规则一致。</li>
- *   <li>极少数「借玩家名义、空手也能造成伤害」的外模组法术会被当成空手放行;要堵死得再查伤害类型
- *       命名空间,等实测确有需要再加。</li>
+ *   <li>玩家<b>手持外模组武器</b>期间,连职业技能反伤这类「借玩家名义」的伤害也判无效(伤害源武器=主手),
+ *       与「拿外模组武器这刀就不算」的规则一致。</li>
+ *   <li>怪物因外模组来源「被强杀」时会满血/回原血复活,这是刻意行为——外模组武器杀不死永夜的怪。</li>
  * </ul>
  */
 public final class ForeignDamageFilterHandler {
@@ -75,39 +84,88 @@ public final class ForeignDamageFilterHandler {
     /** 嘲讽冷却:每玩家上次被嘲讽的世界时间(transient,套路照 ClassSkillHandler.lastCombat)。 */
     private static final Map<UUID, Long> LAST_TAUNT = new HashMap<>();
 
+    /**
+     * m191:被外模组秒杀类武器强杀前的血量快照。
+     * 秒杀链里 {@code hurt()}(→ ALLOW_DAMAGE 记快照)紧接着 {@code setHealth(0)+die()}(→ ALLOW_DEATH 读快照复原),
+     * 同一 tick 内完成,故用「tick + 血量」快照把血抬回被打前的值(保留此前的合法伤害),而不是一律满血。
+     */
+    private record HpSnapshot(long tick, float health) {}
+    private static final Map<UUID, HpSnapshot> PRE_KILL_HP = new HashMap<>();
+
     public static void register() {
+        // ① 伤害路径:凡走 damage() 的外模组伤害,直接取消(m189;弓箭/法术/自定义伤害类型都在这拦)。
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             YongyeConfig cfg = YongyeConfig.get();
             if (!cfg.enableForeignDamageFilter) return true;
-            if (!(entity instanceof Monster)) return true;   // 只管怪物(判法同 LootHandler/MobEnhancementHandler)
-            Entity attacker = source.getAttacker();
-            if (attacker == null) return true;               // 环境伤害不拦
+            if (!(entity instanceof Monster)) return true;         // 只管怪物(判法同 LootHandler/MobEnhancementHandler)
+            if (!isForeignToMonster(cfg, source)) return true;     // 原版 / 永夜 / 白名单 → 放行
 
-            // ① 玩家出手:看武器命名空间。
-            //   getWeaponStack()【待编译验证】= yarn 1.21.1 官方 mapping method_60948,近战/弹射物都会填武器;
-            //   拿不到(老式伤害源)就兜底看主手。
-            if (attacker instanceof PlayerEntity player) {
-                ItemStack weapon = source.getWeaponStack();
-                if (weapon == null || weapon.isEmpty()) {
-                    weapon = player.getMainHandStack();
+            // 是外模组伤害:记录当前血量(供 ② 复原),提示 + 嘲讽,取消这次伤害。
+            PRE_KILL_HP.put(entity.getUuid(), new HpSnapshot(entity.getWorld().getTime(), entity.getHealth()));
+            if (source.getAttacker() instanceof ServerPlayerEntity sp) {
+                if (cfg.foreignDamageTaunt) taunt(cfg, entity, sp);
+                if (cfg.foreignDamageFilterHint) {
+                    sp.sendMessage(Text.literal("外来模组武器对怪物无效(只认原版 / 永夜武器)")
+                            .formatted(Formatting.GRAY), true);
                 }
-                String ns = Registries.ITEM.getId(weapon.getItem()).getNamespace();
-                if (isAllowedNamespace(cfg, ns)) return true;
-                if (player instanceof ServerPlayerEntity sp) {
-                    if (cfg.foreignDamageTaunt) taunt(cfg, entity, sp);       // m190:怪物开口嘲讽(聊天栏,带冷却)
-                    if (cfg.foreignDamageFilterHint) {
-                        sp.sendMessage(Text.literal("外来模组武器对怪物无效(只认原版 / 永夜武器)")
-                                .formatted(Formatting.GRAY), true);
-                    }
-                }
-                return false;
             }
-
-            // ② 非玩家实体出手:看攻击者实体类型命名空间(写法同 EliteHandler/MobBossHandler 的自家怪判定)。
-            String ns = Registries.ENTITY_TYPE.getId(attacker.getType()).getNamespace();
-            return isAllowedNamespace(cfg, ns);
+            return false;
         });
-        Yongye.LOGGER.info("[永夜] 怪物伤害来源检测已挂载(外模组伤害不作数,只认原版/永夜武器)");
+
+        // ② 死亡路径(m191 修复):AvaritiaNeo 无限剑这类「setHealth(0)+die() 绕过 damage()」的秒杀,
+        //    ① 拦不住,必须在死亡回调里拦。返回 false 取消死亡并把血抬回(回调内必须让血 >0,套路照 EndDragonHandler 三命)。
+        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.enableForeignDamageFilter) return true;
+            if (!(entity instanceof Monster)) return true;
+            if (!isForeignToMonster(cfg, source)) return true;     // 原版/永夜致死正常演出
+
+            // 复原血量:优先用同一 tick 的伤害快照(保留此前合法伤害),否则兜底满血。
+            long now = entity.getWorld().getTime();
+            HpSnapshot snap = PRE_KILL_HP.remove(entity.getUuid());
+            float restore = (snap != null && now - snap.tick() <= 2 && snap.health() > 0f)
+                    ? snap.health() : entity.getMaxHealth();
+            entity.setHealth(Math.max(1.0f, restore));
+
+            // 嘲讽照旧(冷却自动与 ① 去重,一刀只响一次);action bar 提示不重发,免同 tick 闪烁。
+            if (cfg.foreignDamageTaunt && source.getAttacker() instanceof ServerPlayerEntity sp) {
+                taunt(cfg, entity, sp);
+            }
+            return false;
+        });
+
+        Yongye.LOGGER.info("[永夜] 怪物伤害来源检测已挂载(伤害+死亡双拦,外模组伤害/秒杀均不作数)");
+    }
+
+    /**
+     * 判定「这次对怪物的伤害 / 死亡是否来自外模组」。三路信号,任一判为外来即返回 true:
+     * <ol>
+     *   <li><b>伤害类型命名空间</b>(如 avaritia:infinity)——【待编译验证】getTypeRegistryEntry() 为 yarn 1.21.1 官方 mapping;</li>
+     *   <li>玩家出手 → 造成伤害的<b>武器</b>(伤害源武器栈,拿不到兜底主手)的命名空间;</li>
+     *   <li>非玩家实体出手 → <b>攻击者实体类型</b>命名空间(外模组召唤物 / 炮塔)。</li>
+     * </ol>
+     * 无攻击者且伤害类型为原版(摔落 / 岩浆 / 仙人掌等)→ 判为非外来,照常放行(不让怪物对环境免疫)。
+     */
+    private static boolean isForeignToMonster(YongyeConfig cfg, DamageSource source) {
+        // (1) 伤害类型命名空间【待编译验证:getTypeRegistryEntry()】
+        if (!isAllowedNamespace(cfg, damageTypeNamespace(source))) return true;
+
+        Entity attacker = source.getAttacker();
+        if (attacker == null) return false;   // 无攻击者 + 原版伤害类型 = 环境伤害,不算外来
+
+        if (attacker instanceof PlayerEntity player) {
+            ItemStack weapon = source.getWeaponStack();   // 【待编译验证】method_60948;拿不到兜底主手
+            if (weapon == null || weapon.isEmpty()) weapon = player.getMainHandStack();
+            return !isAllowedNamespace(cfg, Registries.ITEM.getId(weapon.getItem()).getNamespace());
+        }
+        return !isAllowedNamespace(cfg, Registries.ENTITY_TYPE.getId(attacker.getType()).getNamespace());
+    }
+
+    /** 伤害类型的命名空间;取不到时按原版({@code minecraft})处理,避免误伤环境伤害。 */
+    private static String damageTypeNamespace(DamageSource source) {
+        return source.getTypeRegistryEntry().getKey()
+                .map(k -> k.getValue().getNamespace())
+                .orElse("minecraft");
     }
 
     /** minecraft / yongye 恒放行;配置 foreignDamageFilterExtraNamespaces 里逗号分隔的命名空间额外放行。 */
@@ -125,8 +183,7 @@ public final class ForeignDamageFilterHandler {
     /**
      * m190:怪物开口嘲讽——外模组武器这一刀被判无效后,怪物在聊天栏对攻击者说一句风凉话。
      * 格式:「怪物名」+ 台词;名字走 mob.getName()(与 BOSS 化改名兼容,BOSS 版会带【BOSS】前缀说话)。
-     * 每玩家带冷却(foreignDamageTauntCooldownTicks,默 60t = 3 秒),防连点刷屏;
-     * action bar 那条灰字机制提示与本嘲讽双轨并存,各自有开关。
+     * 每玩家带冷却(foreignDamageTauntCooldownTicks,默 60t = 3 秒),防连点刷屏,同时天然去重 ①②两路的重复触发。
      */
     private static void taunt(YongyeConfig cfg, LivingEntity mob, ServerPlayerEntity sp) {
         long now = sp.getWorld().getTime();
