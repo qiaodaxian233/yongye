@@ -2071,3 +2071,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **零配置变更**,configVersion 仍 21。静态自检:花括号 23/23、圆括号 150/150、方括号 1/1;无未用 import;三事件注册点(AttackEntity+ALLOW_DAMAGE+ALLOW_DEATH)各一;私有方法四个定义↔调用一致。
 - 改 1 文件:`ForeignDamageFilterHandler`(+AttackEntityCallback 前置层 + 2 import)。
 - **要实机验**:手持外模组近战武器左键怪→打不动+嘲讽(且应比之前更"干净",怪不会闪一下 0 血);手持原版/永夜武器→正常;空手→正常(minecraft:air 放行);外模组枪械→仍由 ①② 拦(本层管不着投射物)。
+
+## 里程碑 194 — 更换 mod 图标(资源替换)
+- **需求**:作者上传新的《永夜》圆形徽标(暗夜日食 + 永夜二字 + 紫色十字剑纹 + 废墟城堡),要求更换图标。
+- **处理**:源图 1254×1254 RGB 正方形 → LANCZOS 降采样到 **512×512 RGBA**(比原 128×128 清晰得多,2 的幂通用规格),PIL optimize 存 PNG(376KB)。覆盖 `src/main/resources/assets/yongye/icon.png`。
+- **无需改 json**:`fabric.mod.json` 的 `"icon": "assets/yongye/icon.png"` 路径不变,仅替换文件本身。
+- **备注**:源图四角为纯黑(RGB 无透明),Mod Menu 里会显示成黑底方形中的圆形徽标;若要四角透明呈纯圆形,可另做一版 alpha 抠圆(待作者确认再动,不擅自改设计)。
+- 零代码 / 零配置变更,configVersion 仍 21。改 1 资源文件:`assets/yongye/icon.png`。
