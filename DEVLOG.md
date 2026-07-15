@@ -2060,3 +2060,14 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
   2. **直接 `discard()`/`remove(RemovalReason.KILLED)`**:连 `die()` 都不走 → ALLOW_DEATH 够不着。极骚写法,罕见。
   3. **爆炸 `minecraft:explosion` 未挂射手 / 燃烧·中毒·凋灵等原版 DoT**:与原版 TNT/火/毒无法区分(m192 已记)。
 - **结论**:只要武器是"正经打伤害"(哪怕数值爆表)都拦得住;能绕的只有极少数"跳过伤害系统直接删血/删实体/借 generic_kill"的写法。遇到具体可疑模组,照 TaCZ/Avaritia 翻源码再精准补。**本条纯调研,无代码改动。**
+
+## 里程碑 193 — 外模组伤害过滤:近战「手持前置检查」(照作者思路,最干净的一层)
+- **作者思路**:「看武器标签是不是这个 MOD 的也可以啊,检查手持是不是原版和用的就行,不是就不能造成伤害。」
+- **回应**:这正是过滤器对玩家出手的主判据(m189 起就是「伤害源武器栈,拿不到兜底主手 → 看命名空间」)。但「看手持」只在**伤害源里有玩家握着东西**时才有手可看;m192 记录的漏网(entity.kill()/discard()/爆炸/DoT)恰恰是**伤害源里没有玩家**,没手可查,故仍需 ①伤害 ②死亡 兜底。
+- **本轮加固(把「看手持」提前到攻击瞬间)**:新增 `AttackEntityCallback`(⓪)——玩家**左键攻击怪物**的一刻就看主手命名空间,不是原版/永夜/白名单直接 `ActionResult.FAIL` 取消整次攻击。好处:连无限剑那种自定义击杀逻辑(setHealth(0)+die())**都还没来得及跑**,比 ①②「先秒杀再复活」更干净利索;服务端补嘲讽+提示,客户端只取消预测(`!world.isClient` 分流)。
+- **边界**:ⓠ只挡**近战左键**;弓/枪/法术**发射的投射物**不走 AttackEntityCallback,仍由 ①(命中时 damage 拦)②(死亡兜底)负责——三层各管一段,不重叠冲突。手持外模组武器右键(UseEntity)不受影响(只挡攻击不挡交互)。
+- **零新 API**:`AttackEntityCallback.EVENT.register((player,world,hand,entity,hitResult)->)`、`ActionResult.PASS/FAIL`、`world.isClient` 全部在树先例(ClassSkillHandler/WeaponCombatHandler/SkillEffectManager 已用已编)。守卫写法 `entity instanceof LivingEntity living && entity instanceof Monster` 照 ClassSkillHandler 同款。
+- 与现有 AttackEntityCallback(职业技能/武器连击,仅对**永夜武器**生效)不冲突:本层对永夜/原版手持一律 PASS,只 FAIL 外模组手持;后者本就被那些回调忽略。
+- **零配置变更**,configVersion 仍 21。静态自检:花括号 23/23、圆括号 150/150、方括号 1/1;无未用 import;三事件注册点(AttackEntity+ALLOW_DAMAGE+ALLOW_DEATH)各一;私有方法四个定义↔调用一致。
+- 改 1 文件:`ForeignDamageFilterHandler`(+AttackEntityCallback 前置层 + 2 import)。
+- **要实机验**:手持外模组近战武器左键怪→打不动+嘲讽(且应比之前更"干净",怪不会闪一下 0 血);手持原版/永夜武器→正常;空手→正常(minecraft:air 放行);外模组枪械→仍由 ①② 拦(本层管不着投射物)。

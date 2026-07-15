@@ -3,6 +3,7 @@ package com.yongye.system;
 import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -12,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
@@ -93,6 +95,27 @@ public final class ForeignDamageFilterHandler {
     private static final Map<UUID, HpSnapshot> PRE_KILL_HP = new HashMap<>();
 
     public static void register() {
+        // ⓪ 近战前置(m193,照作者「看手持是不是原版/永夜就行」的思路):
+        //    玩家左键攻击怪物的瞬间就看主手——不是原版/永夜/白名单,直接 FAIL 掉整次攻击。
+        //    好处:连无限剑那种「自定义击杀逻辑(setHealth(0)+die())」都还没来得及跑,比 ①② 事后补救更干净。
+        //    注意:只挡「近战左键」;弓/枪/法术发射的投射物不走这里,仍靠 ①(伤害)②(死亡)兜底。
+        AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.enableForeignDamageFilter) return ActionResult.PASS;
+            if (!(entity instanceof LivingEntity living) || !(entity instanceof Monster)) return ActionResult.PASS;
+            String ns = Registries.ITEM.getId(player.getMainHandStack().getItem()).getNamespace();
+            if (isAllowedNamespace(cfg, ns)) return ActionResult.PASS;   // 原版/永夜/白名单 → 放行正常攻击
+            // 外模组手持:取消这次近战。服务端补嘲讽 + 提示(客户端只负责取消预测)。
+            if (!world.isClient && player instanceof ServerPlayerEntity sp) {
+                if (cfg.foreignDamageTaunt) taunt(cfg, living, sp);
+                if (cfg.foreignDamageFilterHint) {
+                    sp.sendMessage(Text.literal("外来模组武器对怪物无效(只认原版 / 永夜武器)")
+                            .formatted(Formatting.GRAY), true);
+                }
+            }
+            return ActionResult.FAIL;
+        });
+
         // ① 伤害路径:凡走 damage() 的外模组伤害,直接取消(m189;弓箭/法术/自定义伤害类型都在这拦)。
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             YongyeConfig cfg = YongyeConfig.get();
