@@ -4,6 +4,7 @@ import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -11,6 +12,13 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * 怪物伤害来源检测(m189)——外模组伤害不作数,只认原版和永夜的武器。
@@ -36,6 +44,37 @@ import net.minecraft.util.Formatting;
 public final class ForeignDamageFilterHandler {
     private ForeignDamageFilterHandler() {}
 
+    /**
+     * m190:外模组武器打怪被判无效时,怪物开口嘲讽的内置台词池(聊天栏,随机抽一句)。
+     * 风格照作者示例「哎呦喂,您拿前朝的剑,斩本朝的官?」;
+     * 想追加台词不用改代码——配置 foreignDamageTauntExtraLines 用竖线 | 分隔即可。
+     */
+    private static final String[] TAUNTS = {
+            "哎呦喂,您这是拿前朝的剑,斩本朝的官呐?",
+            "此兵器没上永夜的户口,恕不接招。",
+            "客官,您这家伙什海关都没过,就想通关我?",
+            "外来的和尚好念经,外来的刀可砍不动我。",
+            "啧,异界的破铜烂铁也敢往我身上招呼?",
+            "水土不服啊朋友,这武器一进永夜就蔫了。",
+            "别费劲了,这玩意儿在永夜连烧火棍都不如。",
+            "拿错剧本了吧?那是隔壁世界的道具。",
+            "我身披永夜结界,专防三无兵器。",
+            "就这?我痒痒肉都没被你找着。",
+            "您这刀锋利是锋利,可惜签证过期了。",
+            "永夜规矩:兵器不认,伤害不算。",
+            "好家伙,跨服砍人呢?这里不兴这个。",
+            "嘶——好凉快,原来是你在给我扇风啊。",
+            "大侠,先去铁匠铺把这铁片子落个户再来。",
+            "别敲了别敲了,跟拿羽毛挠我似的。",
+            "异界神兵?到了永夜也就是根牙签。",
+            "劝你换把本地的家伙,这把是真不疼。",
+            "您这一下,比蚊子叮还温柔。",
+            "回去问问你那武器:知道这是谁的地盘吗?"
+    };
+
+    /** 嘲讽冷却:每玩家上次被嘲讽的世界时间(transient,套路照 ClassSkillHandler.lastCombat)。 */
+    private static final Map<UUID, Long> LAST_TAUNT = new HashMap<>();
+
     public static void register() {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             YongyeConfig cfg = YongyeConfig.get();
@@ -54,9 +93,12 @@ public final class ForeignDamageFilterHandler {
                 }
                 String ns = Registries.ITEM.getId(weapon.getItem()).getNamespace();
                 if (isAllowedNamespace(cfg, ns)) return true;
-                if (cfg.foreignDamageFilterHint && player instanceof ServerPlayerEntity sp) {
-                    sp.sendMessage(Text.literal("外来模组武器对怪物无效(只认原版 / 永夜武器)")
-                            .formatted(Formatting.GRAY), true);
+                if (player instanceof ServerPlayerEntity sp) {
+                    if (cfg.foreignDamageTaunt) taunt(cfg, entity, sp);       // m190:怪物开口嘲讽(聊天栏,带冷却)
+                    if (cfg.foreignDamageFilterHint) {
+                        sp.sendMessage(Text.literal("外来模组武器对怪物无效(只认原版 / 永夜武器)")
+                                .formatted(Formatting.GRAY), true);
+                    }
                 }
                 return false;
             }
@@ -78,5 +120,34 @@ public final class ForeignDamageFilterHandler {
             }
         }
         return false;
+    }
+
+    /**
+     * m190:怪物开口嘲讽——外模组武器这一刀被判无效后,怪物在聊天栏对攻击者说一句风凉话。
+     * 格式:「怪物名」+ 台词;名字走 mob.getName()(与 BOSS 化改名兼容,BOSS 版会带【BOSS】前缀说话)。
+     * 每玩家带冷却(foreignDamageTauntCooldownTicks,默 60t = 3 秒),防连点刷屏;
+     * action bar 那条灰字机制提示与本嘲讽双轨并存,各自有开关。
+     */
+    private static void taunt(YongyeConfig cfg, LivingEntity mob, ServerPlayerEntity sp) {
+        long now = sp.getWorld().getTime();
+        Long last = LAST_TAUNT.get(sp.getUuid());
+        if (last != null && now - last < Math.max(0, cfg.foreignDamageTauntCooldownTicks)) return;
+        LAST_TAUNT.put(sp.getUuid(), now);
+
+        // 台词池 = 内置 20 条 + 配置追加(竖线 | 分隔;台词里含中文逗号/问号无碍,别用竖线即可)
+        List<String> pool = new ArrayList<>(Arrays.asList(TAUNTS));
+        String extra = cfg.foreignDamageTauntExtraLines;
+        if (extra != null && !extra.isBlank()) {
+            for (String s : extra.split("\\|")) {
+                String t = s.trim();
+                if (!t.isEmpty()) pool.add(t);
+            }
+        }
+        String line = pool.get(sp.getRandom().nextInt(pool.size()));
+
+        sp.sendMessage(Text.literal("「").formatted(Formatting.DARK_GRAY)
+                .append(mob.getName().copy().formatted(Formatting.RED))
+                .append(Text.literal("」").formatted(Formatting.DARK_GRAY))
+                .append(Text.literal(" " + line).formatted(Formatting.YELLOW)), false);
     }
 }

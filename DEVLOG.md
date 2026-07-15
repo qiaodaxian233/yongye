@@ -2001,3 +2001,20 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **有意取舍(已写进类注释)**:手持外模组武器期间,职业技能反伤这类「借玩家名义」的伤害同样判无效(伤害源武器=主手,与「拿外模组武器这刀不算」一致);借玩家名义、空手也能打伤害的外模组法术会被当空手放行——要堵死得再查伤害类型命名空间,等实测确有需要再加。
 - **待编译验证**:仅 `DamageSource.getWeaponStack()`(FabricMC/yarn 1.21.1 官方 mapping 已核 = method_60948,仓库首用);其余 import 与调用全部有在树先例(静态自检脚本逐条核过)。
 - 改 3 文件:新 handler + YongyeConfig(字段+版本)+ Yongye 挂载。
+
+## 里程碑 190 — 外模组武器打怪:怪物开口嘲讽(m189 续,风味文案)
+- **需求**(作者原话):「如果发现用别的MOD的武器打怪,怪物就会说『哎呦喂,您拿前朝的剑,斩本朝的官?』可以多写一些文案」。
+- 挂在 m189 `ForeignDamageFilterHandler` 玩家分支上:这一刀因外模组武器被判无效时,**怪物在聊天栏对攻击者说话**——
+  格式 `「怪物名」 台词`(名字红字走 `mob.getName()`,与 BOSS 化改名兼容:BOSS 版会带着【BOSS】前缀开口;台词黄字)。
+- **内置台词池 20 条**,全按作者示例的损嘴风格:前朝的剑斩本朝的官 / 兵器没上永夜户口 / 海关都没过就想通关我 /
+  外来的和尚好念经 / 水土不服 / 烧火棍 / 拿错剧本 / 三无兵器 / 签证过期 / 兵器不认伤害不算 / 跨服砍人 /
+  给我扇风 / 落户再来 / 羽毛挠痒 / 异界神兵=牙签 / 蚊子叮 / 问问你那武器这是谁的地盘……随机抽一句。
+- **可配置(遵守「新机制必须后台可调」守则)**,配置 +3,**configVersion 20→21**:
+  - `foreignDamageTaunt`(默认开)嘲讽总开关;
+  - `foreignDamageTauntCooldownTicks`(默认 60t = 3 秒)**每玩家冷却**——连点攻击不刷屏,冷却内只出 action bar 灰字;
+    transient `HashMap<UUID,Long>` 记上次时间,套路照 ClassSkillHandler.lastCombat,计时用 `world.getTime()`(在树 proven);
+  - `foreignDamageTauntExtraLines`(默认空)竖线 `|` 分隔的自定义台词,追加进内置池,作者想加梗不用改代码。
+- action bar 那条「外来模组武器对怪物无效」灰字提示**保留双轨**:嘲讽=风味、提示=讲机制,各自开关互不影响。
+- **零新 API 面**:`sendMessage(Text,boolean)` / `getName().copy()` / `getRandom()` / `world.getTime()` 全部有在树先例;
+  静态自检两文件括号配平、3 新字段定义↔引用一致、taunt 定义/调用各 1。
+- 改 2 文件:ForeignDamageFilterHandler(台词池+冷却+发话)+ YongyeConfig(3 字段+版本 21)。

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 20;
+    public static final int CURRENT_CONFIG_VERSION = 21;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -683,6 +683,12 @@ public class YongyeConfig {
     public boolean foreignDamageFilterHint = true;
     /** 额外放行的模组命名空间(逗号分隔,如 "somemod,othermod");minecraft 与 yongye 始终放行。 */
     public String foreignDamageFilterExtraNamespaces = "";
+    /** m190:外模组武器打怪被判无效时,怪物在聊天栏开口嘲讽(内置 20 条台词随机抽,如「哎呦喂,您拿前朝的剑,斩本朝的官?」)。 */
+    public boolean foreignDamageTaunt = true;
+    /** 嘲讽冷却:同一玩家两句嘲讽之间的最短间隔(tick,20=1秒;防连点刷屏)。 */
+    public int foreignDamageTauntCooldownTicks = 60;
+    /** 追加嘲讽台词:竖线 | 分隔的自定义台词,追加进内置台词池(台词里别用竖线;空=只用内置)。 */
+    public String foreignDamageTauntExtraLines = "";
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;
