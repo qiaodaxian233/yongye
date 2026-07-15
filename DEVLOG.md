@@ -2048,3 +2048,15 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **零配置变更**,configVersion 仍 21。静态自检:花括号 20/20、圆括号 130/130、方括号 1/1;无未用 import;私有方法四个定义↔调用一致。
 - 改 1 文件:`ForeignDamageFilterHandler`(isForeignToMonster 增第 2 路信号 + javadoc 同步)。
 - **残留(记录在案,均非 TaCZ 问题,待实测按需补)**:①爆炸类弹药(RPG/榴弹)若走 `minecraft:explosion` 且未把射手记为爆炸源实体→与原版 TNT 无法区分会漏(TaCZ 有传 getOwner,能拦);②燃烧弹点燃后的**持续燃烧**按 `minecraft:on_fire` 无攻击者→漏(直击已拦);③特殊弹附加的中毒/凋灵等 DoT 按原版伤害类型 tick→漏;④极个别直接 `entity.discard()/remove()` 强删的武器→连 ALLOW_DEATH 都绕过。这些要堵需按具体模组再定,不宜一刀切(否则误伤原版 TNT/火/毒)。
+
+## 记录 — 1.21.1 Fabric 高伤害/秒杀武器面排查(m192 续,调研,无代码改动)
+- **背景**:作者问「1.21.1 Fabric 还有没有别的高伤害武器(会绕过过滤器)」。核实思路:拦不拦的关键**不是伤害数值,而是这一下怎么投送出来的**——Minecraft 造成伤害/击杀的方式有限,按机制归类即可覆盖没见过的模组。
+- **已核实源码**:AvaritiaNeo(无限剑 setHealth(0)+die() 绕过 damage())、TaCZ(子弹走 hurt()+自定义伤害类型 tacz:bullet)。
+- **机制归类 + 覆盖情况**:
+  - **① 走 `hurt()`/`damage()` 的伤害(占绝大多数)**:数值再大也会被 ALLOW_DAMAGE 取消。主流高伤模组——TaCZ(已确认)、L_Ender Cataclysm(boss武器/AOE,极大概率,未逐一翻源码)、Simply Swords(特殊攻击)、AE2 物质加农炮、Create 土豆加农炮、Iron's Spells/Ars Nouveau(法术,自定义伤害类型 → 命名空间直接判)——都属此类,**已覆盖**。
+  - **② `setHealth(0)+die()` 秒杀(绕过 damage())**:m191 的 ALLOW_DEATH 拦(AvaritiaNeo 已确认)。**已覆盖**。
+- **仍会漏(需按具体模组定制,不能一刀切,否则误伤原版)**:
+  1. **`entity.kill()` 类**:1.21 里 `kill()` 内部 = `damage(genericKill(), MAX)`,伤害类型 `minecraft:generic_kill`、**无攻击者**,与玩家 `/kill` 完全一致 → 放行。堵它会连 `/kill`/虚空死亡一起废,故不堵。个别 novelty「秒杀棒」可能走这条。
+  2. **直接 `discard()`/`remove(RemovalReason.KILLED)`**:连 `die()` 都不走 → ALLOW_DEATH 够不着。极骚写法,罕见。
+  3. **爆炸 `minecraft:explosion` 未挂射手 / 燃烧·中毒·凋灵等原版 DoT**:与原版 TNT/火/毒无法区分(m192 已记)。
+- **结论**:只要武器是"正经打伤害"(哪怕数值爆表)都拦得住;能绕的只有极少数"跳过伤害系统直接删血/删实体/借 generic_kill"的写法。遇到具体可疑模组,照 TaCZ/Avaritia 翻源码再精准补。**本条纯调研,无代码改动。**
