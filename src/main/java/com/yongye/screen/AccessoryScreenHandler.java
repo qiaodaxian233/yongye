@@ -45,7 +45,9 @@ public class AccessoryScreenHandler extends ScreenHandler {
         addSlot(new Slot(acc, 10, 152, 28) {
             @Override
             public boolean canInsert(ItemStack stack) {
-                return stack.getItem() instanceof net.minecraft.item.ElytraItem;
+                // 原版鞘翅(1.21.1 仍是 ElytraItem):isOf 兜底确保原版鞘翅一定认得,instanceof 兼容模组鞘翅
+                return stack.isOf(net.minecraft.item.Items.ELYTRA)
+                        || stack.getItem() instanceof net.minecraft.item.ElytraItem;
             }
             @Override
             public int getMaxItemCount() {
@@ -77,9 +79,12 @@ public class AccessoryScreenHandler extends ScreenHandler {
                 // 饰品槽 → 背包
                 if (!this.insertItem(original, accEnd, invEnd, true)) return ItemStack.EMPTY;
             } else {
-                // 背包 → 饰品槽(仅神器)
+                // 背包 → 饰品区:神器进神器槽(0..SIZE-2),鞘翅进鞘翅槽(SIZE-1)
+                int wingSlot = AccessoryStorage.SIZE - 1;
                 if (original.getItem() instanceof ArtifactItem) {
-                    if (!this.insertItem(original, 0, accEnd, false)) return ItemStack.EMPTY;
+                    if (!this.insertItem(original, 0, wingSlot, false)) return ItemStack.EMPTY;
+                } else if (isWing(original)) {
+                    if (!this.insertItem(original, wingSlot, wingSlot + 1, false)) return ItemStack.EMPTY;
                 } else {
                     return ItemStack.EMPTY;
                 }
@@ -88,6 +93,12 @@ public class AccessoryScreenHandler extends ScreenHandler {
             else slot.markDirty();
         }
         return newStack;
+    }
+
+    /** 是否鞘翅(原版鞘翅或模组鞘翅);与翼槽 canInsert 判定一致。 */
+    private static boolean isWing(ItemStack stack) {
+        return stack.isOf(net.minecraft.item.Items.ELYTRA)
+                || stack.getItem() instanceof net.minecraft.item.ElytraItem;
     }
 
     @Override

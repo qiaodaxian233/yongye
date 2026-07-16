@@ -2139,3 +2139,12 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 静态自检:5 文件括号全配平(YongyeConfig 27/27·133/133、EquipmentEnhancer 53/53·247/247、ModCommands 98/98·862/862、DebugScreen 44/44·204/204、StatsScreen 15/15·96/96);新 import(ClientPlayerEntity/EntityAttributes)均被引用。
 - **待编译验证**:仅 StatsScreen 首用 `player.getAttributeValue(EntityAttributes.GENERIC_*)`(1.21.1 标准 API,常量名与仓库既有 createAttributes 一致,风险低)。其余(bool 开关/toggle 命令/Btn/canBreak &&)全 proven。
 - 改 5 文件:`YongyeConfig`(+enableEnhanceBreak、ver24)、`EquipmentEnhancer`(canBreak 接开关)、`ModCommands`(+enhancebreak 命令)、`client/DebugScreen`(+按钮)、`client/StatsScreen`(+当前属性块+big)。
+
+## 里程碑 202 — 修饰品栏「翼」槽放不进原版鞘翅
+- **现象**:作者「饰品栏翼槽放原版鞘翅不识别」。核实 AccessoryScreenHandler 第11槽(index 10):
+  1. `canInsert` 用 `instanceof ElytraItem`——1.21.1 里原版鞘翅仍是 ElytraItem(鞘翅改 glider 组件、ElytraItem 移除是 **1.21.2**,已查 Fabric 官方迁移文档),手动拖拽理论可行;
+  2. **真凶=`quickMove`(shift 点击)**:「背包→饰品区」分支只处理 `instanceof ArtifactItem`,鞘翅不是神器→shift 点击直接返回 EMPTY 什么都不发生=「放不进」。
+- **修**:①canInsert 加 `stack.isOf(Items.ELYTRA)` 兜底(确保原版鞘翅一定认得)保留 instanceof 兼容模组鞘翅;②quickMove 背包→饰品区分支加鞘翅路由:神器进神器槽 `insertItem(0, SIZE-1)`,鞘翅进翼槽 `insertItem(SIZE-1, SIZE)`;③新增 `isWing()` 辅助(与 canInsert 同判定)。
+- **⚠ 遗留(已如实告知作者,待定)**:m140 删了 AccessoryGliderMixin 后,**没有任何代码读这个翼槽来提供滑翔**(全局 grep 确认:EntityFlagInvoker 的使用者 AccessoryGliderMixin 已删、不在 mixins.json)。故鞘翅**放进翼槽只是存放,不会飞**;飞行现在靠把鞘翅穿在**正常胸甲槽**(m140 的设计)。若作者想要「翼槽本身赋予飞行(可同时穿胸甲)」,需重新加滑翔逻辑(m140 因其 finicky 移除,是较大改动)——待作者确认再做,本轮不擅自加不可实测的滑翔 mixin。
+- 零新 API(isOf/insertItem/instanceof 全 proven),零配置变更 configVersion 仍 24。静态自检 AccessoryScreenHandler 花 24/24 圆 58/58 配平。
+- 改 1 文件:`screen/AccessoryScreenHandler`。
