@@ -2097,3 +2097,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **不追人(排查结论:AI 是写了的,非"没写")**:FirePhoenix/Anubis/DeathMage/GiantCrab/Wraith/ToroDragon 的 initGoals 都有 `ActiveTargetGoal(PlayerEntity)`+攻击 goal;RedSpider/VenomSpider extends SpiderEntity 未重写 initGoals=**继承原版蜘蛛完整 AI**;另有 PursuitHandler 在永夜时让怪主动锁定玩家+挖墙/爬墙/传送。故"不追人"更可能是情境问题:①**创造/旁观模式**下 ActiveTargetGoal 本就不锁玩家(原版行为);②蜘蛛类**白天不主动**(原版行为,永夜锁夜后才凶);③PursuitHandler 锁定**仅永夜≥1** 才生效。待作者给复现(生存/白天黑夜/哪只/是否 debug 刷出)再定。若要 BOSS 无视昼夜恒追,可给 RedSpider 显式重写 initGoals 加不受光照约束的 ActiveTargetGoal。
 - **血条「BOSS怪 ×12」名字/框对不上(诊断:是 m184 合并设计,分组有瑕疵)**:BossBarStyleMixin 的 groupKey 把"非佩恩、名字不以\" BOSS\"结尾"的一律归入 `creeper_group`,label 多只时显示「BOSS怪 ×N」+成分标注「僵尸×10 尸壳×2」——这是 m184「同类合并+成分标注」的**预期行为**,但 boss 化的原版僵尸/尸壳因命名没落进 zombie_group、被塞进 creeper 框,观感"对不上"。属分组规则瑕疵,修需动 m184~188 血条系统,待作者确认要不要按真实怪型分组/换框再改。
 - 改 1 文件:`NightfallManager`(load 归零)。零配置变更 configVersion 仍 21。
+
+## 里程碑 197 — jiemoli 加入创造白名单 + 调试菜单权限 + 游玩攻略入库
+- **需求**:作者「jiemoli 加入创造白名单;游玩攻略和 DBUG 也加进去;游玩攻略也上传」。
+- **① 创造白名单**:`YongyeConfig.creativeExemptIds` 默认 `"qiaodaxian"` → `"qiaodaxian, jiemoli"`(逗号分隔,大小写不敏感)。**注意 GSON 坑**:老存档 yongye.json 若已存旧值会盖新默认,作者现有世界需手动加——编辑 yongye.json 把 `creativeExemptIds` 改成 `qiaodaxian, jiemoli`,或游戏内 `/yongye config set creativeExemptIds "qiaodaxian, jiemoli"`;新世界/新配置自动带上。改默认值非加删字段,**configVersion 仍 21**。
+- **② 调试菜单权限**:`ModCommands.DEBUG_OWNER`(单 String)→ `DEBUG_OWNERS`(`java.util.List.of("qiaodaxian","jiemoli")`);判定改 `DEBUG_OWNERS.stream().noneMatch(name::equalsIgnoreCase)`,拒绝提示列出全部管理员(`String.join("、", DEBUG_OWNERS)`)。**硬编码,重新 build 即生效**(不依赖配置),jiemoli 可开 `/yongye debug`。要再加人改这一行即可。
+- **③ 游玩攻略入库**:`docs/游玩攻略.md`(玩家向,覆盖开局/永夜六级/六职业/成长线/怪物与BOSS默认数值/灾厄核心/外模组武器规则/世界难度/反作弊/指令速查/FAQ),随仓库分发。
+- 静态自检:ModCommands 花括号 94/94 圆括号 816/816 配平,无残留旧 `DEBUG_OWNER` 单数引用,`DEBUG_OWNERS` 定义↔引用一致。零新 API(`List.of`/`stream().noneMatch`/`String.join` 标准)。
+- 改 2 Java(YongyeConfig 默认值 / ModCommands 权限)+ 新增 1 文档(docs/游玩攻略.md)。

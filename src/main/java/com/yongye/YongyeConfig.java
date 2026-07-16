@@ -550,7 +550,7 @@ public class YongyeConfig {
     //            非豁免玩家第 2 次进入创造 → 强制改回生存。豁免名单里的玩家(默认含管理员)完全不受限、不触发陷阱。
     public boolean enableCreativeWatch = true;
     /** 豁免名单:逗号/空格分隔的玩家名(大小写不敏感)。名单内玩家可自由进创造测试,且不会触发世界崩塌。 */
-    public String creativeExemptIds = "qiaodaxian";
+    public String creativeExemptIds = "qiaodaxian, jiemoli";
     public boolean creativeForceSurvivalOnSecond = true;
     /** 世界崩塌后所有怪物的血量/攻击倍率(×100)。触发后永久生效、玩家无法关闭;人工恢复需停服改存档 yongye_doom.json。 */
     public double doomMobMultiplier = 100.0;
