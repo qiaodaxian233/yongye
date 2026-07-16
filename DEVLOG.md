@@ -2131,3 +2131,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 零新 API(giveItemStack/ItemStack(item,count)/sendFeedback 全同 wardbook proven),零配置变更 **configVersion 仍 23**。
 - 静态自检:ModCommands 花 97/97 圆 851/851、DebugScreen 花 44/44 圆 203/203 配平;`literal("protectscroll")` 唯一、按钮唯一。
 - 改 2 文件:`ModCommands`(+protectscroll 命令)、`client/DebugScreen`(+发卷按钮)。
+
+## 里程碑 201 — 碎武器(碎裂)总开关 + 成长面板加「当前属性」显示(含武僧)
+- **需求**:作者「(debug 里)碎武器这个开关」;「武僧属性在哪显示,看不见」;「所有人加一个当前属性显示」。
+- **① 碎武器总开关**:新配置 `enableEnhanceBreak`(默 true)。`EquipmentEnhancer` 的 m199 `canBreak` 前置改为 `c.enableEnhanceBreak && DifficultyManager.getLevel() >= c.enhanceBreakMinDifficulty`——关掉后强化仍可能失败(白费材料/等级不涨),但装备**永不碎裂**,且不消耗保护卷。命令 `/yongye enhancebreak`(切换,照 protectperop 模板)+ DebugScreen 成长页按钮「碎武器:切换」。**configVersion 23→24**。
+- **② 当前属性显示(所有职业通用,解武僧看不见)**:根因=成长面板只显示技能书等级/加成,不显示玩家**最终属性**;武僧又无武器(武器面板空)故看不到。方案=**纯客户端**在 StatsScreen 顶部加「◆ 当前属性 ◆」块,直接读本地玩家 `MinecraftClient.getInstance().player` 已被原版同步的最终属性值(getAttributeValue),含职业/携带(m133)/强化加成——武僧照样显示。展示:生命 当前/上限、攻击伤害、攻击速度、护甲、韧性、移动速度、击退抗性、幸运;大数用 big() 紧凑(≥1亿→X.X亿/≥1万→X.X万,后期十亿级不爆行)。不改服务端/网络包(本地玩家属性原版就同步到客户端)。
+- 静态自检:5 文件括号全配平(YongyeConfig 27/27·133/133、EquipmentEnhancer 53/53·247/247、ModCommands 98/98·862/862、DebugScreen 44/44·204/204、StatsScreen 15/15·96/96);新 import(ClientPlayerEntity/EntityAttributes)均被引用。
+- **待编译验证**:仅 StatsScreen 首用 `player.getAttributeValue(EntityAttributes.GENERIC_*)`(1.21.1 标准 API,常量名与仓库既有 createAttributes 一致,风险低)。其余(bool 开关/toggle 命令/Btn/canBreak &&)全 proven。
+- 改 5 文件:`YongyeConfig`(+enableEnhanceBreak、ver24)、`EquipmentEnhancer`(canBreak 接开关)、`ModCommands`(+enhancebreak 命令)、`client/DebugScreen`(+按钮)、`client/StatsScreen`(+当前属性块+big)。

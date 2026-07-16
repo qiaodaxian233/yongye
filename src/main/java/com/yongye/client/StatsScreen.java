@@ -4,6 +4,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -40,13 +42,44 @@ public class StatsScreen extends Screen {
 
         int cx = this.width / 2;
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("◆ 成长面板 ◆").formatted(Formatting.GOLD), cx, 26, 0xFFFFD700);
+                Text.literal("◆ 成长面板 ◆").formatted(Formatting.GOLD), cx, 18, 0xFFFFD700);
 
-        int y = 52;
+        // 当前属性:所有职业通用。读本地玩家已同步的最终属性(含职业/携带/强化加成),武僧无武器也能看。
+        int y = 38;
+        ctx.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("◆ 当前属性 ◆").formatted(Formatting.AQUA), cx, y, 0xFF55FFFF);
+        y += 16;
+        ClientPlayerEntity pl = MinecraftClient.getInstance().player;
+        if (pl != null) {
+            String[] attrs = {
+                    "生命 " + big(pl.getHealth()) + " / " + big(pl.getMaxHealth()),
+                    "攻击伤害 " + big(pl.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE))
+                            + "    攻击速度 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)),
+                    "护甲 " + big(pl.getAttributeValue(EntityAttributes.GENERIC_ARMOR))
+                            + "    韧性 " + big(pl.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS)),
+                    "移动速度 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED))
+                            + "    击退抗性 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE)),
+                    "幸运 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_LUCK)),
+            };
+            for (String s : attrs) {
+                ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(s), cx, y, 0xFFFFFFFF);
+                y += 16;
+            }
+        } else {
+            ctx.drawCenteredTextWithShadow(this.textRenderer,
+                    Text.literal("(读取中…)").formatted(Formatting.GRAY), cx, y, 0xFF888888);
+            y += 16;
+        }
+
+        // 成长(技能书等级与加成)
+        y += 8;
+        ctx.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("◆ 成长(技能书)◆").formatted(Formatting.GOLD), cx, y, 0xFFFFD700);
+        y += 18;
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("血量强化   V" + ClientStats.health + "    (+" + (ClientStats.health * 10L) + " 最大生命)"),
                 cx, y, 0xFFFF5555);
-        y += 18;
+        y += 16;
 
         String[] descs = {
                 "  攻击伤害 +" + fmt(level(0) * 0.5),
@@ -64,8 +97,16 @@ public class StatsScreen extends Screen {
             int color = lv > 0 ? 0xFF55FFFF : 0xFF888888;
             ctx.drawCenteredTextWithShadow(this.textRenderer,
                     Text.literal(NAMES[i] + "   V" + lv + (lv > 0 ? descs[i] : "")), cx, y, color);
-            y += 18;
+            y += 16;
         }
+    }
+
+    /** 大数紧凑显示:≥1亿→X.X亿,≥1万→X.X万,否则原样(后期攻击/生命可达十亿级)。 */
+    private static String big(double v) {
+        double a = Math.abs(v);
+        if (a >= 1e8) return fmt(v / 1e8) + "亿";
+        if (a >= 1e4) return fmt(v / 1e4) + "万";
+        return fmt(v);
     }
 
     private static int level(int i) {

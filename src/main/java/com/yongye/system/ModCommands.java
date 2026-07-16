@@ -164,6 +164,14 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        // m201:碎武器(碎裂)总开关(切换)
+                        .then(CommandManager.literal("enhancebreak").executes(ctx -> {
+                                    boolean v = !com.yongye.YongyeConfig.get().enableEnhanceBreak;
+                                    com.yongye.YongyeConfig.get().enableEnhanceBreak = v;
+                                    com.yongye.YongyeConfig.save();
+                                    ctx.getSource().sendFeedback(() -> Text.literal("碎武器(碎裂)= " + v + "(已保存)").formatted(Formatting.GREEN), false);
+                                    return 1;
+                        }))
                         // m198:每次强化自动消耗保护卷 开关(无参=切换,或跟 true/false)
                         .then(CommandManager.literal("protectperop")
                                 .executes(ctx -> {

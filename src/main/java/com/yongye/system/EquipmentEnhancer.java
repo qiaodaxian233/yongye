@@ -243,7 +243,7 @@ public final class EquipmentEnhancer {
         boolean broke = false, usedProtect = false;
         // m199:碎裂难度门——世界难度 ≥ enhanceBreakMinDifficulty(默 3=困难)才可能碎裂;
         //       低于此档(或难度未设定 getLevel()=-1)一律不碎、也不消耗保护卷。
-        boolean canBreak = DifficultyManager.getLevel() >= c.enhanceBreakMinDifficulty;
+        boolean canBreak = c.enableEnhanceBreak && DifficultyManager.getLevel() >= c.enhanceBreakMinDifficulty;
         // m198:整次强化保护——开启且本次会摸到碎裂等级(≥enhanceBreakLevel)时,消耗一张保护卷
         //       (优先用已激活的手动护盾),这一整次强化都不碎裂(不管里面尝试多少次)。
         //       开关 enhanceProtectPerOperation(/yongye protectperop 或调试菜单可关)。

@@ -84,6 +84,7 @@ public class DebugScreen extends Screen {
                             new Btn("找回强化", "yongye recover"),
                             new Btn("每次强化护盾:切换", "yongye protectperop"),
                             new Btn("给强化保护卷×16", "yongye protectscroll"),
+                            new Btn("碎武器:切换", "yongye enhancebreak"),
                     }),
                     new Section("技能书(V50;type level)", new Btn[]{
                             new Btn("攻击 attack", "yongye skillbook attack 50"),
