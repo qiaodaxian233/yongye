@@ -2105,3 +2105,14 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **③ 游玩攻略入库**:`docs/游玩攻略.md`(玩家向,覆盖开局/永夜六级/六职业/成长线/怪物与BOSS默认数值/灾厄核心/外模组武器规则/世界难度/反作弊/指令速查/FAQ),随仓库分发。
 - 静态自检:ModCommands 花括号 94/94 圆括号 816/816 配平,无残留旧 `DEBUG_OWNER` 单数引用,`DEBUG_OWNERS` 定义↔引用一致。零新 API(`List.of`/`stream().noneMatch`/`String.join` 标准)。
 - 改 2 Java(YongyeConfig 默认值 / ModCommands 权限)+ 新增 1 文档(docs/游玩攻略.md)。
+
+## 里程碑 198 — 强化保护卷改「整次强化消耗一张」+ 调试可关
+- **需求**:作者「每次强化不管多少次都消耗一个(保护卷);这个在调试里可以关闭」。即把 m159 那套「手动右键激活、只挡一次碎裂、批量强化里第二次碎裂就没得挡」的模型,改成**一次强化操作消耗一张卷、整次不碎**,且可开关。
+- **实现(EquipmentEnhancer.attempt)**:开头算 `opProtected`——开关 `enhanceProtectPerOperation` 开 且 本次会摸到碎裂等级(`startLevel+budget >= enhanceBreakLevel`)时,**优先消耗已激活的手动护盾 ENHANCE_PROTECTED,否则从背包扣一张保护卷**(新辅助 `consumeOneProtectScroll` 逐栈找 ModItems.ENHANCE_PROTECT_SCROLL 扣 1),置 opProtected;碎裂判定块改为:opProtected 则**整次任何高级失败都不碎**,否则回落到老的「手动护盾挡一次 / 否则按 enhanceBreakChance 判碎」。
+  - **只在会碎的强化上扣卷**(op 触及 ≥enhanceBreakLevel 才扣),低级安全强化不浪费保护卷——这是对「每次强化都消耗一个」的合理取舍(每次**会碎的**强化消耗一张);要「字面每次都扣」可再说。
+  - 关闭开关 = 回到 m159 老行为(右键激活手动护盾、挡一次碎裂)。
+- **开关**:配置新增 `enhanceProtectPerOperation`(默认 true)。命令 `/yongye protectperop`(无参=切换,或跟 true/false,存盘+反馈,照 enable 模板)。调试菜单「道具/成长」页加按钮「每次强化护盾:切换」→ 发 `yongye protectperop`。
+- **configVersion 21→22**(新增字段;GSON 缺失键取代码默认 true,老存档自动带上、不触发盖默认)。
+- 静态自检:EquipmentEnhancer 53/53·246/246、ModCommands 96/96·839/839、DebugScreen 44/44·202/202、YongyeConfig 27/27·133/133 全配平;opProtected/consumeOneProtectScroll/protectperop 定义↔引用一致。**零新 API**(getInventory/getStack/decrement/BoolArgumentType/config.save 全在树 proven)。
+- 改 4 文件:EquipmentEnhancer(逻辑+辅助)/YongyeConfig(+字段+版本)/ModCommands(+命令)/DebugScreen(+按钮)。
+- **要实机验**:开关默认开——冲 1 万级以上强化时,背包有保护卷则每次强化自动扣一张、整次不碎;背包没卷则照常可能碎;`/yongye protectperop` 或调试按钮切到关,回到右键手动护盾模式。

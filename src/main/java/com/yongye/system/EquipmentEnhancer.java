@@ -241,6 +241,18 @@ public final class EquipmentEnhancer {
                 (p != null) ? p.getRandom() : net.minecraft.util.math.random.Random.create();
         int level = startLevel, ok = 0, fail = 0, remain = budget;
         boolean broke = false, usedProtect = false;
+        // m198:整次强化保护——开启且本次会摸到碎裂等级(≥enhanceBreakLevel)时,消耗一张保护卷
+        //       (优先用已激活的手动护盾),这一整次强化都不碎裂(不管里面尝试多少次)。
+        //       开关 enhanceProtectPerOperation(/yongye protectperop 或调试菜单可关)。
+        boolean opProtected = false;
+        if (p != null && c.enhanceProtectPerOperation && startLevel + budget >= c.enhanceBreakLevel) {
+            if (p.getAttachedOrElse(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false)) {
+                p.setAttached(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
+                opProtected = true; usedProtect = true;
+            } else if (consumeOneProtectScroll(p)) {
+                opProtected = true; usedProtect = true;
+            }
+        }
         // 安全段(必成功)批量推进,避免大量 RNG 空转
         if (level < c.enhanceFailStartLevel && remain > 0) {
             int bulk = Math.min(remain, c.enhanceFailStartLevel - level);
@@ -253,19 +265,36 @@ public final class EquipmentEnhancer {
             } else {
                 fail++;
                 if (level >= c.enhanceBreakLevel) {
-                    boolean prot = (p != null)
-                            && p.getAttachedOrElse(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
-                    if (prot) {
-                        p.setAttached(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
-                        usedProtect = true;
-                    } else if (rng.nextDouble() < c.enhanceBreakChance) {
-                        broke = true;
+                    if (opProtected) {
+                        usedProtect = true;   // m198:整次强化已被保护,高级失败一律不碎
+                    } else {
+                        boolean prot = (p != null)
+                                && p.getAttachedOrElse(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
+                        if (prot) {
+                            p.setAttached(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
+                            usedProtect = true;
+                        } else if (rng.nextDouble() < c.enhanceBreakChance) {
+                            broke = true;
+                        }
                     }
                 }
             }
         }
         ItemStack out = broke ? ItemStack.EMPTY : withLevel(equipment, level);
         return new EnhanceResult(out, startLevel, level, ok, fail, broke, usedProtect);
+    }
+
+    /** m198:从背包扣一张强化保护卷(从前往后逐栈找),扣到返回 true。 */
+    private static boolean consumeOneProtectScroll(net.minecraft.server.network.ServerPlayerEntity p) {
+        var inv = p.getInventory();
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack s = inv.getStack(i);
+            if (s.getItem() == com.yongye.registry.ModItems.ENHANCE_PROTECT_SCROLL) {
+                s.decrement(1);
+                return true;
+            }
+        }
+        return false;
     }
 
 

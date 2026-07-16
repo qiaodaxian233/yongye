@@ -164,6 +164,23 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        // m198:每次强化自动消耗保护卷 开关(无参=切换,或跟 true/false)
+                        .then(CommandManager.literal("protectperop")
+                                .executes(ctx -> {
+                                    boolean v = !com.yongye.YongyeConfig.get().enhanceProtectPerOperation;
+                                    com.yongye.YongyeConfig.get().enhanceProtectPerOperation = v;
+                                    com.yongye.YongyeConfig.save();
+                                    ctx.getSource().sendFeedback(() -> Text.literal("每次强化自动消耗保护卷 = " + v + "(已保存)").formatted(Formatting.GREEN), false);
+                                    return 1;
+                                })
+                                .then(CommandManager.argument("v", BoolArgumentType.bool()).executes(ctx -> {
+                                    boolean v = BoolArgumentType.getBool(ctx, "v");
+                                    com.yongye.YongyeConfig.get().enhanceProtectPerOperation = v;
+                                    com.yongye.YongyeConfig.save();
+                                    ctx.getSource().sendFeedback(() -> Text.literal("每次强化自动消耗保护卷 = " + v + "(已保存)").formatted(Formatting.GREEN), false);
+                                    return 1;
+                                })))
+
                         // 世界难度:查看 / 设定(0游玩~6永夜)。整局一个值,设定即全局生效。
                         .then(CommandManager.literal("difficulty")
                                 .then(CommandManager.literal("status").executes(ctx -> {
