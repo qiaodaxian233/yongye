@@ -2124,3 +2124,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **可调**:新增 `enhanceBreakMinDifficulty`(默 3),想改成地狱起(4)/深渊起(5)/永夜起(6)改它即可;想任何难度都可碎设 0。**configVersion 22→23**(加字段;老 json 缺该键 GSON 保留默认 3 自动生效,仅弹一次版本不一致提示属正常)。
 - 静态自检:EquipmentEnhancer 花括号 53/53 圆括号 247/247 配平;`canBreak` 定义 1 + 引用 2;DifficultyManager 同包(com.yongye.system)免 import。零新 API。
 - 改 2 文件:`YongyeConfig`(+enhanceBreakMinDifficulty、CURRENT_CONFIG_VERSION 23)、`EquipmentEnhancer`(canBreak 门)。
+
+## 里程碑 200 — 补强化保护卷的获取入口(命令 + debug 按钮)
+- **背景**:作者问「保护卷在哪兑换?debug 里为什么没开关?还是杀够怪自动给?」。核实 `ProtectScrollHandler`:保护卷**没有兑换界面**,只有两条**自动**途径——①敌对怪被玩家击杀时按 `protectScrollDropChance`(默 0.002)低概率直接掉;②击杀累计到阈值自动兑换 1 张,首张 `protectScrollKillBase`(默 2000)击杀、每兑换 1 张阈值翻倍(2000→4000→8000…)。debug 里原有的「每次强化护盾:切换」是 m198 的 `enhanceProtectPerOperation` 消耗开关,**不是发卷**。确实缺一个直接拿卷的入口。
+- **本轮补**:①命令 `/yongye protectscroll` —— 直接发 16 张(=一整叠,maxCount 16),照 wardbook 内联写法;②DebugScreen「成长」页加按钮「给强化保护卷×16」→ 该命令。便于测试/管理,正常玩法仍走掉落+杀怪兑换。
+- 零新 API(giveItemStack/ItemStack(item,count)/sendFeedback 全同 wardbook proven),零配置变更 **configVersion 仍 23**。
+- 静态自检:ModCommands 花 97/97 圆 851/851、DebugScreen 花 44/44 圆 203/203 配平;`literal("protectscroll")` 唯一、按钮唯一。
+- 改 2 文件:`ModCommands`(+protectscroll 命令)、`client/DebugScreen`(+发卷按钮)。

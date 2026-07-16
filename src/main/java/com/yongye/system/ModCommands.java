@@ -364,6 +364,13 @@ public final class ModCommands {
                             ctx.getSource().sendFeedback(() -> Text.literal("已获得【守护附魔书】").formatted(Formatting.LIGHT_PURPLE), false);
                             return 1;
                         }))
+                        // m200:发强化保护卷(便于测试/管理;正常玩法靠杀怪低概率掉落 + 杀怪累计到阈值自动兑换)
+                        .then(CommandManager.literal("protectscroll").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.ENHANCE_PROTECT_SCROLL, 16));
+                            ctx.getSource().sendFeedback(() -> Text.literal("已获得【强化保护卷】×16").formatted(Formatting.LIGHT_PURPLE), false);
+                            return 1;
+                        }))
 
                         .then(CommandManager.literal("top").executes(ctx -> {
                             java.util.List<ServerPlayerEntity> list =
