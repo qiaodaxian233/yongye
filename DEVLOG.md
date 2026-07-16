@@ -2116,3 +2116,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 静态自检:EquipmentEnhancer 53/53·246/246、ModCommands 96/96·839/839、DebugScreen 44/44·202/202、YongyeConfig 27/27·133/133 全配平;opProtected/consumeOneProtectScroll/protectperop 定义↔引用一致。**零新 API**(getInventory/getStack/decrement/BoolArgumentType/config.save 全在树 proven)。
 - 改 4 文件:EquipmentEnhancer(逻辑+辅助)/YongyeConfig(+字段+版本)/ModCommands(+命令)/DebugScreen(+按钮)。
 - **要实机验**:开关默认开——冲 1 万级以上强化时,背包有保护卷则每次强化自动扣一张、整次不碎;背包没卷则照常可能碎;`/yongye protectperop` 或调试按钮切到关,回到右键手动护盾模式。
+
+## 里程碑 199 — 碎裂加难度门:困难档以上才会碎武器
+- **需求**:作者「碎武器在困难难度以上才会触发」。
+- **实现**:`EquipmentEnhancer.attempt` 顶部算 `canBreak = DifficultyManager.getLevel() >= c.enhanceBreakMinDifficulty`(新配置,默 3=困难;档位=GameDifficulty 序号 0游玩~6永夜)。`canBreak` 同时管住**两处**:①m198 整次强化保护的**预扣**(加 `canBreak &&`,难度不够不预扣保护卷)②循环内碎裂块 `if (canBreak && level >= enhanceBreakLevel)`(难度不够高级失败只是普通失败:白费本次预算、等级不变、**不碎、不消耗保护卷**)。
+- **语义**:只门控「碎裂」,不动失败/成功率系统——低于困难仍会强化失败,只是永不碎、永不掉保护卷。难度未设定(getLevel()=-1)按不可碎处理(安全)。
+- **可调**:新增 `enhanceBreakMinDifficulty`(默 3),想改成地狱起(4)/深渊起(5)/永夜起(6)改它即可;想任何难度都可碎设 0。**configVersion 22→23**(加字段;老 json 缺该键 GSON 保留默认 3 自动生效,仅弹一次版本不一致提示属正常)。
+- 静态自检:EquipmentEnhancer 花括号 53/53 圆括号 247/247 配平;`canBreak` 定义 1 + 引用 2;DifficultyManager 同包(com.yongye.system)免 import。零新 API。
+- 改 2 文件:`YongyeConfig`(+enhanceBreakMinDifficulty、CURRENT_CONFIG_VERSION 23)、`EquipmentEnhancer`(canBreak 门)。

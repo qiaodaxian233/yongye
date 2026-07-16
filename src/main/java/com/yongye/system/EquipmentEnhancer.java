@@ -241,11 +241,14 @@ public final class EquipmentEnhancer {
                 (p != null) ? p.getRandom() : net.minecraft.util.math.random.Random.create();
         int level = startLevel, ok = 0, fail = 0, remain = budget;
         boolean broke = false, usedProtect = false;
+        // m199:碎裂难度门——世界难度 ≥ enhanceBreakMinDifficulty(默 3=困难)才可能碎裂;
+        //       低于此档(或难度未设定 getLevel()=-1)一律不碎、也不消耗保护卷。
+        boolean canBreak = DifficultyManager.getLevel() >= c.enhanceBreakMinDifficulty;
         // m198:整次强化保护——开启且本次会摸到碎裂等级(≥enhanceBreakLevel)时,消耗一张保护卷
         //       (优先用已激活的手动护盾),这一整次强化都不碎裂(不管里面尝试多少次)。
         //       开关 enhanceProtectPerOperation(/yongye protectperop 或调试菜单可关)。
         boolean opProtected = false;
-        if (p != null && c.enhanceProtectPerOperation && startLevel + budget >= c.enhanceBreakLevel) {
+        if (p != null && canBreak && c.enhanceProtectPerOperation && startLevel + budget >= c.enhanceBreakLevel) {
             if (p.getAttachedOrElse(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false)) {
                 p.setAttached(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
                 opProtected = true; usedProtect = true;
@@ -264,7 +267,7 @@ public final class EquipmentEnhancer {
                 level++; ok++;
             } else {
                 fail++;
-                if (level >= c.enhanceBreakLevel) {
+                if (canBreak && level >= c.enhanceBreakLevel) {
                     if (opProtected) {
                         usedProtect = true;   // m198:整次强化已被保护,高级失败一律不碎
                     } else {

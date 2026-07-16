@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 22;
+    public static final int CURRENT_CONFIG_VERSION = 23;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -191,6 +191,9 @@ public class YongyeConfig {
     public double enhanceFailEndRate = 0.10;       // enhanceFailEndLevel 及以上的成功率(封底)
     public int enhanceBreakLevel = 10000;          // 达到此级后,失败可能令装备碎裂
     public double enhanceBreakChance = 0.25;       // 碎裂概率(仅在 ≥enhanceBreakLevel 的失败上判定;有保护卷则免)
+    // m199:碎裂难度门——只有世界难度 ≥ 此档才可能「碎裂」;低于此档(或难度未设定)强化仍会失败、
+    //       但装备不会碎、也不消耗保护卷。档位=GameDifficulty 序号(0游玩/1简单/2适中/3困难/4地狱/5深渊/6永夜),默认 3=困难。
+    public int enhanceBreakMinDifficulty = 3;
     // m198:整次强化保护。开启后,每次强化(操作)只要会摸到碎裂等级(≥enhanceBreakLevel),
     // 就自动消耗一张强化保护卷(优先用已激活的手动护盾),这一整次强化都不碎裂(不管里面尝试多少次);
     // 关闭则回到「手动右键激活、挡下一次碎裂」的老行为。可用 /yongye protectperop 或调试菜单开关。
