@@ -2170,3 +2170,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **`ClassReplaceScreen`**:两张卡面改为海报 99×132 等比缩略(同一套贴图),红框「将丢弃」语义与标签保留。
 - **无「待编译验证」**:drawTexture 9 参 / matrices 缩放 / YongyeButton+addDrawableChild 组合均有在树先例;ChooseClassPayload 为本仓库类(import 比对脚本的"无先例"是重写后的已知误报)。
 - 实机看:海报清晰度(现 768 宽,嫌糊可提 1024 宽)、页签切换、确认按钮、替换界面缩略。configVersion 不变。
+
+## 里程碑 206 — 全物品标识「抖音:乔大仙」(tooltip 水印,可配)
+- **需求**(作者):「所有物品添加 抖音:乔大仙」→ 悬停**任意物品**(原版 + 模组)的提示栏末尾追加一行金色「抖音:乔大仙」。
+- 实现:客户端 `ItemTooltipCallback` 一个钩子覆盖全部物品,零逐物品改动(YongyeClient 注册;包路径与签名照 FabricMC/fabric **1.21.1 分支源码**逐字核对:`net.fabricmc.fabric.api.client.item.v1`,`getTooltip(stack, Item.TooltipContext, TooltipType, List<Text>)`)。
+- 配置 +2,**configVersion 24→25**:`enableItemWatermark`(默认开)/ `itemWatermarkText`(默认「抖音:乔大仙」,换字/关闭改配置即可)。
+- **待编译验证**:仅 `ItemTooltipCallback`(仓库首用,已按官方源码核对);TooltipType / Text / Formatting 均在树。

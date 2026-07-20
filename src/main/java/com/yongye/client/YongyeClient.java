@@ -318,6 +318,23 @@ public class YongyeClient implements ClientModInitializer {
             }
         });
 
+        // 【m206】全物品标识：悬停任意物品（原版+模组）tooltip 末尾加一行，可在配置关闭/改字
+
+        net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipType, lines) -> {
+
+            com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
+
+            if (cfg.enableItemWatermark && cfg.itemWatermarkText != null && !cfg.itemWatermarkText.isBlank()) {
+
+                lines.add(net.minecraft.text.Text.literal(cfg.itemWatermarkText)
+
+                        .formatted(net.minecraft.util.Formatting.GOLD));
+
+            }
+
+        });
+
+
         Yongye.LOGGER.info("[夜蚀] 客户端:精英皮肤 + 成长面板 + 装备介绍 + 技能按键已注册");
     }
 }

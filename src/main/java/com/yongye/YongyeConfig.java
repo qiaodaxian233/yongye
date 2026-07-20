@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 24;
+    public static final int CURRENT_CONFIG_VERSION = 25;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -693,6 +693,12 @@ public class YongyeConfig {
     public boolean foreignDamageFilterHint = true;
     /** 额外放行的模组命名空间(逗号分隔,如 "somemod,othermod");minecraft 与 yongye 始终放行。 */
     public String foreignDamageFilterExtraNamespaces = "";
+
+    // ============ m206:全物品标识(抖音:乔大仙) ============
+    /** 悬停任意物品(原版+模组)的提示栏末尾追加一行标识;关掉即不显示。 */
+    public boolean enableItemWatermark = true;
+    /** 标识文字(所有物品统一显示,想换字改这里)。 */
+    public String itemWatermarkText = "抖音:乔大仙";
     /** m190:外模组武器打怪被判无效时,怪物在聊天栏开口嘲讽(内置 20 条台词随机抽,如「哎呦喂,您拿前朝的剑,斩本朝的官?」)。 */
     public boolean foreignDamageTaunt = true;
     /** 嘲讽冷却:同一玩家两句嘲讽之间的最短间隔(tick,20=1秒;防连点刷屏)。 */
