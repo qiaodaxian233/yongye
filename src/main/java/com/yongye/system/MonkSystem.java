@@ -76,6 +76,6 @@ public final class MonkSystem {
 
             return TypedActionResult.success(stack, false);
         });
-        Yongye.LOGGER.info("[永夜] 武僧吞噬系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 武僧吞噬系统已挂载");
     }
 }

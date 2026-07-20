@@ -82,7 +82,7 @@ public final class CreativeWatchHandler {
                 LAST_MODE.put(uuid, cur);
             }
         });
-        Yongye.LOGGER.info("[永夜] 创造模式监听已挂载");
+        Yongye.LOGGER.info("[夜蚀] 创造模式监听已挂载");
     }
 
     /** 玩家名是否在豁免名单(creativeExemptIds,逗号/空格分隔,大小写不敏感)。 */

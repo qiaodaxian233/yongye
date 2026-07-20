@@ -281,6 +281,6 @@ public final class ModAttachments {
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "end_dragon_buffed"));
 
     public static void init() {
-        Yongye.LOGGER.info("[永夜] 数据附着已注册");
+        Yongye.LOGGER.info("[夜蚀] 数据附着已注册");
     }
 }

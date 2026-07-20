@@ -65,7 +65,7 @@ public final class AnubisSpawnHandler {
                     server.getOverworld().getRandom().nextInt(eligible.size()));
             spawnAnubisNear(target);
         });
-        Yongye.LOGGER.info("[永夜] 阿努比斯自然降临系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 阿努比斯自然降临系统已挂载");
     }
 
     private static void spawnAnubisNear(ServerPlayerEntity player) {

@@ -38,6 +38,6 @@ public final class NightfallVisionHandler {
                 p.addStatusEffect(new StatusEffectInstance(StatusEffects.DARKNESS, 100, 0, true, false, false));
             }
         });
-        Yongye.LOGGER.info("[永夜] 永夜剥视系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 永夜剥视系统已挂载");
     }
 }

@@ -43,7 +43,7 @@ public final class LootMagnetHandler {
                 }
             }
         });
-        Yongye.LOGGER.info("[永夜] 战利品磁吸已挂载");
+        Yongye.LOGGER.info("[夜蚀] 战利品磁吸已挂载");
     }
 
     /** 该掉落物是否属于本 mod(命名空间 yongye)。 */

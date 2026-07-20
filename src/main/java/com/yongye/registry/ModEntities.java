@@ -113,6 +113,6 @@ public final class ModEntities {
         FabricDefaultAttributeRegistry.register(GIANT_CRAB, GiantCrabEntity.createGiantCrabAttributes());
         FabricDefaultAttributeRegistry.register(ANUBIS, AnubisEntity.createAnubisAttributes());
         FabricDefaultAttributeRegistry.register(ANUBIS_WRAITH, AnubisWraithEntity.createAnubisWraithAttributes());
-        Yongye.LOGGER.info("[永夜] 自定义实体已注册:toro_ender_dragon / venom_spider / red_spider / fire_phoenix / death_mage / giant_crab / anubis / anubis_wraith");
+        Yongye.LOGGER.info("[夜蚀] 自定义实体已注册:toro_ender_dragon / venom_spider / red_spider / fire_phoenix / death_mage / giant_crab / anubis / anubis_wraith");
     }
 }

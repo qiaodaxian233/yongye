@@ -242,7 +242,7 @@ public final class EliteHandler {
             }
         });
 
-        Yongye.LOGGER.info("[永夜] 精英怪系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 精英怪系统已挂载");
     }
 
     /**

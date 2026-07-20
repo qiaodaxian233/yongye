@@ -212,7 +212,7 @@ public final class ModCommands {
                             String debugName = p.getGameProfile().getName();
                             if (DEBUG_OWNERS.stream().noneMatch(debugName::equalsIgnoreCase)) {
                                 ctx.getSource().sendFeedback(() ->
-                                        Text.literal("[永夜] 调试菜单仅限管理员(" + String.join("、", DEBUG_OWNERS) + ")使用。").formatted(Formatting.RED), false);
+                                        Text.literal("[夜蚀] 调试菜单仅限管理员(" + String.join("、", DEBUG_OWNERS) + ")使用。").formatted(Formatting.RED), false);
                                 return 0;
                             }
                             net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p, new com.yongye.network.OpenDebugPayload());
@@ -362,7 +362,7 @@ public final class ModCommands {
                                     ctx.getSource().sendFeedback(() -> Text.literal(
                                             "配置已保存。文件位置:\n" + path
                                             + "\n把这个 yongye.json 发给作者即可设为默认配置。").formatted(Formatting.AQUA), false);
-                                    com.yongye.Yongye.LOGGER.info("[永夜] 配置导出路径: {}", path);
+                                    com.yongye.Yongye.LOGGER.info("[夜蚀] 配置导出路径: {}", path);
                                     return 1;
                                 })))
 
@@ -575,7 +575,7 @@ public final class ModCommands {
                 );
         });
 
-        Yongye.LOGGER.info("[永夜] 指令已注册");
+        Yongye.LOGGER.info("[夜蚀] 指令已注册");
     }
 
     // ===== 通用配置读写(反射:任意 YongyeConfig 公共实例字段都能在游戏内 set/get/list)=====

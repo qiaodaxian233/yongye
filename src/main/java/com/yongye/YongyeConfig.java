@@ -687,7 +687,7 @@ public class YongyeConfig {
     public double endHordeStatMultiplier = 2.0;
 
     // ============ m189:怪物伤害来源检测(外模组伤害不作数) ============
-    /** 总开关:怪物受到的伤害只认原版 / 永夜来源;外模组武器与外模组召唤物的伤害一律无效。 */
+    /** 总开关:怪物受到的伤害只认原版 / 夜蚀（本模组）来源;外模组武器与外模组召唤物的伤害一律无效。 */
     public boolean enableForeignDamageFilter = true;
     /** 伤害被判无效时,给玩家 action bar 提示(不刷聊天栏)。 */
     public boolean foreignDamageFilterHint = true;
@@ -769,11 +769,11 @@ public class YongyeConfig {
                     List<String> obsolete = obsoleteKeys(obj);   // 文件有、代码已删
                     List<String> missing = missingKeys(obj);     // 代码有、文件没有(新加的)
                     if (!obsolete.isEmpty())
-                        Yongye.LOGGER.warn("[永夜] 配置含 {} 个陈旧字段(已从代码删除,下次保存自动清除): {}", obsolete.size(), obsolete);
+                        Yongye.LOGGER.warn("[夜蚀] 配置含 {} 个陈旧字段(已从代码删除,下次保存自动清除): {}", obsolete.size(), obsolete);
                     if (!missing.isEmpty())
-                        Yongye.LOGGER.info("[永夜] 配置缺 {} 个新字段(已采用默认值,下次保存自动补全): {}", missing.size(), missing);
+                        Yongye.LOGGER.info("[夜蚀] 配置缺 {} 个新字段(已采用默认值,下次保存自动补全): {}", missing.size(), missing);
                     if (INSTANCE.configVersion != CURRENT_CONFIG_VERSION)
-                        Yongye.LOGGER.warn("[永夜] 配置版本 {} ≠ 当前 {}:部分默认值可能已调整。若要采用新默认值,用 /yongye config reset(会清自定义)或参照 /yongye config check 手动核对。",
+                        Yongye.LOGGER.warn("[夜蚀] 配置版本 {} ≠ 当前 {}:部分默认值可能已调整。若要采用新默认值,用 /yongye config reset(会清自定义)或参照 /yongye config check 手动核对。",
                                 INSTANCE.configVersion, CURRENT_CONFIG_VERSION);
                 } catch (RuntimeException ignore) { /* 诊断失败不影响正常加载 */ }
                 INSTANCE.configVersion = CURRENT_CONFIG_VERSION; // 对齐版本号,下次保存写入新版
@@ -782,7 +782,7 @@ public class YongyeConfig {
                 save();
             }
         } catch (IOException | RuntimeException e) {
-            Yongye.LOGGER.error("[永夜] 读取配置失败,使用默认值", e);
+            Yongye.LOGGER.error("[夜蚀] 读取配置失败,使用默认值", e);
             INSTANCE = new YongyeConfig();
         }
     }
@@ -852,7 +852,7 @@ public class YongyeConfig {
             Files.createDirectories(path.getParent());
             Files.writeString(path, GSON.toJson(INSTANCE == null ? new YongyeConfig() : INSTANCE));
         } catch (IOException e) {
-            Yongye.LOGGER.error("[永夜] 写入配置失败", e);
+            Yongye.LOGGER.error("[夜蚀] 写入配置失败", e);
         }
     }
 

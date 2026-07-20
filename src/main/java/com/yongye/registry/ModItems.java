@@ -146,6 +146,6 @@ private static Item register(String name, Item item) {
     }
 
     public static void init() {
-        Yongye.LOGGER.info("[永夜] 物品已注册");
+        Yongye.LOGGER.info("[夜蚀] 物品已注册");
     }
 }

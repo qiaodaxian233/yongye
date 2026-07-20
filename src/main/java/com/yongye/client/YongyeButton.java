@@ -6,7 +6,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
 /**
- * 永夜主题按钮:深色半透明玻璃蓝底 + 蓝青描边 + 悬停发光 + 顶部一道玻璃高光。
+ * 夜蚀主题按钮:深色半透明玻璃蓝底 + 蓝青描边 + 悬停发光 + 顶部一道玻璃高光。
  * 用于背包左侧那一列功能按钮(成长/装备/饰品/天赋/强化/兑换/学书/本命),替代朴素的原版灰按钮。
  *
  * 实现:继承 ButtonWidget(沿用其点击/叙述逻辑),只重写 renderWidget 自绘外观,不动其它界面、零 mixin。

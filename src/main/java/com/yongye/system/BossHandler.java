@@ -84,7 +84,7 @@ public final class BossHandler {
             dropBossRewards(world, entity);
         });
 
-        Yongye.LOGGER.info("[永夜] Boss 翻倍系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] Boss 翻倍系统已挂载");
     }
 
     private static void dropBossRewards(ServerWorld world, LivingEntity boss) {

@@ -31,6 +31,6 @@ public final class SurvivalRankHandler {
                 }
             }
         });
-        Yongye.LOGGER.info("[永夜] 存活排行系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 存活排行系统已挂载");
     }
 }

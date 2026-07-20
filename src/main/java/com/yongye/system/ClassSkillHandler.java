@@ -382,7 +382,7 @@ public final class ClassSkillHandler {
             }
         });
 
-        Yongye.LOGGER.info("[永夜] 职业专属技能已挂载");
+        Yongye.LOGGER.info("[夜蚀] 职业专属技能已挂载");
     }
 
     private static void bonusHit(LivingEntity target, DamageSource src, float dmg, net.minecraft.world.World world) {

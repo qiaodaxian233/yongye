@@ -318,6 +318,6 @@ public class YongyeClient implements ClientModInitializer {
             }
         });
 
-        Yongye.LOGGER.info("[永夜] 客户端:精英皮肤 + 成长面板 + 装备介绍 + 技能按键已注册");
+        Yongye.LOGGER.info("[夜蚀] 客户端:精英皮肤 + 成长面板 + 装备介绍 + 技能按键已注册");
     }
 }

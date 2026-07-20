@@ -62,7 +62,7 @@ public final class StartingKitHandler {
             p.giveItemStack(new ItemStack(item));
             p.setAttached(ModAttachments.GOT_STARTING_KIT, true);
         });
-        Yongye.LOGGER.info("[永夜] 开局赠礼系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 开局赠礼系统已挂载");
     }
 
     /** 软依赖按 id 发一个物品:解析 id → 注册表查 → 查到且非空气则发一个并返回 true,否则返回 false(静默,不崩)。 */

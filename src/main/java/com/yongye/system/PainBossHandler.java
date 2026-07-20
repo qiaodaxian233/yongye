@@ -140,7 +140,7 @@ public final class PainBossHandler {
             }
         });
 
-        Yongye.LOGGER.info("[永夜] 长门(佩恩)Boss 已挂载");
+        Yongye.LOGGER.info("[夜蚀] 长门(佩恩)Boss 已挂载");
     }
 
     /** 永夜达到阈值后,按概率让长门作为「六道之痛」自然降临(全局唯一)。 */
@@ -346,7 +346,7 @@ public final class PainBossHandler {
         setBase(pain, EntityAttributes.GENERIC_FOLLOW_RANGE, 48.0);
         pain.setHealth(pain.getMaxHealth());
         if (prog > 1.01) {
-            Yongye.LOGGER.info(String.format("[永夜] 佩恩降临:进度倍率 ×%.2f → 血量 %.0f / 攻击 %.0f",
+            Yongye.LOGGER.info(String.format("[夜蚀] 佩恩降临:进度倍率 ×%.2f → 血量 %.0f / 攻击 %.0f",
                     prog, cfg.painBossMaxHealth * prog, cfg.painBossAttack * atkProg));
         }
 

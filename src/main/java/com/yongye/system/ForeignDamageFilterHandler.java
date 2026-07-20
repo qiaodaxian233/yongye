@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 怪物伤害来源检测(m189 起)——外模组伤害不作数,只认原版和永夜的武器。
+ * 怪物伤害来源检测(m189 起)——外模组伤害不作数,只认原版和夜蚀的武器。
  *
  * <p>规则(只对「怪物」= Monster 生效,玩家/动物/村民不受影响):
  * <ul>
@@ -33,7 +33,7 @@ import java.util.UUID;
  *       命名空间是 {@code minecraft} / {@code yongye}(或配置额外放行的)才作数,否则伤害整个取消,
  *       action bar 提示 + 怪物开口嘲讽(均可关)。空手 = {@code minecraft:air},照常有效。</li>
  *   <li>攻击者是<b>非玩家实体</b>(外模组召唤物 / 宠物 / 炮塔):看攻击者实体类型的命名空间,同样只认
- *       原版 / 永夜 / 白名单。原版狼、铁傀儡、怪物内斗不受影响。</li>
+ *       原版 / 夜蚀 / 白名单。原版狼、铁傀儡、怪物内斗不受影响。</li>
  *   <li>另看<b>伤害类型命名空间</b>(如 AvaritiaNeo 的 {@code avaritia:infinity}):外模组自定义伤害类型
  *       即便攻击者判不出,也按外来处理。</li>
  * </ul>
@@ -49,7 +49,7 @@ import java.util.UUID;
  * <ul>
  *   <li>玩家<b>手持外模组武器</b>期间,连职业技能反伤这类「借玩家名义」的伤害也判无效(伤害源武器=主手),
  *       与「拿外模组武器这刀就不算」的规则一致。</li>
- *   <li>怪物因外模组来源「被强杀」时会满血/回原血复活,这是刻意行为——外模组武器杀不死永夜的怪。</li>
+ *   <li>怪物因外模组来源「被强杀」时会满血/回原血复活,这是刻意行为——外模组武器杀不死夜蚀的怪。</li>
  * </ul>
  */
 public final class ForeignDamageFilterHandler {
@@ -62,22 +62,22 @@ public final class ForeignDamageFilterHandler {
      */
     private static final String[] TAUNTS = {
             "哎呦喂,您这是拿前朝的剑,斩本朝的官呐?",
-            "此兵器没上永夜的户口,恕不接招。",
+            "此兵器没上夜蚀的户口,恕不接招。",
             "客官,您这家伙什海关都没过,就想通关我?",
             "外来的和尚好念经,外来的刀可砍不动我。",
             "啧,异界的破铜烂铁也敢往我身上招呼?",
-            "水土不服啊朋友,这武器一进永夜就蔫了。",
-            "别费劲了,这玩意儿在永夜连烧火棍都不如。",
+            "水土不服啊朋友,这武器一进夜蚀就蔫了。",
+            "别费劲了,这玩意儿在夜蚀连烧火棍都不如。",
             "拿错剧本了吧?那是隔壁世界的道具。",
-            "我身披永夜结界,专防三无兵器。",
+            "我身披夜蚀结界,专防三无兵器。",
             "就这?我痒痒肉都没被你找着。",
             "您这刀锋利是锋利,可惜签证过期了。",
-            "永夜规矩:兵器不认,伤害不算。",
+            "夜蚀规矩:兵器不认,伤害不算。",
             "好家伙,跨服砍人呢?这里不兴这个。",
             "嘶——好凉快,原来是你在给我扇风啊。",
             "大侠,先去铁匠铺把这铁片子落个户再来。",
             "别敲了别敲了,跟拿羽毛挠我似的。",
-            "异界神兵?到了永夜也就是根牙签。",
+            "异界神兵?到了夜蚀也就是根牙签。",
             "劝你换把本地的家伙,这把是真不疼。",
             "您这一下,比蚊子叮还温柔。",
             "回去问问你那武器:知道这是谁的地盘吗?"
@@ -95,8 +95,8 @@ public final class ForeignDamageFilterHandler {
     private static final Map<UUID, HpSnapshot> PRE_KILL_HP = new HashMap<>();
 
     public static void register() {
-        // ⓪ 近战前置(m193,照作者「看手持是不是原版/永夜就行」的思路):
-        //    玩家左键攻击怪物的瞬间就看主手——不是原版/永夜/白名单,直接 FAIL 掉整次攻击。
+        // ⓪ 近战前置(m193,照作者「看手持是不是原版/夜蚀就行」的思路):
+        //    玩家左键攻击怪物的瞬间就看主手——不是原版/夜蚀/白名单,直接 FAIL 掉整次攻击。
         //    好处:连无限剑那种「自定义击杀逻辑(setHealth(0)+die())」都还没来得及跑,比 ①② 事后补救更干净。
         //    注意:只挡「近战左键」;弓/枪/法术发射的投射物不走这里,仍靠 ①(伤害)②(死亡)兜底。
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
@@ -104,12 +104,12 @@ public final class ForeignDamageFilterHandler {
             if (!cfg.enableForeignDamageFilter) return ActionResult.PASS;
             if (!(entity instanceof LivingEntity living) || !(entity instanceof Monster)) return ActionResult.PASS;
             String ns = Registries.ITEM.getId(player.getMainHandStack().getItem()).getNamespace();
-            if (isAllowedNamespace(cfg, ns)) return ActionResult.PASS;   // 原版/永夜/白名单 → 放行正常攻击
+            if (isAllowedNamespace(cfg, ns)) return ActionResult.PASS;   // 原版/夜蚀/白名单 → 放行正常攻击
             // 外模组手持:取消这次近战。服务端补嘲讽 + 提示(客户端只负责取消预测)。
             if (!world.isClient && player instanceof ServerPlayerEntity sp) {
                 if (cfg.foreignDamageTaunt) taunt(cfg, living, sp);
                 if (cfg.foreignDamageFilterHint) {
-                    sp.sendMessage(Text.literal("外来模组武器对怪物无效(只认原版 / 永夜武器)")
+                    sp.sendMessage(Text.literal("外来模组武器对怪物无效(只认原版 / 夜蚀武器)")
                             .formatted(Formatting.GRAY), true);
                 }
             }
@@ -121,14 +121,14 @@ public final class ForeignDamageFilterHandler {
             YongyeConfig cfg = YongyeConfig.get();
             if (!cfg.enableForeignDamageFilter) return true;
             if (!(entity instanceof Monster)) return true;         // 只管怪物(判法同 LootHandler/MobEnhancementHandler)
-            if (!isForeignToMonster(cfg, source)) return true;     // 原版 / 永夜 / 白名单 → 放行
+            if (!isForeignToMonster(cfg, source)) return true;     // 原版 / 夜蚀 / 白名单 → 放行
 
             // 是外模组伤害:记录当前血量(供 ② 复原),提示 + 嘲讽,取消这次伤害。
             PRE_KILL_HP.put(entity.getUuid(), new HpSnapshot(entity.getWorld().getTime(), entity.getHealth()));
             if (source.getAttacker() instanceof ServerPlayerEntity sp) {
                 if (cfg.foreignDamageTaunt) taunt(cfg, entity, sp);
                 if (cfg.foreignDamageFilterHint) {
-                    sp.sendMessage(Text.literal("外来模组武器对怪物无效(只认原版 / 永夜武器)")
+                    sp.sendMessage(Text.literal("外来模组武器对怪物无效(只认原版 / 夜蚀武器)")
                             .formatted(Formatting.GRAY), true);
                 }
             }
@@ -142,7 +142,7 @@ public final class ForeignDamageFilterHandler {
         ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) ->
                 !tryBlockForeignDeath(entity, source));   // 返回 false 才取消死亡
 
-        Yongye.LOGGER.info("[永夜] 怪物伤害来源检测已挂载(伤害+死亡双拦,外模组伤害/秒杀均不作数)");
+        Yongye.LOGGER.info("[夜蚀] 怪物伤害来源检测已挂载(伤害+死亡双拦,外模组伤害/秒杀均不作数)");
     }
 
     /**
@@ -157,7 +157,7 @@ public final class ForeignDamageFilterHandler {
         YongyeConfig cfg = YongyeConfig.get();
         if (!cfg.enableForeignDamageFilter) return false;
         if (!(mob instanceof Monster)) return false;
-        if (!isForeignToMonster(cfg, source)) return false;   // 原版/永夜致死 → 放行正常死亡
+        if (!isForeignToMonster(cfg, source)) return false;   // 原版/夜蚀致死 → 放行正常死亡
 
         // 复原血量:优先用同一 tick 的伤害快照(保留此前合法伤害),否则兜底满血。
         long now = mob.getWorld().getTime();

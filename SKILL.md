@@ -10,6 +10,8 @@ description: >
 
 # 永夜(yongye)mod —— 踩坑 & 自查手册
 
+> **m203 改名**：模组显示名已改为《夜蚀 / NightBlight》；内部 id、包名、`/yongye` 命令、资源路径仍为 `yongye`（存档兼容，勿改）。机制用语「永夜（等级/降临/之尘）」是剧情/机制名，不随模组改名。
+>
 > 仓库:https://github.com/qiaodaxian233/yongye · Minecraft **Fabric 1.21.1** · 纯 Java,无前置(Fabric API 除外)。
 > 配套文档:`HANDOVER.md`(接手须知 + 0.5 状态行=全里程碑历史)、`DEVLOG.md`(逐里程碑细节)。**动手前三份都扫一眼。**
 

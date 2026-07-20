@@ -75,7 +75,7 @@ public final class NightfallWeatherHandler {
 
             if (active != Event.NONE) applyEvent(server, now, cfg);
         });
-        Yongye.LOGGER.info("[永夜] 永夜天象系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 永夜天象系统已挂载");
     }
 
     private static void startRandomEvent(MinecraftServer server, int nf, long now, YongyeConfig cfg) {

@@ -43,7 +43,7 @@ public class DebugScreen extends Screen {
     private final List<Integer> headerYs = new ArrayList<>();
 
     public DebugScreen() {
-        super(Text.literal("永夜 · 调试菜单"));
+        super(Text.literal("夜蚀 · 调试菜单"));
     }
 
     // ============ 全部命令数据(按页签分类)============

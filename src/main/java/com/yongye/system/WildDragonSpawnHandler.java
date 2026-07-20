@@ -60,7 +60,7 @@ public final class WildDragonSpawnHandler {
                     server.getOverworld().getRandom().nextInt(eligible.size()));
             spawnDragonAbove(target, cfg);
         });
-        Yongye.LOGGER.info("[永夜] 野生末影龙刷怪系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 野生末影龙刷怪系统已挂载");
     }
 
     private static void spawnDragonAbove(ServerPlayerEntity player, YongyeConfig cfg) {

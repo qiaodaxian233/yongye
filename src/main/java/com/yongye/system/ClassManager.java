@@ -285,6 +285,6 @@ public final class ClassManager {
             killer.setAttached(ModAttachments.MONK_FIST_BONUS, b);
             killer.sendMessage(Text.literal("拳意 +1(当前 +" + b + " 拳击伤害)").formatted(Formatting.GOLD), true);
         });
-        Yongye.LOGGER.info("[永夜] 职业系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 职业系统已挂载");
     }
 }

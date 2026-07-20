@@ -67,7 +67,7 @@ public class DifficultyScreen extends Screen {
 
         // 标题
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("◆ 永夜 · 选择难度 ◆").formatted(Formatting.DARK_PURPLE),
+                Text.literal("◆ 夜蚀 · 选择难度 ◆").formatted(Formatting.DARK_PURPLE),
                 cx, listTop() - 70, 0xFFB070FF);
 
         // 简介

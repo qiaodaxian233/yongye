@@ -48,7 +48,7 @@ public final class WorldDoomManager {
             }
         });
 
-        Yongye.LOGGER.info("[永夜] 世界崩塌系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 世界崩塌系统已挂载");
     }
 
     /** 触发世界崩塌(幂等:已崩塌则直接返回)。playerName/itemName 仅用于播报。 */
@@ -84,7 +84,7 @@ public final class WorldDoomManager {
                 if (s != null) doom = s.doom;
             }
         } catch (IOException | RuntimeException e) {
-            Yongye.LOGGER.error("[永夜] 读取世界崩塌状态失败", e);
+            Yongye.LOGGER.error("[夜蚀] 读取世界崩塌状态失败", e);
         }
     }
 
@@ -95,7 +95,7 @@ public final class WorldDoomManager {
             s.doom = doom;
             Files.writeString(savePath, GSON.toJson(s));
         } catch (IOException e) {
-            Yongye.LOGGER.error("[永夜] 写入世界崩塌状态失败", e);
+            Yongye.LOGGER.error("[夜蚀] 写入世界崩塌状态失败", e);
         }
     }
 }

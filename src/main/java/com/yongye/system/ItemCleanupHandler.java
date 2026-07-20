@@ -58,7 +58,7 @@ public final class ItemCleanupHandler {
                 }
             }
         });
-        Yongye.LOGGER.info("[永夜] 掉落物定时清理已挂载");
+        Yongye.LOGGER.info("[夜蚀] 掉落物定时清理已挂载");
     }
 
     private static void warn(MinecraftServer server, int sec) {
@@ -82,6 +82,6 @@ public final class ItemCleanupHandler {
             server.getPlayerManager().broadcast(
                     Text.literal("【清理】已清除地面掉落物 " + total + " 个。").formatted(Formatting.GRAY), false);
         }
-        Yongye.LOGGER.info("[永夜] 定时清理掉落物:{} 个", total);
+        Yongye.LOGGER.info("[夜蚀] 定时清理掉落物:{} 个", total);
     }
 }

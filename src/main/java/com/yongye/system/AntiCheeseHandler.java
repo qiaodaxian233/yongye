@@ -114,7 +114,7 @@ public final class AntiCheeseHandler {
                 }
             }
         });
-        Yongye.LOGGER.info("[永夜] 反苟机制已挂载(泡水/悬空/龟缩)");
+        Yongye.LOGGER.info("[夜蚀] 反苟机制已挂载(泡水/悬空/龟缩)");
     }
 
     /** 判定"搭方块/虚空龟缩":站在方块上(非地面连续地形),且脚下一圈大多悬空。 */

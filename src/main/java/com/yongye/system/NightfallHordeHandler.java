@@ -72,7 +72,7 @@ public final class NightfallHordeHandler {
                 }
             }
         });
-        Yongye.LOGGER.info("[永夜] 永夜尸潮系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 永夜尸潮系统已挂载");
     }
 
     private static boolean trySpawnOne(ServerWorld world, ServerPlayerEntity player, YongyeConfig cfg) {

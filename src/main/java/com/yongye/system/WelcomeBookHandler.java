@@ -41,7 +41,7 @@ public final class WelcomeBookHandler {
             p.giveItemStack(buildGuideBook());
             p.setAttached(ModAttachments.GOT_WELCOME_BOOKS, true);
         });
-        Yongye.LOGGER.info("[永夜] 开局两本书系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 开局两本书系统已挂载");
     }
 
     // ====================== 成书构造工具 ======================
@@ -61,7 +61,7 @@ public final class WelcomeBookHandler {
         ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
         WrittenBookContentComponent content = new WrittenBookContentComponent(
                 new RawFilteredPair<>(title, Optional.<String>empty()), // 书名
-                "永夜",                                                  // 作者
+                "夜蚀",                                                  // 作者
                 0,                                                       // generation:0=原作
                 pages,                                                   // 页内容
                 true                                                     // resolved:纯文本已就绪,无需再解析选择器

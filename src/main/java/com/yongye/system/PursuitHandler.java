@@ -211,7 +211,7 @@ public final class PursuitHandler {
             }
         });
 
-        Yongye.LOGGER.info("[永夜] 追杀系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 追杀系统已挂载");
     }
 
     /**

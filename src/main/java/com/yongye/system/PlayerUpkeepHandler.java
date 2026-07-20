@@ -71,7 +71,7 @@ public final class PlayerUpkeepHandler {
                 }
             }
         });
-        Yongye.LOGGER.info("[永夜] 玩家上层维护(重生满血 + 携带加成)已挂载");
+        Yongye.LOGGER.info("[夜蚀] 玩家上层维护(重生满血 + 携带加成)已挂载");
     }
 
     /** 撤销上次为该玩家镜像的携带加成。 */

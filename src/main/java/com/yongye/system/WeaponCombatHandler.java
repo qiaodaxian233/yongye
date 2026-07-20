@@ -81,7 +81,7 @@ public final class WeaponCombatHandler {
             return ActionResult.PASS;
         });
 
-        Yongye.LOGGER.info("[永夜] 武器暴击系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 武器暴击系统已挂载");
     }
 
     /**

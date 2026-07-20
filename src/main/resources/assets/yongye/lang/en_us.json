@@ -1,5 +1,5 @@
 {
-  "itemGroup.yongye.general": "Yongye: Wasteland Night",
+  "itemGroup.yongye.general": "NightBlight",
   "block.yongye.catastrophe_core": "Catastrophe Core",
   "item.yongye.health_skill_book": "Health Skill Book",
   "item.yongye.life_shard": "Life Shard",
@@ -55,7 +55,7 @@
   "item.yongye.artifact.glutton_heart.desc": "Heals on killing mobs",
   "item.yongye.artifact.world_anchor.desc": "Reduces nearby mobs' digging and climbing",
   "item.yongye.artifact.in_bag": "Active while in your inventory; only the highest level of each counts",
-  "key.categories.yongye": "Yongye",
+  "key.categories.yongye": "NightBlight",
   "key.yongye.skill1": "Weapon Skill 1",
   "key.yongye.skill2": "Weapon Skill 2",
   "key.yongye.skill3": "Weapon Skill 3",

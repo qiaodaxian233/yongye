@@ -163,7 +163,7 @@ public final class TalentManager {
             if (!cfg.enableTalents) return;
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) grantPoints(p, cfg);
         });
-        Yongye.LOGGER.info("[永夜] 天赋系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 天赋系统已挂载");
     }
 
     private static void grantPoints(ServerPlayerEntity p, YongyeConfig cfg) {

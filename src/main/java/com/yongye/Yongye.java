@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 《永夜》主入口。
+ * 《夜蚀》主入口（m203 由《永夜》改名；内部 id/包名/命令仍为 yongye，存档兼容，勿改）。
  * Phase 0: 工程骨架 + 配置 + 注册框架。
  * Phase 1: 怪物基础增强 / 套装血量 / 技能书(V1~V10亿,可配 skillBookMaxLevel,含同级合成) / 随机掉落 / 超稀有材料。
  * Phase 2: 精英怪系统 / Boss 翻倍。
@@ -46,11 +46,11 @@ import org.slf4j.LoggerFactory;
  */
 public class Yongye implements ModInitializer {
     public static final String MOD_ID = "yongye";
-    public static final Logger LOGGER = LoggerFactory.getLogger("永夜");
+    public static final Logger LOGGER = LoggerFactory.getLogger("夜蚀");
 
     @Override
     public void onInitialize() {
-        LOGGER.info("[永夜] 世界已经坏掉了，正在初始化……");
+        LOGGER.info("[夜蚀] 世界已经坏掉了，正在初始化……");
 
         // 配置
         YongyeConfig.load();
@@ -115,7 +115,7 @@ public class Yongye implements ModInitializer {
         HighHpCounterHandler.register();
         SkillEffectManager.register();
         WeaponCombatHandler.register();
-        com.yongye.system.ForeignDamageFilterHandler.register(); // m189 怪物伤害来源检测(只认原版+永夜武器)
+        com.yongye.system.ForeignDamageFilterHandler.register(); // m189 怪物伤害来源检测(只认原版+本模组武器)
         WeaponSkillManager.init();
         HardcoreSurvivalHandler.register();
         EndDragonHandler.register();  // m183 末地末影龙强化(10亿血/三命/脱战回血)
@@ -135,7 +135,7 @@ public class Yongye implements ModInitializer {
             com.yongye.system.PlayerUpkeepHandler.scheduleRespawnHeal(newPlayer);
         });
 
-        LOGGER.info("[永夜] 初始化完成。活到天亮就是胜利。");
+        LOGGER.info("[夜蚀] 初始化完成。活到天亮就是胜利。");
     }
 
     /** 把某个属性的硬上限抬到 max(原版默认夹在 1024,会让高血量/高强化失效)。 */
@@ -152,6 +152,6 @@ public class Yongye implements ModInitializer {
         raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE, cap);
         raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ARMOR, cap);
         raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ARMOR_TOUGHNESS, cap);
-        LOGGER.info("[永夜] 已抬高属性上限(原版默认夹在 1024)");
+        LOGGER.info("[夜蚀] 已抬高属性上限(原版默认夹在 1024)");
     }
 }

@@ -1,4 +1,4 @@
-# 永夜 (Yongye)
+# 夜蚀 NightBlight（原《永夜》，内部 id 仍 yongye）
 
 极难灾变生存玩法 · Minecraft **Fabric 1.21.1**
 

@@ -73,7 +73,7 @@ public final class CustomMobSpawnHandler {
             rollElite(server, cfg, cfg.giantCrabMinDay, cfg.giantCrabSpawnChance, cfg.giantCrabMaxNearby,
                     GiantCrabEntity.class, w -> new GiantCrabEntity(ModEntities.GIANT_CRAB, w));
         });
-        Yongye.LOGGER.info("[永夜] 新怪自然刷怪系统已挂载(红蛛/法师/凤凰=BOSS事件,毒蛛/螃蟹=精英压力)");
+        Yongye.LOGGER.info("[夜蚀] 新怪自然刷怪系统已挂载(红蛛/法师/凤凰=BOSS事件,毒蛛/螃蟹=精英压力)");
     }
 
     /**

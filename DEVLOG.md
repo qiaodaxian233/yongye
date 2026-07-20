@@ -2148,3 +2148,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **⚠ 遗留(已如实告知作者,待定)**:m140 删了 AccessoryGliderMixin 后,**没有任何代码读这个翼槽来提供滑翔**(全局 grep 确认:EntityFlagInvoker 的使用者 AccessoryGliderMixin 已删、不在 mixins.json)。故鞘翅**放进翼槽只是存放,不会飞**;飞行现在靠把鞘翅穿在**正常胸甲槽**(m140 的设计)。若作者想要「翼槽本身赋予飞行(可同时穿胸甲)」,需重新加滑翔逻辑(m140 因其 finicky 移除,是较大改动)——待作者确认再做,本轮不擅自加不可实测的滑翔 mixin。
 - 零新 API(isOf/insertItem/instanceof 全 proven),零配置变更 configVersion 仍 24。静态自检 AccessoryScreenHandler 花 24/24 圆 58/58 配平。
 - 改 1 文件:`screen/AccessoryScreenHandler`。
+
+## 里程碑 203 — 模组改名《夜蚀 / NightBlight》(原《永夜》;内部 id 不动,存档兼容)
+- **需求**(作者原话):「给模组改一个名字 你给起一个名字 不叫永夜了」→ 定名 **《夜蚀》**(英文 NightBlight):夜色如蚀、一层层侵吞世界,贴合「永夜等级不断下沉」的核心玩法;作者不满意随时换,改的全是字符串。
+- **改的是「显示名」这一层**(66 文件):fabric.mod.json(name=「夜蚀 NightBlight」+ description 冠《夜蚀》)、主菜单大字「永夜」→「夜蚀」+ 英文副标 ETERNAL NIGHT → NIGHTBLIGHT(TitleScreenMixin,血红辉光风格保留)、Logger 名与全部 `[永夜]` 日志前缀 ×76 → `[夜蚀]`、调试菜单标题、开局难度界面标题「◆ 夜蚀 · 选择难度 ◆」、物品组/按键分类双语 lang(zh「夜蚀」/ en「NightBlight」)、欢迎书作者署名、m189 伤害检测的模组指称与吐槽文案(「没上夜蚀的户口」等)、README 与 游玩介绍.md 的标题及《》书名号、YongyeButton 注释。
+- **刻意不动(重要)**:内部 mod id / 包名 / `/yongye` 命令 / 资源路径 / 存档文件名(yongye.json、yongye_doom.json 等)——动了老存档的物品、实体、附着数据全部丢失;游戏机制与剧情用语「永夜(等级/降临/尸潮/天象/剥视)」「永夜之尘/之眼/之翼」与欢迎书剧情——那是世界观本体,不是模组名;开发文档历史不回溯改写,SKILL.md 顶部加了改名说明行。
+- 校验:三份 JSON 合法;改动均为字符串字面量,无代码结构变化;**无「待编译验证」**;configVersion 不变(仍 22)。

@@ -42,7 +42,7 @@ public final class DifficultyManager {
             load();
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> save());
-        Yongye.LOGGER.info("[永夜] 世界难度系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 世界难度系统已挂载");
     }
 
     /** 设定世界难度(0~6),全服播报并写存档。命令 /yongye difficulty 与界面选择都走这里。 */
@@ -66,7 +66,7 @@ public final class DifficultyManager {
                 if (s != null) level = s.level;
             }
         } catch (IOException | RuntimeException e) {
-            Yongye.LOGGER.error("[永夜] 读取世界难度失败", e);
+            Yongye.LOGGER.error("[夜蚀] 读取世界难度失败", e);
         }
     }
 
@@ -77,7 +77,7 @@ public final class DifficultyManager {
             s.level = level;
             Files.writeString(savePath, GSON.toJson(s));
         } catch (IOException e) {
-            Yongye.LOGGER.error("[永夜] 写入世界难度失败", e);
+            Yongye.LOGGER.error("[夜蚀] 写入世界难度失败", e);
         }
     }
 }

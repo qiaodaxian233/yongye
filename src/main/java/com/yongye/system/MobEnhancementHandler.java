@@ -106,7 +106,7 @@ public final class MobEnhancementHandler {
                         effect, StatusEffectInstance.INFINITE, 0, true, false, false));
             }
         });
-        Yongye.LOGGER.info("[永夜] 怪物增强系统已挂载");
+        Yongye.LOGGER.info("[夜蚀] 怪物增强系统已挂载");
     }
 
     /** 进度倍率:基于永夜等级 + 游戏天数 + 附近玩家最大生命。(public:佩恩等特殊怪复用同一套缩放) */

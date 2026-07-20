@@ -139,7 +139,7 @@ public final class EndDragonHandler {
             LAST_HEALTH.keySet().retainAll(seen);
         });
 
-        Yongye.LOGGER.info("[永夜] 末地末影龙强化已挂载(10亿血/三命/脱战回血)");
+        Yongye.LOGGER.info("[夜蚀] 末地末影龙强化已挂载(10亿血/三命/脱战回血)");
     }
 
     /** 挂属性修饰(幂等)+ 首次补满血。 */
