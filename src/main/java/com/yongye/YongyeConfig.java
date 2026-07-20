@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 28;
+    public static final int CURRENT_CONFIG_VERSION = 29;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -694,11 +694,11 @@ public class YongyeConfig {
     /** 额外放行的模组命名空间(逗号分隔,如 "somemod,othermod");minecraft 与 yongye 始终放行。 */
     public String foreignDamageFilterExtraNamespaces = "";
 
-    // ============ m206:全物品标识(抖音:乔大仙) ============
+    // ============ m206:全物品标识(m214 起默认文案 DY:乔大仙) ============
     /** 悬停任意物品(原版+模组)的提示栏末尾追加一行标识;关掉即不显示。 */
     public boolean enableItemWatermark = true;
     /** 标识文字(所有物品统一显示,想换字改这里)。 */
-    public String itemWatermarkText = "抖音:乔大仙";
+    public String itemWatermarkText = "DY:乔大仙";
 
     // ============ m208:海报技能补齐(坦克真减伤 / 剑客剑气凌空) ============
     /** 坦克:所受一切伤害(含无视护甲的真实伤害)按此比例直接减免;0 关闭。 */
@@ -813,6 +813,8 @@ public class YongyeConfig {
                 String json = Files.readString(path);
                 INSTANCE = GSON.fromJson(json, YongyeConfig.class);
                 if (INSTANCE == null) INSTANCE = new YongyeConfig();
+                // m214:标识默认文案改版「抖音:乔大仙 → DY:乔大仙」;仅当文件里仍是旧默认值时迁移,自定义文案不动
+                if ("抖音:乔大仙".equals(INSTANCE.itemWatermarkText)) INSTANCE.itemWatermarkText = "DY:乔大仙";
                 // —— 陈旧检查:对比文件键 vs 当前字段,警告死键/缺失键/版本不符 ——
                 try {
                     JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
