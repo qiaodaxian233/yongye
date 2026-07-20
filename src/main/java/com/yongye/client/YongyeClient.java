@@ -354,18 +354,20 @@ public class YongyeClient implements ClientModInitializer {
         Yongye.LOGGER.info("[夜蚀] 客户端:精英皮肤 + 成长面板 + 装备介绍 + 技能按键 + 武器等级染色已注册");
     }
 
-    /** m211:强化等级 → 染色(0xRRGGBB)。等级阶梯是指数型(100/250/500/1000/2500),用对数插值让各品质档的色变均匀。 */
+    /** m211/m213:强化等级 → 染色(0xAARRGGBB,**必须带满 alpha**:1.21 起物品染色按 ARGB 解释,
+     *  高 8 位是透明度,返回纯 RGB(高位=0)会把整件物品渲染成全透明=隐形,m212 后实机就是这么翻车的)。
+     *  等级阶梯是指数型(100/250/500/1000/2500),用对数插值让各品质档的色变均匀。 */
     private static int weaponTintColor(ItemStack stack) {
         com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
-        if (!cfg.weaponTintEnabled) return 0xFFFFFF;
+        if (!cfg.weaponTintEnabled) return 0xFFFFFFFF;
         int lvl = stack.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);
         int start = Math.max(1, cfg.weaponTintStartLevel);
         int end = Math.max(start + 1, cfg.weaponTintEndLevel);
-        if (lvl <= start) return 0xFFFFFF; // 0~起始级:保持纯黑白
+        if (lvl <= start) return 0xFFFFFFFF; // 0~起始级:不透明纯白=保持黑白
         double t = (Math.log(Math.min(lvl, end)) - Math.log(start)) / (Math.log(end) - Math.log(start));
         float hue = (float) (((200.0 + 160.0 * t) % 360.0) / 360.0); // 冰蓝→蓝紫→品红→正红,无绿无黄
         float sat = (float) Math.min(1.0, t * 1.25);                  // 饱和度略快拉满 =「越来越鲜艳」
-        return hsvToRgb(hue, sat, 1.0f);
+        return 0xFF000000 | hsvToRgb(hue, sat, 1.0f);                 // 补满 alpha,防隐形
     }
 
     /** HSV→RGB(入参均 0~1,返回 0xRRGGBB)。自实现,不依赖 MathHelper.hsvToRgb 的映射名。 */
