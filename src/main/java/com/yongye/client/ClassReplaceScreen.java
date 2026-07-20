@@ -1,6 +1,5 @@
 package com.yongye.client;
 
-import com.yongye.Yongye;
 import com.yongye.item.PlayerClass;
 import com.yongye.network.ClassReplacePayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -9,16 +8,15 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 
 /**
  * 职业替换界面:已满 2 职业时右键新职业书弹出。
  * 顶部文字标明「将学习」的新职业;下方并排两张当前职业卡(本命/第二),点哪张就丢弃哪张并换上新职业。
- * ESC 取消(不替换、不扣书)。卡图沿用 ClassSelectScreen 的 drawTexture 9 参签名(原尺寸 106×132)。
+ * ESC 取消不扣书。卡面由 ClassCardRenderer 程序化绘制（m204，与选职界面同款）。
  */
 public class ClassReplaceScreen extends Screen {
-    // 卡尺寸与 ClassSelectScreen 一致(原尺寸绘制,避免缩放签名风险)
-    private static final int CW = 106, CH = 132, GAP = 50;
+    // 卡尺寸与 ClassCardRenderer 一致
+    private static final int CW = ClassCardRenderer.CW, CH = ClassCardRenderer.CH, GAP = 50;
 
     private final PlayerClass newClass;
     private final PlayerClass slot0, slot1;
@@ -33,10 +31,6 @@ public class ClassReplaceScreen extends Screen {
     private int cardTop()  { return this.height / 2 - CH / 2 + 10; }
     private int card0X()   { return this.width / 2 - CW - GAP / 2; }
     private int card1X()   { return this.width / 2 + GAP / 2; }
-
-    private static Identifier cardTex(PlayerClass c) {
-        return Identifier.of(Yongye.MOD_ID, "textures/gui/class_card_" + c.id + ".png");
-    }
 
     @Override
     public boolean shouldCloseOnEsc() { return true; }   // 允许取消
@@ -92,7 +86,7 @@ public class ClassReplaceScreen extends Screen {
             ctx.fill(x - 3, y, x, y + CH, b);
             ctx.fill(x + CW, y, x + CW + 3, y + CH, b);
         }
-        ctx.drawTexture(cardTex(c), x, y, 0, 0, CW, CH, CW, CH);
+        ClassCardRenderer.drawCard(ctx, this.textRenderer, c, x, y, false); // 悬停语义=外层红框「将丢弃」，卡面不另发光
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal(slotLabel + "\uff1a" + c.cn).formatted(Formatting.WHITE),
                 x + CW / 2, y + CH + 6, 0xFFFFFFFF);

@@ -2154,3 +2154,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **改的是「显示名」这一层**(66 文件):fabric.mod.json(name=「夜蚀 NightBlight」+ description 冠《夜蚀》)、主菜单大字「永夜」→「夜蚀」+ 英文副标 ETERNAL NIGHT → NIGHTBLIGHT(TitleScreenMixin,血红辉光风格保留)、Logger 名与全部 `[永夜]` 日志前缀 ×76 → `[夜蚀]`、调试菜单标题、开局难度界面标题「◆ 夜蚀 · 选择难度 ◆」、物品组/按键分类双语 lang(zh「夜蚀」/ en「NightBlight」)、欢迎书作者署名、m189 伤害检测的模组指称与吐槽文案(「没上夜蚀的户口」等)、README 与 游玩介绍.md 的标题及《》书名号、YongyeButton 注释。
 - **刻意不动(重要)**:内部 mod id / 包名 / `/yongye` 命令 / 资源路径 / 存档文件名(yongye.json、yongye_doom.json 等)——动了老存档的物品、实体、附着数据全部丢失;游戏机制与剧情用语「永夜(等级/降临/尸潮/天象/剥视)」「永夜之尘/之眼/之翼」与欢迎书剧情——那是世界观本体,不是模组名;开发文档历史不回溯改写,SKILL.md 顶部加了改名说明行。
 - 校验:三份 JSON 合法;改动均为字符串字面量,无代码结构变化;**无「待编译验证」**;configVersion 不变(仍 22)。
+
+## 里程碑 204 — 选职界面重做:程序化职业卡(替代旧 AI 卡图)
+- **需求**(作者):「职业选择界面…现在有点不好看我想重新生成一下」。沙箱画不了像样的卡面插画(SKILL §5),改走**程序化绘制**:观感统一、可随时改配色、不再依赖 AI 生图。
+- 新 **`ClassCardRenderer`**(共享卡片渲染器,106×132 与旧卡图同尺寸,两个界面网格零改动):职业色描边(悬停双圈发光)→ 夜蚀深蓝纵向渐变底(2px 色带循环,零新 API)→ 1.25× 职业名 + 分隔线 → 2× 职业武器图标(matrices push/translate/scale + drawItem,WeaponInfoScreen 同款;**武僧空手画大字「拳」**)→ 定位语 → 三行特长 → 悬停「▶ 点击选择 ◀」。特长/介绍文案与 ClassManager.mods() 与职业技能实际数值对齐(肉盾+20血+8甲盾反、战士怒气、术士燃血施法、剑客+4攻格反、武僧吞噬、刺客+20%速夜视)。
+- **`ClassSelectScreen`** 重写:金色 1.4× 标题 + 夜色压暗层 + 悬停时底部显示该职业一句话介绍(职业色);网格、点击判定、ChooseClassPayload 提交、屏蔽 ESC 全部沿用旧版。**`ClassReplaceScreen`** 接入同一渲染器(红框「将丢弃」语义保留,卡面不另发光),删 cardTex/Identifier 依赖。
+- 删除 6 张旧 AI 卡图 PNG(git 历史可找回);`class_card` 引用全仓清零。
+- **无「待编译验证」**:全部绘制调用(fill / drawCenteredTextWithShadow / matrices 缩放 / drawItem)与 import 均有在树先例(ChooseClassPayload 为本仓库类)。要作者实机看:六卡观感、悬停发光与底部介绍、替换界面卡面、武僧「拳」字卡;配色不满意改 ClassCardRenderer.THEMES 即可。
+- configVersion 不变(仍 22)。
