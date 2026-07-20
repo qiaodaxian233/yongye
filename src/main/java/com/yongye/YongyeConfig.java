@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 26;
+    public static final int CURRENT_CONFIG_VERSION = 27;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -712,6 +712,14 @@ public class YongyeConfig {
     public int foreignDamageTauntCooldownTicks = 60;
     /** 追加嘲讽台词:竖线 | 分隔的自定义台词,追加进内置台词池(台词里别用竖线;空=只用内置)。 */
     public String foreignDamageTauntExtraLines = "";
+
+    // ============ m211:武器随强化等级动态染色 ============
+    /** 职业武器+混沌之刃随强化等级变色:≤起始级保持纯黑白,越高越鲜艳(冰蓝→紫→品红→正红,全程无绿无黄);关=永远黑白。 */
+    public boolean weaponTintEnabled = true;
+    /** 染色起始强化等级:不超过它保持纯黑白(默认 100=「稀有」品质门槛)。 */
+    public int weaponTintStartLevel = 100;
+    /** 染色封顶强化等级:达到即纯红,再高不再变(默认 2500=「至尊」品质门槛)。 */
+    public int weaponTintEndLevel = 2500;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

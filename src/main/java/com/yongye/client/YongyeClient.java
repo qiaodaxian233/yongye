@@ -339,6 +339,49 @@ public class YongyeClient implements ClientModInitializer {
         });
 
 
-        Yongye.LOGGER.info("[夜蚀] 客户端:精英皮肤 + 成长面板 + 装备介绍 + 技能按键已注册");
+        // 【m211】武器随强化等级动态染色:≤起始级(默认100)=纯黑白,越高越鲜艳,封顶级(默认2500)=正红;
+        // 色相路径 200°(冰蓝)→360°(正红),刻意绕开绿/黄(作者点名不要)。贴图是 m210 黑白版,
+        // 乘法染色下白→染成该色、黑保持黑,天然「有色金属」质感。ENHANCE_LEVEL 是数据组件,自动同步客户端。
+        {
+            java.util.List<net.minecraft.item.Item> tintItems =
+                    new java.util.ArrayList<>(com.yongye.registry.ModItems.classWeapons().values());
+            tintItems.add(com.yongye.registry.ModItems.CHAOS_BLADE);
+            net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry.ITEM.register(
+                    (stack, tintIndex) -> weaponTintColor(stack),
+                    tintItems.toArray(new net.minecraft.item.ItemConvertible[0]));
+        }
+
+        Yongye.LOGGER.info("[夜蚀] 客户端:精英皮肤 + 成长面板 + 装备介绍 + 技能按键 + 武器等级染色已注册");
+    }
+
+    /** m211:强化等级 → 染色(0xRRGGBB)。等级阶梯是指数型(100/250/500/1000/2500),用对数插值让各品质档的色变均匀。 */
+    private static int weaponTintColor(ItemStack stack) {
+        com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
+        if (!cfg.weaponTintEnabled) return 0xFFFFFF;
+        int lvl = stack.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);
+        int start = Math.max(1, cfg.weaponTintStartLevel);
+        int end = Math.max(start + 1, cfg.weaponTintEndLevel);
+        if (lvl <= start) return 0xFFFFFF; // 0~起始级:保持纯黑白
+        double t = (Math.log(Math.min(lvl, end)) - Math.log(start)) / (Math.log(end) - Math.log(start));
+        float hue = (float) (((200.0 + 160.0 * t) % 360.0) / 360.0); // 冰蓝→蓝紫→品红→正红,无绿无黄
+        float sat = (float) Math.min(1.0, t * 1.25);                  // 饱和度略快拉满 =「越来越鲜艳」
+        return hsvToRgb(hue, sat, 1.0f);
+    }
+
+    /** HSV→RGB(入参均 0~1,返回 0xRRGGBB)。自实现,不依赖 MathHelper.hsvToRgb 的映射名。 */
+    private static int hsvToRgb(float h, float s, float v) {
+        int sector = ((int) (h * 6.0f)) % 6;
+        float f = h * 6.0f - (float) Math.floor(h * 6.0f);
+        float p = v * (1 - s), q = v * (1 - f * s), u = v * (1 - (1 - f) * s);
+        float r, g, b;
+        switch (sector) {
+            case 0 -> { r = v; g = u; b = p; }
+            case 1 -> { r = q; g = v; b = p; }
+            case 2 -> { r = p; g = v; b = u; }
+            case 3 -> { r = p; g = q; b = v; }
+            case 4 -> { r = u; g = p; b = v; }
+            default -> { r = v; g = p; b = q; }
+        }
+        return ((int) (r * 255.0f) << 16) | ((int) (g * 255.0f) << 8) | (int) (b * 255.0f);
     }
 }
