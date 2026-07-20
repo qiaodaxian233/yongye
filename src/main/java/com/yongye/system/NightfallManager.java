@@ -103,7 +103,7 @@ public final class NightfallManager {
         if (clamped == level) return;
         level = clamped;
         save();
-        broadcast(server, Text.literal("【永夜】世界进入:" + getLevelName()).formatted(Formatting.DARK_PURPLE));
+        broadcast(server, Text.literal("【夜蚀】世界进入:" + getLevelName()).formatted(Formatting.DARK_PURPLE));
         for (net.minecraft.server.network.ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
             com.yongye.network.YongyeNet.sendNightfall(p);
         }
@@ -116,7 +116,7 @@ public final class NightfallManager {
     /** 赎夜:降低一级。 */
     public static void redeem(MinecraftServer server) {
         if (level <= 0) {
-            broadcast(server, Text.literal("【永夜】昼夜本就正常,无需赎夜。").formatted(Formatting.GRAY));
+            broadcast(server, Text.literal("【夜蚀】昼夜本就正常,无需赎夜。").formatted(Formatting.GRAY));
             return;
         }
         setLevel(server, level - 1);

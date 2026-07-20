@@ -2176,3 +2176,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 实现:客户端 `ItemTooltipCallback` 一个钩子覆盖全部物品,零逐物品改动(YongyeClient 注册;包路径与签名照 FabricMC/fabric **1.21.1 分支源码**逐字核对:`net.fabricmc.fabric.api.client.item.v1`,`getTooltip(stack, Item.TooltipContext, TooltipType, List<Text>)`)。
 - 配置 +2,**configVersion 24→25**:`enableItemWatermark`(默认开)/ `itemWatermarkText`(默认「抖音:乔大仙」,换字/关闭改配置即可)。
 - **待编译验证**:仅 `ItemTooltipCallback`(仓库首用,已按官方源码核对);TooltipType / Text / Formatting 均在树。
+
+## 里程碑 207 — 选职界面居中重排(实机反馈)+ 聊天前缀改名补漏
+- 作者实机截图:m205 版海报偏右、页签孤在屏幕最左、确认钮压到底部快捷栏,「看着难受,能不能放中间」。
+- 重排为一个居中整体:**海报屏幕正中**等比铺满高度(上下各留 10);**6 个页签紧贴海报左侧**(金 ▶ 指示当前);**确认钮挂在页签列正下方**(下带灰字「(不可更改)」),彻底离开底部 HUD 区。逻辑零改动,纯布局。
+- 顺手补 m203 改名漏网:玩家可见聊天前缀 **【永夜】→【夜蚀】** ×3(DifficultyManager 难度公告、NightfallManager 永夜等级公告/赎夜提示;「【永夜天象】」是机制名保留)。
+- 无「待编译验证」。

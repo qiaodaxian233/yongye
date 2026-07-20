@@ -51,7 +51,7 @@ public final class DifficultyManager {
         save();
         GameDifficulty d = GameDifficulty.byOrdinal(level);
         server.getPlayerManager().broadcast(
-                Text.literal("【永夜】世界难度设定为:【" + d.cn + "】 怪物强度 ×" + trim(d.mobMult)).formatted(d.color), false);
+                Text.literal("【夜蚀】世界难度设定为:【" + d.cn + "】 怪物强度 ×" + trim(d.mobMult)).formatted(d.color), false);
     }
 
     private static String trim(double v) {
