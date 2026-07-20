@@ -62,6 +62,8 @@ public final class ClassSkillHandler {
     private static final Map<UUID, net.minecraft.util.math.Vec3d> tankLastPos = new HashMap<>();
     /** 刺客:上次受伤的 tick 时刻(脱战时间决定暗能) */
     private static final Map<UUID, Long> assassinLastHit = new HashMap<>();
+    /** 坦克真减伤重放守卫(m208):重放的伤害直接放行,避免递归/重复触发受击逻辑。 */
+    private static final java.util.Set<UUID> TANK_REAPPLY = new java.util.HashSet<>();
 
     /** 给 YongyeNet 读取各职业 MP 值(0.0~1.0) */
     public static float getMp(net.minecraft.server.network.ServerPlayerEntity p, PlayerClass cls) {
@@ -257,12 +259,48 @@ public final class ClassSkillHandler {
                 }
             }
 
+            // 剑客:剑气满层 → 「剑气凌空」直线穿透(m208,海报补齐)。剑气层(swordsmanEdge)此前只喂 MP 条,
+            // 现在作为资源被此技消耗:攒满 10 层后的下一次近战命中,沿视线放出穿透剑气,打完清零重新攒。
+            if (charged && ClassManager.isActive(p, PlayerClass.SWORDSMAN)
+                    && swordsmanEdge.getOrDefault(p.getUuid(), 0) >= 10) {
+                swordsmanEdge.put(p.getUuid(), 0);
+                boolean pw = ClassWeaponItem.held(p, PlayerClass.SWORDSMAN);
+                DamageSource psrc = world.getDamageSources().playerAttack(p);
+                Vec3d pd = p.getRotationVector();
+                Vec3d base = p.getPos().add(0, p.getStandingEyeHeight() * 0.9, 0);
+                float pdmg = (float) (cfg.swordsmanPierceDamage * (pw ? 1.5 : 1.0));
+                java.util.Set<Integer> pierced = new java.util.HashSet<>();
+                int hitN = 0;
+                for (double dst = 1.0; dst <= cfg.swordsmanPierceRange; dst += 1.0) {
+                    Vec3d cpt = base.add(pd.x * dst, pd.y * dst, pd.z * dst);
+                    Box seg = new Box(cpt.x - 0.9, cpt.y - 0.9, cpt.z - 0.9,
+                            cpt.x + 0.9, cpt.y + 0.9, cpt.z + 0.9);
+                    for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, seg,
+                            e -> e.isAlive() && e != p && !(e instanceof PlayerEntity))) {
+                        if (pierced.add(le.getId())) {
+                            le.damage(psrc, pdmg);
+                            le.timeUntilRegen = 0;
+                            hitN++;
+                        }
+                    }
+                    if (world instanceof ServerWorld sw2) {
+                        sw2.spawnParticles(ParticleTypes.SWEEP_ATTACK, cpt.x, cpt.y, cpt.z, 1, 0.05, 0.05, 0.05, 0.0);
+                    }
+                }
+                if (world instanceof ServerWorld sw2) {
+                    sw2.playSound(null, p.getX(), p.getY(), p.getZ(),
+                            SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.0f, 1.35f);
+                }
+                p.sendMessage(Text.literal("剑气凌空!洞穿 " + hitN + " 个目标").formatted(Formatting.AQUA), true);
+            }
+
             return ActionResult.PASS;
         });
 
         // ===== 受到伤害触发:刺客闪避 / 剑客格挡反击 =====
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!(entity instanceof ServerPlayerEntity p)) return true;
+            if (TANK_REAPPLY.contains(p.getUuid())) return true; // 真减伤重放:放行,且不重复触发职业受击逻辑
             YongyeConfig cfg = YongyeConfig.get();
             if (!cfg.enableClassSkills) return true;
             if (source.getAttacker() == null) return true; // 仅闪避/格挡来自实体的攻击
@@ -311,6 +349,23 @@ public final class ClassSkillHandler {
                             SoundEvents.ENTITY_PHANTOM_FLAP, SoundCategory.PLAYERS, 0.8f, 1.6f);
                 }
                 p.sendMessage(Text.literal("闪避!").formatted(Formatting.GREEN), true);
+                return false;
+            }
+
+            // 坦克:真减伤(m208,海报「15% 真减伤」补齐)——取消本次伤害,按减免后的数值重放一次;
+            // 重放由顶部守卫直接放行走原版结算,所以连无视护甲的真实伤害也一并按比例减免。
+            // 放在刺客闪避之后,双职业时不吞掉闪避的整段免伤。
+            double cut = cfg.tankFlatReductionFraction;
+            if (cut > 0 && ClassManager.isActive(p, PlayerClass.TANK)) {
+                float reduced = amount * (float) (1.0 - Math.min(0.95, cut));
+                TANK_REAPPLY.add(p.getUuid());
+                try {
+                    if (reduced > 0.01f) {
+                        p.damage(source, reduced);
+                    }
+                } finally {
+                    TANK_REAPPLY.remove(p.getUuid());
+                }
                 return false;
             }
             return true;

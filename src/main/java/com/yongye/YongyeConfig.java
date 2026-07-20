@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 25;
+    public static final int CURRENT_CONFIG_VERSION = 26;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -699,6 +699,13 @@ public class YongyeConfig {
     public boolean enableItemWatermark = true;
     /** 标识文字(所有物品统一显示,想换字改这里)。 */
     public String itemWatermarkText = "抖音:乔大仙";
+
+    // ============ m208:海报技能补齐(坦克真减伤 / 剑客剑气凌空) ============
+    /** 坦克:所受一切伤害(含无视护甲的真实伤害)按此比例直接减免;0 关闭。 */
+    public double tankFlatReductionFraction = 0.15;
+    /** 剑客:剑气攒满 10 层后,下一次近战命中沿视线放出「剑气凌空」直线穿透(打完清零重攒)。 */
+    public double swordsmanPierceRange = 12.0;
+    public double swordsmanPierceDamage = 10.0;
     /** m190:外模组武器打怪被判无效时,怪物在聊天栏开口嘲讽(内置 20 条台词随机抽,如「哎呦喂,您拿前朝的剑,斩本朝的官?」)。 */
     public boolean foreignDamageTaunt = true;
     /** 嘲讽冷却:同一玩家两句嘲讽之间的最短间隔(tick,20=1秒;防连点刷屏)。 */

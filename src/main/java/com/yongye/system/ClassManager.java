@@ -45,7 +45,8 @@ public final class ClassManager {
                     new CMod(2, 1, Operation.ADD_VALUE));
             case WARLOCK -> List.of(new CMod(0, -10, Operation.ADD_VALUE), new CMod(4, 2.5, Operation.ADD_VALUE),
                     new CMod(5, 1, Operation.ADD_VALUE), new CMod(2, 1, Operation.ADD_VALUE));
-            case SWORDSMAN -> List.of(new CMod(2, 4, Operation.ADD_VALUE), new CMod(1, -2, Operation.ADD_VALUE));
+            case SWORDSMAN -> List.of(new CMod(2, 4, Operation.ADD_VALUE), new CMod(1, -2, Operation.ADD_VALUE),
+                    new CMod(3, 0.12, Operation.ADD_MULTIPLIED_BASE)); // m208 身法如风:+12% 移速(海报补齐)
             case MONK -> List.of(new CMod(0, 10, Operation.ADD_VALUE), new CMod(1, 5, Operation.ADD_VALUE),
                     new CMod(4, 1.5, Operation.ADD_VALUE), new CMod(5, 1.5, Operation.ADD_VALUE),
                     new CMod(3, -0.1, Operation.ADD_MULTIPLIED_BASE));
