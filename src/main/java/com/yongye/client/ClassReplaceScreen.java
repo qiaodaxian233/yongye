@@ -1,5 +1,6 @@
 package com.yongye.client;
 
+import com.yongye.Yongye;
 import com.yongye.item.PlayerClass;
 import com.yongye.network.ClassReplacePayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -7,16 +8,17 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Formatting;
 
 /**
  * 职业替换界面:已满 2 职业时右键新职业书弹出。
  * 顶部文字标明「将学习」的新职业;下方并排两张当前职业卡(本命/第二),点哪张就丢弃哪张并换上新职业。
- * ESC 取消不扣书。卡面由 ClassCardRenderer 程序化绘制（m204，与选职界面同款）。
+ * ESC 取消不扣书。卡面为「职业介绍」海报等比缩略（m205，与选职界面同一套贴图）。
  */
 public class ClassReplaceScreen extends Screen {
-    // 卡尺寸与 ClassCardRenderer 一致
-    private static final int CW = ClassCardRenderer.CW, CH = ClassCardRenderer.CH, GAP = 50;
+    // 卡尺寸 99×132 = 海报 3:4 等比缩略
+    private static final int CW = 99, CH = 132, GAP = 50;
 
     private final PlayerClass newClass;
     private final PlayerClass slot0, slot1;
@@ -43,6 +45,10 @@ public class ClassReplaceScreen extends Screen {
             if (slot1 != null && hit(mouseX, mouseY, card1X(), y)) { confirm(slot1); return true; }
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private static Identifier posterOf(PlayerClass c) {
+        return Identifier.of(Yongye.MOD_ID, "textures/gui/class_poster_" + c.id + ".png");
     }
 
     private boolean hit(double mx, double my, int x, int y) {
@@ -86,7 +92,12 @@ public class ClassReplaceScreen extends Screen {
             ctx.fill(x - 3, y, x, y + CH, b);
             ctx.fill(x + CW, y, x + CW + 3, y + CH, b);
         }
-        ClassCardRenderer.drawCard(ctx, this.textRenderer, c, x, y, false); // 悬停语义=外层红框「将丢弃」，卡面不另发光
+        float s = CH / 1024.0f;   // 海报 768×1024 → 99×132
+        ctx.getMatrices().push();
+        ctx.getMatrices().translate(x, y, 0);
+        ctx.getMatrices().scale(s, s, 1.0f);
+        ctx.drawTexture(posterOf(c), 0, 0, 0, 0, 768, 1024, 768, 1024);
+        ctx.getMatrices().pop();
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal(slotLabel + "\uff1a" + c.cn).formatted(Formatting.WHITE),
                 x + CW / 2, y + CH + 6, 0xFFFFFFFF);

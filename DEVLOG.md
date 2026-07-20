@@ -2162,3 +2162,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 删除 6 张旧 AI 卡图 PNG(git 历史可找回);`class_card` 引用全仓清零。
 - **无「待编译验证」**:全部绘制调用(fill / drawCenteredTextWithShadow / matrices 缩放 / drawItem)与 import 均有在树先例(ChooseClassPayload 为本仓库类)。要作者实机看:六卡观感、悬停发光与底部介绍、替换界面卡面、武僧「拳」字卡;配色不满意改 ClassCardRenderer.THEMES 即可。
 - configVersion 不变(仍 22)。
+
+## 里程碑 205 — 选职界面换用户 6 张「职业介绍」海报(整图翻页版)
+- **需求**(作者):「职业图换成这个」+ 传来 武僧/术士/刺客/坦克/战士/剑客 六张 AI 海报(1086×1448,自带职业名、定位语、技能列表、立绘)→ m204 的程序化卡片让位,删 `ClassCardRenderer`(git 历史可找回)。
+- **装图**:LANCZOS 降采样至 768×1024(插画按 SKILL §5 用 LANCZOS,3:4 比例不变)→ `textures/gui/class_poster_<id>.png` ×6(约 8MB)。坦克海报对应 TANK(枚举 cn=肉盾:页签显示「肉盾」、海报标题写「坦克」,同一职业)。
+- **`ClassSelectScreen` 重写 = 海报翻页版**:左侧 6 个夜蚀主题页签(YongyeButton)切换 + 金色 ▶ 指示当前;海报在右侧区域按 3:4 等比最大化居中(matrices 缩放 + drawTexture 9 参,签名照 AccessoryScreen 在树先例);底部「✔ 选定当前职业(不可更改)」确认后才提交 ChooseClassPayload——选职不可逆,由「点卡即选」改为显式确认,防误触;仍屏蔽 ESC。海报自带全部文案,界面不再叠字。
+- **`ClassReplaceScreen`**:两张卡面改为海报 99×132 等比缩略(同一套贴图),红框「将丢弃」语义与标签保留。
+- **无「待编译验证」**:drawTexture 9 参 / matrices 缩放 / YongyeButton+addDrawableChild 组合均有在树先例;ChooseClassPayload 为本仓库类(import 比对脚本的"无先例"是重写后的已知误报)。
+- 实机看:海报清晰度(现 768 宽,嫌糊可提 1024 宽)、页签切换、确认按钮、替换界面缩略。configVersion 不变。
