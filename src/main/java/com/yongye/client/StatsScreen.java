@@ -42,62 +42,70 @@ public class StatsScreen extends Screen {
 
         int cx = this.width / 2;
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("◆ 成长面板 ◆").formatted(Formatting.GOLD), cx, 18, 0xFFFFD700);
+                Text.literal("◆ 成长面板 ◆").formatted(Formatting.GOLD), cx, 14, 0xFFFFD700);
 
-        // 当前属性:所有职业通用。读本地玩家已同步的最终属性(含职业/携带/强化加成),武僧无武器也能看。
-        int y = 38;
+        // 双栏布局(m209):旧版单栏 17 行在 GUI 缩放 4 / 小窗口下会压住「返回」按钮并顶出屏幕。
+        // 左栏=当前属性,右栏=成长(技能书);栏心偏移随窗口宽度收缩,最小 96 保证不互相重叠。
+        int off = Math.max(96, Math.min(120, this.width / 4));
+        int lx = cx - off, rxc = cx + off;
+        int lh = 15;
+
+        // ===== 左栏:当前属性(所有职业通用) =====
+        int y = 36;
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("◆ 当前属性 ◆").formatted(Formatting.AQUA), cx, y, 0xFF55FFFF);
-        y += 16;
+                Text.literal("◆ 当前属性 ◆").formatted(Formatting.AQUA), lx, y, 0xFF55FFFF);
+        y += lh + 2;
         ClientPlayerEntity pl = MinecraftClient.getInstance().player;
         if (pl != null) {
+            // 攻击伤害用服务端同步值:GENERIC_ATTACK_DAMAGE 原版不下发客户端,本地读永远是 1(攻速是 tracked 的所以正常)。
+            double atk = ClientStats.attackDamage >= 0 ? ClientStats.attackDamage
+                    : pl.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
             String[] attrs = {
                     "生命 " + big(pl.getHealth()) + " / " + big(pl.getMaxHealth()),
-                    "攻击伤害 " + big(pl.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE))
-                            + "    攻击速度 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)),
-                    "护甲 " + big(pl.getAttributeValue(EntityAttributes.GENERIC_ARMOR))
-                            + "    韧性 " + big(pl.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS)),
-                    "移动速度 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED))
-                            + "    击退抗性 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE)),
+                    "攻击伤害 " + big(atk),
+                    "攻击速度 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)),
+                    "护甲 " + big(pl.getAttributeValue(EntityAttributes.GENERIC_ARMOR)),
+                    "韧性 " + big(pl.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS)),
+                    "移动速度 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)),
+                    "击退抗性 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE)),
                     "幸运 " + fmt(pl.getAttributeValue(EntityAttributes.GENERIC_LUCK)),
             };
             for (String s : attrs) {
-                ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(s), cx, y, 0xFFFFFFFF);
-                y += 16;
+                ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(s), lx, y, 0xFFFFFFFF);
+                y += lh;
             }
         } else {
             ctx.drawCenteredTextWithShadow(this.textRenderer,
-                    Text.literal("(读取中…)").formatted(Formatting.GRAY), cx, y, 0xFF888888);
-            y += 16;
+                    Text.literal("(读取中…)").formatted(Formatting.GRAY), lx, y, 0xFF888888);
         }
 
-        // 成长(技能书等级与加成)
-        y += 8;
+        // ===== 右栏:成长(技能书等级与加成) =====
+        y = 36;
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("◆ 成长(技能书)◆").formatted(Formatting.GOLD), cx, y, 0xFFFFD700);
-        y += 18;
+                Text.literal("◆ 成长(技能书)◆").formatted(Formatting.GOLD), rxc, y, 0xFFFFD700);
+        y += lh + 2;
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("血量强化   V" + ClientStats.health + "    (+" + (ClientStats.health * 10L) + " 最大生命)"),
-                cx, y, 0xFFFF5555);
-        y += 16;
+                Text.literal("血量强化 V" + ClientStats.health + " (+" + (ClientStats.health * 10L) + " 最大生命)"),
+                rxc, y, 0xFFFF5555);
+        y += lh;
 
         String[] descs = {
-                "  攻击伤害 +" + fmt(level(0) * 0.5),
-                "  护甲 +" + fmt(level(1) * 0.5) + " / 韧性 +" + fmt(level(1) * 0.25),
-                "  每秒回血 " + fmt(level(2) * 0.1),
-                "  闪避 " + (int) Math.round(Math.min(0.5, level(3) * 0.01) * 100) + "%",
-                "  反伤 ×" + fmt(Math.min(3.0, level(4) * 0.05)),
-                "  清负面 " + (int) Math.round(Math.min(0.8, level(5) * 0.01) * 100) + "% + 抗火",
-                "  持续回饱食度(几乎不会饿)",
-                "  抢夺概率 " + (int) Math.round(Math.min(0.9, level(7) * 0.005) * 100) + "%"
+                " 攻击伤害 +" + fmt(level(0) * 0.5),
+                " 护甲 +" + fmt(level(1) * 0.5) + "/韧性 +" + fmt(level(1) * 0.25),
+                " 每秒回血 " + fmt(level(2) * 0.1),
+                " 闪避 " + (int) Math.round(Math.min(0.5, level(3) * 0.01) * 100) + "%",
+                " 反伤 ×" + fmt(Math.min(3.0, level(4) * 0.05)),
+                " 清负面 " + (int) Math.round(Math.min(0.8, level(5) * 0.01) * 100) + "% + 抗火",
+                " 持续回饱食度",
+                " 抢夺概率 " + (int) Math.round(Math.min(0.9, level(7) * 0.005) * 100) + "%"
         };
 
         for (int i = 0; i < NAMES.length; i++) {
             int lv = level(i);
             int color = lv > 0 ? 0xFF55FFFF : 0xFF888888;
             ctx.drawCenteredTextWithShadow(this.textRenderer,
-                    Text.literal(NAMES[i] + "   V" + lv + (lv > 0 ? descs[i] : "")), cx, y, color);
-            y += 16;
+                    Text.literal(NAMES[i] + " V" + lv + (lv > 0 ? descs[i] : "")), rxc, y, color);
+            y += lh;
         }
     }
 

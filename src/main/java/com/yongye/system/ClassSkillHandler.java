@@ -50,6 +50,8 @@ public final class ClassSkillHandler {
     private static final Map<UUID, Integer> comboTarget = new HashMap<>();
     private static final Map<UUID, Long> comboUntil = new HashMap<>();
     private static final Map<UUID, Long> lastCombat = new HashMap<>();
+    /** 攻击伤害同步(m209):上次下发给该玩家的 GENERIC_ATTACK_DAMAGE 终值,变化才发包 */
+    private static final Map<UUID, Double> lastAtkSync = new HashMap<>();
 
     // ===== 职业资源(MP)计算用状态 =====
     /** 战士:当前怒气 0.0~1.0(受伤涨、不战斗衰减) */
@@ -411,6 +413,18 @@ public final class ClassSkillHandler {
                         // 移动了:重置静止计时
                         tankLastMove.put(tid, p.getServerWorld().getTime());
                         tankLastPos.put(tid, cur);
+                    }
+                }
+                // ===== 每10tick向客户端同步攻击伤害(m209)=====
+                // GENERIC_ATTACK_DAMAGE 原版不是 tracked 属性、永不下发客户端,成长面板本地读只能读到基础值 1;
+                // 这里在服务端读终值(含手持武器+强化+职业修饰符),变化才发包。不分职业,所有玩家都同步。
+                if (server.getTicks() % 10 == 0) {
+                    double atk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+                    Double lastAtk = lastAtkSync.get(p.getUuid());
+                    if (lastAtk == null || Math.abs(lastAtk - atk) > 1.0E-3) {
+                        lastAtkSync.put(p.getUuid(), atk);
+                        net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                                new com.yongye.network.AttackSyncPayload(atk));
                     }
                 }
                 // ===== 每10tick向客户端同步MP =====

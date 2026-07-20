@@ -125,6 +125,10 @@ public class YongyeClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.MpSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.mp = payload.mp()));
 
+        // 攻击伤害同步:服务端终值(原版 GENERIC_ATTACK_DAMAGE 不下发客户端,成长面板要显示真值)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.AttackSyncPayload.ID, (payload, context) ->
+                context.client().execute(() -> ClientStats.attackDamage = payload.atk()));
+
         // 灾厄核心定位器同步:更新方向箭头目标
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.CoreLocatorPayload.ID, (payload, context) ->
                 context.client().execute(() -> {

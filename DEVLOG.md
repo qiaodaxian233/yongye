@@ -2190,3 +2190,12 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **剑客·剑气凌空**(`swordsmanPierceRange`=12 / `swordsmanPierceDamage`=10,持流光×1.5):剑气层此前只喂 MP 条无消耗,现在攒满 10 层后的下一次近战命中,沿视线逐格细判定放出**穿透直线剑气**(命中去重),打完清零重攒——资源闭环。
 - 配置 +3,**configVersion 25→26**;`new Box(6 double)` / getEntitiesByClass / takeKnockback 等全部在树先例,**无「待编译验证」**。
 - 实机盯:坦克挨真伤(高血量反制)是否按 85% 结算、真减伤重放有没有异常(击退/无敌帧观感)、剑客攒满 10 层剑气后的穿透与 MP 条清零、剑客移速手感。
+
+## 里程碑 209 — 成长面板/装备介绍界面排版修复 + 攻击伤害真值同步(实机截图三连修)
+- **需求**(作者实机截图):「有重叠;拿着武器但是攻击没变(面板攻击伤害显示 1,攻速 2.1 却在变);武器模型放在哪里」。
+- **① 攻击伤害显示 1 的根因(不是武器坏了)**:成长面板(StatsScreen,m201)在客户端本地读 `getAttributeValue(GENERIC_ATTACK_DAMAGE)`,但原版这个属性**不是 tracked 属性、永远不下发客户端**——客户端读到的一直是玩家基础值 1.0;攻击速度是 tracked 的所以正常同步(2.1 会变)。**服务端的实际伤害一直是对的**,纯显示问题。修法:新增 `AttackSyncPayload`(S2C,double),ClassSkillHandler 的每玩家 10-tick 循环里在服务端读终值(含手持武器 + 强化组件 + 职业修饰符),**数值变化才发包**(lastAtkSync 缓存,不分职业所有玩家都同步);客户端存 `ClientStats.attackDamage`(<0=未收到,收到前回落本地值),面板改读它。
+- **② 成长面板重叠**:旧版单栏 17 行(当前属性 5 行 + 成长 12 行)在 GUI 缩放 4 / 小窗口(高度≈270)下直接压住「返回」按钮并顶出屏幕底。重排为**双栏**:左栏「当前属性」8 行(原本一行两项拆成一行一项,栏更窄),右栏「成长(技能书)」10 行,行距 15,栏心偏移 `max(96, min(120, width/4))` 随窗口收缩、最小 96 保证不互压;高度 240 的窗口也能完整放下且不碰按钮。
+- **③ 装备介绍面板(WeaponInfoScreen)重叠**:属性区行距 14 时,第 4 行「耐久度」画在 y0+112~121,而品质框底色从 y0+116 起、「品质」行在 y0+120——**耐久度正好压进品质框**;另外「强化 +X」(y0+162~171)与「✦ 神器技能」行(y0+168)在灰字提示横向延伸段也有 3px 互压。修法:属性区与品质框行距 14→12,品质框上移到 y0+112(框体 y0+108~164),各区间留净空:属性区最深 y0+101 < 框顶 108,框底 164 < 神器技能 168,技能 3 行到 y0+215 < 按钮 224。
+- **武器模型位置(作者问,记录备查)**:职业武器 ×5(武僧无武器,m134 起不注册)= `src/main/resources/assets/yongye/models/item/class_weapon_<职业id>.json`(**Blockbench 3D 模型**,elements+UV,credit "Done by Pramanix")+ 贴图 `textures/item/class_weapon_<职业id>.png`(1024²/128² 不等);同目录 `*_e.png` 是 OptiFine 发光贴图约定,**未被任何模型引用**,原版不加载,删改均不影响。混沌之刃 = `models/item/chaos_blade.json`(**平面 handheld 贴图模型**)+ `textures/item/chaos_blade.png`(64×64)。改外观:改形状用 Blockbench 开 json,只换皮直接重画对应 png(尺寸随意,保持正方形)。
+- 校验:7 个改动文件括号全配平;AttackSyncPayload 注册/发送/接收三点齐全;ClientStats.attackDamage 定义↔引用一致。**无「待编译验证」**:PacketCodec.of + writeDouble/readDouble、ServerPlayNetworking.send、registerGlobalReceiver、drawCenteredTextWithShadow 均为在树先例写法。configVersion 不变(仍 26)。
+- 实机验:①拿任意武器开成长面板,攻击伤害应在半秒内变成真值(换手持物跟着变);②GUI 缩放调到 4 看成长面板双栏是否完整、不压返回钮;③开装备介绍看耐久度/品质框/神器技能三段是否清爽分离。

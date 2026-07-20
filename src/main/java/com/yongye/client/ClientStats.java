@@ -11,6 +11,8 @@ public final class ClientStats {
     public static String className = "";   // 本命职业 id("" = 无)
     /** 当前职业资源值 0.0~1.0(由 MpSyncPayload 每10tick更新) */
     public static float mp = 0f;
+    /** 服务端同步的最终攻击伤害(由 AttackSyncPayload 更新;<0 = 尚未收到) */
+    public static double attackDamage = -1;
 
     public static void update(int h, int[] l, String cn) {
         health = h;
