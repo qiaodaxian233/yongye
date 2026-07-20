@@ -131,6 +131,13 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        // 夜蚀侵蚀(测试/运营用):/yongye blight [半径],把脚下一片转为夜蚀群系
+                        .then(CommandManager.literal("blight")
+                                .executes(ctx -> runBlight(ctx.getSource(), 40))
+                                .then(CommandManager.argument("radius", IntegerArgumentType.integer(8, 128))
+                                        .executes(ctx -> runBlight(ctx.getSource(),
+                                                IntegerArgumentType.getInteger(ctx, "radius")))))
+
                         // 召唤小怪·阿努比斯恶灵(测试用):/yongye wraith
                         .then(CommandManager.literal("wraith").executes(ctx -> {
                             net.minecraft.server.network.ServerPlayerEntity p = ctx.getSource().getPlayer();
@@ -638,5 +645,16 @@ public final class ModCommands {
             }
         }
         return "共 " + n + " 个可设字段:" + sb;
+    }
+
+    /** m212:/yongye blight [半径] —— 把执行者脚下一片已加载区块转为夜蚀群系。 */
+    private static int runBlight(net.minecraft.server.command.ServerCommandSource src, int radius) {
+        ServerPlayerEntity p = src.getPlayer();
+        if (p == null) { src.sendError(Text.literal("只能由玩家执行")); return 0; }
+        net.minecraft.server.world.ServerWorld w = p.getServerWorld();
+        int chunks = com.yongye.system.NightBlightHandler.blightArea(w, p.getBlockPos(), radius);
+        src.sendFeedback(() -> Text.literal(
+                "夜蚀已吞噬周围 " + chunks + " 个区块(半径 " + radius + " 格)").formatted(Formatting.DARK_PURPLE), false);
+        return chunks;
     }
 }

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 27;
+    public static final int CURRENT_CONFIG_VERSION = 28;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -720,6 +720,35 @@ public class YongyeConfig {
     public int weaponTintStartLevel = 100;
     /** 染色封顶强化等级:达到即纯红,再高不再变(默认 2500=「至尊」品质门槛)。 */
     public int weaponTintEndLevel = 2500;
+
+    // ============ m212:夜蚀群系 ============
+    /** 夜蚀群系总开关(侵蚀转化 + 全生物敌化 + 侵蚀掉落 + 自然侵蚀)。 */
+    public boolean enableBlight = true;
+    /** 自然侵蚀起始天数:第 N 天起才可能自然出现侵蚀区(命令 /yongye blight 不受限)。 */
+    public int blightStartDay = 12;
+    /** 每次检定自然出现新侵蚀区的概率。 */
+    public double blightSeedChance = 0.03;
+    /** 自然侵蚀检定间隔(tick,1200=1 分钟)。 */
+    public int blightSeedCheckIntervalTicks = 1200;
+    /** 自然侵蚀区半径(格)。 */
+    public int blightZoneRadius = 40;
+    /** 群系内全生物敌化的索敌半径(以玩家为中心,格)。 */
+    public int blightAggroRange = 24;
+    /** 被动生物(牛羊鸡猪村民等)在群系内攻击玩家的单次伤害(3.0=1.5 颗心)。 */
+    public double blightPassiveDamage = 3.0;
+    /** 被动生物追击玩家的移动速度倍率。 */
+    public double blightPassiveSpeed = 1.25;
+    /** 侵蚀掉落是否要求玩家击杀(关=摔死烧死也掉,可被刷)。 */
+    public boolean blightDropRequirePlayerKill = true;
+    /** 群系内死亡生物掉落永夜之尘的概率与数量上限。 */
+    public double blightDustChance = 0.5;
+    public int blightDustMax = 2;
+    /** 被动生物额外:生命碎片概率。 */
+    public double blightShardChance = 0.20;
+    /** 怪物额外:裂隙碎片概率。 */
+    public double blightRiftChance = 0.12;
+    /** 全员极小概率:深渊魂晶。 */
+    public double blightCrystalChance = 0.015;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

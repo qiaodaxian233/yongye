@@ -91,6 +91,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.WildDragonSpawnHandler.register();   // m165 野生末影龙:第N天起高空几率刷出
         com.yongye.system.AnubisSpawnHandler.register();       // m175 阿努比斯:第N天起地表几率降临
         com.yongye.system.CustomMobSpawnHandler.register();    // m176 五只新怪自然刷怪(BOSS事件+精英压力)
+        com.yongye.system.NightBlightHandler.register();       // m212 夜蚀群系:侵蚀转化+全生物敌化+侵蚀掉落
         com.yongye.system.SurvivalRankHandler.register();
         com.yongye.system.NightfallWeatherHandler.register();
         com.yongye.system.NightfallVisionHandler.register();
