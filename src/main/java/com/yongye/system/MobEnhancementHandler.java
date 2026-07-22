@@ -86,6 +86,11 @@ public final class MobEnhancementHandler {
             int nf = NightfallManager.getLevel();
             if (cfg.enableNightfall && nf > 5) {
                 double abyssMult = (nf - 5) * cfg.nightfallBeyondHpPerLevel;
+                // m218:战斗爽难度下 V5+ 深渊倍增适量减弱(怪已 ×3.2,再指数上天就不「爽」了);
+                // 乘 battleFunBeyondScale(默认 0.5=减半),缩到 ≤1 时走下方 >1 守卫自然不生效。
+                if (DifficultyManager.getLevel() == com.yongye.item.GameDifficulty.BATTLE.ordinal()) {
+                    abyssMult *= Math.max(0.0, cfg.battleFunBeyondScale);
+                }
                 if (abyssMult > 1.0) {
                     addMultiplierTotal(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_NIGHTFALL_HP, abyssMult);
                     addMultiplierTotal(mob, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_NIGHTFALL_ATK, abyssMult);

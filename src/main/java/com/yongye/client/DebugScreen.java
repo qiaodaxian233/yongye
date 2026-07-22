@@ -69,6 +69,14 @@ public class DebugScreen extends Screen {
                             new Btn("核心", "yongye quest core"),
                             new Btn("采集", "yongye quest gather"),
                     }),
+                    new Section("永夜V5+倍增(血攻乘 倍数×(等级-5);m218)", new Btn[]{
+                            new Btn("倍数/级 1", "yongye config set nightfallBeyondHpPerLevel 1"),
+                            new Btn("倍数/级 2·默认", "yongye config set nightfallBeyondHpPerLevel 2"),
+                            new Btn("倍数/级 4", "yongye config set nightfallBeyondHpPerLevel 4"),
+                            new Btn("战斗爽×0.25", "yongye config set battleFunBeyondScale 0.25"),
+                            new Btn("战斗爽×0.5·默认", "yongye config set battleFunBeyondScale 0.5"),
+                            new Btn("战斗爽×1不减", "yongye config set battleFunBeyondScale 1.0"),
+                    }),
                     new Section("排行", new Btn[]{
                             new Btn("存活排行", "yongye top"),
                     }),
