@@ -40,6 +40,8 @@ public final class SummonerHandler {
 
     private record Tracked(IronGolemEntity golem, long expireAt) {}
     private static final Map<UUID, List<Tracked>> byOwner = new HashMap<>();
+    /** m226:肝帝天团按主人跟踪——重复施放先散上一批,修「连按癫狂叠好几队」。 */
+    private static final Map<UUID, List<com.yongye.entity.GanDiEntity>> gandiByOwner = new HashMap<>();
 
     public static void register() {
         // 寿命管理:每 20 tick 扫一轮
@@ -128,6 +130,15 @@ public final class SummonerHandler {
         net.minecraft.util.Formatting[] colors = {
                 net.minecraft.util.Formatting.AQUA, net.minecraft.util.Formatting.YELLOW,
                 net.minecraft.util.Formatting.GREEN, net.minecraft.util.Formatting.LIGHT_PURPLE };
+        // 上一批还在?先礼貌散场(POOF),防连按叠队
+        List<com.yongye.entity.GanDiEntity> old = gandiByOwner.remove(p.getUuid());
+        if (old != null) for (com.yongye.entity.GanDiEntity g : old) {
+            if (g.isAlive()) {
+                sw.spawnParticles(ParticleTypes.POOF, g.getX(), g.getBodyY(0.5), g.getZ(), 10, 0.4, 0.5, 0.4, 0.02);
+                g.discard();
+            }
+        }
+        List<com.yongye.entity.GanDiEntity> squad = new ArrayList<>(4);
         int done = 0;
         for (int v = 0; v < 4; v++) {
             com.yongye.entity.GanDiEntity e = ModEntities.GANDI.create(sw);
@@ -142,8 +153,9 @@ public final class SummonerHandler {
             if (v == 3) { boostEntity(e, EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.5); // 迷人:输出
                           boostEntity(e, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.2); }
             e.setHealth(e.getMaxHealth());
-            if (sw.spawnEntity(e)) done++;
+            if (sw.spawnEntity(e)) { squad.add(e); done++; }
         }
+        if (!squad.isEmpty()) gandiByOwner.put(p.getUuid(), squad);
         return done;
     }
 
