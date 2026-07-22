@@ -102,13 +102,18 @@ public class WeaponInfoScreen extends Screen {
         // m209:行距 14→12。旧版 4 行属性(含耐久度)会画到 y0+112~121,
         // 而下方品质框底色从 y0+116 起——耐久度那行正好压进框里(实机截图的"重叠")。
         if (weapon) {
-            double atk = level * c.enhanceDamagePerLevel;
+            // m237:肉盾系(HYBRID)攻击按折减显示(此前漏乘,显示虚高);攻速+暴击合并一行,
+            // 腾出的行显示强化生命(普通武器 0.1/级,肉盾系 1.0/级)——仍 3 行,不破 m209 版面
+            boolean hybrid = EquipmentEnhancer.kindOf(stack.getItem()) == EquipmentEnhancer.Kind.HYBRID;
+            double atk = level * c.enhanceDamagePerLevel * (hybrid ? c.enhanceHybridDamageFraction : 1.0);
+            double hp = level * (hybrid ? c.enhanceHealthPerLevel : c.enhanceWeaponHealthPerLevel);
             ctx.drawTextWithShadow(this.textRenderer,
                     Text.literal("攻击力  +" + NumFmt.compact(atk)).formatted(Formatting.RED), rx, ry, 0xFFFF5555); ry += 12;
             ctx.drawTextWithShadow(this.textRenderer,
-                    Text.literal("攻击速度  +" + fmt(q.attackSpeed)).formatted(Formatting.GOLD), rx, ry, 0xFFFFAA00); ry += 12;
+                    Text.literal("攻速 +" + fmt(q.attackSpeed) + " · 暴击 +" + (int) Math.round(q.critChance * 100) + "%")
+                            .formatted(Formatting.GOLD), rx, ry, 0xFFFFAA00); ry += 12;
             ctx.drawTextWithShadow(this.textRenderer,
-                    Text.literal("暴击率  +" + (int) Math.round(q.critChance * 100) + "%").formatted(Formatting.GREEN), rx, ry, 0xFF55FF55); ry += 12;
+                    Text.literal("最大生命  +" + NumFmt.compact(hp)).formatted(Formatting.RED), rx, ry, 0xFFFF5555); ry += 12;
         } else {
             ctx.drawTextWithShadow(this.textRenderer,
                     Text.literal("护甲  +" + NumFmt.compact(level * c.enhanceArmorPerLevel)).formatted(Formatting.AQUA), rx, ry, 0xFF55FFFF); ry += 12;

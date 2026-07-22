@@ -38,11 +38,14 @@ public class EnhanceScreenHandler extends ScreenHandler {
                 return 1;
             }
         });
-        // 材料槽:只收强化材料,可整组(默认上限 64)
+        // 材料槽:收强化材料(整组);m236 强化继承开启时也收「已强化装备」(把它的等级并给左边那件)
         addSlot(new Slot(input, MAT_SLOT, 94, 37) {
             @Override
             public boolean canInsert(ItemStack stack) {
-                return EquipmentEnhancer.isMaterial(stack.getItem());
+                if (EquipmentEnhancer.isMaterial(stack.getItem())) return true;
+                return com.yongye.YongyeConfig.get().enableEnhanceInherit
+                        && EquipmentEnhancer.isEnhanceable(stack.getItem())
+                        && EquipmentEnhancer.getLevel(stack) > 0;
             }
         });
 
@@ -78,6 +81,37 @@ public class EnhanceScreenHandler extends ScreenHandler {
         ItemStack equip = input.getStack(EQUIP_SLOT);
         ItemStack mat = input.getStack(MAT_SLOT);
         if (equip.isEmpty() || !EquipmentEnhancer.isEnhanceable(equip.getItem())) return;
+        // m236 强化继承:材料槽放的是「已强化装备」→ 把它的等级按保留比例并入左边装备,来源销毁。
+        // 确定性转移(不走失败/碎裂):等级本就是材料+概率挣来的,继承只收税不再赌一次。
+        com.yongye.YongyeConfig icfg = com.yongye.YongyeConfig.get();
+        if (icfg.enableEnhanceInherit && !mat.isEmpty()
+                && !EquipmentEnhancer.isMaterial(mat.getItem())
+                && EquipmentEnhancer.isEnhanceable(mat.getItem())
+                && EquipmentEnhancer.getLevel(mat) > 0) {
+            net.minecraft.server.network.ServerPlayerEntity isp =
+                    (player instanceof net.minecraft.server.network.ServerPlayerEntity s2) ? s2 : null;
+            int srcLv = EquipmentEnhancer.getLevel(mat);
+            double keep = Math.max(0.0, Math.min(1.0, icfg.enhanceInheritKeepFraction));
+            int gain = (int) Math.floor(srcLv * keep);
+            if (gain <= 0) {
+                if (isp != null) isp.sendMessage(net.minecraft.text.Text.literal(
+                        "继承比例过低,本次转移不到 1 级").formatted(net.minecraft.util.Formatting.RED), true);
+                return;
+            }
+            input.setStack(EQUIP_SLOT, EquipmentEnhancer.addLevels(equip, gain));
+            input.setStack(MAT_SLOT, ItemStack.EMPTY);   // 来源装备销毁(等级已转走)
+            if (isp != null) {
+                isp.getWorld().playSound(null, isp.getX(), isp.getY(), isp.getZ(),
+                        net.minecraft.sound.SoundEvents.BLOCK_ANVIL_USE,
+                        net.minecraft.sound.SoundCategory.PLAYERS, 1.0f, 1.2f);
+                isp.sendMessage(net.minecraft.text.Text.literal(
+                        "强化继承!来源 Lv." + srcLv + " × " + (int) Math.round(keep * 100) + "% → +"
+                        + gain + " 级,当前 Lv." + EquipmentEnhancer.getLevel(input.getStack(EQUIP_SLOT)))
+                        .formatted(net.minecraft.util.Formatting.GOLD), true);
+            }
+            sendContentUpdates();
+            return;
+        }
         if (mat.isEmpty() || !EquipmentEnhancer.isMaterial(mat.getItem())) return;
         int add = mat.getCount() * EquipmentEnhancer.materialValue(mat.getItem());
         if (add <= 0) return;

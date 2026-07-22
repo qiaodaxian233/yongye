@@ -130,6 +130,13 @@ public final class EquipmentEnhancer {
                         new EntityAttributeModifier(DMG_ID, level * c.enhanceDamagePerLevel,
                                 EntityAttributeModifier.Operation.ADD_VALUE),
                         AttributeModifierSlot.MAINHAND);
+                // m237:普通武器强化也加血,但每级只 +0.1(可配)——十分之一于肉盾系(hybrid=1.0/级),拉不平
+                if (c.enhanceWeaponHealthPerLevel > 0) {
+                    result = result.with(EntityAttributes.GENERIC_MAX_HEALTH,
+                            new EntityAttributeModifier(HP_ID, level * c.enhanceWeaponHealthPerLevel,
+                                    EntityAttributeModifier.Operation.ADD_VALUE),
+                            AttributeModifierSlot.MAINHAND);
+                }
                 if (q.attackSpeed > 0) {
                     result = result.with(EntityAttributes.GENERIC_ATTACK_SPEED,
                             new EntityAttributeModifier(SPD_ID, q.attackSpeed,

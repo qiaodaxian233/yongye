@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 40;
+    public static final int CURRENT_CONFIG_VERSION = 41;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -174,7 +174,11 @@ public class YongyeConfig {
     public double enhanceHealthPerLevel = 1.0;     // 盔甲每级 +最大生命
     public int enhanceDurabilityPerLevel = 8;      // 每级 +最大耐久
     public double enhanceCritBonusMultiplier = 0.75; // 暴击额外伤害 = 强化攻击加成 × 此值
-    public double enhanceHybridDamageFraction = 0.5; // 攻防双修武器(如镇魂)的攻击成长 = 武器攻击/级 × 此值(攻击加得少些)
+    public double enhanceHybridDamageFraction = 0.3; // 攻防双修武器(如镇魂)的攻击成长 = 武器攻击/级 × 此值(m237:0.5→0.3,肉盾攻击再压,坦而不是战)
+    public double enhanceWeaponHealthPerLevel = 0.1;  // m237:普通武器每级 +最大生命(肉盾系走 enhanceHealthPerLevel=1.0,十倍差距)
+    // —— m236 强化继承(强化界面:材料槽放已强化装备 → 等级按比例并入左边装备,来源销毁) ——
+    public boolean enableEnhanceInherit = true;
+    public double enhanceInheritKeepFraction = 0.8;   // 继承保留比例(0.8=转移80%,1.0=无损)
     public int enhanceShardValue = 1;              // 生命碎片 = +1 级
     public int enhanceCrystalValue = 10;           // 生命结晶 = +10 级
     public int enhanceCoreValue = 100;             // 生命核心 = +100 级
@@ -925,6 +929,8 @@ public class YongyeConfig {
                 if ("抖音:乔大仙".equals(INSTANCE.itemWatermarkText)) INSTANCE.itemWatermarkText = "DY:乔大仙";
                 // m222:终局龙血默认值改版 1e9→1e19;仅当仍是旧默认值时迁移,自定义不动
                 if (INSTANCE.endDragonHealth == 1.0E9) INSTANCE.endDragonHealth = 1.0E19;
+                // m237:肉盾武器攻击折减默认值改版 0.5→0.3;仅当仍是旧默认值时迁移,自定义不动
+                if (INSTANCE.enhanceHybridDamageFraction == 0.5) INSTANCE.enhanceHybridDamageFraction = 0.3;
                 // —— 陈旧检查:对比文件键 vs 当前字段,警告死键/缺失键/版本不符 ——
                 try {
                     JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
