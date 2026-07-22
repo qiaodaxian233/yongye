@@ -100,22 +100,16 @@ public final class ClassUltimateManager {
                 msg(p, "灭世!焚尽 " + hit + " 个目标(献祭生命)", Formatting.GOLD);
             }
             case SUMMONER -> {
-                if (p.isSneaking()) {
-                    // 癫狂:献祭生命 → 力量+速度,并召唤肝帝玩家
-                    if (p.getHealth() <= cfg.ultSummonerFrenzyHpCost + 1.0f) { msg(p, "生命不足,无法癫狂", Formatting.RED); return false; }
-                    p.setHealth(Math.max(1.0f, p.getHealth() - (float) cfg.ultSummonerFrenzyHpCost));
-                    p.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, cfg.ultSummonerFrenzyDurationTicks, 1, true, false, true));
-                    p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, cfg.ultSummonerFrenzyDurationTicks, 1, true, false, true));
-                    int got = SummonerHandler.summonGanDi(p);
-                    burst(sw, p, ParticleTypes.SOUL_FIRE_FLAME, SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON);
-                    msg(p, got > 0 ? "癫狂!肝帝天团降临:岛风·晚安·不爱肝·迷人·芥末!(驻场 " + cfg.gandiLifeSec + " 秒;直接按键=召唤傀儡)"
-                                   : "癫狂!献祭生命,力量+速度暴涨", Formatting.GOLD);
-                } else {
-                    // 召唤:5 座强化铁傀儡拔地而起(潜行按键=癫狂)
-                    int n = SummonerHandler.summonGolems(p);
-                    burst(sw, p, ParticleTypes.POOF, SoundEvents.BLOCK_ANVIL_PLACE);
-                    msg(p, "召唤!" + n + " 座强化铁傀儡拔地而起(潜行按键=癫狂)", Formatting.GOLD);
-                }
+                // 癫狂(m232 起大招专职此技,不再需要潜行;铁傀儡召唤挪到小技能键,独立冷却):
+                // 献祭生命 → 力量+速度,并请五位朋友(肝帝天团)前来助阵
+                if (p.getHealth() <= cfg.ultSummonerFrenzyHpCost + 1.0f) { msg(p, "生命不足,无法癫狂", Formatting.RED); return false; }
+                p.setHealth(Math.max(1.0f, p.getHealth() - (float) cfg.ultSummonerFrenzyHpCost));
+                p.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, cfg.ultSummonerFrenzyDurationTicks, 1, true, false, true));
+                p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, cfg.ultSummonerFrenzyDurationTicks, 1, true, false, true));
+                int got = SummonerHandler.summonGanDi(p);
+                burst(sw, p, ParticleTypes.SOUL_FIRE_FLAME, SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON);
+                msg(p, got > 0 ? "癫狂!朋友们来助阵了:岛风·晚安·不爱肝·迷人·芥末!(并肩作战 " + cfg.gandiLifeSec + " 秒;小技能键=召唤傀儡)"
+                               : "癫狂!献祭生命,力量+速度暴涨", Formatting.GOLD);
             }
             case MONK -> {
                 // 百裂拳:周身连击+强力击退

@@ -26,11 +26,11 @@ import net.minecraft.world.World;
 import java.util.UUID;
 
 /**
- * 「肝帝玩家」(m223,召唤师·癫狂的召唤物):玩家模型的友军 NPC。
+ * 「肝帝玩家」(m223,召唤师·癫狂请来的朋友):玩家模型的友军 NPC——是并肩作战的朋友,不是仆从。
  * 皮肤占位:assets/yongye/textures/entity/gandi.png(64×64 标准皮肤布局),
  * 作者发来正式皮肤后【直接覆盖该文件】即可,零代码改动。
  * AI:近战攻击敌对怪(ActiveTargetGoal 只锁 HostileEntity,不打玩家/友军);
- * 离主人 >12 格时优先跑回主人身边;寿命到点自散(灵魂粒子)。
+ * 离朋友(召唤者)>12 格时优先跑回其身边;寿命到点自散(灵魂粒子)。
  * 属性从配置读(gandiHealth/gandiAttack/gandiSpeed),注册期读取——改配置后需重启生效。
  */
 public class GanDiEntity extends PathAwareEntity {
@@ -98,7 +98,7 @@ public class GanDiEntity extends PathAwareEntity {
         this.targetSelector.add(1, new ActiveTargetGoal<>(this, HostileEntity.class, true));
     }
 
-    /** 台词直达主人聊天栏:【彩色名字】台词(可用 gandiChatEnabled 关闭)。 */
+    /** 台词直达朋友(召唤者)聊天栏:【彩色名字】台词(可用 gandiChatEnabled 关闭)。 */
     private void speak(String line) {
         if (!YongyeConfig.get().gandiChatEnabled || owner == null) return;
         if (!(this.getWorld() instanceof ServerWorld sw)) return;
@@ -148,8 +148,8 @@ public class GanDiEntity extends PathAwareEntity {
                 speakFrom(2); nextTalkAt = now + 240;
             }
         }
-        // 分工光环(m224/m230,每 3 秒一轮):岛风=傀儡恢复+抗性 | 晚安=修傀儡+缩主人CD |
-        // 不爱肝=傀儡生命上限+强抗 | 迷人=傀儡力量+速度 | 芥末·爆肝节奏=给主人急迫II+恢复I(劳模光环,人设待作者补充抖音方向后可调)
+        // 分工光环(m224/m230,每 3 秒一轮):岛风=傀儡恢复+抗性 | 晚安=修傀儡+缩朋友CD |
+        // 不爱肝=傀儡生命上限+强抗 | 迷人=傀儡力量+速度 | 芥末·爆肝节奏=给朋友急迫II+恢复I(劳模光环,人设待作者补充抖音方向后可调)
         if (lifeTicks % 60 == 0 && owner != null) {
             java.util.List<IronGolemEntity> golems = com.yongye.system.SummonerHandler.golemsOf(owner);
             for (IronGolemEntity g : golems) {
@@ -163,8 +163,8 @@ public class GanDiEntity extends PathAwareEntity {
                                 g.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 100, 0, true, false, false)); }
                 }
             }
-            if (getVariant() == 1) com.yongye.system.ClassUltimateManager.reduceCooldown(owner, 40); // 晚安:每 3 秒帮主人缩 2 秒 CD
-            if (getVariant() == 4) {   // 芥末:主人光环(急迫II+恢复I),肝就完事了
+            if (getVariant() == 1) com.yongye.system.ClassUltimateManager.reduceCooldown(owner, 40); // 晚安:每 3 秒帮朋友缩 2 秒 CD
+            if (getVariant() == 4) {   // 芥末:朋友光环(急迫II+恢复I),肝就完事了
                 net.minecraft.entity.player.PlayerEntity o = sw.getPlayerByUuid(owner);
                 if (o != null) {
                     o.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 100, 1, true, false, true));
@@ -174,7 +174,7 @@ public class GanDiEntity extends PathAwareEntity {
             sw.spawnParticles(net.minecraft.particle.ParticleTypes.HAPPY_VILLAGER, getX(), getBodyY(0.8), getZ(), 3, 0.3, 0.4, 0.3, 0.0);
         }
 
-        // 跟随主人:无仇恨且离主人太远时跑回去(每 10 tick 判一次省性能)
+        // 跟随朋友:无仇恨且离得太远时跑回其身边(每 10 tick 判一次省性能)
         if (lifeTicks % 10 == 0 && this.getTarget() == null && owner != null) {
             PlayerEntity o = sw.getPlayerByUuid(owner);
             if (o != null && this.squaredDistanceTo(o) > 144.0) {

@@ -31,15 +31,15 @@ public class ClassSelectScreen extends Screen {
 
     /** m228:技能按键介绍(与 PlayerClass.values() 顺序一一对应:肉盾/战士/术士/剑客/武僧/刺客/召唤师)。 */
     private static final String[][] SKILL_INTRO = {
-            {"【X】不动如山:嘲讽群怪 + 抗性/吸收护体", "被动:嘲讽聚怪 · 护盾吸收 · 格挡反震 · 15% 真减伤"},
-            {"【X】旋风斩:周身范围一击", "被动:吸血 15% · 残血目标斩杀"},
-            {"【X】灭世:献祭生命,大范围魔法爆发", "潜行=耗血蓄力 · 手持法杖蓄力远程弹"},
-            {"【X】万剑归一:前方大范围剑气洞穿", "连斩 10 刀自动放穿透剑气 · 招架反弹 · +12% 移速"},
-            {"【X】百裂拳:周身连击 + 强力击退", "空手连击层层叠伤 · 15% 缴械 · 越打越痛"},
-            {"【X】影遁:隐身 + 迅捷突袭", "背刺伤害翻倍 · 20% 闪避/暴击 · 脱战加速+夜视"},
-            {"【X】召唤:5 座强化铁傀儡(血攻×2)", "潜行+【X】癫狂:献祭生命,召唤肝帝天团(驻场 60 秒)"},
+            {"【X】不动如山:嘲讽群怪 + 抗性/吸收护体", "【C】盾击:小范围重击 + 击退减速", "被动:嘲讽聚怪 · 护盾吸收 · 格挡反震 · 15% 真减伤"},
+            {"【X】旋风斩:周身范围一击", "【C】战吼:震慑周围(虚弱/缓慢),自身力量", "被动:吸血 15% · 残血目标斩杀"},
+            {"【X】灭世:献祭生命,大范围魔法爆发", "【C】生命虹吸:小范围魔伤,按命中回血", "潜行=耗血蓄力 · 手持法杖蓄力远程弹"},
+            {"【X】万剑归一:前方大范围剑气洞穿", "【C】剑气斩:前方短距剑气", "连斩 10 刀自动放穿透剑气 · 招架反弹 · +12% 移速"},
+            {"【X】百裂拳:周身连击 + 强力击退", "【C】金钟罩:短时抗性II + 回复", "空手连击层层叠伤 · 15% 缴械 · 越打越痛"},
+            {"【X】影遁:隐身 + 迅捷突袭", "【C】疾影步:向前猛冲 + 短暂加速", "背刺伤害翻倍 · 20% 闪避/暴击 · 脱战加速+夜视"},
+            {"【X】癫狂:献祭生命,请朋友们助阵(岛风·晚安·不爱肝·迷人·芥末)", "【C】召唤:5 座强化铁傀儡(独立冷却,不占大招)", "傀儡血攻×2 · 五位朋友各带光环并肩作战"},
     };
-    private static final String COMMON_INTRO = "通用:R/G/V=混沌之刃武器技能(需持有) · 按键均可在 设置-按键 里改";
+    private static final String COMMON_INTRO = "通用:R/G/V=混沌之刃武器技能(需持有) · 大招与小技能冷却互不占用 · 按键均可在 设置-按键 里改";
 
     public ClassSelectScreen() {
         super(Text.literal("选择本命职业"));
@@ -99,11 +99,12 @@ public class ClassSelectScreen extends Screen {
 
         // 技能按键介绍(m228):压在底部按钮带上方,三行——大招 / 职业机制 / 通用键位
         String[] intro = SKILL_INTRO[Math.min(sel, SKILL_INTRO.length - 1)];
-        int introY = tabY - 8 - 3 * 11 - 6;
+        int introY = tabY - 8 - 4 * 11 - 6;
         ctx.fill(0, introY - 4, this.width, tabY - 8, 0x99050710);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(intro[0]), this.width / 2, introY, 0xFFFFD700);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(intro[1]), this.width / 2, introY + 11, 0xFFCFE8FF);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(COMMON_INTRO), this.width / 2, introY + 22, 0xFF8A93A3);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(intro[1]), this.width / 2, introY + 11, 0xFF7FE8C8);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(intro[2]), this.width / 2, introY + 22, 0xFFCFE8FF);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(COMMON_INTRO), this.width / 2, introY + 33, 0xFF8A93A3);
 
         // 当前页签指示:按钮正下方一条金色底条
         YongyeButton cur = tabs[sel];

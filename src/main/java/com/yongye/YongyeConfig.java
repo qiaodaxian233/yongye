@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 37;
+    public static final int CURRENT_CONFIG_VERSION = 38;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -763,7 +763,7 @@ public class YongyeConfig {
     public int ultSummonerGolemLifeSec = 60;
     /** 「强化」倍率:傀儡血/攻各 ×(1+此值),默认 1.0=翻一倍。 */
     public double summonerGolemBoostMult = 1.0;
-    /** 「癫狂」(潜行+大招键)消耗的生命值。 */
+    /** 「癫狂」(大招键,m232 起不再需要潜行)消耗的生命值。 */
     public double ultSummonerFrenzyHpCost = 20.0;
     /** 「癫狂」力量II+速度II 的持续时间(tick)。 */
     public int ultSummonerFrenzyDurationTicks = 400;
@@ -772,7 +772,7 @@ public class YongyeConfig {
     public double gandiAttack = 40.0;
     public double gandiSpeed = 0.35;
     public int gandiLifeSec = 60;
-    /** 肝帝台词(登场/战斗/闲聊/告别,只发给主人):关=全员沉默。 */
+    /** 肝帝台词(登场/战斗/闲聊/告别,只发给召唤他们的朋友):关=全员沉默。 */
     public boolean gandiChatEnabled = true;
     // —— m227 肝帝台词池:竖线 | 分隔句子,随机抽一句;清空该字段=该类台词沉默。
     //    Debug「配置」页有查改入口;改句示例:/yongye config set gandiTalkDaofengSpawn 句1|句2
@@ -802,12 +802,36 @@ public class YongyeConfig {
     public String gandiTalkJiemoBye      = "先下了,回床上躺会儿……明天接着肝。";
     public String gandiTalkJiemoDeath    = "肝……肝不动了……";
     // —— m229 召唤物成长与鹰扬 ——
-    /** 召唤物(傀儡+肝帝)附加生命 = 主人最大生命 × 此比例(随主人成长)。 */
+    /** 召唤物(傀儡+肝帝)附加生命 = 召唤者(朋友)最大生命 × 此比例(随你一起成长)。 */
     public double summonerOwnerHpRatio = 0.5;
-    /** 召唤物附加攻击 = 主人攻击 × 此比例。 */
+    /** 召唤物附加攻击 = 召唤者攻击 × 此比例。 */
     public double summonerOwnerAtkRatio = 0.5;
     /** 手持「鹰扬」且本职业生效时,铁傀儡强化倍率额外加成。 */
     public double summonerStaffExtraBoost = 0.5;
+
+    // —— m232 职业小技能(默认 C 键,与大招各自冷却互不占用) ——
+    /** 职业小技能总开关。 */
+    public boolean enableClassMinorSkill = true;
+    /** 小技能冷却(tick,默认 300=15 秒;铁傀儡召唤也走这条,不再吃大招 CD)。 */
+    public long minorSkillCooldownTicks = 300;
+    /** 肉盾·盾击:半径 / 伤害(附带击退+缓慢II 3秒)。 */
+    public double minorTankRadius = 3.0;
+    public double minorTankDamage = 6.0;
+    /** 战士·战吼:半径 / 持续(tick;周围怪虚弱+缓慢,自身力量I)。 */
+    public double minorWarriorRadius = 6.0;
+    public int minorWarriorDurationTicks = 100;
+    /** 术士·生命虹吸:半径 / 伤害 / 每命中回血。 */
+    public double minorWarlockRadius = 4.0;
+    public double minorWarlockDamage = 8.0;
+    public double minorWarlockHealPerHit = 2.0;
+    /** 剑客·剑气斩:前方剑气距离 / 伤害。 */
+    public double minorSwordsmanRange = 6.0;
+    public double minorSwordsmanDamage = 8.0;
+    /** 武僧·金钟罩:持续(tick;抗性II+回复I)。 */
+    public int minorMonkDurationTicks = 100;
+    /** 刺客·疾影步:冲刺力度 / 加速持续(tick,速度II)。 */
+    public double minorAssassinDashStrength = 1.6;
+    public int minorAssassinSpeedTicks = 60;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

@@ -55,6 +55,12 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.system.ClassUltimateManager.use(p));
         });
+        // 职业小技能(m232,默认 C 键,与大招独立冷却)
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.ClassMinorSkillPayload.ID, com.yongye.network.ClassMinorSkillPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ClassMinorSkillPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.ClassMinorSkillManager.use(p));
+        });
         // 天赋界面:S2C 同步状态 + C2S 加点请求
         PayloadTypeRegistry.playS2C().register(com.yongye.network.TalentSyncPayload.ID, com.yongye.network.TalentSyncPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.NightfallSyncPayload.ID, com.yongye.network.NightfallSyncPayload.CODEC);

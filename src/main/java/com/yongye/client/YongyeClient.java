@@ -322,6 +322,15 @@ public class YongyeClient implements ClientModInitializer {
             }
         });
 
+        // 职业小技能按键(m232,默认 C)→ 发包施放本命职业小技能(独立冷却,不占大招CD)
+        KeyBinding minorSkillKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.yongye.minorskill", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.yongye"));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (minorSkillKey.wasPressed()) {
+                if (client.player != null) ClientPlayNetworking.send(new com.yongye.network.ClassMinorSkillPayload());
+            }
+        });
+
         // 【m206】全物品标识：悬停任意物品（原版+模组）tooltip 末尾加一行，可在配置关闭/改字
 
         net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipType, lines) -> {

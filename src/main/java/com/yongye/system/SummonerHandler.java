@@ -25,6 +25,7 @@ import java.util.UUID;
 
 /**
  * 召唤师系统(m223):「召唤」5 座铁傀儡 +「强化」×2 血攻 + 傀儡寿命管理。
+ * m232 起「召唤」由小技能键(默认 C)触发,走独立冷却,不再占用大招 CD;大招键专职「癫狂」。
  * - 傀儡=原版 IronGolemEntity + setPlayerCreated(true)(只打怪不打玩家,原版友军逻辑白嫖);
  *   「强化」= MAX_HEALTH/ATTACK_DAMAGE 各挂 ADD_MULTIPLIED_TOTAL 修饰符(值=summonerGolemBoostMult,
  *   默认 1.0=翻一倍),照 MobEnhancementHandler 的修饰符写法。
@@ -42,7 +43,7 @@ public final class SummonerHandler {
 
     private record Tracked(IronGolemEntity golem, long expireAt) {}
     private static final Map<UUID, List<Tracked>> byOwner = new HashMap<>();
-    /** m226:肝帝天团按主人跟踪——重复施放先散上一批,修「连按癫狂叠好几队」。 */
+    /** m226:肝帝天团按召唤者跟踪——重复施放先散上一批,修「连按癫狂叠好几队」。 */
     private static final Map<UUID, List<com.yongye.entity.GanDiEntity>> gandiByOwner = new HashMap<>();
 
     public static void register() {
@@ -98,7 +99,7 @@ public final class SummonerHandler {
                 && ClassManager.isActive(p, com.yongye.item.PlayerClass.SUMMONER)) {
             boostMult += Math.max(0, cfg.summonerStaffExtraBoost);
         }
-        // m229:召唤物随主人属性成长——附加 主人血量×比例 / 主人攻击×比例(ADD_VALUE)
+        // m229:召唤物随召唤者属性成长——附加 朋友(你)血量×比例 / 攻击×比例(ADD_VALUE)
         double ownerHp  = p.getMaxHealth() * Math.max(0, cfg.summonerOwnerHpRatio);
         double ownerAtk = p.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE)
                 * Math.max(0, cfg.summonerOwnerAtkRatio);
@@ -139,7 +140,7 @@ public final class SummonerHandler {
                 EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
-    /** 平加成(ADD_VALUE):召唤物随主人属性成长用。 */
+    /** 平加成(ADD_VALUE):召唤物随召唤者属性成长用。 */
     private static void addFlat(net.minecraft.entity.LivingEntity e,
             net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attr,
             Identifier id, double value) {
@@ -150,7 +151,7 @@ public final class SummonerHandler {
     }
 
     /** 「癫狂」的召唤物(m224):肝帝天团四人齐上——0岛风/1晚安/2不爱肝/3迷人,
-     *  名牌常显;不爱肝+100%血(主坦),迷人+50%攻+20%速(输出),芥末+30%速(m230 劳模,给主人挂急迫)。返回实际召出数。 */
+     *  名牌常显;不爱肝+100%血(主坦),迷人+50%攻+20%速(输出),芥末+30%速(m230 劳模,给朋友挂急迫)。返回实际召出数。 */
     public static int summonGanDi(ServerPlayerEntity p) {
         ServerWorld sw = (ServerWorld) p.getWorld();
         net.minecraft.util.Formatting[] colors = {
@@ -176,7 +177,7 @@ public final class SummonerHandler {
             e.setVariant(v);
             e.setCustomName(net.minecraft.text.Text.literal(com.yongye.entity.GanDiEntity.VARIANT_NAMES[v]).formatted(colors[v]));
             e.setCustomNameVisible(true);
-            // m229:肝帝随主人属性成长(同傀儡比例)
+            // m229:肝帝随召唤者属性成长(同傀儡比例)
             addFlat(e, EntityAttributes.GENERIC_MAX_HEALTH,
                     OWNER_HP_ID, p.getMaxHealth() * Math.max(0, YongyeConfig.get().summonerOwnerHpRatio));
             addFlat(e, EntityAttributes.GENERIC_ATTACK_DAMAGE, OWNER_ATK_ID,
@@ -201,7 +202,7 @@ public final class SummonerHandler {
                 EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
-    /** 主人当前存活的铁傀儡列表(肝帝光环用)。 */
+    /** 该玩家当前存活的铁傀儡列表(肝帝光环用)。 */
     public static java.util.List<IronGolemEntity> golemsOf(UUID owner) {
         List<Tracked> list = byOwner.get(owner);
         if (list == null) return java.util.List.of();
