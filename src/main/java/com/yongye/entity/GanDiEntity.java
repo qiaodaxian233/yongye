@@ -2,6 +2,12 @@ package com.yongye.entity;
 
 import com.yongye.YongyeConfig;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.LookAtEntityGoal;
@@ -29,6 +35,12 @@ import java.util.UUID;
  */
 public class GanDiEntity extends PathAwareEntity {
 
+    /** m224:肝帝变体(0岛风/1晚安/2不爱肝/3迷人)。DataTracker 同步给客户端选皮肤。
+     *  待编译验证:initDataTracker(DataTracker.Builder) 签名与 TrackedDataHandlerRegistry.INTEGER(1.20.5+ 标准写法)。 */
+    private static final TrackedData<Integer> VARIANT =
+            DataTracker.registerData(GanDiEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    public static final String[] VARIANT_NAMES = {"岛风", "晚安", "不爱肝", "迷人"};
+
     private UUID owner;
     private int lifeTicks;
 
@@ -45,6 +57,15 @@ public class GanDiEntity extends PathAwareEntity {
                 .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32.0)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.5);
     }
+
+    @Override
+    protected void initDataTracker(DataTracker.Builder builder) {
+        super.initDataTracker(builder);
+        builder.add(VARIANT, 0);
+    }
+
+    public int getVariant() { return this.dataTracker.get(VARIANT); }
+    public void setVariant(int v) { this.dataTracker.set(VARIANT, Math.max(0, Math.min(3, v))); }
 
     @Override
     protected void initGoals() {
@@ -71,6 +92,25 @@ public class GanDiEntity extends PathAwareEntity {
             this.discard();
             return;
         }
+        // 分工光环(m224,每 3 秒一轮,作用于主人的全部铁傀儡):
+        // 岛风·圆梦筑城=恢复+抗性 | 晚安·极限生电=直接修复+给主人缩大招CD | 不爱肝·百万方工程=生命上限+强抗 | 迷人·蒸汽武装=力量+速度
+        if (lifeTicks % 60 == 0 && owner != null) {
+            java.util.List<IronGolemEntity> golems = com.yongye.system.SummonerHandler.golemsOf(owner);
+            for (IronGolemEntity g : golems) {
+                switch (getVariant()) {
+                    case 0 -> { g.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 100, 0, true, false, false));
+                                g.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 100, 0, true, false, false)); }
+                    case 1 -> g.heal(4.0f);
+                    case 2 -> { g.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, 100, 1, true, false, false));
+                                g.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 100, 1, true, false, false)); }
+                    case 3 -> { g.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 100, 1, true, false, false));
+                                g.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 100, 0, true, false, false)); }
+                }
+            }
+            if (getVariant() == 1) com.yongye.system.ClassUltimateManager.reduceCooldown(owner, 40); // 晚安:每 3 秒帮主人缩 2 秒 CD
+            sw.spawnParticles(net.minecraft.particle.ParticleTypes.HAPPY_VILLAGER, getX(), getBodyY(0.8), getZ(), 3, 0.3, 0.4, 0.3, 0.0);
+        }
+
         // 跟随主人:无仇恨且离主人太远时跑回去(每 10 tick 判一次省性能)
         if (lifeTicks % 10 == 0 && this.getTarget() == null && owner != null) {
             PlayerEntity o = sw.getPlayerByUuid(owner);

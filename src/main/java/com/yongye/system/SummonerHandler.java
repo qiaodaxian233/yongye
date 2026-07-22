@@ -121,14 +121,47 @@ public final class SummonerHandler {
                 EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
-    /** 「癫狂」的召唤物:肝帝玩家降临主人身侧。 */
-    public static boolean summonGanDi(ServerPlayerEntity p) {
+    /** 「癫狂」的召唤物(m224):肝帝天团四人齐上——0岛风/1晚安/2不爱肝/3迷人,
+     *  名牌常显;不爱肝额外 +100% 血(主坦),迷人额外 +50% 攻 +20% 速(输出)。返回实际召出数。 */
+    public static int summonGanDi(ServerPlayerEntity p) {
         ServerWorld sw = (ServerWorld) p.getWorld();
-        com.yongye.entity.GanDiEntity e = ModEntities.GANDI.create(sw);
-        if (e == null) return false;
-        e.refreshPositionAndAngles(p.getX() + 1.0, p.getY(), p.getZ() + 1.0, p.getYaw(), 0);
-        e.setOwner(p.getUuid());
-        return sw.spawnEntity(e);
+        net.minecraft.util.Formatting[] colors = {
+                net.minecraft.util.Formatting.AQUA, net.minecraft.util.Formatting.YELLOW,
+                net.minecraft.util.Formatting.GREEN, net.minecraft.util.Formatting.LIGHT_PURPLE };
+        int done = 0;
+        for (int v = 0; v < 4; v++) {
+            com.yongye.entity.GanDiEntity e = ModEntities.GANDI.create(sw);
+            if (e == null) break;
+            double ang = Math.PI * 2 * v / 4 + Math.PI / 4;
+            e.refreshPositionAndAngles(p.getX() + Math.cos(ang) * 1.8, p.getY(), p.getZ() + Math.sin(ang) * 1.8, p.getYaw(), 0);
+            e.setOwner(p.getUuid());
+            e.setVariant(v);
+            e.setCustomName(net.minecraft.text.Text.literal(com.yongye.entity.GanDiEntity.VARIANT_NAMES[v]).formatted(colors[v]));
+            e.setCustomNameVisible(true);
+            if (v == 2) boostEntity(e, EntityAttributes.GENERIC_MAX_HEALTH, 1.0);      // 不爱肝:主坦
+            if (v == 3) { boostEntity(e, EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.5); // 迷人:输出
+                          boostEntity(e, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.2); }
+            e.setHealth(e.getMaxHealth());
+            if (sw.spawnEntity(e)) done++;
+        }
+        return done;
+    }
+
+    private static void boostEntity(net.minecraft.entity.LivingEntity e,
+            net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attr, double mult) {
+        EntityAttributeInstance inst = e.getAttributeInstance(attr);
+        if (inst == null || inst.getModifier(BOOST_ID) != null) return;
+        inst.addPersistentModifier(new EntityAttributeModifier(BOOST_ID, mult,
+                EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+    }
+
+    /** 主人当前存活的铁傀儡列表(肝帝光环用)。 */
+    public static java.util.List<IronGolemEntity> golemsOf(UUID owner) {
+        List<Tracked> list = byOwner.get(owner);
+        if (list == null) return java.util.List.of();
+        java.util.List<IronGolemEntity> out = new ArrayList<>(list.size());
+        for (Tracked tr : list) if (tr.golem().isAlive()) out.add(tr.golem());
+        return out;
     }
 
     /** 召唤师资源条:存活傀儡数 / 上限(HUD 用)。 */

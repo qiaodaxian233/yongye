@@ -33,6 +33,11 @@ public final class ClassUltimateManager {
 
     private static final Map<UUID, Long> cooldownUntil = new HashMap<>();
 
+    /** m224:外部缩减大招冷却(晚安·极限生电光环用)。 */
+    public static void reduceCooldown(UUID id, long ticks) {
+        cooldownUntil.computeIfPresent(id, (k, v) -> v - ticks);
+    }
+
     public static void use(ServerPlayerEntity p) {
         YongyeConfig cfg = YongyeConfig.get();
         if (!cfg.enableClassUltimate) { msg(p, "职业大招未启用", Formatting.RED); return; }
@@ -101,9 +106,10 @@ public final class ClassUltimateManager {
                     p.setHealth(Math.max(1.0f, p.getHealth() - (float) cfg.ultSummonerFrenzyHpCost));
                     p.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, cfg.ultSummonerFrenzyDurationTicks, 1, true, false, true));
                     p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, cfg.ultSummonerFrenzyDurationTicks, 1, true, false, true));
-                    boolean got = SummonerHandler.summonGanDi(p);
+                    int got = SummonerHandler.summonGanDi(p);
                     burst(sw, p, ParticleTypes.SOUL_FIRE_FLAME, SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON);
-                    msg(p, got ? "癫狂!献祭生命,力量+速度暴涨,肝帝降临!" : "癫狂!献祭生命,力量+速度暴涨", Formatting.GOLD);
+                    msg(p, got > 0 ? "癫狂!肝帝天团降临:岛风·晚安·不爱肝·迷人!(" + got + "/4)"
+                                   : "癫狂!献祭生命,力量+速度暴涨", Formatting.GOLD);
                 } else {
                     // 召唤:5 座强化铁傀儡拔地而起(潜行按键=癫狂)
                     int n = SummonerHandler.summonGolems(p);
