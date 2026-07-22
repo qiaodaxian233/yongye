@@ -111,10 +111,7 @@ public class StatsScreen extends Screen {
 
     /** 大数紧凑显示:≥1亿→X.X亿,≥1万→X.X万,否则原样(后期攻击/生命可达十亿级)。 */
     private static String big(double v) {
-        double a = Math.abs(v);
-        if (a >= 1e8) return fmt(v / 1e8) + "亿";
-        if (a >= 1e4) return fmt(v / 1e4) + "万";
-        return fmt(v);
+        return NumFmt.compact(v);   // m219:统一 K/M/B/T(原万/亿)
     }
 
     private static int level(int i) {

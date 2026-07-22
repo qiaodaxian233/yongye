@@ -130,7 +130,7 @@ public final class EndDragonHandler {
                     ServerBossBar dragonBar = ((EnderDragonFightAccessor) fight).yongye$getBossBar();
                     if (dragonBar != null) {
                         dragonBar.setName(dragon.getDisplayName().copy()
-                                .append(Text.literal("\u2016" + (int)cur + "/" + (int)dragon.getMaxHealth())));
+                                .append(Text.literal("\u2016" + (long)cur + "/" + (long)dragon.getMaxHealth())));
                     }
                 }
             }

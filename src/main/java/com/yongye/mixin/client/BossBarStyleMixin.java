@@ -22,7 +22,7 @@ import java.util.Map;
  * BOSS 血条画框 + 自适应布局 + 血量数字显示(m187):
  * <ul>
  *   <li><b>血量数字</b>(m187 新增):服务端把「‖当前/最大」嵌进血条名后缀;客户端解析后
- *       显示「X.X亿 / 10.0亿」金字,格式化为万/亿紧凑单位。不含 ‖ 的条(原版凋灵等)
+ *       显示「X.XB / 1.0B」金字,格式化为 K/M/B/T 紧凑单位(m219)。不含 ‖ 的条(原版凋灵等)
  *       兜底显示百分比。</li>
  *   <li><b>同类 BOSS 合并成一根血条</b>(m184):组内血量求和,牌匾名带「×N」。</li>
  *   <li><b>名字随档缩放 + 浮点对中</b>(m184):按档位缩放文字(大1.0/中0.85/小0.7)。</li>
@@ -236,11 +236,9 @@ public abstract class BossBarStyleMixin {
         return new long[]{sumCur, sumMax};
     }
 
-    /** 紧凑血量格式:≥1亿 显示 X.X亿 / ≥1万 显示 X.X万 / 其余原值。 */
+    /** 紧凑血量格式(m219 起 K/M/B/T,统一走 NumFmt;超 int 上限的血量由 long 通道无损直达)。 */
     private static String yongye$fmtHp(long n) {
-        if (n >= 100_000_000L) return String.format(java.util.Locale.ROOT, "%.1f亿", n / 1e8);
-        if (n >= 10_000L)      return String.format(java.util.Locale.ROOT, "%.1f万", n / 1e4);
-        return String.valueOf(n);
+        return com.yongye.client.NumFmt.compact((double) n);
     }
 
     /** 从血条名的字符串中剥去 ‖hp 后缀,返回纯名字字符串。 */

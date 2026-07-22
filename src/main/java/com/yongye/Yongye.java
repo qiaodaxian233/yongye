@@ -148,7 +148,9 @@ public class Yongye implements ModInitializer {
 
     /** 解除核心属性的 1024 硬上限。攻速 1024 已够用,不动。 */
     private static void raiseAttributeCaps() {
-        double cap = 1_000_000_000.0; // 上限抬到十亿:后期玩家攻击/怪物血量都可能破百万,留足头部空间
+        // m219:上限抬到 1e15(千万亿)。作者点名血量要能突破 2147483647(int 上限):属性本身是 double,
+        // double 能精确表示到 9e15 的整数;实体血量是 float,超 ~1677 万后有精度粒度但功能正常。
+        double cap = 1.0E15;
         raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH, cap);
         raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE, cap);
         raiseCap(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ARMOR, cap);

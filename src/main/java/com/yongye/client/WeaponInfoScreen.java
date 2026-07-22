@@ -104,18 +104,18 @@ public class WeaponInfoScreen extends Screen {
         if (weapon) {
             double atk = level * c.enhanceDamagePerLevel;
             ctx.drawTextWithShadow(this.textRenderer,
-                    Text.literal("攻击力  +" + fmt(atk)).formatted(Formatting.RED), rx, ry, 0xFFFF5555); ry += 12;
+                    Text.literal("攻击力  +" + NumFmt.compact(atk)).formatted(Formatting.RED), rx, ry, 0xFFFF5555); ry += 12;
             ctx.drawTextWithShadow(this.textRenderer,
                     Text.literal("攻击速度  +" + fmt(q.attackSpeed)).formatted(Formatting.GOLD), rx, ry, 0xFFFFAA00); ry += 12;
             ctx.drawTextWithShadow(this.textRenderer,
                     Text.literal("暴击率  +" + (int) Math.round(q.critChance * 100) + "%").formatted(Formatting.GREEN), rx, ry, 0xFF55FF55); ry += 12;
         } else {
             ctx.drawTextWithShadow(this.textRenderer,
-                    Text.literal("护甲  +" + fmt(level * c.enhanceArmorPerLevel)).formatted(Formatting.AQUA), rx, ry, 0xFF55FFFF); ry += 12;
+                    Text.literal("护甲  +" + NumFmt.compact(level * c.enhanceArmorPerLevel)).formatted(Formatting.AQUA), rx, ry, 0xFF55FFFF); ry += 12;
             ctx.drawTextWithShadow(this.textRenderer,
-                    Text.literal("韧性  +" + fmt(level * c.enhanceToughnessPerLevel)).formatted(Formatting.AQUA), rx, ry, 0xFF55FFFF); ry += 12;
+                    Text.literal("韧性  +" + NumFmt.compact(level * c.enhanceToughnessPerLevel)).formatted(Formatting.AQUA), rx, ry, 0xFF55FFFF); ry += 12;
             ctx.drawTextWithShadow(this.textRenderer,
-                    Text.literal("最大生命  +" + fmt(level * c.enhanceHealthPerLevel)).formatted(Formatting.RED), rx, ry, 0xFFFF5555); ry += 12;
+                    Text.literal("最大生命  +" + NumFmt.compact(level * c.enhanceHealthPerLevel)).formatted(Formatting.RED), rx, ry, 0xFFFF5555); ry += 12;
         }
         if (stack.isDamageable()) {
             int max = stack.getMaxDamage();

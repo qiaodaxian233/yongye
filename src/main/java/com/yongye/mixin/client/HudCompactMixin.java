@@ -223,18 +223,9 @@ public class HudCompactMixin {
         return (idx >= 0 && idx < lv.length) ? lv[idx] : 0;
     }
 
-    /** 数字紧凑显示:<1000 原样,≥1000 显示 K,≥100万 显示 M(整千/整百万不带小数)。 */
+    /** 数字紧凑显示(m219 起统一走 NumFmt:K/M/B/T,十亿以上不再堆成一长串 M)。 */
     private static String yongye$num(float v) {
-        long n = Math.round(v);
-        if (n < 1000L) return String.valueOf(n);
-        if (n < 1_000_000L) {
-            double k = n / 1000.0;
-            return (k == Math.floor(k) ? String.valueOf((long) k)
-                    : String.format(Locale.ROOT, "%.1f", k)) + "K";
-        }
-        double m = n / 1_000_000.0;
-        return (m == Math.floor(m) ? String.valueOf((long) m)
-                : String.format(Locale.ROOT, "%.1f", m)) + "M";
+        return com.yongye.client.NumFmt.compact(v);
     }
 
     private static String yongye$rate(float r) {
