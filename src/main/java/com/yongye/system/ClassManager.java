@@ -52,6 +52,9 @@ public final class ClassManager {
                     new CMod(3, -0.1, Operation.ADD_MULTIPLIED_BASE));
             case ASSASSIN -> List.of(new CMod(3, 0.2, Operation.ADD_MULTIPLIED_BASE), new CMod(1, -3, Operation.ADD_VALUE),
                     new CMod(2, 2, Operation.ADD_VALUE));
+            // m225 召唤师:后排指挥位——+10 血(站得住)、-20% 攻(输出全靠傀儡)、+1 实体交互距离(远程点兵)
+            case SUMMONER -> List.of(new CMod(0, 10, Operation.ADD_VALUE),
+                    new CMod(2, -0.2, Operation.ADD_MULTIPLIED_TOTAL), new CMod(5, 1, Operation.ADD_VALUE));
         };
     }
 
