@@ -104,7 +104,17 @@ public final class ModEntities {
                             .dimensions(1.0f, 1.9f)
                             .build("anubis_wraith"));
 
+    // 肝帝玩家(m223,召唤师·癫狂的召唤物;玩家模型+模组皮肤,友军)
+    public static final RegistryKey<EntityType<?>> GANDI_KEY =
+            RegistryKey.of(RegistryKeys.ENTITY_TYPE, Identifier.of(Yongye.MOD_ID, "gandi"));
+    public static final EntityType<com.yongye.entity.GanDiEntity> GANDI =
+            Registry.register(Registries.ENTITY_TYPE, GANDI_KEY.getValue(),
+                    EntityType.Builder.create(com.yongye.entity.GanDiEntity::new, SpawnGroup.CREATURE)
+                            .dimensions(0.6f, 1.8f)   // 玩家同款体型
+                            .build("gandi"));
+
     public static void init() {
+        FabricDefaultAttributeRegistry.register(GANDI, com.yongye.entity.GanDiEntity.createGanDiAttributes());
         FabricDefaultAttributeRegistry.register(TORO_ENDER_DRAGON, ToroEnderDragonEntity.createDragonAttributes());
         FabricDefaultAttributeRegistry.register(VENOM_SPIDER, VenomSpiderEntity.createVenomSpiderAttributes());
         FabricDefaultAttributeRegistry.register(RED_SPIDER, RedSpiderEntity.createRedSpiderAttributes());

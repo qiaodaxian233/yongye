@@ -262,6 +262,7 @@ public class ClassWeaponItem extends Item {
             case WARLOCK -> "噬魂杖 —— 以命为薪,焚尽周遭。";
             case MONK -> "鬼神拳套 —— 拳意不绝,连环不止。";
             case SWORDSMAN -> "流光 —— 剑气纵横,格挡即反击。";
+            case SUMMONER -> "召唤师不持武器——傀儡即其兵刃。";
         });
     }
 
@@ -273,6 +274,7 @@ public class ClassWeaponItem extends Item {
             case WARLOCK -> "  范围更大、伤害更高、耗血更少";
             case MONK -> "  视为空手可连击、连击更狠";
             case SWORDSMAN -> "  剑气更广更痛、格挡反击增强";
+            case SUMMONER -> "  (召唤师无专属武器)";
         });
     }
 }

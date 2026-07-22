@@ -181,7 +181,7 @@ public class HudCompactMixin {
     private static int[] yongye$mpColors(String cls) {
         // m139:所有职业统一蓝色资源条(底 / 填充 / 高光)
         return switch (cls) {
-            case "warlock", "assassin", "warrior", "swordsman", "tank", "monk"
+            case "warlock", "assassin", "warrior", "swordsman", "tank", "monk", "summoner"
                     -> new int[]{0xFF0A1E38, 0xFF2E7AD0, 0xFF7FCFFF};
             default -> null;
         };
@@ -190,6 +190,7 @@ public class HudCompactMixin {
     private static String yongye$mpLabel(String cls) {
         return switch (cls) {
             case "warlock"   -> "灵力";
+            case "summoner"  -> "傀儡";
             case "assassin"  -> "暗能";
             case "warrior"   -> "怒气";
             case "swordsman" -> "剑气";
@@ -203,6 +204,7 @@ public class HudCompactMixin {
     private static String yongye$classCnName(String cls) {
         return switch (cls) {
             case "tank"      -> "肉盾";
+            case "summoner"  -> "召唤师";
             case "warrior"   -> "战士";
             case "warlock"   -> "术士";
             case "swordsman" -> "剑客";
@@ -215,7 +217,7 @@ public class HudCompactMixin {
     /** 本命职业的等级(levels 数组顺序:tank/warrior/warlock/swordsman/monk/assassin)。 */
     private static int yongye$classLevel(String cls) {
         int idx = switch (cls) {
-            case "tank" -> 0; case "warrior" -> 1; case "warlock" -> 2;
+            case "tank" -> 0; case "warrior" -> 1; case "warlock" -> 2; case "summoner" -> 6;
             case "swordsman" -> 3; case "monk" -> 4; case "assassin" -> 5;
             default -> -1;
         };

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 31;
+    public static final int CURRENT_CONFIG_VERSION = 33;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -672,7 +672,7 @@ public class YongyeConfig {
     /** 末地末影龙强化总开关(10亿血/高防/三命/脱战回血;不影响自建龙)。 */
     public boolean enableEndDragonBuff = true;
     /** 末影龙最大生命(默认 10 亿 = m127 属性上限,正好装满)。 */
-    public double endDragonHealth = 1.0E9;
+    public double endDragonHealth = 1.0E19;   // m222:作者点名终局龙血=10000000000000000000(u64 时代的门面)
     /** 末影龙护甲 / 护甲韧性(40+20 接近原版减伤公式 80% 上限)。 */
     public double endDragonArmor = 40.0;
     public double endDragonToughness = 20.0;
@@ -756,6 +756,23 @@ public class YongyeConfig {
     /** 战斗爽难度下永夜 V5+ 深渊倍增的缩放:每级倍率 step×(等级-5) 再乘此值(1=不减弱,0.5=减半,0=该机制在战斗爽中关闭)。 */
     public double battleFunBeyondScale = 0.5;
 
+    // ============ m223:召唤师职业 ============
+    /** 「召唤」一次召出的铁傀儡数量。 */
+    public int ultSummonerGolemCount = 5;
+    /** 傀儡寿命(秒),到点自散;再次召唤会先散掉上一批。 */
+    public int ultSummonerGolemLifeSec = 60;
+    /** 「强化」倍率:傀儡血/攻各 ×(1+此值),默认 1.0=翻一倍。 */
+    public double summonerGolemBoostMult = 1.0;
+    /** 「癫狂」(潜行+大招键)消耗的生命值。 */
+    public double ultSummonerFrenzyHpCost = 20.0;
+    /** 「癫狂」力量II+速度II 的持续时间(tick)。 */
+    public int ultSummonerFrenzyDurationTicks = 400;
+    /** 肝帝:生命 / 攻击 / 移速 / 寿命秒(注册期读取,改后需重启生效)。 */
+    public double gandiHealth = 300.0;
+    public double gandiAttack = 40.0;
+    public double gandiSpeed = 0.35;
+    public int gandiLifeSec = 60;
+
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;
     /** 追杀:撞低墙时给一次起跳冲量帮助翻越 */
@@ -821,6 +838,8 @@ public class YongyeConfig {
                 if (INSTANCE == null) INSTANCE = new YongyeConfig();
                 // m214:标识默认文案改版「抖音:乔大仙 → DY:乔大仙」;仅当文件里仍是旧默认值时迁移,自定义文案不动
                 if ("抖音:乔大仙".equals(INSTANCE.itemWatermarkText)) INSTANCE.itemWatermarkText = "DY:乔大仙";
+                // m222:终局龙血默认值改版 1e9→1e19;仅当仍是旧默认值时迁移,自定义不动
+                if (INSTANCE.endDragonHealth == 1.0E9) INSTANCE.endDragonHealth = 1.0E19;
                 // —— 陈旧检查:对比文件键 vs 当前字段,警告死键/缺失键/版本不符 ——
                 try {
                     JsonObject obj = JsonParser.parseString(json).getAsJsonObject();

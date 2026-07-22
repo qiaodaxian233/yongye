@@ -132,6 +132,7 @@ public class DebugScreen extends Screen {
                             new Btn("剑客 swordsman", "yongye classbook swordsman"),
                             new Btn("武僧 monk", "yongye classbook monk"),
                             new Btn("刺客 assassin", "yongye classbook assassin"),
+                            new Btn("召唤师 summoner", "yongye classbook summoner"),
                     }),
                     new Section("职业专属武器(classweapon)", new Btn[]{
                             new Btn("坦克·镇魂", "yongye classweapon tank"),

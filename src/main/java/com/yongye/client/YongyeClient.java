@@ -339,6 +339,10 @@ public class YongyeClient implements ClientModInitializer {
         });
 
 
+        // 【m223】肝帝渲染器(玩家模型+模组皮肤)
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.GANDI, GanDiRenderer::new);
+
         // 【m211】武器随强化等级动态染色:≤起始级(默认100)=纯黑白,越高越鲜艳,封顶级(默认2500)=正红;
         // 色相路径 200°(冰蓝)→360°(正红),刻意绕开绿/黄(作者点名不要)。贴图是 m210 黑白版,
         // 乘法染色下白→染成该色、黑保持黑,天然「有色金属」质感。ENHANCE_LEVEL 是数据组件,自动同步客户端。

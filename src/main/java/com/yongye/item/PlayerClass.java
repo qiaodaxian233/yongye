@@ -7,7 +7,8 @@ public enum PlayerClass {
     WARLOCK("warlock", "术士"),
     SWORDSMAN("swordsman", "剑客"),
     MONK("monk", "武僧"),
-    ASSASSIN("assassin", "刺客");
+    ASSASSIN("assassin", "刺客"),
+    SUMMONER("summoner", "召唤师");   // m223 召唤流:召唤傀儡/强化/癫狂
 
     public final String id;
     public final String cn;

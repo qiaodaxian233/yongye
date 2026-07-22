@@ -130,7 +130,7 @@ public abstract class BossBarStyleMixin {
             double[] groupHp = yongye$parseGroupHp(g);
             float pct;
             if (groupHp != null && groupHp[1] > 0) {
-                pct = Math.max(0f, Math.min(1f, (float) groupHp[0] / groupHp[1]));
+                pct = (float) Math.max(0.0, Math.min(1.0, groupHp[0] / groupHp[1])); // m222:double 通道后全程 double 再收窄,修编译错
             } else {
                 float sum = 0f;
                 for (ClientBossBar b : g.members) sum += b.getPercent();
