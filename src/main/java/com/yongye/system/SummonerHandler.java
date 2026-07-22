@@ -87,6 +87,7 @@ public final class SummonerHandler {
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
             if (entity instanceof IronGolemEntity g && g.getCommandTags().contains(TAG) && !isTracked(g)) {
                 g.discard();
+                Yongye.LOGGER.info("[夜蚀] 清理上个会话残留的召唤傀儡 @ {},{},{}", g.getBlockX(), g.getBlockY(), g.getBlockZ());
             }
         });
         Yongye.LOGGER.info("[夜蚀] 召唤师系统已挂载(傀儡召唤/强化/寿命)");
@@ -127,6 +128,10 @@ public final class SummonerHandler {
 
         int count = Math.max(1, cfg.ultSummonerGolemCount);
         List<Tracked> list = new ArrayList<>(count);
+        // 【m235 修出生即死】ENTITY_LOAD 对新生成实体也会同步触发(不只 chunk 加载):
+        // 必须在 spawnEntity 之前就把傀儡登进追踪表,否则「清残留」钩子看到带 tag 又
+        // 查无此籍,当场 discard——m223 起傀儡一直被自己人秒杀,消息却照报成功。
+        byOwner.put(p.getUuid(), list);
         long expire = sw.getTime() + Math.max(100L, cfg.ultSummonerGolemLifeSec * 20L);
         int done = 0;
         for (int i = 0; i < count; i++) {
@@ -144,12 +149,15 @@ public final class SummonerHandler {
             addFlat(g, EntityAttributes.GENERIC_MAX_HEALTH, OWNER_HP_ID, ownerHp);
             addFlat(g, EntityAttributes.GENERIC_ATTACK_DAMAGE, OWNER_ATK_ID, ownerAtk);
             g.setHealth(g.getMaxHealth());
+            Tracked tr = new Tracked(g, expire);
+            list.add(tr);               // 先登记再生成(见上方注释)
             if (sw.spawnEntity(g)) {
-                list.add(new Tracked(g, expire));
                 done++;
+            } else {
+                list.remove(tr);        // 生成失败才摘除
             }
         }
-        if (!list.isEmpty()) byOwner.put(p.getUuid(), list);
+        if (list.isEmpty()) byOwner.remove(p.getUuid());   // m235:表已提前放入,空了才摘
         return done;
     }
 
