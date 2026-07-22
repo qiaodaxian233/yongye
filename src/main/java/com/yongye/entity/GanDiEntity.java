@@ -39,7 +39,7 @@ public class GanDiEntity extends PathAwareEntity {
      *  待编译验证:initDataTracker(DataTracker.Builder) 签名与 TrackedDataHandlerRegistry.INTEGER(1.20.5+ 标准写法)。 */
     private static final TrackedData<Integer> VARIANT =
             DataTracker.registerData(GanDiEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    public static final String[] VARIANT_NAMES = {"岛风", "晚安", "不爱肝", "迷人"};
+    public static final String[] VARIANT_NAMES = {"岛风", "晚安", "不爱肝", "迷人", "芥末"};
 
     /** m227:台词改从配置读(gandiTalk* 字段,| 分句;Debug 配置页可查改),类别:0登场/1战斗/2闲聊/3告别/4阵亡。 */
     private String[] pool(int cat) {
@@ -48,7 +48,8 @@ public class GanDiEntity extends PathAwareEntity {
                 {c.gandiTalkDaofengSpawn, c.gandiTalkDaofengCombat, c.gandiTalkDaofengIdle, c.gandiTalkDaofengBye, c.gandiTalkDaofengDeath},
                 {c.gandiTalkWananSpawn,   c.gandiTalkWananCombat,   c.gandiTalkWananIdle,   c.gandiTalkWananBye,   c.gandiTalkWananDeath},
                 {c.gandiTalkBuganSpawn,   c.gandiTalkBuganCombat,   c.gandiTalkBuganIdle,   c.gandiTalkBuganBye,   c.gandiTalkBuganDeath},
-                {c.gandiTalkMirenSpawn,   c.gandiTalkMirenCombat,   c.gandiTalkMirenIdle,   c.gandiTalkMirenBye,   c.gandiTalkMirenDeath}};
+                {c.gandiTalkMirenSpawn,   c.gandiTalkMirenCombat,   c.gandiTalkMirenIdle,   c.gandiTalkMirenBye,   c.gandiTalkMirenDeath},
+                {c.gandiTalkJiemoSpawn,   c.gandiTalkJiemoCombat,   c.gandiTalkJiemoIdle,   c.gandiTalkJiemoBye,   c.gandiTalkJiemoDeath}};
         String raw = all[getVariant()][cat];
         if (raw == null || raw.isBlank()) return new String[0];
         return java.util.Arrays.stream(raw.split("\\|")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
@@ -85,7 +86,7 @@ public class GanDiEntity extends PathAwareEntity {
     }
 
     public int getVariant() { return this.dataTracker.get(VARIANT); }
-    public void setVariant(int v) { this.dataTracker.set(VARIANT, Math.max(0, Math.min(3, v))); }
+    public void setVariant(int v) { this.dataTracker.set(VARIANT, Math.max(0, Math.min(4, v))); }
 
     @Override
     protected void initGoals() {
@@ -104,7 +105,7 @@ public class GanDiEntity extends PathAwareEntity {
         net.minecraft.entity.player.PlayerEntity o = sw.getPlayerByUuid(owner);
         if (o == null) return;
         net.minecraft.util.Formatting[] colors = { net.minecraft.util.Formatting.AQUA, net.minecraft.util.Formatting.YELLOW,
-                net.minecraft.util.Formatting.GREEN, net.minecraft.util.Formatting.LIGHT_PURPLE };
+                net.minecraft.util.Formatting.GREEN, net.minecraft.util.Formatting.LIGHT_PURPLE, net.minecraft.util.Formatting.DARK_GREEN };
         o.sendMessage(net.minecraft.text.Text.literal("【" + VARIANT_NAMES[getVariant()] + "】")
                 .formatted(colors[getVariant()])
                 .append(net.minecraft.text.Text.literal(line).formatted(net.minecraft.util.Formatting.WHITE)), false);
@@ -147,8 +148,8 @@ public class GanDiEntity extends PathAwareEntity {
                 speakFrom(2); nextTalkAt = now + 240;
             }
         }
-        // 分工光环(m224,每 3 秒一轮,作用于主人的全部铁傀儡):
-        // 岛风·圆梦筑城=恢复+抗性 | 晚安·极限生电=直接修复+给主人缩大招CD | 不爱肝·百万方工程=生命上限+强抗 | 迷人·蒸汽武装=力量+速度
+        // 分工光环(m224/m230,每 3 秒一轮):岛风=傀儡恢复+抗性 | 晚安=修傀儡+缩主人CD |
+        // 不爱肝=傀儡生命上限+强抗 | 迷人=傀儡力量+速度 | 芥末·爆肝节奏=给主人急迫II+恢复I(劳模光环,人设待作者补充抖音方向后可调)
         if (lifeTicks % 60 == 0 && owner != null) {
             java.util.List<IronGolemEntity> golems = com.yongye.system.SummonerHandler.golemsOf(owner);
             for (IronGolemEntity g : golems) {
@@ -163,6 +164,13 @@ public class GanDiEntity extends PathAwareEntity {
                 }
             }
             if (getVariant() == 1) com.yongye.system.ClassUltimateManager.reduceCooldown(owner, 40); // 晚安:每 3 秒帮主人缩 2 秒 CD
+            if (getVariant() == 4) {   // 芥末:主人光环(急迫II+恢复I),肝就完事了
+                net.minecraft.entity.player.PlayerEntity o = sw.getPlayerByUuid(owner);
+                if (o != null) {
+                    o.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 100, 1, true, false, true));
+                    o.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 100, 0, true, false, true));
+                }
+            }
             sw.spawnParticles(net.minecraft.particle.ParticleTypes.HAPPY_VILLAGER, getX(), getBodyY(0.8), getZ(), 3, 0.3, 0.4, 0.3, 0.0);
         }
 

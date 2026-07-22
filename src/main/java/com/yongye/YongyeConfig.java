@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 36;
+    public static final int CURRENT_CONFIG_VERSION = 37;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -796,6 +796,11 @@ public class YongyeConfig {
     public String gandiTalkMirenIdle     = "回头带你看我的飞艇船坞。|机械之城,今晚亮灯。";
     public String gandiTalkMirenBye      = "蒸汽散了……我也撤了。";
     public String gandiTalkMirenDeath    = "锅炉,炸了……";
+    public String gandiTalkJiemoSpawn    = "肝痒痒了,该活动一下了。|芥末到岗,今天也要肝到发光。";
+    public String gandiTalkJiemoCombat   = "手不能停,肝就完事!|打怪也是肝,冲!";
+    public String gandiTalkJiemoIdle     = "闲着也是闲着,再肝一单。|这点活,不够我塞牙缝的。";
+    public String gandiTalkJiemoBye      = "先下了,回床上躺会儿……明天接着肝。";
+    public String gandiTalkJiemoDeath    = "肝……肝不动了……";
     // —— m229 召唤物成长与鹰扬 ——
     /** 召唤物(傀儡+肝帝)附加生命 = 主人最大生命 × 此比例(随主人成长)。 */
     public double summonerOwnerHpRatio = 0.5;

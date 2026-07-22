@@ -150,12 +150,13 @@ public final class SummonerHandler {
     }
 
     /** 「癫狂」的召唤物(m224):肝帝天团四人齐上——0岛风/1晚安/2不爱肝/3迷人,
-     *  名牌常显;不爱肝额外 +100% 血(主坦),迷人额外 +50% 攻 +20% 速(输出)。返回实际召出数。 */
+     *  名牌常显;不爱肝+100%血(主坦),迷人+50%攻+20%速(输出),芥末+30%速(m230 劳模,给主人挂急迫)。返回实际召出数。 */
     public static int summonGanDi(ServerPlayerEntity p) {
         ServerWorld sw = (ServerWorld) p.getWorld();
         net.minecraft.util.Formatting[] colors = {
                 net.minecraft.util.Formatting.AQUA, net.minecraft.util.Formatting.YELLOW,
-                net.minecraft.util.Formatting.GREEN, net.minecraft.util.Formatting.LIGHT_PURPLE };
+                net.minecraft.util.Formatting.GREEN, net.minecraft.util.Formatting.LIGHT_PURPLE,
+                net.minecraft.util.Formatting.DARK_GREEN };
         // 上一批还在?先礼貌散场(POOF),防连按叠队
         List<com.yongye.entity.GanDiEntity> old = gandiByOwner.remove(p.getUuid());
         if (old != null) for (com.yongye.entity.GanDiEntity g : old) {
@@ -164,12 +165,12 @@ public final class SummonerHandler {
                 g.discard();
             }
         }
-        List<com.yongye.entity.GanDiEntity> squad = new ArrayList<>(4);
+        List<com.yongye.entity.GanDiEntity> squad = new ArrayList<>(5);
         int done = 0;
-        for (int v = 0; v < 4; v++) {
+        for (int v = 0; v < 5; v++) {
             com.yongye.entity.GanDiEntity e = ModEntities.GANDI.create(sw);
             if (e == null) break;
-            double ang = Math.PI * 2 * v / 4 + Math.PI / 4;
+            double ang = Math.PI * 2 * v / 5 + Math.PI / 4;
             e.refreshPositionAndAngles(p.getX() + Math.cos(ang) * 1.8, p.getY(), p.getZ() + Math.sin(ang) * 1.8, p.getYaw(), 0);
             e.setOwner(p.getUuid());
             e.setVariant(v);
@@ -184,6 +185,7 @@ public final class SummonerHandler {
             if (v == 2) boostEntity(e, EntityAttributes.GENERIC_MAX_HEALTH, 1.0);      // 不爱肝:主坦
             if (v == 3) { boostEntity(e, EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.5); // 迷人:输出
                           boostEntity(e, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.2); }
+            if (v == 4) boostEntity(e, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3);   // 芥末:劳模腿快
             e.setHealth(e.getMaxHealth());
             if (sw.spawnEntity(e)) { squad.add(e); done++; }
         }

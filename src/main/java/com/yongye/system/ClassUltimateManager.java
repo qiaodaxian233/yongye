@@ -108,7 +108,7 @@ public final class ClassUltimateManager {
                     p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, cfg.ultSummonerFrenzyDurationTicks, 1, true, false, true));
                     int got = SummonerHandler.summonGanDi(p);
                     burst(sw, p, ParticleTypes.SOUL_FIRE_FLAME, SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON);
-                    msg(p, got > 0 ? "癫狂!肝帝天团降临:岛风·晚安·不爱肝·迷人!(驻场 " + cfg.gandiLifeSec + " 秒;直接按键=召唤傀儡)"
+                    msg(p, got > 0 ? "癫狂!肝帝天团降临:岛风·晚安·不爱肝·迷人·芥末!(驻场 " + cfg.gandiLifeSec + " 秒;直接按键=召唤傀儡)"
                                    : "癫狂!献祭生命,力量+速度暴涨", Formatting.GOLD);
                 } else {
                     // 召唤:5 座强化铁傀儡拔地而起(潜行按键=癫狂)
