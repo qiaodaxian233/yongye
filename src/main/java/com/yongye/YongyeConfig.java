@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 29;
+    public static final int CURRENT_CONFIG_VERSION = 30;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -749,6 +749,10 @@ public class YongyeConfig {
     public double blightRiftChance = 0.12;
     /** 全员极小概率:深渊魂晶。 */
     public double blightCrystalChance = 0.015;
+
+    // ============ m217:战斗爽难度 ============
+    /** 战斗爽难度下反滚雪球的减弱比例:动态掉率倍率向 1 回拉的份额(0=不减弱,0.5=衰减减半,1=等于关闭)。 */
+    public double battleFunSnowballRelief = 0.5;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

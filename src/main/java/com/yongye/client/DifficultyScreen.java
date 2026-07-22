@@ -10,7 +10,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * 开局难度选择界面:顶部「永夜」简介,下面 7 档难度(游玩→永夜)逐行可点,点选即提交并关闭。
+ * 开局难度选择界面:顶部「永夜」简介,下面 8 档难度(游玩→永夜+战斗爽)逐行可点,点选即提交并关闭。
  * 强制选择(屏蔽 ESC),与旧的「选职弹窗」同为登录首个界面——现在先选难度,职业之后用「职业选择书」自选。
  */
 public class DifficultyScreen extends Screen {

@@ -166,6 +166,12 @@ public class DebugScreen extends Screen {
                             new Btn("掉落·开", "yongye loot enable true"),
                             new Btn("掉落·关", "yongye loot enable false"),
                     }),
+                    new Section("反滚雪球(动态爆率:越强掉得越少;m216)", new Btn[]{
+                            new Btn("反滚雪球·关", "yongye config set enableDynamicLoot false"),
+                            new Btn("反滚雪球·开", "yongye config set enableDynamicLoot true"),
+                            new Btn("必爆缩减·关", "yongye config set dynamicLootScaleGuaranteed false"),
+                            new Btn("必爆缩减·开", "yongye config set dynamicLootScaleGuaranteed true"),
+                    }),
             }),
             // —— 配置(config)——
             new Page("配置", new Section[]{

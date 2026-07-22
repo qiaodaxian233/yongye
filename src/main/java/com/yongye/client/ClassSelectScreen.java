@@ -11,22 +11,23 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 /**
- * 开局选职界面(m205 海报翻页版;m207 重排:海报正中、页签贴左、确认钮挂页签下)。
- * 实机反馈 m205 版「海报偏右 + 页签孤在最左 + 确认钮压快捷栏」,重排为一个居中的整体:
- * 海报屏幕正中等比铺满高度,6 个职业页签紧贴海报左侧,确认按钮在页签列正下方(远离底部 HUD)。
- * 强制选择(屏蔽 ESC);贴图 768×1024,drawTexture 9 参签名照 AccessoryScreen。
+ * 开局选职界面(m215 横版全屏:作者换新一批 16:9 海报,「上次的太传奇了」)。
+ * 布局:海报 cover 全屏铺满(等比放大到盖住整屏,超出部分居中裁掉,不留黑边;
+ * 海报文字区都在左侧,底部裁一点无伤大雅);底部一条暗色横带压两行——
+ * 上行 6 个职业页签(当前页签下方金色底条指示),下行确认按钮。
+ * 强制选择(屏蔽 ESC);贴图 1280×720,drawTexture 9 参签名照 AccessoryScreen。
  */
 public class ClassSelectScreen extends Screen {
 
-    /** 海报贴图像素(装入时统一 768×1024,3:4)。 */
-    private static final int TW = 768, TH = 1024;
+    /** 海报贴图像素(m215 起横版,统一 1280×720,16:9)。 */
+    private static final int TW = 1280, TH = 720;
 
     private final PlayerClass[] classes = PlayerClass.values();
     private final YongyeButton[] tabs = new YongyeButton[PlayerClass.values().length];
     private int sel = 0;
 
-    // init() 里算好的布局(海报位置尺寸 / 页签列 X / 确认钮下方注释行 Y)
-    private int drawW, drawH, px, py, tabX, noteY;
+    // init() 里算好的布局(底部页签行/确认行 Y)
+    private int tabY, confirmY;
 
     public ClassSelectScreen() {
         super(Text.literal("选择本命职业"));
@@ -43,32 +44,25 @@ public class ClassSelectScreen extends Screen {
 
     @Override
     protected void init() {
-        // 海报:上下各留 10、3:4 等比、屏幕正中;超窄窗口按宽度回推
-        drawH = this.height - 20;
-        drawW = drawH * 3 / 4;
-        int maxW = this.width - 96 - 16;   // 给页签列(64 宽 + 12 间距)和边距留位
-        if (drawW > maxW) {
-            drawW = Math.max(60, maxW);
-            drawH = drawW * 4 / 3;
-        }
-        px = this.width / 2 - drawW / 2;
-        py = (this.height - drawH) / 2;
-        tabX = Math.max(6, px - 76);       // 页签紧贴海报左侧
-
         int th = 20, gap = 6;
-        int blockH = classes.length * (th + gap) - gap + 14 + th;  // 页签块 + 间距 + 确认钮
-        int ty = this.height / 2 - blockH / 2;
+        // 页签宽:默认 64,窄窗口(GUI 缩放 4 等)按可用宽度回缩,最小 40
+        int tw = 64;
+        if (classes.length * (tw + gap) - gap > this.width - 8) {
+            tw = Math.max(40, (this.width - 8 - (classes.length - 1) * gap) / classes.length);
+        }
+        int totalW = classes.length * (tw + gap) - gap;
+        int x0 = this.width / 2 - totalW / 2;
+        confirmY = this.height - 26;
+        tabY = confirmY - th - 6;
         for (int i = 0; i < classes.length; i++) {
             final int idx = i;
-            tabs[i] = new YongyeButton(tabX, ty + i * (th + gap), 64, th,
+            tabs[i] = new YongyeButton(x0 + i * (tw + gap), tabY, tw, th,
                     Text.literal(classes[i].cn), b -> this.sel = idx);
             addDrawableChild(tabs[i]);
         }
-        // 确认钮:页签列正下方(与页签列同轴,远离底部快捷栏)
-        int cy = ty + classes.length * (th + gap) - gap + 14;
-        noteY = cy + th + 4;
-        addDrawableChild(new YongyeButton(tabX - 8, cy, 80, th,
-                Text.literal("✔ 选定职业"), b -> {
+        // 确认钮:页签行正下方,文案自带「不可更改」提示
+        addDrawableChild(new YongyeButton(this.width / 2 - 70, confirmY, 140, th,
+                Text.literal("✔ 选定职业(不可更改)"), b -> {
             ClientPlayNetworking.send(new ChooseClassPayload(classes[sel].id));
             MinecraftClient.getInstance().setScreen(null);
         }));
@@ -77,25 +71,25 @@ public class ClassSelectScreen extends Screen {
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         this.renderBackground(ctx, mouseX, mouseY, delta);
-        // 再压一层夜色,衬海报
-        ctx.fill(0, 0, this.width, this.height, 0x66050710);
 
-        // 海报(屏幕正中)
-        float s = drawW / (float) TW;
+        // 海报全屏 cover:等比放大到盖满屏幕,超出部分居中裁掉(不留黑边、不拉伸变形)
+        float s = Math.max(this.width / (float) TW, this.height / (float) TH);
+        int dw = Math.round(TW * s), dh = Math.round(TH * s);
+        int px = (this.width - dw) / 2, py = (this.height - dh) / 2;
         ctx.getMatrices().push();
         ctx.getMatrices().translate(px, py, 0);
         ctx.getMatrices().scale(s, s, 1.0f);
         ctx.drawTexture(posterOf(classes[sel]), 0, 0, 0, 0, TW, TH, TW, TH);
         ctx.getMatrices().pop();
 
-        // 当前页签指示(金色小箭头)+ 确认钮下方提示
+        // 底部暗色横带衬托按钮(海报信息栏在左上,不会被压)
+        ctx.fill(0, tabY - 8, this.width, this.height, 0x99050710);
+
+        // 当前页签指示:按钮正下方一条金色底条
         YongyeButton cur = tabs[sel];
         if (cur != null) {
-            ctx.drawTextWithShadow(this.textRenderer, Text.literal("▶"),
-                    cur.getX() - 9, cur.getY() + 6, 0xFFFFD700);
+            ctx.fill(cur.getX(), cur.getY() + 20, cur.getX() + cur.getWidth(), cur.getY() + 22, 0xFFFFD700);
         }
-        ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("（不可更改）"), tabX + 32, noteY, 0xFF8A93A3);
         super.render(ctx, mouseX, mouseY, delta);
     }
 }

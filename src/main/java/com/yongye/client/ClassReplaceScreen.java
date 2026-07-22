@@ -17,8 +17,8 @@ import net.minecraft.util.Formatting;
  * ESC 取消不扣书。卡面为「职业介绍」海报等比缩略（m205，与选职界面同一套贴图）。
  */
 public class ClassReplaceScreen extends Screen {
-    // 卡尺寸 99×132 = 海报 3:4 等比缩略
-    private static final int CW = 99, CH = 132, GAP = 50;
+    // 卡尺寸 176×99 = 海报 16:9 等比缩略(m215 起海报横版 1280×720)
+    private static final int CW = 176, CH = 99, GAP = 50;
 
     private final PlayerClass newClass;
     private final PlayerClass slot0, slot1;
@@ -92,11 +92,11 @@ public class ClassReplaceScreen extends Screen {
             ctx.fill(x - 3, y, x, y + CH, b);
             ctx.fill(x + CW, y, x + CW + 3, y + CH, b);
         }
-        float s = CH / 1024.0f;   // 海报 768×1024 → 99×132
+        float s = CH / 720.0f;    // 海报 1280×720 → 176×99
         ctx.getMatrices().push();
         ctx.getMatrices().translate(x, y, 0);
         ctx.getMatrices().scale(s, s, 1.0f);
-        ctx.drawTexture(posterOf(c), 0, 0, 0, 0, 768, 1024, 768, 1024);
+        ctx.drawTexture(posterOf(c), 0, 0, 0, 0, 1280, 720, 1280, 720);
         ctx.getMatrices().pop();
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal(slotLabel + "\uff1a" + c.cn).formatted(Formatting.WHITE),

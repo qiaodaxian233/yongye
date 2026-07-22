@@ -27,11 +27,18 @@ public final class PlayerPower {
         return skill + enhance * YongyeConfig.get().dynamicLootEnhanceWeight;
     }
 
-    /** 动态掉率倍率(0~1):m = max(下限, 1 / (1 + 强度/K))。关闭时恒为 1。 */
+    /** 动态掉率倍率(0~1):m = max(下限, 1 / (1 + 强度/K))。关闭时恒为 1。
+     *  m217:世界难度为「战斗爽」时,倍率向 1 回拉 battleFunSnowballRelief 比例(0.5=衰减减半),
+     *  即反滚雪球「适量减弱」而非关闭——越强掉得越少的曲线仍在,只是坡度放缓一半。 */
     public static double lootMultiplier(ServerPlayerEntity p) {
         YongyeConfig cfg = YongyeConfig.get();
         if (!cfg.enableDynamicLoot) return 1.0;
         double m = 1.0 / (1.0 + score(p) / Math.max(1.0, cfg.dynamicLootK));
-        return Math.max(cfg.dynamicLootFloor, m);
+        m = Math.max(cfg.dynamicLootFloor, m);
+        if (DifficultyManager.getLevel() == com.yongye.item.GameDifficulty.BATTLE.ordinal()) {
+            double relief = Math.min(1.0, Math.max(0.0, cfg.battleFunSnowballRelief));
+            m = m + (1.0 - m) * relief;
+        }
+        return m;
     }
 }
