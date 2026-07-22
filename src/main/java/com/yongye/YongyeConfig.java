@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 35;
+    public static final int CURRENT_CONFIG_VERSION = 36;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -796,6 +796,13 @@ public class YongyeConfig {
     public String gandiTalkMirenIdle     = "回头带你看我的飞艇船坞。|机械之城,今晚亮灯。";
     public String gandiTalkMirenBye      = "蒸汽散了……我也撤了。";
     public String gandiTalkMirenDeath    = "锅炉,炸了……";
+    // —— m229 召唤物成长与鹰扬 ——
+    /** 召唤物(傀儡+肝帝)附加生命 = 主人最大生命 × 此比例(随主人成长)。 */
+    public double summonerOwnerHpRatio = 0.5;
+    /** 召唤物附加攻击 = 主人攻击 × 此比例。 */
+    public double summonerOwnerAtkRatio = 0.5;
+    /** 手持「鹰扬」且本职业生效时,铁傀儡强化倍率额外加成。 */
+    public double summonerStaffExtraBoost = 0.5;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

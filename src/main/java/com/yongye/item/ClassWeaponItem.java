@@ -81,6 +81,11 @@ public class ClassWeaponItem extends Item {
                 b.add(EntityAttributes.GENERIC_MAX_HEALTH,
                         new EntityAttributeModifier(id("weapon_warrior_hp"), 8.0, Operation.ADD_VALUE), M);
             }
+            case SUMMONER -> {
+                // m229 鹰扬:法杖手感——低攻慢速,召唤加成在 SummonerHandler(持杖傀儡强化+50%)
+                b.add(EntityAttributes.GENERIC_ATTACK_DAMAGE, baseAtk(6.0), M);
+                b.add(EntityAttributes.GENERIC_ATTACK_SPEED, baseAspd(-2.6), M);
+            }
             case TANK -> {
                 b.add(EntityAttributes.GENERIC_ATTACK_DAMAGE, baseAtk(9.0), M);
                 b.add(EntityAttributes.GENERIC_ATTACK_SPEED, baseAspd(-3.0), M);
@@ -262,7 +267,7 @@ public class ClassWeaponItem extends Item {
             case WARLOCK -> "噬魂杖 —— 以命为薪,焚尽周遭。";
             case MONK -> "鬼神拳套 —— 拳意不绝,连环不止。";
             case SWORDSMAN -> "流光 —— 剑气纵横,格挡即反击。";
-            case SUMMONER -> "召唤师不持武器——傀儡即其兵刃。";
+            case SUMMONER -> "鹰扬 —— 鹰目所及,傀儡所至。";
         });
     }
 
@@ -274,7 +279,7 @@ public class ClassWeaponItem extends Item {
             case WARLOCK -> "  范围更大、伤害更高、耗血更少";
             case MONK -> "  视为空手可连击、连击更狠";
             case SWORDSMAN -> "  剑气更广更痛、格挡反击增强";
-            case SUMMONER -> "  (召唤师无专属武器)";
+            case SUMMONER -> "  持杖召唤:铁傀儡强化倍率额外 +50%";
         });
     }
 }

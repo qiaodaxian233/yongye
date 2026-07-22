@@ -37,6 +37,8 @@ public final class SummonerHandler {
 
     public static final String TAG = "yongye_summon";
     private static final Identifier BOOST_ID = Identifier.of(Yongye.MOD_ID, "summon_boost");
+    private static final Identifier OWNER_HP_ID = Identifier.of(Yongye.MOD_ID, "summon_owner_hp");
+    private static final Identifier OWNER_ATK_ID = Identifier.of(Yongye.MOD_ID, "summon_owner_atk");
 
     private record Tracked(IronGolemEntity golem, long expireAt) {}
     private static final Map<UUID, List<Tracked>> byOwner = new HashMap<>();
@@ -89,6 +91,18 @@ public final class SummonerHandler {
         List<Tracked> old = byOwner.remove(p.getUuid());
         if (old != null) for (Tracked tr : old) if (tr.golem().isAlive()) dismiss(tr.golem());
 
+        // m229:持「鹰扬」且本职业生效 → 强化倍率额外 +staffExtraBoost
+        double boostMult = cfg.summonerGolemBoostMult;
+        net.minecraft.item.Item staff = com.yongye.registry.ModItems.getClassWeapon(com.yongye.item.PlayerClass.SUMMONER);
+        if (staff != null && p.getMainHandStack().isOf(staff)
+                && ClassManager.isActive(p, com.yongye.item.PlayerClass.SUMMONER)) {
+            boostMult += Math.max(0, cfg.summonerStaffExtraBoost);
+        }
+        // m229:召唤物随主人属性成长——附加 主人血量×比例 / 主人攻击×比例(ADD_VALUE)
+        double ownerHp  = p.getMaxHealth() * Math.max(0, cfg.summonerOwnerHpRatio);
+        double ownerAtk = p.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                * Math.max(0, cfg.summonerOwnerAtkRatio);
+
         int count = Math.max(1, cfg.ultSummonerGolemCount);
         List<Tracked> list = new ArrayList<>(count);
         long expire = sw.getTime() + Math.max(100L, cfg.ultSummonerGolemLifeSec * 20L);
@@ -103,8 +117,10 @@ public final class SummonerHandler {
             g.setPersistent();
             g.addCommandTag(TAG);
             // 「强化」:血/攻 ×(1+倍率),默认翻一倍
-            boost(g, EntityAttributes.GENERIC_MAX_HEALTH, cfg.summonerGolemBoostMult);
-            boost(g, EntityAttributes.GENERIC_ATTACK_DAMAGE, cfg.summonerGolemBoostMult);
+            boost(g, EntityAttributes.GENERIC_MAX_HEALTH, boostMult);
+            boost(g, EntityAttributes.GENERIC_ATTACK_DAMAGE, boostMult);
+            addFlat(g, EntityAttributes.GENERIC_MAX_HEALTH, OWNER_HP_ID, ownerHp);
+            addFlat(g, EntityAttributes.GENERIC_ATTACK_DAMAGE, OWNER_ATK_ID, ownerAtk);
             g.setHealth(g.getMaxHealth());
             if (sw.spawnEntity(g)) {
                 list.add(new Tracked(g, expire));
@@ -121,6 +137,16 @@ public final class SummonerHandler {
         if (inst == null || inst.getModifier(BOOST_ID) != null) return;
         inst.addPersistentModifier(new EntityAttributeModifier(BOOST_ID, mult,
                 EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+    }
+
+    /** 平加成(ADD_VALUE):召唤物随主人属性成长用。 */
+    private static void addFlat(net.minecraft.entity.LivingEntity e,
+            net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attr,
+            Identifier id, double value) {
+        if (value <= 0) return;
+        EntityAttributeInstance inst = e.getAttributeInstance(attr);
+        if (inst == null || inst.getModifier(id) != null) return;
+        inst.addPersistentModifier(new EntityAttributeModifier(id, value, EntityAttributeModifier.Operation.ADD_VALUE));
     }
 
     /** 「癫狂」的召唤物(m224):肝帝天团四人齐上——0岛风/1晚安/2不爱肝/3迷人,
@@ -149,6 +175,12 @@ public final class SummonerHandler {
             e.setVariant(v);
             e.setCustomName(net.minecraft.text.Text.literal(com.yongye.entity.GanDiEntity.VARIANT_NAMES[v]).formatted(colors[v]));
             e.setCustomNameVisible(true);
+            // m229:肝帝随主人属性成长(同傀儡比例)
+            addFlat(e, EntityAttributes.GENERIC_MAX_HEALTH,
+                    OWNER_HP_ID, p.getMaxHealth() * Math.max(0, YongyeConfig.get().summonerOwnerHpRatio));
+            addFlat(e, EntityAttributes.GENERIC_ATTACK_DAMAGE, OWNER_ATK_ID,
+                    p.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                            * Math.max(0, YongyeConfig.get().summonerOwnerAtkRatio));
             if (v == 2) boostEntity(e, EntityAttributes.GENERIC_MAX_HEALTH, 1.0);      // 不爱肝:主坦
             if (v == 3) { boostEntity(e, EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.5); // 迷人:输出
                           boostEntity(e, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.2); }
