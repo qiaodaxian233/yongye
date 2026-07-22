@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "yongye:life_shard"
+    },
+    "title": "生命的碎片",
+    "description": "获得一枚生命碎片,离更强壮近了一步。",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "has": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "yongye:life_shard"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "parent": "yongye:night_dust"
+}

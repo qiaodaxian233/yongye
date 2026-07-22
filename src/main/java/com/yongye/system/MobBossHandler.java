@@ -101,7 +101,7 @@ public final class MobBossHandler {
                 float max = mob.getMaxHealth();
                 // m187:血量数字嵌入血条名(每 tick 从 mob.getName() 重建,防后缀叠加)
                 bar.setName(mob.getName().copy()
-                        .append(Text.literal("\u2016" + (long)mob.getHealth() + "/" + (long)max)));
+                        .append(Text.literal("\u2016" + String.format(java.util.Locale.ROOT, "%.0f", (double) mob.getHealth()) + "/" + String.format(java.util.Locale.ROOT, "%.0f", (double) max))));
                 bar.setPercent(max > 0 ? Math.max(0f, Math.min(1f, mob.getHealth() / max)) : 0f);
                 syncBarViewers(mob, bar);
             }

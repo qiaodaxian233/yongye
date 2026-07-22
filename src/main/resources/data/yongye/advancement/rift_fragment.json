@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "yongye:rift_fragment"
+    },
+    "title": "裂隙在低语",
+    "description": "获得一块裂隙碎片,世界的裂缝正在张开。",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "has": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "yongye:rift_fragment"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "parent": "yongye:life_shard"
+}

@@ -59,7 +59,7 @@ public class RedSpiderEntity extends SpiderEntity implements GeoEntity {
             float max = this.getMaxHealth();
             // m187:血量数字嵌入血条名(‖当前/最大)→ 客户端解析显示
             this.bossBar.setName(this.getType().getName().copy().formatted(Formatting.RED)
-                    .append(Text.literal("\u2016" + (long)this.getHealth() + "/" + (long)max)));
+                    .append(Text.literal("\u2016" + String.format(java.util.Locale.ROOT, "%.0f", (double) this.getHealth()) + "/" + String.format(java.util.Locale.ROOT, "%.0f", (double) max))));
             this.bossBar.setPercent(max > 0 ? Math.max(0f, Math.min(1f, this.getHealth() / max)) : 0f);
         }
     }

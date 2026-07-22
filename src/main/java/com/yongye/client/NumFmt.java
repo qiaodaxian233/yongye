@@ -4,7 +4,7 @@ import java.util.Locale;
 
 /**
  * 统一紧凑数字格式(m219,作者:「数字太大了,用 1K 1B 这样」)。
- * 规则:<1 万原样(整数不带小数点);≥1 万 K;≥100 万 M;≥10 亿 B;≥1 万亿 T。
+ * 规则:<1 万原样(整数不带小数点);≥1 万 K;≥100 万 M;≥10 亿 B;≥1 万亿 T;≥千万亿 Qa;≥百京 Qi(u64 上限 ≈18.4Qi)。
  * 商 <100 保一位小数(整值省略小数),≥100 取整:1.5K / 15.3K / 153K / 2.5B / 999T。
  * 血条 / HUD / 成长面板 / 装备介绍共用,保证全模组数字口径一致。
  */
@@ -13,6 +13,8 @@ public final class NumFmt {
 
     public static String compact(double v) {
         double a = Math.abs(v);
+        if (a >= 1e18) return one(v / 1e18) + "Qi";
+        if (a >= 1e15) return one(v / 1e15) + "Qa";
         if (a >= 1e12) return one(v / 1e12) + "T";
         if (a >= 1e9)  return one(v / 1e9)  + "B";
         if (a >= 1e6)  return one(v / 1e6)  + "M";

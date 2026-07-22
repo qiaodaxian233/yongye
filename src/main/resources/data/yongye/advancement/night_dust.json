@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "yongye:endless_night_dust"
+    },
+    "title": "夜之结晶",
+    "description": "获得一份永夜之尘——黑暗也能被握在手里。",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "has": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "yongye:endless_night_dust"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "parent": "yongye:root"
+}

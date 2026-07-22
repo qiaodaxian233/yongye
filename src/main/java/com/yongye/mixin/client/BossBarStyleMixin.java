@@ -127,7 +127,7 @@ public abstract class BossBarStyleMixin {
                     0f, 0f, st.sw, st.sh, st.sw, st.sh);
 
             // m187:有 HP 数据时按实际比算填充,否则用百分比平均
-            long[] groupHp = yongye$parseGroupHp(g);
+            double[] groupHp = yongye$parseGroupHp(g);
             float pct;
             if (groupHp != null && groupHp[1] > 0) {
                 pct = Math.max(0f, Math.min(1f, (float) groupHp[0] / groupHp[1]));
@@ -185,7 +185,7 @@ public abstract class BossBarStyleMixin {
             ctx.drawTextWithShadow(tr, name, cx - tw / 2, j, 0xFFFFFF);
             acc.yongye$renderVanillaBar(ctx, cx - 91, j + 9, bar);
             // m188:数字覆画在原版条正中(条 j+9..j+14,文字上缘 j+7 上下对称跨条)
-            long[] hp = yongye$parseHp(bar);
+            double[] hp = yongye$parseHp(bar);
             String sub = hp != null && hp[1] > 0
                     ? yongye$fmtHp(hp[0]) + " / " + yongye$fmtHp(hp[1])
                     : Math.round(bar.getPercent() * 100) + "%";
@@ -211,34 +211,34 @@ public abstract class BossBarStyleMixin {
     // ===== HP 解析 =====
 
     /** 从血条名的 ‖cur/max 后缀解析血量;解析失败返回 null。 */
-    private static long[] yongye$parseHp(ClientBossBar bar) {
+    private static double[] yongye$parseHp(ClientBossBar bar) {
         String s = bar.getName().getString();
         int idx = s.indexOf('\u2016'); // ‖
         if (idx < 0) return null;
         String[] parts = s.substring(idx + 1).split("/", 2);
         if (parts.length < 2) return null;
         try {
-            return new long[]{Long.parseLong(parts[0].trim()), Long.parseLong(parts[1].trim())};
+            return new double[]{Double.parseDouble(parts[0].trim()), Double.parseDouble(parts[1].trim())};
         } catch (NumberFormatException e) {
             return null;
         }
     }
 
     /** 合并组 HP 求和;任意成员缺失 HP 则返回 null。 */
-    private static long[] yongye$parseGroupHp(Group g) {
-        long sumCur = 0, sumMax = 0;
+    private static double[] yongye$parseGroupHp(Group g) {
+        double sumCur = 0, sumMax = 0;
         for (ClientBossBar b : g.members) {
-            long[] hp = yongye$parseHp(b);
+            double[] hp = yongye$parseHp(b);
             if (hp == null) return null;
             sumCur += hp[0];
             sumMax += hp[1];
         }
-        return new long[]{sumCur, sumMax};
+        return new double[]{sumCur, sumMax};
     }
 
-    /** 紧凑血量格式(m219 起 K/M/B/T,统一走 NumFmt;超 int 上限的血量由 long 通道无损直达)。 */
-    private static String yongye$fmtHp(long n) {
-        return com.yongye.client.NumFmt.compact((double) n);
+    /** 紧凑血量格式(m220 起通道全 double:服务端 %.0f 写入、此处 parseDouble,u64 级血量不再被 int/long 卡住)。 */
+    private static String yongye$fmtHp(double n) {
+        return com.yongye.client.NumFmt.compact(n);
     }
 
     /** 从血条名的字符串中剥去 ‖hp 后缀,返回纯名字字符串。 */

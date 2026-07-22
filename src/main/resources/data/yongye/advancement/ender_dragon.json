@@ -1,0 +1,30 @@
+{
+  "display": {
+    "icon": {
+      "id": "yongye:chaos_blade"
+    },
+    "title": "终焉:黎明将至",
+    "description": "在夜蚀的世界里击败末影龙——你战胜了永夜本身。",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "kill": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "minecraft:ender_dragon"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "yongye:death_mage"
+}

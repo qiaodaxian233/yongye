@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {
+      "id": "yongye:class_select_book"
+    },
+    "title": "初入夜蚀",
+    "description": "太阳不再升起。欢迎来到夜蚀的世界。",
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "minecraft:textures/gui/advancements/backgrounds/end.png"
+  },
+  "criteria": {
+    "tick": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}
