@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 38;
+    public static final int CURRENT_CONFIG_VERSION = 39;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -832,6 +832,17 @@ public class YongyeConfig {
     /** 刺客·疾影步:冲刺力度 / 加速持续(tick,速度II)。 */
     public double minorAssassinDashStrength = 1.6;
     public int minorAssassinSpeedTicks = 60;
+
+    // —— m233 召唤师强化包(三技能职业,每一件都要够硬) ——
+    /** 傀儡持续回血(每秒,0=关):在场傀儡缓慢自愈,「强化」的血量翻倍更耐用。 */
+    public double summonerGolemRegenPerSec = 2.0;
+    /** 统御被动:场上有自己的召唤物(傀儡/朋友)存活时,召唤者获得抗性I。 */
+    public boolean enableSummonerGuardAura = true;
+    /** 统御:召唤物存活数达到此值时抗性升 II 级(默认 5=一整队傀儡)。 */
+    public int summonerGuardAuraBigCount = 5;
+    /** 癫狂自身增益等级(amplifier,0起):力量默认 2=力量III,速度默认 1=速度II。 */
+    public int ultSummonerFrenzyPowerAmp = 2;
+    public int ultSummonerFrenzySpeedAmp = 1;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

@@ -47,9 +47,10 @@ public final class SummonerHandler {
     private static final Map<UUID, List<com.yongye.entity.GanDiEntity>> gandiByOwner = new HashMap<>();
 
     public static void register() {
-        // 寿命管理:每 20 tick 扫一轮
+        // 寿命管理:每 20 tick 扫一轮(m233 顺带做傀儡回血+统御被动)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTicks() % 20 != 0 || byOwner.isEmpty()) return;
+            if (server.getTicks() % 20 != 0 || (byOwner.isEmpty() && gandiByOwner.isEmpty())) return;
+            YongyeConfig cfg = YongyeConfig.get();
             long now = server.getOverworld().getTime();
             for (Iterator<Map.Entry<UUID, List<Tracked>>> it = byOwner.entrySet().iterator(); it.hasNext(); ) {
                 List<Tracked> list = it.next().getValue();
@@ -57,9 +58,29 @@ public final class SummonerHandler {
                     IronGolemEntity g = tr.golem();
                     if (g.isRemoved() || !g.isAlive()) return true;
                     if (now >= tr.expireAt()) { dismiss(g); return true; }
+                    // m233:傀儡持续回血(「召唤/强化」加强——三技能职业,傀儡要经打)
+                    if (cfg.summonerGolemRegenPerSec > 0 && g.getHealth() < g.getMaxHealth()) {
+                        g.heal((float) cfg.summonerGolemRegenPerSec);
+                    }
                     return false;
                 });
                 if (list.isEmpty()) it.remove();
+            }
+            // m233:统御被动——场上每有自己的召唤物(傀儡/朋友)存活,召唤者获得抗性I;
+            // 召唤物 ≥ summonerGuardAuraBigCount(默认5)时升抗性II。全走 proven API(getPlayerList/状态效果)。
+            if (cfg.enableSummonerGuardAura) {
+                for (ServerPlayerEntity o : server.getPlayerManager().getPlayerList()) {
+                    int n = 0;
+                    List<Tracked> gl = byOwner.get(o.getUuid());
+                    if (gl != null) for (Tracked tr : gl) if (tr.golem().isAlive()) n++;
+                    List<com.yongye.entity.GanDiEntity> fl = gandiByOwner.get(o.getUuid());
+                    if (fl != null) for (com.yongye.entity.GanDiEntity g : fl) if (g.isAlive()) n++;
+                    if (n > 0) {
+                        int amp = n >= Math.max(1, cfg.summonerGuardAuraBigCount) ? 1 : 0;
+                        o.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                                net.minecraft.entity.effect.StatusEffects.RESISTANCE, 45, amp, true, false, true));
+                    }
+                }
             }
         });
         // 重启遗留清理:带 tag 却不在内存表内的傀儡 = 上个会话的残留
