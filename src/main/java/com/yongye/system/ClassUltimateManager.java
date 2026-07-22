@@ -68,7 +68,7 @@ public final class ClassUltimateManager {
         switch (c) {
             case WARRIOR -> {
                 // 旋风斩:周身范围一击
-                int hit = aoe(p, sw, src, cfg.ultWarriorRadius, (float) cfg.ultWarriorDamage, null);
+                int hit = aoe(p, sw, src, cfg.ultWarriorRadius, (float) (cfg.ultWarriorDamage + atk(p) * cfg.ultWarriorAttackRatio), null);
                 burst(sw, p, ParticleTypes.SWEEP_ATTACK, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP);
                 msg(p, "旋风斩!命中 " + hit + " 个目标", Formatting.GOLD);
             }
@@ -95,7 +95,7 @@ public final class ClassUltimateManager {
                 // 灭世:大范围魔法爆发(消耗生命)
                 if (p.getHealth() <= cfg.ultWarlockHpCost + 1.0f) { msg(p, "生命不足,无法施放", Formatting.RED); return false; }
                 p.setHealth(Math.max(1.0f, p.getHealth() - (float) cfg.ultWarlockHpCost));
-                int hit = aoe(p, sw, sw.getDamageSources().magic(), cfg.ultWarlockRadius, (float) cfg.ultWarlockDamage, null);
+                int hit = aoe(p, sw, sw.getDamageSources().magic(), cfg.ultWarlockRadius, (float) (cfg.ultWarlockDamage + atk(p) * cfg.ultWarlockAttackRatio), null);
                 burst(sw, p, ParticleTypes.SOUL_FIRE_FLAME, SoundEvents.ENTITY_WITHER_SPAWN);
                 msg(p, "灭世!焚尽 " + hit + " 个目标(献祭生命)", Formatting.GOLD);
             }
@@ -114,7 +114,7 @@ public final class ClassUltimateManager {
             }
             case MONK -> {
                 // 百裂拳:周身连击+强力击退
-                int hit = aoe(p, sw, src, cfg.ultMonkRadius, (float) cfg.ultMonkDamage, p.getPos());
+                int hit = aoe(p, sw, src, cfg.ultMonkRadius, (float) (cfg.ultMonkDamage + atk(p) * cfg.ultMonkAttackRatio), p.getPos());
                 burst(sw, p, ParticleTypes.SWEEP_ATTACK, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG);
                 msg(p, "百裂拳!击退并重创 " + hit + " 个目标", Formatting.GOLD);
             }
@@ -123,10 +123,11 @@ public final class ClassUltimateManager {
                 Vec3d dir = p.getRotationVector();
                 double r = cfg.ultSwordsmanRange;
                 Box wave = p.getBoundingBox().expand(r).offset(dir.x * r, 0, dir.z * r);
+                float swDmg = (float) (cfg.ultSwordsmanDamage + atk(p) * cfg.ultSwordsmanAttackRatio);
                 int hit = 0;
                 for (LivingEntity le : sw.getEntitiesByClass(LivingEntity.class, wave,
                         e -> e.isAlive() && e != p && !(e instanceof PlayerEntity))) {
-                    le.damage(src, (float) cfg.ultSwordsmanDamage);
+                    le.damage(src, swDmg);
                     le.timeUntilRegen = 0;
                     hit++;
                 }
@@ -157,6 +158,11 @@ public final class ClassUltimateManager {
 
     private static Box box(ServerPlayerEntity p, double r) {
         return p.getBoundingBox().expand(r);
+    }
+
+    /** m234:玩家当前攻击力——伤害型大招统一「基础值+攻击×倍率」,后期不脱节(照 m72 武器技能公式)。 */
+    private static double atk(ServerPlayerEntity p) {
+        return p.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE);
     }
 
     private static void burst(ServerWorld sw, ServerPlayerEntity p, net.minecraft.particle.ParticleEffect particle,

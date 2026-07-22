@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 39;
+    public static final int CURRENT_CONFIG_VERSION = 40;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -843,6 +843,20 @@ public class YongyeConfig {
     /** 癫狂自身增益等级(amplifier,0起):力量默认 2=力量III,速度默认 1=速度II。 */
     public int ultSummonerFrenzyPowerAmp = 2;
     public int ultSummonerFrenzySpeedAmp = 1;
+
+    // —— m234 技能吃攻击力(统一「基础值 + 攻击 × 倍率」,与 m72 武器技能同公式;倍率 0=回固定值老行为) ——
+    /** 大招:旋风斩 / 灭世 / 百裂拳 / 万剑归一 的攻击倍率。 */
+    public double ultWarriorAttackRatio   = 2.0;
+    public double ultWarlockAttackRatio   = 3.0;
+    public double ultMonkAttackRatio      = 1.5;
+    public double ultSwordsmanAttackRatio = 2.5;
+    /** 小技能:盾击 / 生命虹吸 / 剑气斩 的攻击倍率。 */
+    public double minorTankAttackRatio      = 0.5;
+    public double minorWarlockAttackRatio   = 0.8;
+    public double minorSwordsmanAttackRatio = 1.0;
+    /** 被动:术士潜行AOE / 剑客剑气凌空 的攻击倍率(算完再乘持职业武器的 ×1.5)。 */
+    public double warlockAoeAttackRatio     = 0.8;
+    public double swordsmanPierceAttackRatio = 1.0;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

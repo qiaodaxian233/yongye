@@ -231,7 +231,9 @@ public final class ClassSkillHandler {
                     if (cost > 0) p.setHealth(Math.max(1.0f, p.getHealth() - (float) cost));
                     DamageSource magic = world.getDamageSources().magic();
                     double radius = cfg.warlockAoeRadius + (wep ? 2.0 : 0.0);
-                    float dmg = (float) (cfg.warlockAoeDamage * (wep ? 1.5 : 1.0));
+                    float dmg = (float) ((cfg.warlockAoeDamage
+                            + p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.warlockAoeAttackRatio)
+                            * (wep ? 1.5 : 1.0));   // m234:基础+攻击×倍率,持法杖再×1.5
                     Box area = target.getBoundingBox().expand(radius);
                     for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, area,
                             e -> e.isAlive() && e != p && !(e instanceof PlayerEntity))) {
@@ -271,7 +273,9 @@ public final class ClassSkillHandler {
                 DamageSource psrc = world.getDamageSources().playerAttack(p);
                 Vec3d pd = p.getRotationVector();
                 Vec3d base = p.getPos().add(0, p.getStandingEyeHeight() * 0.9, 0);
-                float pdmg = (float) (cfg.swordsmanPierceDamage * (pw ? 1.5 : 1.0));
+                float pdmg = (float) ((cfg.swordsmanPierceDamage
+                        + p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) * cfg.swordsmanPierceAttackRatio)
+                        * (pw ? 1.5 : 1.0));   // m234:基础+攻击×倍率,持流光再×1.5
                 java.util.Set<Integer> pierced = new java.util.HashSet<>();
                 int hitN = 0;
                 for (double dst = 1.0; dst <= cfg.swordsmanPierceRange; dst += 1.0) {

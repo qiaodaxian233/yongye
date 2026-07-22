@@ -77,7 +77,7 @@ public final class ClassMinorSkillManager {
                 int hit = 0;
                 for (LivingEntity le : sw.getEntitiesByClass(LivingEntity.class, box(p, cfg.minorTankRadius),
                         e -> e.isAlive() && e != p && !(e instanceof PlayerEntity))) {
-                    le.damage(src, (float) cfg.minorTankDamage);
+                    le.damage(src, (float) (cfg.minorTankDamage + atk(p) * cfg.minorTankAttackRatio));
                     le.timeUntilRegen = 0;
                     Vec3d kb = le.getPos().subtract(p.getPos());
                     le.takeKnockback(1.0, -kb.x, -kb.z);
@@ -101,7 +101,7 @@ public final class ClassMinorSkillManager {
             }
             case WARLOCK -> {
                 // 生命虹吸:小范围魔法伤害,按命中数回血
-                int hit = aoe(p, sw, sw.getDamageSources().magic(), cfg.minorWarlockRadius, (float) cfg.minorWarlockDamage, null);
+                int hit = aoe(p, sw, sw.getDamageSources().magic(), cfg.minorWarlockRadius, (float) (cfg.minorWarlockDamage + atk(p) * cfg.minorWarlockAttackRatio), null);
                 if (hit > 0) p.heal((float) (hit * cfg.minorWarlockHealPerHit));
                 burst(sw, p, ParticleTypes.WITCH, SoundEvents.ENTITY_EVOKER_CAST_SPELL);
                 msg(p, "生命虹吸!汲取 " + hit + " 个目标的生命", Formatting.AQUA);
@@ -111,10 +111,11 @@ public final class ClassMinorSkillManager {
                 Vec3d dir = p.getRotationVector();
                 double r = cfg.minorSwordsmanRange;
                 Box wave = p.getBoundingBox().expand(r * 0.5).offset(dir.x * r * 0.6, 0, dir.z * r * 0.6);
+                float mwDmg = (float) (cfg.minorSwordsmanDamage + atk(p) * cfg.minorSwordsmanAttackRatio);
                 int hit = 0;
                 for (LivingEntity le : sw.getEntitiesByClass(LivingEntity.class, wave,
                         e -> e.isAlive() && e != p && !(e instanceof PlayerEntity))) {
-                    le.damage(src, (float) cfg.minorSwordsmanDamage);
+                    le.damage(src, mwDmg);
                     le.timeUntilRegen = 0;
                     hit++;
                 }
@@ -169,6 +170,11 @@ public final class ClassMinorSkillManager {
 
     private static Box box(ServerPlayerEntity p, double r) {
         return p.getBoundingBox().expand(r);
+    }
+
+    /** m234:玩家当前攻击力——伤害型小技能统一「基础值+攻击×倍率」(照 m72 武器技能公式)。 */
+    private static double atk(ServerPlayerEntity p) {
+        return p.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE);
     }
 
     private static void burst(ServerWorld sw, ServerPlayerEntity p, net.minecraft.particle.ParticleEffect particle,
