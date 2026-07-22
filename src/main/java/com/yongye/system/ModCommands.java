@@ -334,6 +334,16 @@ public final class ModCommands {
                                             Text.literal("配置已重置为默认值(部分改动重进世界生效)").formatted(Formatting.AQUA), false);
                                     return 1;
                                 }))
+                                .then(CommandManager.literal("get")
+                                        .then(CommandManager.argument("key", StringArgumentType.word())
+                                                .executes(ctx -> {
+                                                    String key = StringArgumentType.getString(ctx, "key");
+                                                    String val = com.yongye.YongyeConfig.getFieldString(key);
+                                                    ctx.getSource().sendFeedback(() -> Text.literal(
+                                                            val != null ? key + " = " + val : "没有这个配置字段:" + key)
+                                                            .formatted(val != null ? Formatting.AQUA : Formatting.RED), false);
+                                                    return val != null ? 1 : 0;
+                                                })))
                                 .then(CommandManager.literal("set")
                                         .then(CommandManager.argument("key", StringArgumentType.word())
                                                 .then(CommandManager.argument("value", StringArgumentType.greedyString())

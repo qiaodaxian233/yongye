@@ -41,27 +41,24 @@ public class GanDiEntity extends PathAwareEntity {
             DataTracker.registerData(GanDiEntity.class, TrackedDataHandlerRegistry.INTEGER);
     public static final String[] VARIANT_NAMES = {"岛风", "晚安", "不爱肝", "迷人"};
 
-    /** m226:四人台词池(登场/战斗/闲聊/告别),索引=变体。人设按作者提供的抖音方向写。 */
-    private static final String[][] LINE_SPAWN = {
-            {"岛风到位!这地形我看看能改点啥。", "圆梦镇施工队,进场!"},
-            {"晚安已上线,生电机器马上开转。", "别慌,后勤交给我。"},
-            {"不爱肝?骗人的,一百万方块都肝完了。", "重活来了?正好活动筋骨。"},
-            {"迷人参上,蒸汽机压满!", "机械之城的火,借你用用。"}};
-    private static final String[][] LINE_COMBAT = {
-            {"打架别拆我建筑啊!", "先围一圈墙,稳住!"},
-            {"傀儡耐久我包了,放心冲!", "效率!效率!"},
-            {"站我后面!这波我扛!", "这点伤害,还没搬砖累。"},
-            {"给傀儡点火!全速输出!", "别省煤,烧就完了!"}};
-    private static final String[][] LINE_IDLE = {
-            {"这块地……适合盖个圆梦镇。", "薰衣草配夜蚀,还挺搭。"},
-            {"这刷铁机一小时能出三组……", "红石一响,黄金万两。"},
-            {"下个项目复刻白熊山,你说行吗?", "肝到天亮,不算什么。"},
-            {"回头带你看我的飞艇船坞。", "机械之城,今晚亮灯。"}};
-    private static final String[] LINE_BYE = {
-            "我先回去画图纸了,下次见!", "机器停了,我也该睡了,晚安~",
-            "行了,回去继续搬我的百万方块。", "蒸汽散了……我也撤了。"};
-    private static final String[] LINE_DEATH = {
-            "工地……先塌一半……", "机器,烧了……", "这波,扛不住了……", "锅炉,炸了……"};
+    /** m227:台词改从配置读(gandiTalk* 字段,| 分句;Debug 配置页可查改),类别:0登场/1战斗/2闲聊/3告别/4阵亡。 */
+    private String[] pool(int cat) {
+        YongyeConfig c = YongyeConfig.get();
+        String[][] all = {
+                {c.gandiTalkDaofengSpawn, c.gandiTalkDaofengCombat, c.gandiTalkDaofengIdle, c.gandiTalkDaofengBye, c.gandiTalkDaofengDeath},
+                {c.gandiTalkWananSpawn,   c.gandiTalkWananCombat,   c.gandiTalkWananIdle,   c.gandiTalkWananBye,   c.gandiTalkWananDeath},
+                {c.gandiTalkBuganSpawn,   c.gandiTalkBuganCombat,   c.gandiTalkBuganIdle,   c.gandiTalkBuganBye,   c.gandiTalkBuganDeath},
+                {c.gandiTalkMirenSpawn,   c.gandiTalkMirenCombat,   c.gandiTalkMirenIdle,   c.gandiTalkMirenBye,   c.gandiTalkMirenDeath}};
+        String raw = all[getVariant()][cat];
+        if (raw == null || raw.isBlank()) return new String[0];
+        return java.util.Arrays.stream(raw.split("\\|")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
+    }
+
+    /** 从某类池随机说一句(池空=沉默)。 */
+    private void speakFrom(int cat) {
+        String[] p = pool(cat);
+        if (p.length > 0) speak(p[this.random.nextInt(p.length)]);
+    }
 
     private UUID owner;
     private int lifeTicks;
@@ -113,13 +110,9 @@ public class GanDiEntity extends PathAwareEntity {
                 .append(net.minecraft.text.Text.literal(line).formatted(net.minecraft.util.Formatting.WHITE)), false);
     }
 
-    private String pick(String[] pool) {
-        return pool[this.random.nextInt(pool.length)];
-    }
-
     @Override
     public void onDeath(net.minecraft.entity.damage.DamageSource damageSource) {
-        speak(LINE_DEATH[getVariant()]);   // 阵亡白(区别于寿终的告别白)
+        speakFrom(4);   // 阵亡白(区别于寿终的告别白)
         super.onDeath(damageSource);
     }
 
@@ -135,12 +128,12 @@ public class GanDiEntity extends PathAwareEntity {
         int lifeMax = Math.max(100, YongyeConfig.get().gandiLifeSec * 20);
         ++lifeTicks;
         // 登场白:错峰开口(变体 0/1/2/3 分别在第 5/25/45/65 tick),不刷屏
-        if (lifeTicks == 5 + getVariant() * 20) speak(pick(LINE_SPAWN[getVariant()]));
+        if (lifeTicks == 5 + getVariant() * 20) speakFrom(0);
         // 离场预警:剩 10 秒时由岛风代表全队说一句(只说一次,避免 4 连报)
         if (lifeTicks == lifeMax - 200 && getVariant() == 0) speak("时间不多了,收尾吧!(天团 10 秒后离场)");
         // 寿命:到点化作灵魂散去,各自留一句告别白
         if (lifeTicks >= lifeMax) {
-            speak(LINE_BYE[getVariant()]);
+            speakFrom(3);
             sw.spawnParticles(ParticleTypes.SOUL, getX(), getBodyY(0.5), getZ(), 20, 0.4, 0.6, 0.4, 0.02);
             this.discard();
             return;
@@ -149,9 +142,9 @@ public class GanDiEntity extends PathAwareEntity {
         long now = sw.getTime();
         if (now >= nextTalkAt) {
             if (this.getTarget() != null && this.random.nextFloat() < 0.35f) {
-                speak(pick(LINE_COMBAT[getVariant()])); nextTalkAt = now + 240;
+                speakFrom(1); nextTalkAt = now + 240;
             } else if (this.getTarget() == null && lifeTicks % 300 == 0 && this.random.nextFloat() < 0.25f) {
-                speak(pick(LINE_IDLE[getVariant()])); nextTalkAt = now + 240;
+                speakFrom(2); nextTalkAt = now + 240;
             }
         }
         // 分工光环(m224,每 3 秒一轮,作用于主人的全部铁傀儡):

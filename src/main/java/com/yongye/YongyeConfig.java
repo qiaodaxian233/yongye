@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 34;
+    public static final int CURRENT_CONFIG_VERSION = 35;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -774,6 +774,28 @@ public class YongyeConfig {
     public int gandiLifeSec = 60;
     /** 肝帝台词(登场/战斗/闲聊/告别,只发给主人):关=全员沉默。 */
     public boolean gandiChatEnabled = true;
+    // —— m227 肝帝台词池:竖线 | 分隔句子,随机抽一句;清空该字段=该类台词沉默。
+    //    Debug「配置」页有查改入口;改句示例:/yongye config set gandiTalkDaofengSpawn 句1|句2
+    public String gandiTalkDaofengSpawn  = "岛风到位!这地形我看看能改点啥。|圆梦镇施工队,进场!";
+    public String gandiTalkDaofengCombat = "打架别拆我建筑啊!|先围一圈墙,稳住!";
+    public String gandiTalkDaofengIdle   = "这块地……适合盖个圆梦镇。|薰衣草配夜蚀,还挺搭。";
+    public String gandiTalkDaofengBye    = "我先回去画图纸了,下次见!";
+    public String gandiTalkDaofengDeath  = "工地……先塌一半……";
+    public String gandiTalkWananSpawn    = "晚安已上线,生电机器马上开转。|别慌,后勤交给我。";
+    public String gandiTalkWananCombat   = "傀儡耐久我包了,放心冲!|效率!效率!";
+    public String gandiTalkWananIdle     = "这刷铁机一小时能出三组……|红石一响,黄金万两。";
+    public String gandiTalkWananBye      = "机器停了,我也该睡了,晚安~";
+    public String gandiTalkWananDeath    = "机器,烧了……";
+    public String gandiTalkBuganSpawn    = "不爱肝?骗人的,一百万方块都肝完了。|重活来了?正好活动筋骨。";
+    public String gandiTalkBuganCombat   = "站我后面!这波我扛!|这点伤害,还没搬砖累。";
+    public String gandiTalkBuganIdle     = "下个项目复刻白熊山,你说行吗?|肝到天亮,不算什么。";
+    public String gandiTalkBuganBye      = "行了,回去继续搬我的百万方块。";
+    public String gandiTalkBuganDeath    = "这波,扛不住了……";
+    public String gandiTalkMirenSpawn    = "迷人参上,蒸汽机压满!|机械之城的火,借你用用。";
+    public String gandiTalkMirenCombat   = "给傀儡点火!全速输出!|别省煤,烧就完了!";
+    public String gandiTalkMirenIdle     = "回头带你看我的飞艇船坞。|机械之城,今晚亮灯。";
+    public String gandiTalkMirenBye      = "蒸汽散了……我也撤了。";
+    public String gandiTalkMirenDeath    = "锅炉,炸了……";
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;
