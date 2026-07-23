@@ -10,14 +10,19 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * 开局难度选择界面:顶部「永夜」简介,下面 8 档难度(游玩→永夜+战斗爽)逐行可点,点选即提交并关闭。
+ * 开局难度选择界面:顶部「永夜」简介,下面 8 档难度按强度排序(战斗爽居地狱与深渊之间)逐行可点,点选即提交并关闭。
  * 强制选择(屏蔽 ESC),与旧的「选职弹窗」同为登录首个界面——现在先选难度,职业之后用「职业选择书」自选。
  */
 public class DifficultyScreen extends Screen {
 
     private static final int PANEL_W = 380;
     private static final int ROW_H = 26;
-    private final GameDifficulty[] diffs = GameDifficulty.values();
+    // m251:展示顺序=强度顺序(战斗爽 ×3.2 排在地狱 ×2.5 与深渊 ×4.0 之间,不再吊在末尾);
+    // 枚举 ordinal/存档序号不动,点选时发 diffs[i].ordinal() 而不是行号。
+    private final GameDifficulty[] diffs = {
+            GameDifficulty.PLAY, GameDifficulty.EASY, GameDifficulty.NORMAL, GameDifficulty.HARD,
+            GameDifficulty.HELL, GameDifficulty.BATTLE, GameDifficulty.ABYSS, GameDifficulty.ETERNAL
+    };
 
     // 游戏简介(逐行,绘制在难度列表上方)
     private static final String[] INTRO = {
@@ -51,7 +56,7 @@ public class DifficultyScreen extends Screen {
             for (int i = 0; i < diffs.length; i++) {
                 int y = rowY(i);
                 if (mouseX >= x && mouseX <= x + PANEL_W && mouseY >= y && mouseY <= y + ROW_H - 2) {
-                    ClientPlayNetworking.send(new ChooseDifficultyPayload(i));
+                    ClientPlayNetworking.send(new ChooseDifficultyPayload(diffs[i].ordinal())); // m251:发 ordinal 不发行号
                     MinecraftClient.getInstance().setScreen(null);
                     return true;
                 }

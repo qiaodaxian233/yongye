@@ -30,11 +30,14 @@ public final class DifficultyManager {
 
     public static boolean isSet() { return level >= 0; }
 
-    /** m249 难度门:当前世界难度是否达到 d 档及以上。
-     *  战斗爽(BATTLE)ordinal 追加在枚举末尾(7)数值最大,天然通过任何「≥某档」的门(它按最高档对待);
-     *  未设定(-1)一律不达标。给「反滚雪球/血量对位只在地狱+生效」这类门统一用。 */
-    public static boolean atLeast(com.yongye.item.GameDifficulty d) {
-        return level >= d.ordinal();
+    /** m251(改自 m249 的 atLeast):反滚雪球/血量对位这两套「压制成长」系统是否启用——
+     *  仅 地狱/深渊/永夜 三档;战斗爽虽然强度(×3.2)介于地狱与深渊之间,但定位是「爽」,
+     *  作者点名这两套在战斗爽一律关闭(不搞掉率衰减、不按玩家攻击拔怪血);
+     *  游玩~困难 与 未设定(-1)同样关闭。 */
+    public static boolean growthSuppressionOn() {
+        return level == com.yongye.item.GameDifficulty.HELL.ordinal()
+                || level == com.yongye.item.GameDifficulty.ABYSS.ordinal()
+                || level == com.yongye.item.GameDifficulty.ETERNAL.ordinal();
     }
     public static int getLevel() { return level; }
 

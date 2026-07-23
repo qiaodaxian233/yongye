@@ -11,6 +11,9 @@ import net.minecraft.util.Formatting;
  * 顺序即 ordinal(0~7);世界难度由 DifficultyManager 持有一个值(存世界存档),未设定按「适中」处理。
  * 注意:m217 起「战斗爽」追加在枚举末尾(ordinal 7)以保证老存档序号不漂移,
  * 因此 ordinal 顺序≠强度顺序(战斗爽 ×3.2 介于地狱与深渊之间);做「难度≥档位」比较时留意。
+ * m251:选难度界面改按 DifficultyScreen 里的「强度顺序」展示(战斗爽排在地狱与深渊之间),
+ * ordinal/存档序号仍不动;反滚雪球与血量对位只在 地狱/深渊/永夜 启用,战斗爽明确关闭
+ * (作者点名——战斗爽定位是「爽」,不搞掉率衰减、不按玩家攻击拔怪血),见 DifficultyManager.growthSuppressionOn。
  */
 public enum GameDifficulty {
     PLAY    ("游玩", 0.5,  "最轻松的体验。怪物只比原版略强,适合观光、建造、熟悉机制。",          Formatting.GREEN),
@@ -20,7 +23,7 @@ public enum GameDifficulty {
     HELL    ("地狱", 2.5,  "残酷。一个失误就可能致命,为熟练的硬核玩家准备。",                    Formatting.RED),
     ABYSS   ("深渊", 4.0,  "深渊级压制。怪物远超你的成长曲线,九死一生。",                        Formatting.DARK_RED),
     ETERNAL ("永夜", 6.0,  "永夜真正的样子——绝望难度,只为最强者而存在。",                      Formatting.DARK_PURPLE),
-    BATTLE  ("战斗爽", 3.2, "爽就完事了。怪物更肉、掉落更多,反滚雪球减半——狂欢向的高压难度。",   Formatting.LIGHT_PURPLE);
+    BATTLE  ("战斗爽", 3.2, "爽就完事了。怪物更肉、掉落更多,无掉率衰减——狂欢向的高压难度。",   Formatting.LIGHT_PURPLE);
 
     public final String cn;
     public final double mobMult;

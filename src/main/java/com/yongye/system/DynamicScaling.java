@@ -44,11 +44,10 @@ public final class DynamicScaling {
         double diffMult = com.yongye.system.DifficultyManager.mobMult();
 
         // —— 血量对位:目标 = 玩家每击攻击 × 期望击杀次数 × 难度,只增不减 ——
-        // 门的演进:m147 挂世界难度「困难+」→ m148 改挂永夜等级 ≥5 → m249 定版:
-        //   作者点名「血量加倍默认关闭,地狱以上才开」——改回挂世界难度,门槛提到「地狱(HELL)及以上」
-        //   (地狱/深渊/永夜/战斗爽 生效;游玩~困难 不按攻击拔血=默认关闭)。不再看永夜等级。
-        //   伤害对位仍未受此门约束(作者只点名血量)。
-        boolean hpScalingOn = DifficultyManager.atLeast(com.yongye.item.GameDifficulty.HELL);
+        // 门的演进:m147 困难+ → m148 永夜≥5 → m249 难度≥地狱 → m251 定版:
+        //   仅 地狱/深渊/永夜 启用;战斗爽明确关闭(作者点名——「爽」档怪已 ×3.2,不再按玩家攻击拔血),
+        //   游玩~困难 同样关闭。不看永夜等级。伤害对位仍未受此门约束(作者只点名血量)。
+        boolean hpScalingOn = DifficultyManager.growthSuppressionOn();
         EntityAttributeInstance hpInst = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
         if (hpScalingOn && hpInst != null && targetHits > 0 && pAtk > 0) {
             double curHp = hpInst.getValue();

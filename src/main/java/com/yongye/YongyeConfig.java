@@ -784,7 +784,7 @@ public class YongyeConfig {
     public double blightCrystalChance = 0.015;
 
     // ============ m217:战斗爽难度 ============
-    /** 战斗爽难度下反滚雪球的减弱比例:动态掉率倍率向 1 回拉的份额(0=不减弱,0.5=衰减减半,1=等于关闭)。 */
+    /** m251 起弃用:反滚雪球在战斗爽已明确关闭(见 DifficultyManager.growthSuppressionOn),减半回拉不再被读取,保留占位防旧 json 报死键。 */
     public double battleFunSnowballRelief = 0.5;
     /** 战斗爽难度下永夜 V5+ 深渊倍增的缩放:每级倍率 step×(等级-5) 再乘此值(1=不减弱,0.5=减半,0=该机制在战斗爽中关闭)。 */
     public double battleFunBeyondScale = 0.5;

@@ -196,7 +196,8 @@ public final class ModCommands {
                                     return 1;
                                 })))
 
-                        // 世界难度:查看 / 设定(0游玩~6永夜)。整局一个值,设定即全局生效。
+                        // 世界难度:查看 / 设定(0游玩~6永夜,7=战斗爽,强度介于4地狱与5深渊)。整局一个值,设定即全局生效。
+                        // m251 修:上限原硬编码 6,战斗爽(7)用命令设不进去——改按枚举长度。
                         .then(CommandManager.literal("difficulty")
                                 .then(CommandManager.literal("status").executes(ctx -> {
                                     int lv = com.yongye.system.DifficultyManager.getLevel();
@@ -205,7 +206,7 @@ public final class ModCommands {
                                             Text.literal("当前世界难度:" + name).formatted(Formatting.GOLD), false);
                                     return 1;
                                 }))
-                                .then(CommandManager.argument("level", IntegerArgumentType.integer(0, 6)).executes(ctx -> {
+                                .then(CommandManager.argument("level", IntegerArgumentType.integer(0, com.yongye.item.GameDifficulty.values().length - 1)).executes(ctx -> {
                                     com.yongye.system.DifficultyManager.setLevel(ctx.getSource().getServer(),
                                             IntegerArgumentType.getInteger(ctx, "level"));
                                     return 1;
