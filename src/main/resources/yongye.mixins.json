@@ -8,7 +8,9 @@
     "TankDefenseMixin",
     "EntityFlagInvoker",
     "EnderDragonFightAccessor",
-    "MonsterDeathGuardMixin"
+    "MonsterDeathGuardMixin",
+    "SoulboundDropMixin",
+    "SoulboundPickupMixin"
   ],
   "client": [
     "client.HudCompactMixin",

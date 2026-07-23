@@ -2263,3 +2263,37 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **m260 战斗站姿+格挡姿态(作者:「和 Epic Fight 做的像,现在不像」)**:「像不像」的大头=Epic Fight 拿武器有**架势**(待机/格挡都是姿态,不是原版垂手站),攻击动画只是瞬间。补上循环姿态两条:①**战斗站姿** yongye_battle_idle(48t 循环微呼吸:持械臂半举备战+躯干侧身+头部回正,**只动上身——腿不碰,行走跑步照常**);②**格挡姿态** yongye_guard_pose(40t 循环:武器横举胸前双臂交叉护体+缩身,与 m259 格挡联动)。**架构**=SlashAnimManager 加第二动作层(STANCE_ID,优先级 900<挥砍层 1000=攻击瞬间自动盖过站姿)+**站姿状态机 tickStance**(每客户端 tick,只管本地玩家):按住右键+可格挡武器(法杖除外)→格挡姿态 > 手持可出刀光武器→战斗站姿 > 无;切换 4t 快融;YongyeClient 挂 tick 走 m254 同一套 Throwable 降级口径(库炸=站姿静默消失不崩)。循环 emote 格式=isLoop:true+returnTick:0(照库源码字段)。配置+2(slashFxBattleStance/slashFxGuardPose 均默认开),**v57→58**;待编译验证:无新 API(全走 m254 已核面+useKey 与 attackKey 同族字段);实机盯=拿剑站定看备战架势与呼吸感、走跑腿部正常、按住右键看格挡横举、收武器回原版站姿、F3+T 可热调两条 JSON。
 - **m261 法杖无限蓄力·按秒倍增(作者:「法杖右键可以一直右键,按秒数倍数增长」)**:原版蓄力=1.5s 封顶 ×4;改为**想按多久按多久**(getMaxUseTime→72000 弓同款),倍率=**秒数×warlockBoltMultPerSecond(默认 1.0/秒:1s=×1、5s=×5)**,保底 warlockBoltMinMult(手快松也有下限),封顶 warlockBoltMultCap(默认 ×10=按满 10 秒,到顶金字「已满」再按不涨);**每整秒 action bar 播报当前倍率**,吟唱粒子密度随秒数加码、音调按封顶秒数归一渐升;**耗血同步加码**(×(0.4+0.2×秒),封顶 ×3——蓄越久献祭越狠,术士人设一致)。旧 warlockBoltMaxMult/warlockBoltChargeTicks 弃用占位(代码零残引已核)。配置+2,**v58→59**;待编译验证:无新 API。实机盯=按住右键 10 秒看播报 ×1→×10(已满)、松手一炮对比 1 秒松手、观察扣血随秒数变狠。
 - **m262 术士小技能改·暗影分身(作者:「法师小技能改成召唤两个分身,50% 血量、100% 攻击」)**:生命虹吸退场(配置三字段+攻击倍率弃用占位,零残引已核),换**暗影分身**:①新实体 WarlockCloneEntity(照 GanDiEntity 极简化:PathAwareEntity 友军近战锁 HostileEntity,无台词无变体),**属性=召唤瞬间按主人快照 setBaseValue**(血量=主人最大生命×minorWarlockCloneHpRatio 默认 0.5、攻击=主人攻击×AtkRatio 默认 1.0——与肝帝的 addFlat 成长线互不相干,分身是一次性快照),寿命 600t=30 秒到点魂火散场,出生**继承主人当前仇恨目标**(getAttacking),无目标时贴身跟随主人(>12 格追赶);②渲染=玩家模型+**程序化暗紫剪影皮肤**(warlock_clone.png 64×64 宽臂:暗紫剪影+亮紫双眼+胸口符纹,一眼「影分身」,不碰在线皮肤 API 零风险);③注册三件套照 GANDI 模板(ModEntities+FabricDefaultAttributeRegistry+EntityRendererRegistry)+双语 lang;④ClassMinorSkillManager WARLOCK case 重写=环形落位召 2 个+唤魔者召唤音+回执「暗影分身!×2(50%血/100%攻,30秒)」;⑤选职界面术士介绍行同步(【C】暗影分身+法杖按秒倍增)。配置+4(count2/hp0.5/atk1.0/life600),**configVersion 59→60**;**待编译验证 1(低险)**=LivingEntity.getAttacking() 首用(yarn 标准方法);实机盯=术士按 C 看两个暗紫分身落位、F3 悬停核血量=自己一半、分身打怪伤害与自己一刀持平、30 秒魂火散场、无目标时跟人。
+
+## m263 BOSS 出场演出 + 皮肤 BOSS 出场血量拔高(2026-07-23)
+
+作者:「BOSS 出场血量不能太低要高,就是我给皮肤的那几个」+「战斗帅怎么帅怎么来」。
+
+- **出场血量可配并大幅拔高**:五只皮肤 BOSS 的基础血量从硬编码改为配置(属性在实体注册时烘焙,改配置需重启)——阿努比斯 8000→**100万**(anubisBaseHealth)、自建末影龙 500→**60万**、浴火凤凰 650→**40万**、死亡法师 500→**30万**、红蜘蛛 400→**25万**。生成后照旧再吃 MobEnhancement 天数成长 + DynamicScaling 玩家攻击对位(只增不减),后期实际血量远高于此。写法照 GanDi 先例(cfg 在 ModEntities.init 前已 load)。
+- **出场演出**:新 `system/BossEntranceFx`——登场瞬间给 `bossEntranceRange`(48 格)内玩家整屏标题(BOSS 名+「巨物苏醒」副标,颜色随其血条色系)+ 镜头重震/闪光(CombatFxPayload,m239 管线)+ 凋灵吼 + 魂火双螺旋自地面盘升顶端炸开。全在树 API(Title 三件套=CatastropheCoreManager 已编、spawnParticles/playSoundToPlayer 多处已编),**零新 API**。
+- 接入点:五实体 tick 首帧(`entrancePlayed` 旗标;实体 age 不持久化,**区块重载后 BOSS 再次进视野会重演一次**,压迫感有意保留)+ 佩恩 spawnEntity 后。命令召唤同样触发。
+- 配置 +8(enableBossEntrance/bossEntranceRange/bossEntranceShake + 五血量),configVersion 60→**63**(与 m264/m265 三笔合并一次跳版)。
+- 实机盯:`/yongye anubis` 看标题+震屏+魂火螺旋;F3 核血量 100 万;嫌演出频繁关 enableBossEntrance。
+
+## m264 蚀矿·蚀锭(只在被侵蚀的土地上出现)(2026-07-23)
+
+作者:「想做一套夜蚀装备,要在被污染的区域生成蚀矿」。素材=作者 GPT 生成的蚀矿/蚀锭图(1254²),走 m159/m160 proven 管线 LANCZOS 64×64(锭图自带 alpha,按 m179 口径 alpha<45 清毛边)。
+
+- **蚀矿方块** `blight_ore`:strength 5/6 + requiresTool + 微光 5(紫纹发光);**钻石镐起挖**(tags: mineable/pickaxe + needs_diamond_tool,1.21 单数 block 目录);掉自身(loot_table/blocks,survives_explosion);熔炼/高炉 → **蚀锭**(经验 2.0,照原版远古残骸口径「挖块→烧锭」)。
+- **只在夜蚀群系出现,两条路**:①**播种**——NightBlightHandler.blightArea 每转化一个区块播 `blightOreVeinsPerChunk`(2)条矿脉:地下(bottom+8 ~ 地表-6)随机取点,把石头族(石/深板岩/花岗闪长安山/凝灰岩)原地转化成蚀矿,单脉 `blightOreVeinSize`(5)块,落到空气/矿洞就换点重试;②**生长**——每 `blightOreGrowIntervalTicks`(1 分钟)检定,身处侵蚀区的每名玩家按 `blightOreGrowChance`(0.35)在周围 12 格内长 1 块(老侵蚀区也能长新矿,资源可再生)。
+- 命令 `/yongye blight` 造的侵蚀区同样播种(共用 blightArea)。
+- 配置 +4;**待编译验证 1(低险)**=AbstractBlock.Settings.requiresTool() 仓库首用(标准方法)。
+- 实机盯:`/yongye blight 40` 后往地下挖看紫矿;铁镐挖不掉、钻石镐掉;熔炉烧出蚀锭;站侵蚀区里挂 1 分钟看脚边长矿。
+
+## m265 夜蚀套装(灵魂绑定:别人抢不走)(2026-07-23)
+
+作者:「可以做盔甲,别人抢不走」。ArmorMaterial 七参构造 + Registry.registerReference 写法与真实 1.21.1 编译过的模组源码(Kaupenjoe Fabric-Tutorial 17-armor 分支,yarn 1.21.1+build.3)逐字核对;mixin 目标方法全经 yarn 1.21.1 官方 mapping 核实(dropInventory=method_16078 / onPlayerCollision=method_5694 / ItemStack.OPTIONAL_CODEC=field_49266);Fabric 附件持久化经官方源码核实走 RegistryOps,ItemStack 列表可安全存档。
+
+- **材质 BLIGHT**:防 6/12/9/6=33(下界合金 20)、韧性 6、每件击退抗 0.1、耐久系数 45(合金 37)、修复材料蚀锭;穿戴层 `textures/models/armor/blight_layer_{1,2}.png`(程序化:暗钢底噪+紫纹裂隙,原版 UV 布局,靴只画腿区下 5 行、护腿=腰带+腿上 8 行,透明像素不渲染)。
+- **合成**:4 件经典盔甲配方 ×蚀锭;强化系统自动识别(EquipmentEnhancer instanceof ArmorItem 兜底)可无限强化,吃 m237 盔甲强化表(甲 0.3/韧 0.1/血 1.0/耐久 8 每级)。
+- **灵魂绑定三件套**(总开关 blightArmorSoulbound):
+  - **认主**:BlightArmorItem.inventoryTick——未绑定 + 进了玩家背包 → 写 BLIGHT_OWNER 组件("uuid|名字")+ action bar「与你的灵魂缔结了契约」;tooltip 显示主人。
+  - **他人捡不起**:SoulboundPickupMixin 挂 ItemEntity.onPlayerCollision HEAD,带主物品被非主人碰撞直接 cancel(原地留给主人;丢给队友是丢不出去的——这是特性)。
+  - **死亡不掉落**:SoulboundDropMixin 挂 LivingEntity.dropInventory HEAD(instanceof ServerPlayerEntity 门),把带主物品/夜蚀盔甲从背包截走存 SOULBOUND_STASH 附件(persistent+copyOnDeath),Yongye 的 AFTER_RESPAWN 里 offerOrDrop 原样归还+提示;keepInventory 开着时 dropInventory 不会被调,天然兼容。
+- 物品图标 4 张程序化打底(调色板取自蚀锭),作者随时可用 GPT 生图替换 `textures/item/blight_*.png`(64×64,透明底)——**穿戴层那两张勿用 AI 生成**(UV 布局 AI 画不对)。
+- 配置 +1;**待编译验证(集中在盔甲注册,均照真实 1.21.1 源码,低险)**=Registries.ARMOR_MATERIAL / ArmorMaterial 七参构造+Layer / Registry.registerReference / ArmorItem.Type.getMaxDamage / SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE / ItemStack.OPTIONAL_CODEC.listOf() 附件 / 两个 mixin 目标(yarn 已核) / Inventory.size()/setStack(标准)。
+- 实机盯:烧锭合套穿上看穿戴层观感;A 捡起→B 去捡确认捡不动;A 死亡确认装备不掉、重生回背包+紫字提示;强化界面塞头盔确认能强化;tooltip 看「已认主」。

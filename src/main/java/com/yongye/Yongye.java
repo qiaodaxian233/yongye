@@ -65,6 +65,7 @@ public class Yongye implements ModInitializer {
         com.yongye.registry.ModScreens.init();
         ModAttachments.init();
         ModBlocks.init();
+        com.yongye.registry.ModArmorMaterials.init();   // m265 夜蚀盔甲材质(须在 ModItems 之前)
         ModItems.init();
         ModItemGroups.init();
         ModRecipes.init();
@@ -141,6 +142,17 @@ public class Yongye implements ModInitializer {
             newPlayer.setHealth(newPlayer.getMaxHealth());          // 即时尽量回满
             // 兜底:神器/强化护甲/携带武器等生命上限可能晚一两 tick 才应用,开 2 秒满血窗口持续补满
             com.yongye.system.PlayerUpkeepHandler.scheduleRespawnHeal(newPlayer);
+            // m265:归还死亡时截走的灵魂绑定物品(附件 copyOnDeath 已随死亡复制到新玩家)
+            java.util.List<net.minecraft.item.ItemStack> stash =
+                    newPlayer.getAttachedOrElse(com.yongye.registry.ModAttachments.SOULBOUND_STASH, java.util.List.of());
+            if (!stash.isEmpty()) {
+                for (net.minecraft.item.ItemStack s : stash) {
+                    if (!s.isEmpty()) newPlayer.getInventory().offerOrDrop(s.copy());
+                }
+                newPlayer.setAttached(com.yongye.registry.ModAttachments.SOULBOUND_STASH, new java.util.ArrayList<>());
+                newPlayer.sendMessage(net.minecraft.text.Text.literal("【夜蚀】灵魂契约生效——你的夜蚀装备回到了身边")
+                        .formatted(net.minecraft.util.Formatting.LIGHT_PURPLE), false);
+            }
         });
 
         LOGGER.info("[夜蚀] 初始化完成。活到天亮就是胜利。");

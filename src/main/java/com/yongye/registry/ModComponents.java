@@ -53,6 +53,16 @@ public final class ModComponents {
                     .build()
     );
 
+    /** BLIGHT_OWNER(m265):夜蚀盔甲的主人,存 "uuid|名字";非主人无法拾取,死亡不掉落。 */
+    public static final ComponentType<String> BLIGHT_OWNER = Registry.register(
+            Registries.DATA_COMPONENT_TYPE,
+            Identifier.of(Yongye.MOD_ID, "blight_owner"),
+            ComponentType.<String>builder()
+                    .codec(Codec.STRING)
+                    .packetCodec(PacketCodecs.STRING)
+                    .build()
+    );
+
     public static void init() {
         Yongye.LOGGER.info("[夜蚀] 数据组件已注册");
     }

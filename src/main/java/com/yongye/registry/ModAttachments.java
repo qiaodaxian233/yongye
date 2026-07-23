@@ -31,6 +31,15 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "learned_skills"));
 
+    /** SOULBOUND_STASH(m265):死亡瞬间从掉落流程截走的灵魂绑定物品,重生归还后清空。
+     *  Fabric 附件持久化用 RegistryOps 编解码(官方源码已核),ItemStack 列表可安全存档。 */
+    public static final AttachmentType<java.util.List<net.minecraft.item.ItemStack>> SOULBOUND_STASH =
+            AttachmentRegistry.<java.util.List<net.minecraft.item.ItemStack>>builder()
+                    .persistent(net.minecraft.item.ItemStack.OPTIONAL_CODEC.listOf())
+                    .initializer(java.util.ArrayList::new)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "soulbound_stash"));
+
     /** LEARNED_CLASSES: 玩家已学职业(有序,最多2),按学习顺序;槽位等级门控。 */
     public static final AttachmentType<java.util.List<String>> LEARNED_CLASSES =
             AttachmentRegistry.<java.util.List<String>>builder()

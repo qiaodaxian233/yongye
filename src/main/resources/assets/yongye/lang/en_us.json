@@ -1,6 +1,12 @@
 {
   "itemGroup.yongye.general": "NightBlight",
   "block.yongye.catastrophe_core": "Catastrophe Core",
+  "block.yongye.blight_ore": "Blight Ore",
+  "item.yongye.blight_ingot": "Blight Ingot",
+  "item.yongye.blight_helmet": "Blight Helmet",
+  "item.yongye.blight_chestplate": "Blight Chestplate",
+  "item.yongye.blight_leggings": "Blight Leggings",
+  "item.yongye.blight_boots": "Blight Boots",
   "item.yongye.health_skill_book": "Health Skill Book",
   "item.yongye.life_shard": "Life Shard",
   "item.yongye.life_crystal": "Life Crystal",

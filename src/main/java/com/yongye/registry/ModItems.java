@@ -13,6 +13,7 @@ import com.yongye.item.HealthSkillBookItem;
 import com.yongye.item.SkillBookItem;
 import com.yongye.item.WardBookItem;
 import com.yongye.item.SkillType;
+import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.util.Rarity;
 import net.minecraft.registry.Registries;
@@ -60,6 +61,22 @@ public final class ModItems {
     public static final Item RIFT_FRAGMENT         = register("rift_fragment", new Item(new Item.Settings()));
     public static final Item ABYSS_SOUL_CRYSTAL    = register("abyss_soul_crystal", new Item(new Item.Settings()));
     public static final Item ENDING_ESSENCE        = register("ending_essence", new Item(new Item.Settings()));
+    /** 蚀锭(m264):蚀矿熔炼所得,夜蚀套装的合成材料。 */
+    public static final Item BLIGHT_INGOT          = register("blight_ingot", new Item(new Item.Settings().rarity(Rarity.RARE)));
+
+    // —— 夜蚀套装(m265):蚀锭打造,灵魂绑定(认主/他人捡不起/死亡不掉),耐久系数 45 > 下界合金 37 ——
+    public static final Item BLIGHT_HELMET = register("blight_helmet",
+            new com.yongye.item.BlightArmorItem(ModArmorMaterials.BLIGHT, ArmorItem.Type.HELMET,
+                    new Item.Settings().maxDamage(ArmorItem.Type.HELMET.getMaxDamage(45)).rarity(Rarity.EPIC)));
+    public static final Item BLIGHT_CHESTPLATE = register("blight_chestplate",
+            new com.yongye.item.BlightArmorItem(ModArmorMaterials.BLIGHT, ArmorItem.Type.CHESTPLATE,
+                    new Item.Settings().maxDamage(ArmorItem.Type.CHESTPLATE.getMaxDamage(45)).rarity(Rarity.EPIC)));
+    public static final Item BLIGHT_LEGGINGS = register("blight_leggings",
+            new com.yongye.item.BlightArmorItem(ModArmorMaterials.BLIGHT, ArmorItem.Type.LEGGINGS,
+                    new Item.Settings().maxDamage(ArmorItem.Type.LEGGINGS.getMaxDamage(45)).rarity(Rarity.EPIC)));
+    public static final Item BLIGHT_BOOTS = register("blight_boots",
+            new com.yongye.item.BlightArmorItem(ModArmorMaterials.BLIGHT, ArmorItem.Type.BOOTS,
+                    new Item.Settings().maxDamage(ArmorItem.Type.BOOTS.getMaxDamage(45)).rarity(Rarity.EPIC)));
 
     // —— 背包神器(文档第 14 章)——
     private static final Map<ArtifactType, Item> ARTIFACTS = new EnumMap<>(ArtifactType.class);
