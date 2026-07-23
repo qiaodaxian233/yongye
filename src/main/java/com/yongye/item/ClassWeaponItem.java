@@ -251,8 +251,9 @@ public class ClassWeaponItem extends Item {
             Vec3d hpos = hit.getPos().add(0, 1.0, 0);
             sw.spawnParticles(ParticleTypes.SOUL, hpos.x, hpos.y, hpos.z, 12, 0.4, 0.4, 0.4, 0.05);
             sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, hpos.x, hpos.y, hpos.z, 8, 0.3, 0.3, 0.3, 0.02);
+            // m261 补:旧 0~1 蓄力量 charge 已改为按秒倍率 mult,音调改用「倍率/封顶」映射回 0~1(蓄越满音越尖)
             world.playSound(null, hit.getBlockPos(), SoundEvents.ENTITY_BLAZE_HURT,
-                    SoundCategory.PLAYERS, 1.0f, 0.7f + charge * 0.5f);
+                    SoundCategory.PLAYERS, 1.0f, 0.7f + (float) (mult / Math.max(1.0, cfg.warlockBoltMultCap)) * 0.5f);
             p.sendMessage(Text.literal(String.format("魔法弹命中!%.1f伤害(×%.1f) / 耗%.1f血", damage, mult, hpCost))
                     .formatted(Formatting.LIGHT_PURPLE), true);
         } else {
