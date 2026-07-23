@@ -2325,3 +2325,21 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **自建末影龙**:①龙息射线(28 格直线龙息,命中+缓速 II);②俯冲冲撞(6~30 格锁定,FlightMoveControl 3.0 速档压上 2 秒,贴近 5 格撞击:45 伤+2.0 击退+龙火爆音);③**重力撕裂**(一次性):血量跌破 40%,24 格内玩家漂浮 III 3 秒被掀上天+20 伤+龙息粒子+全服播报(摔落交给重力)。
 - 数值口径:技能伤害是固定基础值(不吃天数成长),BOSS 压迫感主要来自 m263 的百万级血量+属性成长,技能负责"帅"和逼走位;嫌疼/嫌轻改对应 cfg。
 - **待编译验证(低险)**:粒子 SONIC_BOOM/DRAGON_BREATH/ITEM_SLIME/EXPLOSION_EMITTER/CLOUD、音效 ENTITY_WARDEN_SONIC_BOOM/ENTITY_BLAZE_SHOOT/ENTITY_ENDERMAN_TELEPORT/ENTITY_RAVAGER_ROAR·STEP/ENTITY_ENDER_DRAGON_SHOOT·GROWL/ENTITY_DRAGON_FIREBALL_EXPLODE/ENTITY_SPIDER_AMBIENT·STEP/ITEM_FIRECHARGE_USE(注册表常量自动命名,全是普通 SoundEvent 档,刻意避开 RegistryEntry 型的 GENERIC_EXPLODE);setFireTicks/setInvulnerable/addVelocity/heal/tryAttack/velocityModified/hurtTime 全 yarn 已核。
+
+## m269 完美格挡·弹反(2026-07-23)
+
+作者:「继续优化战斗系统」+ 常设方针「怎么帅怎么来」。在 m259 格挡地基上加 Sekiro 口径的精准弹反。
+
+- **判定**:右键**起手举盾的头 6 tick(0.3 秒)** 内接住任意可挡攻击 = 完美格挡。关键防蹭设计:右键心跳续期**不刷新**起手时刻——按住不放蹭不出弹反,必须掐着对方出手节奏放下重举(raiseTick 只在 `now >= guardUntil` 的全新起手时记录)。
+- **奖励**:①伤害全免且**不耗格挡值**(连本该破防的重击也能弹开——弹反判定排在破防判定之前);②6 格内的近身攻击者吃**反噬**(被挡伤害×parryReflectFraction,保底自己一刀攻击力,先清无敌帧)+ 被弹开(takeKnockback 1.6,传向语义同 ChargeSlashHandler 先例)+ 缓速III/虚弱II 2 秒硬直;③自身获**力量II+速度I** 3 秒反击窗口(纯原版效果零新管线);④演出=烟花火花+末地烛白光爆点、盾击高音+铁砧金铁交鸣、客户端重震+闪光+确认音(CombatFxPayload HEAVY)、金色粗体「完美格挡!弹反!」。
+- 远程箭矢同样可弹(全免不耗值),只是射手在 6 格外不吃反噬。配置 +4(enableParry/parryWindowTicks/parryReflectFraction/parryBuffTicks)。
+- 全在树 API 零新符号(STRENGTH/SPEED/WEAKNESS 与已编译的 SLOWNESS 同族常量)。
+
+## m270 处决斩杀(2026-07-23)
+
+- **规则**:玩家**直接近战**(source.getSource()==getAttacker(),弓/魔法/召唤物不触发)把敌对怪打到「落刀后仍活但剩血 ≤12%」→ 这一刀升格处决:魂柱冲天+暴击粒子雨+横扫月牙+利刃终结音,当场毙命,深红粗体「处决!」。
+- **豁免**:最大血量 ≥5 万(m263 后 BOSS 全在 25 万+)或凋灵——BOSS 该一刀一刀磨,处决只负责清小怪爽;本来这刀就致死的不抢戏,交还原版。
+- **实现**:ALLOW_DAMAGE 预判 → 取消原伤害 → 清无敌帧 → REENTRY 旗标下补一记玩家名义 1e7 致死刀(坦克折减重放同款嵌套模式)——走真实伤害管线,掉落/经验/击杀归属/m239 击杀闪光确认音全部自然触发,零重复演出。注册位=格挡后、打击感前。
+- 配置 +3(enableExecute/executeThresholdFraction/executeBossHpExempt),两笔合并 **configVersion 64→65**。
+- **待编译验证 0**:全部符号在树已编(HostileEntity/WitherEntity(entity.boss 包,BossHandler 先例)/takeKnockback/timeUntilRegen/playerAttack/SWEEP_ATTACK 粒子=原版横扫月牙)。
+- 实机盯:①掐点右键格挡骷髅箭/僵尸拳看金字弹反、怪被弹飞、自己 3 秒力量;②按住右键不放确认蹭不出弹反只出普通格挡;③把僵尸打到残血看「处决!」魂柱一刀收;④打 BOSS 确认不触发处决。

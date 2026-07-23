@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 64;
+    public static final int CURRENT_CONFIG_VERSION = 65;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -1022,6 +1022,24 @@ public class YongyeConfig {
     public int guardHoldTicks = 8;
     /** 正面判定:攻击者方向与视线的点积下限(0.15≈只挡前方约 160° 扇面,背刺挡不住)。 */
     public double guardFrontalDot = 0.15;
+
+    // ============ m269:完美格挡·弹反 ============
+    /** 完美格挡开关:起手瞬间接住攻击 → 全免不耗格挡值+反噬+弹开攻击者+反击强化。 */
+    public boolean enableParry = true;
+    /** 弹反判定窗口(tick,6=0.3 秒;心跳续期不刷新,按住不放蹭不出来)。 */
+    public int parryWindowTicks = 6;
+    /** 反噬伤害=被挡伤害×此比例(保底自己一刀的攻击力;只反 6 格内的近身攻击者)。 */
+    public double parryReflectFraction = 1.0;
+    /** 弹反成功后自身反击强化时长(tick,60=3 秒力量II+速度I)。 */
+    public int parryBuffTicks = 60;
+
+    // ============ m270:处决斩杀 ============
+    /** 处决开关:近战把敌对怪打进斩杀线 → 这刀直接终结(魂柱+暴击雨+终结音)。 */
+    public boolean enableExecute = true;
+    /** 斩杀线:剩余血量 ≤ 最大血量×此比例即触发。 */
+    public double executeThresholdFraction = 0.12;
+    /** 最大血量 ≥ 此值的目标豁免处决(BOSS 该一刀一刀磨;m263 后 BOSS 全在 25 万+)。 */
+    public double executeBossHpExempt = 50000.0;
 
     // —— m258 空中回旋斩范围伤害(七式之四不再纯视觉:转一圈扫一圈) ——
     /** 空中回旋斩范围伤害总开关。 */

@@ -38,6 +38,9 @@ import java.util.UUID;
  *  - 破防:这一下伤害 ≥ 剩余格挡值 → 被击穿:该击**全额命中**、格挡值清零、guardBreakRecoverTicks(默认 5 秒)
  *    内无法再格挡(红字「破防!」+碎裂声+缓慢 II 硬直),期满格挡值直接回满;
  *  - 回复:未破防时,距上次挡下超过 guardRegenDelayTicks 后,每秒回 上限×guardRegenFractionPerSec。
+ *  - m269 完美格挡·弹反:起手 parryWindowTicks(默认 6t=0.3s)内接住任意可挡攻击 → 全免不耗值,
+ *    近身攻击者吃反噬伤害+被弹开硬直(缓速III+虚弱II),自身获力量II+速度I反击窗口;
+ *    心跳续期不刷新起手时刻——按住不放蹭不出弹反,必须掐点重举。
  * 事件顺序(注册位置=CombatFxHandler 之前):外来伤害过滤/职业受击(坦克真减伤)先行,本格挡后审——
  * 坦克重放的折减伤害会被本格挡正常接住(挡的是减免后的量,不双扣);挡下的伤害不触发攻击者打击感。
  */
@@ -47,6 +50,7 @@ public final class WeaponGuardHandler {
     private static final class Guard {
         double gauge = -1;      // -1=未初始化(首次用时按上限初始化)
         long guardUntil;        // 举盾有效期(每次右键心跳续期)
+        long raiseTick = Long.MIN_VALUE; // m269:本次「起手举盾」时刻(心跳续期不刷新——想再弹反必须放下重举)
         long brokenUntil;       // >now=破防硬直中
         long lastBlockTick;     // 上次挡下的时刻(回复延迟基准)
     }
@@ -73,6 +77,7 @@ public final class WeaponGuardHandler {
                         .formatted(Formatting.RED), true);
                 return TypedActionResult.pass(stack);
             }
+            if (now >= g.guardUntil) g.raiseTick = now;   // m269:非心跳续期=全新起手
             g.guardUntil = now + Math.max(2, cfg.guardHoldTicks);
             p.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 10, 0)); // 举盾负重
             p.sendMessage(gaugeBar(g.gauge, maxGauge(p, cfg), Formatting.AQUA), true);
@@ -95,6 +100,39 @@ public final class WeaponGuardHandler {
                 Vec3d look = p.getRotationVector();
                 Vec3d lookH = new Vec3d(look.x, 0, look.z).normalize();
                 if (lookH.dotProduct(toH.normalize()) < cfg.guardFrontalDot) return true; // 背后/侧后挡不住
+            }
+
+            // —— m269 完美格挡·弹反:起手 parryWindowTicks 内接住的攻击(哪怕本该破防)——
+            // 全免+不耗格挡值+反噬伤害+弹开硬直攻击者+自身获反击强化。奖励精准时机,Sekiro 口径。
+            if (cfg.enableParry && now - g.raiseTick <= Math.max(1, cfg.parryWindowTicks)) {
+                g.lastBlockTick = now;   // 只作回复延迟基准,不扣值
+                if (p.getWorld() instanceof ServerWorld sw) {
+                    Vec3d front = p.getPos().add(p.getRotationVector().multiply(0.9)).add(0, 1.3, 0);
+                    sw.spawnParticles(ParticleTypes.FIREWORK, front.x, front.y, front.z, 16, 0.3, 0.3, 0.3, 0.12);
+                    sw.spawnParticles(ParticleTypes.END_ROD,  front.x, front.y, front.z, 10, 0.25, 0.25, 0.25, 0.08);
+                    sw.playSound(null, p.getX(), p.getY(), p.getZ(),
+                            SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.PLAYERS, 1.0f, 1.6f);
+                    sw.playSound(null, p.getX(), p.getY(), p.getZ(),
+                            SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 0.6f, 1.9f); // 金铁交鸣
+                    if (attacker instanceof net.minecraft.entity.LivingEntity le && le.isAlive()
+                            && le.squaredDistanceTo(p) <= 6.0 * 6.0) {
+                        // 反噬:挡回的力道×比例,保底自己一刀的攻击力;先清无敌帧保证吃满
+                        double atk = p.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE);
+                        float reflect = (float) Math.max(atk, amount * Math.max(0.0, cfg.parryReflectFraction));
+                        le.timeUntilRegen = 0;
+                        le.damage(sw.getDamageSources().playerAttack(p), reflect);
+                        Vec3d away = le.getPos().subtract(p.getPos());
+                        le.takeKnockback(1.6, -away.x, -away.z);   // 注意 takeKnockback 语义:朝参数反方向飞 → 传负值=弹离玩家
+                        le.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 2));
+                        le.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 40, 1));
+                    }
+                }
+                int buff = Math.max(20, cfg.parryBuffTicks);
+                p.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, buff, 1)); // 力量II反击窗口
+                p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, buff, 0));
+                ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HEAVY, 1.1f, 2.2f, true, true));
+                p.sendMessage(Text.literal("完美格挡!弹反!").formatted(Formatting.GOLD, Formatting.BOLD), true);
+                return false;
             }
 
             if (amount < g.gauge) {
