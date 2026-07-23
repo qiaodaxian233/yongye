@@ -31,6 +31,9 @@ public final class SlashAnimManager {
 
     /** 动作层与关联数据的键。 */
     private static final Identifier LAYER_ID = Identifier.of(Yongye.MOD_ID, "slash_anim");
+    /** m260:站姿层(战斗待机/格挡姿态,循环动画;优先级低于挥砍层,攻击瞬间自动被盖过)。 */
+    private static final Identifier STANCE_ID = Identifier.of(Yongye.MOD_ID, "stance_anim");
+    private static int stanceState = 0; // 0=无 1=战斗站姿 2=格挡姿态(本地玩家)
 
     /** 式号(与 SlashFxManager 的 variant 对齐)→ 动画名:0~3 地面连击 / 4 空中回旋 / 5 疾跑突刺 / 6 潜行居合。 */
     private static final String[] VARIANT_ANIM = {
@@ -42,7 +45,37 @@ public final class SlashAnimManager {
     public static void register() {
         PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(LAYER_ID, 1000,
                 player -> new ModifierLayer<IAnimation>());
+        PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(STANCE_ID, 900,
+                player -> new ModifierLayer<IAnimation>()); // m260 站姿层(900<1000,挥砍盖站姿)
         Yongye.LOGGER.info("[夜蚀] 真·拔刀动作库已桥接(player-animator)");
+    }
+
+    /**
+     * m260 站姿状态机(每客户端 tick,只管本地玩家;Epic Fight 感的核心=拿武器有架势):
+     *  格挡姿态(按住右键+持可格挡武器,法杖除外)> 战斗站姿(手持可出刀光武器)> 无。
+     *  状态切换用 4t 快融;循环动画只动 臂/躯干/头,腿不碰=行走跑步照常。
+     */
+    public static void tickStance(net.minecraft.client.MinecraftClient mc) {
+        YongyeConfig cfg = YongyeConfig.get();
+        var p = mc.player;
+        int want = 0;
+        if (p != null && mc.currentScreen == null && SlashFxManager.weaponEligible(p)) {
+            boolean staff = p.getMainHandStack().getItem() instanceof com.yongye.item.ClassWeaponItem cwi
+                    && cwi.playerClass == com.yongye.item.PlayerClass.WARLOCK;
+            if (cfg.slashFxGuardPose && cfg.enableWeaponGuard && !staff && mc.options.useKey.isPressed()) want = 2;
+            else if (cfg.slashFxBattleStance && !p.isUsingItem()) want = 1;
+        }
+        if (want == stanceState) return;
+        stanceState = want;
+        if (p == null) return;
+        var data = PlayerAnimationAccess.getPlayerAssociatedData(p).get(STANCE_ID);
+        if (!(data instanceof ModifierLayer)) return;
+        @SuppressWarnings("unchecked")
+        ModifierLayer<IAnimation> layer = (ModifierLayer<IAnimation>) data;
+        String name = want == 2 ? "yongye_guard_pose" : want == 1 ? "yongye_battle_idle" : null;
+        var playable = name == null ? null : PlayerAnimationRegistry.getAnimation(Identifier.of(Yongye.MOD_ID, name));
+        layer.replaceAnimationWithFade(AbstractFadeModifier.standardFadeIn(4, Ease.INOUTSINE),
+                playable == null ? null : playable.playAnimation(), true);
     }
 
     /**

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 57;
+    public static final int CURRENT_CONFIG_VERSION = 60;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -464,11 +464,17 @@ public class YongyeConfig {
     public double warlockAoeDamage = 8.0;
     // 术士法术弹(右键蓄力施法)
     public double warlockBoltDamage   = 18.0;         // (旧)固定基础伤害,现作保底:伤害取 max(攻击力×倍率, 此值×倍率)
-    public double warlockBoltMinMult  = 0.5;          // 最低蓄力(刚够触发)= 攻击力 × 此倍率
-    public double warlockBoltMaxMult  = 4.0;          // 满蓄力 = 攻击力 × 此倍率(蓄力越久越接近)
-    public double warlockBoltHpCost   = 3.0;          // 满蓄力耗血(min蓄=×0.4)
+    public double warlockBoltMinMult  = 0.5;          // 保底倍率(手快松也有下限)= 攻击力 × 此倍率
+    /** m261 起弃用:蓄力改按秒数线性增长(见 warlockBoltMultPerSecond/Cap),此字段不再被读取,保留占位。 */
+    public double warlockBoltMaxMult  = 4.0;
+    public double warlockBoltHpCost   = 3.0;          // 基准耗血(实际=×(0.4+0.2×蓄力秒数),封顶×3——蓄越久献祭越狠)
     public double warlockBoltRange    = 20.0;         // 射线最大射程(格)
-    public int    warlockBoltChargeTicks = 30;        // 满蓄力所需 tick(默认1.5s)
+    /** m261 起弃用:不再有固定满蓄时长(可无限按住),保留占位。 */
+    public int    warlockBoltChargeTicks = 30;
+    /** m261:每按住 1 秒,伤害倍率 +此值(默认 1.0:1 秒=×1、5 秒=×5)。 */
+    public double warlockBoltMultPerSecond = 1.0;
+    /** m261:倍率封顶(默认 ×10=按满 10 秒;到顶金字提示,再按不涨)。 */
+    public double warlockBoltMultCap = 10.0;
     // 武僧
     public int monkComboWindowTicks = 40;
     public double monkComboBonusPerHit = 1.0;
@@ -858,9 +864,19 @@ public class YongyeConfig {
     public double minorWarriorRadius = 6.0;
     public int minorWarriorDurationTicks = 100;
     /** 术士·生命虹吸:半径 / 伤害 / 每命中回血。 */
+    /** m262 起弃用(小技能已改「暗影分身」):虹吸三字段不再被读取,保留占位。 */
     public double minorWarlockRadius = 4.0;
     public double minorWarlockDamage = 8.0;
     public double minorWarlockHealPerHit = 2.0;
+    // —— m262 术士小技能·暗影分身(替换生命虹吸;按主人快照) ——
+    /** 召唤分身数量。 */
+    public int minorWarlockCloneCount = 2;
+    /** 分身血量=主人最大生命×此比例。 */
+    public double minorWarlockCloneHpRatio = 0.5;
+    /** 分身攻击=主人攻击×此比例。 */
+    public double minorWarlockCloneAtkRatio = 1.0;
+    /** 分身寿命(tick,600=30 秒,到点魂火散场)。 */
+    public int minorWarlockCloneLifeTicks = 600;
     /** 剑客·剑气斩:前方剑气距离 / 伤害。 */
     public double minorSwordsmanRange = 6.0;
     public double minorSwordsmanDamage = 8.0;
@@ -887,7 +903,7 @@ public class YongyeConfig {
     public double ultWarlockAttackRatio   = 3.0;
     public double ultMonkAttackRatio      = 1.5;
     public double ultSwordsmanAttackRatio = 2.5;
-    /** 小技能:盾击 / 生命虹吸 / 剑气斩 的攻击倍率。 */
+    /** 小技能:盾击 / 剑气斩 的攻击倍率(minorWarlockAttackRatio 自 m262 弃用——虹吸已改分身,保留占位)。 */
     public double minorTankAttackRatio      = 0.5;
     public double minorWarlockAttackRatio   = 0.8;
     public double minorSwordsmanAttackRatio = 1.0;
@@ -974,6 +990,10 @@ public class YongyeConfig {
      *  开=本地玩家挥砍播放七式真动作(程序化姿态自动让位);关=回 m243 程序化姿态。动作 JSON 在
      *  assets/yongye/player_animations/,游戏内 F3+T 重载资源即可热调参。 */
     public boolean slashFxAnimLib = true;
+    /** m260:持械战斗站姿(Epic Fight 感:手持武器=备战架势循环动画,只动上身不影响走跑)。 */
+    public boolean slashFxBattleStance = true;
+    /** m260:格挡姿态(按住右键格挡时武器横举护体的循环动画;法杖不参与)。 */
+    public boolean slashFxGuardPose = true;
     /** 第三人称拔刀姿态幅度倍率(m248,0.3~2.5 生效钳制;1=旧版幅度,默认 1.35 更夸张跟手,嫌浮夸调回 1)。 */
     public double slashFxPoseScale = 1.35;
     /** m256:贴图化刀光(拉丝质感刀身+旧纯色带降档当辉光,学 EpicACG 路线);关=回纯色刀光。 */

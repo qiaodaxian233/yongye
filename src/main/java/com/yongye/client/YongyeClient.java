@@ -136,6 +136,16 @@ public class YongyeClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
         // m257 蓄力重斩:按住攻击键蓄力检测(手感反馈+松开上报)
         ClientTickEvents.END_CLIENT_TICK.register(ChargeSlashManager::tick);
+        // m260 站姿状态机(战斗待机/格挡姿态):库不可用时同一套降级口径
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (!SlashFxManager.animLibOk) return;
+            try {
+                SlashAnimManager.tickStance(client);
+            } catch (Throwable t) {
+                SlashFxManager.animLibOk = false;
+                Yongye.LOGGER.warn("[夜蚀] 站姿动画运行期不可用,已降级", t);
+            }
+        });
         // 地面魔法阵特效(m246,法师技能包素材)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.MagicFxPayload.ID, (payload, context) ->
                 context.client().execute(() -> MagicCircleFxManager.onCircle(
@@ -397,6 +407,8 @@ public class YongyeClient implements ClientModInitializer {
         // 【m223】肝帝渲染器(玩家模型+模组皮肤)
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
                 com.yongye.registry.ModEntities.GANDI, GanDiRenderer::new);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                com.yongye.registry.ModEntities.WARLOCK_CLONE, WarlockCloneRenderer::new); // m262 术士分身
 
         // 【m211】武器随强化等级动态染色:≤起始级(默认100)=纯黑白,越高越鲜艳,封顶级(默认2500)=正红;
         // 色相路径 200°(冰蓝)→360°(正红),刻意绕开绿/黄(作者点名不要)。贴图是 m210 黑白版,

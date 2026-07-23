@@ -99,5 +99,6 @@
   "item.yongye.loot_crate_normal": "战利品宝箱·普通",
   "item.yongye.loot_crate_rare": "战利品宝箱·稀有",
   "item.yongye.loot_crate_epic": "战利品宝箱·史诗",
-  "item.yongye.loot_crate_legendary": "战利品宝箱·传说"
+  "item.yongye.loot_crate_legendary": "战利品宝箱·传说",
+  "entity.yongye.warlock_clone": "术士·暗影分身"
 }

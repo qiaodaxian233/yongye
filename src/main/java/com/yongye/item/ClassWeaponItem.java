@@ -147,10 +147,11 @@ public class ClassWeaponItem extends Item {
         return TypedActionResult.consume(user.getStackInHand(hand));
     }
 
-    /** 最长蓄力时间(tick);原版按此计算蓄力进度 0→1 */
+    /** 最长蓄力时间(tick)。m261:作者「可以一直右键,按秒数倍数增长」——放开到弓同款 72000(1 小时),
+     *  想蓄多久蓄多久,倍率封顶后只是不再涨;松手才发射。 */
     @Override
     public int getMaxUseTime(ItemStack stack, LivingEntity user) {  // 【待编译验证】是否需要 LivingEntity 参
-        return YongyeConfig.get().warlockBoltChargeTicks * 3; // 给足余量,实际松手即触发
+        return 72000;
     }
 
     /** 使用动作外观:BOW(举臂拉弓姿势,最贴合蓄力吟唱) */
@@ -164,19 +165,31 @@ public class ClassWeaponItem extends Item {
     public void usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {  // 【待编译验证】
         if (world.isClient || !(user instanceof ServerPlayerEntity p)) return;
         int used = getMaxUseTime(stack, user) - remainingUseTicks;
+        YongyeConfig cfg = YongyeConfig.get();
         if (used > 0 && used % 8 == 0) {
-            // 身周灵魂火粒子(吟唱感)
+            // 身周灵魂火粒子(吟唱感,粒子密度随秒数加码)
             if (world instanceof ServerWorld sw) {
                 Vec3d pos = p.getPos().add(0, 1.0, 0);
                 double angle = (used * 0.4) % (Math.PI * 2);
                 double ox = Math.sin(angle) * 0.8;
                 double oz = Math.cos(angle) * 0.8;
-                sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, pos.x + ox, pos.y, pos.z + oz, 2, 0.1, 0.1, 0.1, 0.02);
+                int n = 2 + Math.min(6, used / 40);
+                sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, pos.x + ox, pos.y, pos.z + oz, n, 0.1, 0.1, 0.1, 0.02);
             }
-            // 渐强吟唱音效(pitch 随蓄力提升)
-            float progress = Math.min(1.0f, used / (float) YongyeConfig.get().warlockBoltChargeTicks);
+            // 渐强吟唱音效(pitch 随蓄力提升,按封顶秒数归一)
+            double capSec = Math.max(1.0, cfg.warlockBoltMultCap / Math.max(0.01, cfg.warlockBoltMultPerSecond));
+            float progress = (float) Math.min(1.0, (used / 20.0) / capSec);
             world.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_ENDERMAN_AMBIENT,
                     SoundCategory.PLAYERS, 0.3f, 0.8f + progress * 0.5f);
+        }
+        // m261:每整秒播报当前倍率(action bar),封顶时金字提示
+        if (used > 0 && used % 20 == 0) {
+            double sec = used / 20.0;
+            double mult = Math.min(cfg.warlockBoltMultCap,
+                    Math.max(cfg.warlockBoltMinMult, sec * cfg.warlockBoltMultPerSecond));
+            boolean capped = mult >= cfg.warlockBoltMultCap - 1.0e-6;
+            p.sendMessage(Text.literal("魔弹蓄力 ×" + String.format("%.1f", mult) + (capped ? "(已满)" : ""))
+                    .formatted(capped ? Formatting.GOLD : Formatting.LIGHT_PURPLE), true);
         }
     }
 
@@ -192,13 +205,15 @@ public class ClassWeaponItem extends Item {
         int used = getMaxUseTime(stack, user) - remainingUseTicks;
         if (used < 5) return; // 蓄力不足0.25s:无效
 
-        float charge = Math.min(1.0f, used / (float) cfg.warlockBoltChargeTicks);
-        // 蓄力倍率:minMult → maxMult 随蓄力线性提升(满蓄力=攻击力×maxMult,默认4倍)
-        double mult = cfg.warlockBoltMinMult + charge * (cfg.warlockBoltMaxMult - cfg.warlockBoltMinMult);
+        // m261:作者「按秒数倍数增长」——倍率 = 秒数 × 每秒增量(默认 1.0/秒:1s=×1、5s=×5),
+        // 保底 warlockBoltMinMult(手快松也有下限),封顶 warlockBoltMultCap(默认 ×10);耗血随秒数同步加码。
+        double sec = used / 20.0;
+        double mult = Math.min(cfg.warlockBoltMultCap,
+                Math.max(cfg.warlockBoltMinMult, sec * cfg.warlockBoltMultPerSecond));
         double atk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
         // 伤害 = 攻击力 × 倍率(保底用配置基础值,防裸装攻击力过低)
         float damage = (float) (Math.max(atk, cfg.warlockBoltDamage) * mult);
-        float hpCost = (float) (cfg.warlockBoltHpCost * (0.4 + charge * 0.6)); // 耗血仍按 0.4→1.0
+        float hpCost = (float) (cfg.warlockBoltHpCost * Math.min(3.0, 0.4 + sec * 0.2)); // 蓄越久耗血越狠,封顶 ×3
         boolean hasWeapon = ClassWeaponItem.held(p, PlayerClass.WARLOCK);
         if (hasWeapon) { damage *= 1.2f; hpCost *= 0.8f; } // 专属武器加成
 

@@ -1,0 +1,88 @@
+{
+ "version": 3,
+ "name": "yongye_battle_idle",
+ "author": "yongye",
+ "description": "持械战斗站姿(循环微呼吸)",
+ "emote": {
+  "isLoop": true,
+  "returnTick": 0,
+  "beginTick": 0,
+  "endTick": 48,
+  "stopTick": 48,
+  "degrees": true,
+  "moves": [
+   {
+    "tick": 0,
+    "easing": "EASEINOUTQUAD",
+    "torso": {
+     "pitch": 3,
+     "yaw": 14,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -2,
+     "yaw": -11,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -52,
+     "yaw": -14,
+     "roll": 8
+    },
+    "leftArm": {
+     "pitch": -14,
+     "yaw": 10,
+     "roll": -10
+    }
+   },
+   {
+    "tick": 24,
+    "easing": "EASEINOUTQUAD",
+    "torso": {
+     "pitch": 4.5,
+     "yaw": 15,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -2.5,
+     "yaw": -12,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -56,
+     "yaw": -15,
+     "roll": 9
+    },
+    "leftArm": {
+     "pitch": -16,
+     "yaw": 11,
+     "roll": -11
+    }
+   },
+   {
+    "tick": 48,
+    "easing": "EASEINOUTQUAD",
+    "torso": {
+     "pitch": 3,
+     "yaw": 14,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -2,
+     "yaw": -11,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -52,
+     "yaw": -14,
+     "roll": 8
+    },
+    "leftArm": {
+     "pitch": -14,
+     "yaw": 10,
+     "roll": -10
+    }
+   }
+  ]
+ }
+}

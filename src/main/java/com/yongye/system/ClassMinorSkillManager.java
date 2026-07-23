@@ -34,7 +34,7 @@ import java.util.UUID;
  * 七职业小技能:
  *  肉盾·盾击   = 周身小范围重击+击退+缓慢(自带控制的小输出)
  *  战士·战吼   = 震慑周围(虚弱+缓慢),自身短时力量
- *  术士·生命虹吸 = 小范围魔法伤害,按命中数回血(与大招「耗血」互补)
+ *  术士·暗影分身(m262,原生命虹吸) = 召唤 2 个分身(主人 50% 血 / 100% 攻,30 秒)
  *  剑客·剑气斩  = 前方短距剑气(万剑归一的迷你版)
  *  武僧·金钟罩  = 短时抗性II+回复(防御脉冲)
  *  刺客·疾影步  = 向前猛冲+短暂加速(服务端改速度必须发同步包,客户端权威)
@@ -100,11 +100,23 @@ public final class ClassMinorSkillManager {
                 msg(p, "战吼!震慑 " + n + " 个目标,自身力量提升", Formatting.AQUA);
             }
             case WARLOCK -> {
-                // 生命虹吸:小范围魔法伤害,按命中数回血
-                int hit = aoe(p, sw, sw.getDamageSources().magic(), cfg.minorWarlockRadius, (float) (cfg.minorWarlockDamage + atk(p) * cfg.minorWarlockAttackRatio), null);
-                if (hit > 0) p.heal((float) (hit * cfg.minorWarlockHealPerHit));
-                burst(sw, p, ParticleTypes.WITCH, SoundEvents.ENTITY_EVOKER_CAST_SPELL);
-                msg(p, "生命虹吸!汲取 " + hit + " 个目标的生命", Formatting.AQUA);
+                // m262:改「暗影分身」(作者点名替换生命虹吸)——召唤 N 个分身,
+                // 血量=主人×50%、攻击=主人×100%(快照,均可配),寿命 30 秒,出生继承主人当前仇恨目标。
+                int count = Math.max(1, cfg.minorWarlockCloneCount);
+                var target = p.getAttacking() instanceof net.minecraft.entity.LivingEntity t && t.isAlive() ? t : null;
+                int spawned = 0;
+                for (int i = 0; i < count; i++) {
+                    double ang = Math.PI * 2 * i / count + 0.8;
+                    var clone = new com.yongye.entity.WarlockCloneEntity(
+                            com.yongye.registry.ModEntities.WARLOCK_CLONE, sw);
+                    clone.refreshPositionAndAngles(p.getX() + Math.cos(ang) * 1.6, p.getY(),
+                            p.getZ() + Math.sin(ang) * 1.6, p.getYaw(), 0);
+                    clone.snapshotFrom(p);
+                    if (target != null) clone.setTarget(target);
+                    if (sw.spawnEntity(clone)) spawned++;
+                }
+                burst(sw, p, ParticleTypes.WITCH, SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON);
+                msg(p, "暗影分身!×" + spawned + "(50%血/100%攻,30秒)", Formatting.LIGHT_PURPLE);
             }
             case SWORDSMAN -> {
                 // 剑气斩:前方短距剑气(万剑归一迷你版)

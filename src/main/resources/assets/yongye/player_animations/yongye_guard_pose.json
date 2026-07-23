@@ -1,0 +1,88 @@
+{
+ "version": 3,
+ "name": "yongye_guard_pose",
+ "author": "yongye",
+ "description": "格挡姿态(武器横举护体,循环)",
+ "emote": {
+  "isLoop": true,
+  "returnTick": 0,
+  "beginTick": 0,
+  "endTick": 40,
+  "stopTick": 40,
+  "degrees": true,
+  "moves": [
+   {
+    "tick": 0,
+    "easing": "EASEINOUTQUAD",
+    "torso": {
+     "pitch": 8,
+     "yaw": 18,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -6,
+     "yaw": -14,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -86,
+     "yaw": -38,
+     "roll": -18
+    },
+    "leftArm": {
+     "pitch": -70,
+     "yaw": 34,
+     "roll": 16
+    }
+   },
+   {
+    "tick": 20,
+    "easing": "EASEINOUTQUAD",
+    "torso": {
+     "pitch": 9,
+     "yaw": 18,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -6.5,
+     "yaw": -14,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -88,
+     "yaw": -39,
+     "roll": -18
+    },
+    "leftArm": {
+     "pitch": -72,
+     "yaw": 35,
+     "roll": 16
+    }
+   },
+   {
+    "tick": 40,
+    "easing": "EASEINOUTQUAD",
+    "torso": {
+     "pitch": 8,
+     "yaw": 18,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -6,
+     "yaw": -14,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -86,
+     "yaw": -38,
+     "roll": -18
+    },
+    "leftArm": {
+     "pitch": -70,
+     "yaw": 34,
+     "roll": 16
+    }
+   }
+  ]
+ }
+}
