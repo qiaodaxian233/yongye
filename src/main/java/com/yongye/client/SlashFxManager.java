@@ -100,14 +100,14 @@ public final class SlashFxManager {
     }
 
     /** 姿态用:当前连击式(本地玩家=真实连击计数;其他玩家按 age 伪随机,只影响观感)。 */
-    static int poseVariant(LivingEntity e) {
+    public static int poseVariant(LivingEntity e) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player != null && e == mc.player) return combo;
         return (e.age / 18) % 3;
     }
 
     /** 姿态用:该实体当前是否该摆拔刀姿态(开关 + 主手武器判定与轨迹同一套)。 */
-    static boolean poseEligible(LivingEntity e) {
+    public static boolean poseEligible(LivingEntity e) {
         YongyeConfig cfg = YongyeConfig.get();
         if (!cfg.slashFxPose) return false;
         return eligible(cfg, e.getMainHandStack());
