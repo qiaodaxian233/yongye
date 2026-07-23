@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 60;
+    public static final int CURRENT_CONFIG_VERSION = 63;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -792,6 +792,36 @@ public class YongyeConfig {
     public double blightRiftChance = 0.12;
     /** 全员极小概率:深渊魂晶。 */
     public double blightCrystalChance = 0.015;
+
+    // ============ m263:BOSS 出场(皮肤 BOSS 出场演出 + 基础血量) ============
+    /** 出场演出总开关:皮肤 BOSS(阿努比斯/凤凰/死亡法师/红蜘蛛/自建龙/佩恩)登场时
+     *  给范围内玩家整屏标题+镜头重震+闪光+凋灵吼+魂火螺旋。 */
+    public boolean enableBossEntrance = true;
+    /** 出场演出作用半径(格)。 */
+    public int bossEntranceRange = 48;
+    /** 出场镜头震动强度(m239 打击感同一量纲;1.4≈击杀级重震)。 */
+    public double bossEntranceShake = 1.4;
+    /** 五只皮肤 BOSS 的出场基础血量(生成后还会再吃天数成长 + 玩家攻击对位,只增不减;
+     *  改这些值需重启生效——属性在实体注册时烘焙)。 */
+    public double anubisBaseHealth = 1.0E6;
+    public double phoenixBaseHealth = 4.0E5;
+    public double deathMageBaseHealth = 3.0E5;
+    public double redSpiderBaseHealth = 2.5E5;
+    public double toroDragonBaseHealth = 6.0E5;
+
+    // ============ m264:蚀矿(只在被侵蚀的土地上出现) ============
+    /** 侵蚀区生成时每个区块播种的矿脉数(0=关)。 */
+    public int blightOreVeinsPerChunk = 2;
+    /** 单条矿脉的方块数上限(1~9 合理)。 */
+    public int blightOreVeinSize = 5;
+    /** 蚀矿缓慢生长检定间隔(tick,1200=1 分钟;老侵蚀区也能长出新矿)。 */
+    public int blightOreGrowIntervalTicks = 1200;
+    /** 每次检定为身处侵蚀区的每名玩家生长 1 块蚀矿的概率。 */
+    public double blightOreGrowChance = 0.35;
+
+    // ============ m265:夜蚀套装(灵魂绑定) ============
+    /** 夜蚀盔甲灵魂绑定总开关:认主(第一个拿到的人)、别人捡不起、死亡不掉落重生归还。 */
+    public boolean blightArmorSoulbound = true;
 
     // ============ m217:战斗爽难度 ============
     /** m251 起弃用:反滚雪球在战斗爽已明确关闭(见 DifficultyManager.growthSuppressionOn),减半回拉不再被读取,保留占位防旧 json 报死键。 */

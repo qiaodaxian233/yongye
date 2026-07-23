@@ -64,7 +64,7 @@ public class FirePhoenixEntity extends HostileEntity implements GeoEntity {
     /** BOSS 基础属性(能打的起点,数值平衡后续再调)。 */
     public static DefaultAttributeContainer.Builder createFirePhoenixAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 650.0)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, com.yongye.YongyeConfig.get().phoenixBaseHealth) // m263:出场血量可配(改配置需重启生效)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 24.0)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
                 .add(EntityAttributes.GENERIC_FLYING_SPEED, 0.9)
@@ -108,9 +108,17 @@ public class FirePhoenixEntity extends HostileEntity implements GeoEntity {
         this.bossBar.removePlayer(player);
     }
 
+    /** m263:出场演出只在本次加载的第一个 tick 播一次(age 不持久化,区块重载重演=有意)。 */
+    private boolean entrancePlayed = false;
+
     @Override
     public void tick() {
         super.tick();
+        if (!this.getWorld().isClient && !this.entrancePlayed) {
+            this.entrancePlayed = true;
+            if (this.getWorld() instanceof net.minecraft.server.world.ServerWorld sw)
+                com.yongye.system.BossEntranceFx.play(sw, this, this.getType().getName(), Formatting.GOLD);
+        }
         // 服务端每 10 tick 刷一次血条百分比(钳制写法同 MobBossHandler)。
         if (!this.getWorld().isClient && ++this.barRefreshTicker >= 10) {
             this.barRefreshTicker = 0;

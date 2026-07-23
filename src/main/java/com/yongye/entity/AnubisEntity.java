@@ -107,7 +107,7 @@ public class AnubisEntity extends HostileEntity implements GeoEntity {
      */
     public static DefaultAttributeContainer.Builder createAnubisAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 8000.0)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, com.yongye.YongyeConfig.get().anubisBaseHealth) // m263:出场血量可配,默认大幅拔高(改配置需重启生效)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, BASE_ATTACK)
                 .add(EntityAttributes.GENERIC_ARMOR, 20.0)
                 .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 10.0)
@@ -143,9 +143,17 @@ public class AnubisEntity extends HostileEntity implements GeoEntity {
 
     // ===== tick:血条刷新 + Stage2 服务端机制 =====
 
+    /** m263:出场演出只在本次加载的第一个 tick 播一次(age 不持久化,区块重载重演=有意)。 */
+    private boolean entrancePlayed = false;
+
     @Override
     public void tick() {
         super.tick();
+        if (!this.getWorld().isClient && !this.entrancePlayed) {
+            this.entrancePlayed = true;
+            if (this.getWorld() instanceof net.minecraft.server.world.ServerWorld sw)
+                com.yongye.system.BossEntranceFx.play(sw, this, this.getType().getName(), Formatting.GOLD);
+        }
         if (this.getWorld().isClient) return;
 
         // — 血条百分比(每 10 tick) —

@@ -351,6 +351,7 @@ public final class PainBossHandler {
         }
 
         world.spawnEntity(pain);
+        BossEntranceFx.play(world, pain, Text.literal("佩恩·天道"), Formatting.DARK_RED); // m263:出场演出
         if (world.getServer() != null) painLastTargetTick = world.getServer().getTicks();
         playBgmNear(world, pain);
         if (world.getServer() != null) {

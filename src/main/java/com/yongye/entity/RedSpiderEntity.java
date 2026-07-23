@@ -51,9 +51,17 @@ public class RedSpiderEntity extends SpiderEntity implements GeoEntity {
         this.bossBar.removePlayer(player);
     }
 
+    /** m263:出场演出只在本次加载的第一个 tick 播一次(age 不持久化,区块重载重演=有意)。 */
+    private boolean entrancePlayed = false;
+
     @Override
     public void tick() {
         super.tick();
+        if (!this.getWorld().isClient && !this.entrancePlayed) {
+            this.entrancePlayed = true;
+            if (this.getWorld() instanceof net.minecraft.server.world.ServerWorld sw)
+                com.yongye.system.BossEntranceFx.play(sw, this, this.getType().getName(), Formatting.RED);
+        }
         if (!this.getWorld().isClient && ++this.barRefreshTicker >= 10) {
             this.barRefreshTicker = 0;
             float max = this.getMaxHealth();
@@ -71,7 +79,7 @@ public class RedSpiderEntity extends SpiderEntity implements GeoEntity {
     /** BOSS 级属性(在原版蜘蛛基础上大幅拔高)。 */
     public static DefaultAttributeContainer.Builder createRedSpiderAttributes() {
         return SpiderEntity.createSpiderAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 400.0)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, com.yongye.YongyeConfig.get().redSpiderBaseHealth) // m263:出场血量可配(改配置需重启生效)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 18.0)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.34)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.8)
