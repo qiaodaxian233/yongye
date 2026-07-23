@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 49;
+    public static final int CURRENT_CONFIG_VERSION = 50;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -549,6 +549,16 @@ public class YongyeConfig {
     /** 持有搜集任务时,击杀敌对怪掉落该任务目标物的概率(解决粘液球等前期难凑物的来源) */
     public double questGatherDropChance = 0.4;
     public int questGatherDropAmount = 1;     // 每次掉落的目标物数量
+
+    // ===== m250 战斗爽任务强化(仅世界难度=战斗爽时生效) =====
+    /** 战斗爽下任务难度总倍率:击杀数/搜集数/逃离距离全部照乘(1=不加难)。 */
+    public double questBattleScale = 1.5;
+    /** 战斗爽下搜集任务目标改为「全物品表随机」(技术性物品/刷怪蛋黑名单外),以抽奖滚动方式揭晓最终目标。 */
+    public boolean questBattleAnyItem = true;
+    /** 抽奖滚动时长(tick,60=3 秒;0=不滚动直接揭晓)。滚动期间任务不判定成功/失败。 */
+    public int questBattleRollTicks = 60;
+    /** 全物品随机的追加黑名单(物品 id 逗号/空格分隔,如 minecraft:dragon_egg,minecraft:elytra)。 */
+    public String questBattleAnyItemExtraBans = "";
 
     // ============ 背包神器(文档第 14 章)============
     public boolean enableArtifacts = true;

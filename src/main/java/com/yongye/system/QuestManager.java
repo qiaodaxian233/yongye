@@ -15,6 +15,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.item.SpawnEggItem;
+import net.minecraft.registry.Registries;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -50,6 +54,8 @@ public final class QuestManager {
         int killNeed;
         int kills;
         double fleeDistance;
+        int rollTicks;    // m250:>0=战斗爽抽奖滚动中(滚完才揭晓目标并开始判定)
+        boolean anyItem;  // m250:目标是全物品表随机抽出(战斗爽),此类不吃杀怪掉目标物的辅助
     }
 
     private record Need(Item item, int count) {}
@@ -60,6 +66,40 @@ public final class QuestManager {
             new Need(Items.REDSTONE, 32), new Need(Items.SLIME_BALL, 8), new Need(Items.LEATHER, 12),
             new Need(ModItems.LIFE_SHARD, 6),
     };
+
+    /** m250:全物品随机的内置黑名单——生存拿不到/纯技术性的物品,抽到=任务必败不公平。
+     *  刷怪蛋走 instanceof SpawnEggItem 统一挡;要再排除(如龙蛋/鞘翅)用配置 questBattleAnyItemExtraBans。 */
+    private static final java.util.Set<Item> ANY_ITEM_BANNED = java.util.Set.of(
+            Items.COMMAND_BLOCK, Items.CHAIN_COMMAND_BLOCK, Items.REPEATING_COMMAND_BLOCK,
+            Items.COMMAND_BLOCK_MINECART, Items.STRUCTURE_BLOCK, Items.STRUCTURE_VOID, Items.JIGSAW,
+            Items.BARRIER, Items.LIGHT, Items.DEBUG_STICK, Items.KNOWLEDGE_BOOK,
+            Items.BEDROCK, Items.SPAWNER, Items.TRIAL_SPAWNER, Items.VAULT,
+            Items.REINFORCED_DEEPSLATE, Items.END_PORTAL_FRAME, Items.BUDDING_AMETHYST,
+            Items.PETRIFIED_OAK_SLAB, Items.FARMLAND, Items.DIRT_PATH);
+
+    /** m250:从整个物品注册表随机抽一个可要求的物品(64 次尝试,黑名单/刷怪蛋/空气跳过;兜底回老物资池)。 */
+    private static Item pickAnyItem(net.minecraft.util.math.random.Random rnd) {
+        int size = Registries.ITEM.size();
+        for (int i = 0; i < 64; i++) {
+            Item it = Registries.ITEM.get(rnd.nextInt(size));
+            if (it == null || it == Items.AIR) continue;
+            if (it instanceof SpawnEggItem) continue;
+            if (ANY_ITEM_BANNED.contains(it)) continue;
+            if (isExtraBanned(it)) continue;
+            return it;
+        }
+        return GATHER_POOL[rnd.nextInt(GATHER_POOL.length)].item();
+    }
+
+    private static boolean isExtraBanned(Item it) {
+        String bans = YongyeConfig.get().questBattleAnyItemExtraBans;
+        if (bans == null || bans.isBlank()) return false;
+        String id = Registries.ITEM.getId(it).toString();
+        for (String s : bans.split("[,\s]+")) {
+            if (!s.isBlank() && s.trim().equalsIgnoreCase(id)) return true;
+        }
+        return false;
+    }
 
     private static final Map<UUID, Quest> ACTIVE = new HashMap<>();
     private static int assignCounter = 0;
@@ -89,7 +129,8 @@ public final class QuestManager {
             } else if (q.type == Type.SLAY && entity instanceof Monster) {
                 q.kills++;
                 if (q.kills >= q.killNeed) complete(killer); else refreshKillBar(q);
-            } else if (q.type == Type.GATHER && q.targetItem != null && entity instanceof Monster) {
+            } else if (q.type == Type.GATHER && q.targetItem != null && !q.anyItem && entity instanceof Monster) {
+                // m250:全物品随机(anyItem)的搜集任务不吃这条辅助——目标可能是钻石块级别,杀怪白送就没难度了
                 // 搜集任务:击杀敌对怪概率掉落目标物,让粘液球等前期难凑物有稳定来源
                 YongyeConfig cfg = YongyeConfig.get();
                 if (cfg.questGatherDropChance > 0 && killer.getRandom().nextDouble() < cfg.questGatherDropChance
@@ -143,6 +184,12 @@ public final class QuestManager {
         if (q.bar != null) q.bar.setPercent(Math.max(0f, Math.min(1f, (float) left / q.totalTicks)));
 
         if (q.done) { if (q.bar != null) q.bar.clearPlayers(); return true; }
+
+        // m250:战斗爽搜集任务的抽奖演出——滚动期间只滚显示不判定(限时照走,3 秒无关痛痒)
+        if (q.rollTicks > 0) {
+            tickRoll(p, q);
+            return false;
+        }
 
         // 成功判定
         if (q.type == Type.FLEE && q.origin != null && p.getPos().distanceTo(q.origin) >= q.fleeDistance) {
@@ -205,21 +252,36 @@ public final class QuestManager {
         int nf = NightfallManager.getLevel();
         int players = Math.max(1, player.getServer().getPlayerManager().getPlayerList().size());
         double pScale = 1 + (players - 1) * cfg.questPlayerScaling; // 人越多越难
+        // m250:战斗爽=任务全面加难(击杀数/搜集数/逃离距离照乘 questBattleScale)
+        boolean battle = DifficultyManager.getLevel() == com.yongye.item.GameDifficulty.BATTLE.ordinal();
+        double bScale = battle ? Math.max(1.0, cfg.questBattleScale) : 1.0;
         if (type == Type.GATHER) {
-            Need need = GATHER_POOL[rnd.nextInt(GATHER_POOL.length)];
-            q.targetItem = need.item();
-            q.targetCount = (int) Math.ceil(need.count() * (1 + nf * 0.4) * pScale);
+            if (battle && cfg.questBattleAnyItem) {
+                // m250:战斗爽搜集=全物品表随机抽取,抽奖滚动揭晓;数量按可堆叠性给
+                q.anyItem = true;
+                q.targetItem = pickAnyItem(rnd);
+                int base = q.targetItem.getMaxCount() <= 1 ? 1 + rnd.nextInt(2) : 3 + rnd.nextInt(12);
+                q.targetCount = (int) Math.ceil(base * (1 + nf * 0.4) * pScale * bScale);
+                q.targetCount = Math.min(q.targetCount, q.targetItem.getMaxCount() <= 1 ? 3 : 128);
+                q.rollTicks = Math.max(0, cfg.questBattleRollTicks);
+            } else {
+                Need need = GATHER_POOL[rnd.nextInt(GATHER_POOL.length)];
+                q.targetItem = need.item();
+                q.targetCount = (int) Math.ceil(need.count() * (1 + nf * 0.4) * pScale * bScale);
+            }
         }
-        if (type == Type.HUNT_ELITE) q.killNeed = (int) Math.ceil((cfg.questHuntEliteCount + nf / 2.0) * pScale);
-        if (type == Type.SLAY) q.killNeed = (int) Math.ceil((cfg.questSlayCount + nf * 5) * pScale);
-        q.fleeDistance = cfg.questFleeDistance * (1 + nf * 0.2);
+        if (type == Type.HUNT_ELITE) q.killNeed = (int) Math.ceil((cfg.questHuntEliteCount + nf / 2.0) * pScale * bScale);
+        if (type == Type.SLAY) q.killNeed = (int) Math.ceil((cfg.questSlayCount + nf * 5) * pScale * bScale);
+        q.fleeDistance = cfg.questFleeDistance * (1 + nf * 0.2) * bScale;
 
         Text title = switch (type) {
             case HUNT_ELITE -> Text.literal("任务·猎杀精英 0/" + q.killNeed).formatted(Formatting.GOLD);
             case SURVIVE -> Text.literal("任务·守住据点:在限时内存活(死亡判败!)").formatted(Formatting.GREEN);
             case FLEE -> Text.literal("任务·限时逃离:远离此地 " + (int) q.fleeDistance + " 格").formatted(Formatting.AQUA);
             case CLEAR_CORE -> Text.literal("任务·清除灾厄核心:摧毁附近的灾厄核心").formatted(Formatting.DARK_RED);
-            case GATHER -> Text.literal("任务·搜集物资:限时内集齐 " + q.targetCount + "× ").formatted(Formatting.LIGHT_PURPLE)
+            case GATHER -> q.rollTicks > 0
+                    ? Text.literal("任务·搜集物资:命运转盘转动中……").formatted(Formatting.LIGHT_PURPLE)
+                    : Text.literal("任务·搜集物资:限时内集齐 " + q.targetCount + "× ").formatted(Formatting.LIGHT_PURPLE)
                     .append(q.targetItem.getName());
             case SLAY -> Text.literal("任务·屠戮怪物 0/" + q.killNeed).formatted(Formatting.RED);
         };
@@ -258,6 +320,33 @@ public final class QuestManager {
                 if (pp != player) pp.sendMessage(msg, false);
             }
             NightfallManager.escalate(player.getServer());
+        }
+    }
+
+    /** m250:抽奖滚动一 tick——每 4t 在 action bar 闪现一个随机物品名(咔哒声调渐升),
+     *  滚完定格揭晓真目标:血条名换真标题 + 聊天栏公布 + 升级音。真目标在派发时已抽好,滚动只是演出。 */
+    private static void tickRoll(ServerPlayerEntity p, Quest q) {
+        q.rollTicks--;
+        ServerWorld sw = p.getWorld() instanceof ServerWorld w ? w : null;
+        if (q.rollTicks <= 0) { // 定格揭晓
+            Text title = Text.literal("任务·搜集物资:限时内集齐 " + q.targetCount + "× ").formatted(Formatting.LIGHT_PURPLE)
+                    .append(q.targetItem.getName());
+            if (q.bar != null) q.bar.setName(title);
+            p.sendMessage(Text.literal("【命运揭晓】本次搜集目标:").formatted(Formatting.GOLD)
+                    .append(Text.literal(q.targetCount + "× ").formatted(Formatting.YELLOW))
+                    .append(q.targetItem.getName().copy().formatted(Formatting.YELLOW)), false);
+            if (sw != null) sw.playSound(null, p.getX(), p.getY(), p.getZ(),
+                    SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1.0f, 1.0f);
+            return;
+        }
+        if (q.rollTicks % 4 == 0) {
+            Item tease = pickAnyItem(p.getRandom()); // 假目标纯演出,与真目标无关
+            p.sendMessage(Text.literal("» 抽取中:").formatted(Formatting.LIGHT_PURPLE)
+                    .append(tease.getName().copy().formatted(Formatting.AQUA)), true);
+            int total = Math.max(1, YongyeConfig.get().questBattleRollTicks);
+            float pitch = 0.8f + 1.0f * (1f - q.rollTicks / (float) total); // 越滚越高,定格前最急
+            if (sw != null) sw.playSound(null, p.getX(), p.getY(), p.getZ(),
+                    SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.55f, pitch);
         }
     }
 
