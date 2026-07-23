@@ -29,6 +29,7 @@ import com.yongye.system.PursuitHandler;
 import com.yongye.system.QuestManager;
 import com.yongye.system.SkillEffectManager;
 import com.yongye.system.WeaponCombatHandler;
+import com.yongye.system.WeaponSkillFx;
 import com.yongye.system.WeaponSkillManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -119,6 +120,7 @@ public class Yongye implements ModInitializer {
         WeaponCombatHandler.register();
         com.yongye.system.ForeignDamageFilterHandler.register(); // m189 怪物伤害来源检测(只认原版+本模组武器)
         com.yongye.system.CombatFxHandler.register(); // m239 沉浸式战斗手感(必须排在伤害过滤之后:被取消的伤害不出打击感)
+        WeaponSkillFx.register(); // m255 武器技能特效编排器(混沌斩/吞噬/终焉的多帧大演出)
         WeaponSkillManager.init();
         com.yongye.system.LootCrateHandler.init(); // 战利品宝箱掉落(m245)
         HardcoreSurvivalHandler.register();

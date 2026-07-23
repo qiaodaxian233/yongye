@@ -92,11 +92,13 @@ public final class WeaponSkillManager {
             le.damage(src, (float) dmg);
             le.takeKnockback(1.6, -look.x, -look.z);
         }
+        // m255:剑气月牙推进大演出(可关);简版一条线保留作打底
         for (int i = 1; i <= (int) range; i++) {
             Vec3d p = eye.add(look.multiply(i));
             world.spawnParticles(ParticleTypes.SWEEP_ATTACK, p.x, p.y, p.z, 2, 0.5, 0.3, 0.5, 0.0);
             world.spawnParticles(ParticleTypes.CRIT, p.x, p.y, p.z, 6, 0.4, 0.4, 0.4, 0.2);
         }
+        WeaponSkillFx.chaosSlash(world, player, range);
         world.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.0f, 0.8f);
     }
@@ -109,18 +111,22 @@ public final class WeaponSkillManager {
         DamageSource src = world.getDamageSources().magic();
         Box box = player.getBoundingBox().expand(radius);
         double healed = 0;
+        java.util.List<Vec3d> victims = new java.util.ArrayList<>(); // m255:灵魂被吸出的源点
         for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, box, e -> e.isAlive() && isHostileTarget(e))) {
             le.damage(src, (float) dmg);
             healed += dmg * cfg.skillDevourHealRatio;
+            victims.add(le.getPos());
             world.spawnParticles(ParticleTypes.PORTAL, le.getX(), le.getBodyY(0.6), le.getZ(),
                     10, 0.3, 0.5, 0.3, 0.4);
         }
         // 禁疗时不回血;单次治疗上限按最大生命百分比封顶
         boolean healBlocked = player.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L) > player.getWorld().getTime();
-        if (healed > 0 && !healBlocked) {
+        boolean actuallyHealed = healed > 0 && !healBlocked;
+        if (actuallyHealed) {
             double cap = player.getMaxHealth() * cfg.skillDevourHealMaxPct;
             player.heal((float) Math.min(healed, cap));
         }
+        WeaponSkillFx.abyssDevour(world, player, radius, victims, actuallyHealed); // m255:吞魂大演出
         world.spawnParticles(ParticleTypes.REVERSE_PORTAL, player.getX(), player.getBodyY(0.6), player.getZ(),
                 40, 0.5, 0.8, 0.5, 0.3);
         world.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -134,11 +140,14 @@ public final class WeaponSkillManager {
         double radius = cfg.skillFinalityRadius;
         DamageSource src = world.getDamageSources().playerAttack(player);
         Box box = player.getBoundingBox().expand(radius);
+        java.util.List<Vec3d> victims = new java.util.ArrayList<>(); // m255:魂火柱落点
         for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, box, e -> e.isAlive() && isHostileTarget(e))) {
             le.damage(src, (float) dmg);
             le.addVelocity(0, 0.8, 0);
             le.velocityModified = true;
+            victims.add(le.getPos());
         }
+        WeaponSkillFx.finality(world, player, radius, victims); // m255:终焉天罚大演出
         world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getY() + 1, player.getZ(), 3, 1, 1, 1, 0);
         world.spawnParticles(ParticleTypes.REVERSE_PORTAL, player.getX(), player.getY() + 1, player.getZ(),
                 120, radius / 2, 1.0, radius / 2, 0.2);
