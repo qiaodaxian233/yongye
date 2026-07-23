@@ -53,8 +53,10 @@ public final class CombatFxHandler {
 
             float frac = amount / Math.max(1.0f, entity.getMaxHealth()); // 这一下占怪最大生命的比例
             int kind = frac >= 0.25f ? CombatFxPayload.HEAVY : CombatFxPayload.HIT;
-            float shake = (float) (Math.min(1.0f, 0.30f + frac * 2.0f) * c.combatFxShakeScale);
-            float fov   = (float) ((kind == CombatFxPayload.HEAVY ? 1.4f : 0.6f) * c.combatFxFovKick);
+            // m248:基准强度整体上调(实机反馈「打击感还是不强」)——普通命中 0.30→0.55 起步、
+            // 封顶 1.0→1.5,重击 FOV 1.4→2.4、轻击 0.6→1.1;倍率配置照乘,想回旧手感把两倍率设 0.6 即可。
+            float shake = (float) (Math.min(1.5f, 0.55f + frac * 2.6f) * c.combatFxShakeScale);
+            float fov   = (float) ((kind == CombatFxPayload.HEAVY ? 2.4f : 1.1f) * c.combatFxFovKick);
             ServerPlayNetworking.send(p, new CombatFxPayload(kind, shake, fov, false, false));
 
             if (c.combatFxParticles && entity.getWorld() instanceof ServerWorld sw) {
@@ -72,8 +74,8 @@ public final class CombatFxHandler {
             if (!(source.getAttacker() instanceof ServerPlayerEntity p)) return;
             if (entity instanceof PlayerEntity) return;
 
-            float shake = (float) (1.1f * c.combatFxShakeScale);
-            float fov   = (float) (1.8f * c.combatFxFovKick);
+            float shake = (float) (1.7f * c.combatFxShakeScale);   // m248:击杀冲击 1.1→1.7
+            float fov   = (float) (2.8f * c.combatFxFovKick);      // m248:击杀顿挫 1.8→2.8
             ServerPlayNetworking.send(p, new CombatFxPayload(
                     CombatFxPayload.KILL, shake, fov, c.combatFxKillFlash, c.combatFxKillSound));
 

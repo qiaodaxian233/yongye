@@ -4,8 +4,8 @@ import com.yongye.YongyeConfig;
 import com.yongye.client.SlashFxManager;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Arm;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,13 +25,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 无条件赋值,body.pitch 有 else 归零分支),TAIL 叠加不跨帧累积;只碰旋转不碰 pivot(pivot 的
  * 重置路径不保证,碰了会漂移);包络两端(p=0/1)均为 0。盔甲 copyBipedStateTo 照抄部件角度跟着摆。
  * require = 0:映射不符则静默不挂,只丢姿态不崩游戏。slashFxBends=false 回 m242 简版(仅拧身+臂)。
+ *
+ * m248 注入点改挂 {@link BipedEntityModel}(原挂 PlayerEntityModel):
+ *  ① 实机反馈「姿态没生效」,最大嫌疑就是 PlayerEntityModel 的 setAngles 注入点在运行时对不上而
+ *    require=0 静默失效;BipedEntityModel.setAngles 是姿态计算的本体实现,必然存在,注入点最稳。
+ *  ② 顺带修一个层级瑕疵:PlayerEntityModel.setAngles 是 super.setAngles 之后才把 袖子/裤腿/外套
+ *    copyTransform 过去——旧版挂 PlayerEntityModel TAIL 在拷贝「之后」才改角度,皮肤外层不跟手;
+ *    改挂 BipedEntityModel TAIL 后姿态在拷贝「之前」就位,外层自然跟随。
+ *  ③ 语义不变:处理器开头加 instanceof PlayerEntity 门,仍只对玩家生效(僵尸等双足怪不摆)。
+ *  另加 slashFxPoseScale 幅度倍率(默认 1.35 比旧版更夸张),嫌轻/嫌重 config set 一条即调。
  */
-@Mixin(PlayerEntityModel.class)
+@Mixin(BipedEntityModel.class)
 public abstract class SlashPoseMixin {
 
     @Inject(method = "setAngles", at = @At("TAIL"), require = 0)
     private void yongye$slashPose(LivingEntity entity, float limbAngle, float limbDistance,
                                   float animationProgress, float headYaw, float headPitch, CallbackInfo ci) {
+        com.yongye.client.CombatFxManager.markInjected("SlashPose(姿态)");
+        if (!(entity instanceof PlayerEntity)) return;    // 只对玩家摆姿态(语义与旧版一致)
         BipedEntityModel<?> m = (BipedEntityModel<?>) (Object) this;
         float p = m.handSwingProgress;                    // 渲染器每帧写入的插值挥手进度
         if (p <= 0f || p >= 1f) return;
@@ -44,9 +55,11 @@ public abstract class SlashPoseMixin {
         ModelPart offLeg  = rightHanded ? m.leftLeg  : m.rightLeg;  // 副手侧腿(前弓)
         float dir = rightHanded ? 1f : -1f;
 
-        boolean bends = YongyeConfig.get().slashFxBends;
-        float e = MathHelper.sin(p * (float) Math.PI);    // 拧身/弓步包络:起收归零(单向)
-        float w = bends ? yongye$strike(p) : e;           // 挥击包络:蓄力反向→爆发→缓落
+        YongyeConfig cfg = YongyeConfig.get();
+        boolean bends = cfg.slashFxBends;
+        float s = MathHelper.clamp((float) cfg.slashFxPoseScale, 0.3f, 2.5f); // m248 幅度倍率
+        float e = MathHelper.sin(p * (float) Math.PI) * s;  // 拧身/弓步包络:起收归零(单向)
+        float w = (bends ? yongye$strike(p) : MathHelper.sin(p * (float) Math.PI)) * s; // 挥击包络
         float k = bends ? 1.6f : 1.0f;                    // MoBends 档拧身放大
 
         float bYaw, bPitch;                               // 记录躯干增量,供头部反向补偿

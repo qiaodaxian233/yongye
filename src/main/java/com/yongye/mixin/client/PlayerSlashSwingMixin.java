@@ -22,6 +22,7 @@ public abstract class PlayerSlashSwingMixin {
 
     @Inject(method = "doAttack", at = @At("RETURN"), require = 0)
     private void yongye$slashOnAttack(CallbackInfoReturnable<Boolean> cir) {
+        com.yongye.client.CombatFxManager.markInjected("SlashSwing(刀光触发)");
         MinecraftClient mc = (MinecraftClient) (Object) this;
         if (mc.player == null) return;
         HitResult hit = mc.crosshairTarget;

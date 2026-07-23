@@ -17,6 +17,17 @@ public final class CombatFxManager {
     private static final int FLASH_MAX_TICKS = 7;
     private static final Random RNG = new Random();
 
+    // ==== m248:注入点存活探针 ====
+    // 手感类 mixin 全是 require=0(不符静默不挂,不崩游戏),代价是坏了也看不出来。
+    // 各 mixin 处理器第一行调一次 markInjected,首次触发在日志打一行「已生效」——
+    // 进游戏后 latest.log 里少了哪行,就是哪个注入点没挂上,不用再瞎猜。
+    private static final java.util.Set<String> INJECT_SEEN = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    public static void markInjected(String name) {
+        if (INJECT_SEEN.add(name))
+            com.yongye.Yongye.LOGGER.info("[夜蚀] 客户端注入已生效: {}", name);
+    }
+
     /** 收到服务端 FX 包(已在客户端主线程)。 */
     public static void onFx(int kind, float shake, float fov, boolean flash, boolean sound) {
         // 取 max 而不是叠加:连击时保持"最重那一下"的手感,不会震到失控

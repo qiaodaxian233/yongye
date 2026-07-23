@@ -27,6 +27,7 @@ public abstract class WeaponSheathMixin {
     private void yongye$sheathHand(LivingEntity entity, ItemStack stack, ModelTransformationMode transformationMode,
                                    Arm arm, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
                                    CallbackInfo ci) {
+        com.yongye.client.CombatFxManager.markInjected("WeaponSheath(疾跑藏手)");
         if (entity instanceof AbstractClientPlayerEntity p
                 && arm == p.getMainArm()
                 && WeaponBackFeatureRenderer.shouldSheath(p)) {

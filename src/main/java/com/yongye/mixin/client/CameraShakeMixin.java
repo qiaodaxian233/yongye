@@ -26,6 +26,7 @@ public abstract class CameraShakeMixin {
     @Inject(method = "update", at = @At("TAIL"), require = 0)
     private void yongye$shake(BlockView area, Entity focusedEntity, boolean thirdPerson,
                               boolean inverseView, float tickDelta, CallbackInfo ci) {
+        CombatFxManager.markInjected("CameraShake(镜头微震)");
         float dy = CombatFxManager.shakeYaw();
         float dp = CombatFxManager.shakePitch();
         if (dy == 0f && dp == 0f) return;

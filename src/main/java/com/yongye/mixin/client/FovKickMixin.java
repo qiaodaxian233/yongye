@@ -20,6 +20,7 @@ public abstract class FovKickMixin {
     @Inject(method = "getFov", at = @At("RETURN"), cancellable = true, require = 0)
     private void yongye$fovKick(Camera camera, float tickDelta, boolean changingFov,
                                 CallbackInfoReturnable<Double> cir) {
+        CombatFxManager.markInjected("FovKick(FOV顿挫)");
         double off = CombatFxManager.fovOffset();
         if (off == 0.0) return;
         cir.setReturnValue(cir.getReturnValue() + off);
