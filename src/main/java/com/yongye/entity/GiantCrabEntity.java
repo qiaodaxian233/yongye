@@ -46,7 +46,8 @@ public class GiantCrabEntity extends HostileEntity implements GeoEntity {
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 12.0)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.28)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.5)
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32.0);
+                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32.0)
+                .add(EntityAttributes.GENERIC_STEP_HEIGHT, 1.6); // m267:宽 3.0 巨蟹直接跨 1 格坎
     }
 
     @Override
@@ -57,6 +58,13 @@ public class GiantCrabEntity extends HostileEntity implements GeoEntity {
         this.goalSelector.add(4, new LookAroundGoal(this));
         this.targetSelector.add(1, new RevengeGoal(this));
         this.targetSelector.add(2, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+    }
+
+    /** m267:宽 3.0 的巨蟹是转圈重灾区,同 BOSS 一并接防转圈助手。 */
+    @Override
+    public void tick() {
+        super.tick();
+        if (!this.getWorld().isClient && this.isAlive()) BossNavAssist.tick(this);
     }
 
     // ===== GeckoLib =====

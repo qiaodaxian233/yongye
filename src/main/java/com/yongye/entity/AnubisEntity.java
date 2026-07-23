@@ -113,7 +113,8 @@ public class AnubisEntity extends HostileEntity implements GeoEntity {
                 .add(EntityAttributes.GENERIC_ARMOR_TOUGHNESS, 10.0)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0)
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 64.0);
+                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 64.0)
+                .add(EntityAttributes.GENERIC_STEP_HEIGHT, 1.6); // m267:宽 2.5 巨体直接跨 1 格坎,不给寻路添堵
     }
 
     @Override
@@ -167,6 +168,8 @@ public class AnubisEntity extends HostileEntity implements GeoEntity {
         }
 
         if (!this.isAlive()) return;
+
+        BossNavAssist.tick(this); // m267 防转圈(近身停航面向 + 寻路失败直线压上)
 
         YongyeConfig cfg = YongyeConfig.get();
 

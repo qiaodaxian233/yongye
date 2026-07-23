@@ -10,6 +10,7 @@ import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -60,7 +61,8 @@ public class DeathMageEntity extends HostileEntity implements GeoEntity {
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 20.0)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
                 .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.6)
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 48.0);
+                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 48.0)
+                .add(EntityAttributes.GENERIC_STEP_HEIGHT, 1.1); // m267:免跳跨 1 格坎
     }
 
     @Override
@@ -91,6 +93,13 @@ public class DeathMageEntity extends HostileEntity implements GeoEntity {
     /** m263:出场演出只在本次加载的第一个 tick 播一次(age 不持久化,区块重载重演=有意)。 */
     private boolean entrancePlayed = false;
 
+    // ===== m268 技能状态 =====
+    private int strikeCooldown = 100;                          // 魂火锁定
+    private int novaCooldown = 140;                            // 亡者音爆
+    private int blinkCooldown = 0;                             // 虚影闪现
+    private net.minecraft.util.math.BlockPos pendingStrike;    // 魂火落点(延迟爆燃)
+    private int pendingStrikeTicks = 0;
+
     @Override
     public void tick() {
         super.tick();
@@ -106,6 +115,89 @@ public class DeathMageEntity extends HostileEntity implements GeoEntity {
             this.bossBar.setName(this.getType().getName().copy().formatted(Formatting.DARK_PURPLE)
                     .append(Text.literal("\u2016" + String.format(java.util.Locale.ROOT, "%.0f", (double) this.getHealth()) + "/" + String.format(java.util.Locale.ROOT, "%.0f", (double) max))));
             this.bossBar.setPercent(max > 0 ? Math.max(0f, Math.min(1f, this.getHealth() / max)) : 0f);
+        }
+        if (!this.getWorld().isClient && this.isAlive()) BossNavAssist.tick(this); // m267 防转圈
+        if (!this.getWorld().isClient && this.isAlive()) this.tickSkills();          // m268 技能
+    }
+
+    // ===== m268:技能(全服务端:粒子+音效+伤害,零新实体) =====
+
+    private void tickSkills() {
+        if (!(this.getWorld() instanceof net.minecraft.server.world.ServerWorld sw)) return;
+        com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
+        net.minecraft.entity.LivingEntity t = this.getTarget();
+
+        // —— 魂火锁定:落点结算(标记 25t 后爆燃,给走位窗口) ——
+        if (this.pendingStrikeTicks > 0 && this.pendingStrike != null) {
+            double px = this.pendingStrike.getX() + 0.5, py = this.pendingStrike.getY() + 0.1, pz = this.pendingStrike.getZ() + 0.5;
+            double a = this.pendingStrikeTicks * 0.6;
+            for (int k = 0; k < 4; k++) {
+                double ang = a + k * (Math.PI / 2);
+                sw.spawnParticles(net.minecraft.particle.ParticleTypes.SOUL_FIRE_FLAME,
+                        px + Math.cos(ang) * 1.6, py + 0.2, pz + Math.sin(ang) * 1.6, 1, 0.05, 0.05, 0.05, 0.0);
+            }
+            if (--this.pendingStrikeTicks == 0) {
+                sw.spawnParticles(net.minecraft.particle.ParticleTypes.SOUL, px, py + 0.5, pz, 40, 1.2, 0.8, 1.2, 0.05);
+                sw.spawnParticles(net.minecraft.particle.ParticleTypes.EXPLOSION, px, py + 0.5, pz, 2, 0.4, 0.2, 0.4, 0.0);
+                sw.playSound(null, px, py, pz, net.minecraft.sound.SoundEvents.ENTITY_WITHER_SHOOT,
+                        net.minecraft.sound.SoundCategory.HOSTILE, 1.5f, 0.7f);
+                for (net.minecraft.entity.player.PlayerEntity pl : sw.getEntitiesByClass(
+                        net.minecraft.entity.player.PlayerEntity.class,
+                        net.minecraft.util.math.Box.of(new net.minecraft.util.math.Vec3d(px, py, pz), 7.0, 5.0, 7.0),
+                        e -> e.squaredDistanceTo(px, py, pz) <= 12.25)) {
+                    pl.damage(sw.getDamageSources().magic(), (float) cfg.mageStrikeDamage);
+                    pl.addStatusEffect(new StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.WITHER, 100, 1));
+                }
+                this.pendingStrike = null;
+            }
+        }
+
+        // —— 魂火锁定:施放 ——
+        if (this.strikeCooldown > 0) this.strikeCooldown--;
+        else if (t != null && this.distanceTo(t) <= 20.0 && this.pendingStrike == null) {
+            this.pendingStrike = t.getBlockPos();
+            this.pendingStrikeTicks = 25;
+            sw.playSound(null, this.getX(), this.getY(), this.getZ(),
+                    net.minecraft.sound.SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON,
+                    net.minecraft.sound.SoundCategory.HOSTILE, 1.4f, 1.3f);
+            this.strikeCooldown = cfg.mageStrikeCooldownTicks;
+        }
+
+        // —— 亡者音爆:近身范围击退 ——
+        if (this.novaCooldown > 0) this.novaCooldown--;
+        else if (t != null && this.distanceTo(t) <= 7.0) {
+            sw.spawnParticles(net.minecraft.particle.ParticleTypes.SONIC_BOOM,
+                    this.getX(), this.getY() + 1.2, this.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+            sw.playSound(null, this.getX(), this.getY(), this.getZ(),
+                    net.minecraft.sound.SoundEvents.ENTITY_WARDEN_SONIC_BOOM,
+                    net.minecraft.sound.SoundCategory.HOSTILE, 1.6f, 1.0f);
+            for (net.minecraft.entity.player.PlayerEntity pl : sw.getEntitiesByClass(
+                    net.minecraft.entity.player.PlayerEntity.class,
+                    net.minecraft.util.math.Box.of(this.getPos(), 16.0, 8.0, 16.0),
+                    e -> e.squaredDistanceTo(this) <= 64.0)) {
+                pl.damage(sw.getDamageSources().magic(), (float) cfg.mageNovaDamage);
+                pl.addStatusEffect(new StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 80, 1));
+                double dx = pl.getX() - this.getX(), dz = pl.getZ() - this.getZ();
+                pl.takeKnockback(1.8, -dx, -dz);
+                if (pl instanceof ServerPlayerEntity spx)
+                    spx.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket(pl));
+            }
+            this.novaCooldown = cfg.mageNovaCooldownTicks;
+        }
+
+        // —— 虚影闪现:被贴脸挨打就闪到目标侧后方(法师不跟你贴身互殴) ——
+        if (this.blinkCooldown > 0) this.blinkCooldown--;
+        else if (t != null && this.hurtTime > 0 && this.distanceTo(t) <= 5.0) {
+            double fx = this.getX(), fy = this.getY(), fz = this.getZ();
+            double ang = this.getRandom().nextDouble() * Math.PI * 2;
+            double nx = t.getX() + Math.cos(ang) * 7.0, nz = t.getZ() + Math.sin(ang) * 7.0;
+            sw.spawnParticles(net.minecraft.particle.ParticleTypes.PORTAL, fx, fy + 1.0, fz, 30, 0.4, 1.0, 0.4, 0.1);
+            this.refreshPositionAndAngles(nx, t.getY(), nz, this.getYaw(), 0);
+            this.getNavigation().stop();
+            sw.spawnParticles(net.minecraft.particle.ParticleTypes.PORTAL, nx, t.getY() + 1.0, nz, 30, 0.4, 1.0, 0.4, 0.1);
+            sw.playSound(null, nx, t.getY(), nz, net.minecraft.sound.SoundEvents.ENTITY_ENDERMAN_TELEPORT,
+                    net.minecraft.sound.SoundCategory.HOSTILE, 1.4f, 0.8f);
+            this.blinkCooldown = cfg.mageBlinkCooldownTicks;
         }
     }
 

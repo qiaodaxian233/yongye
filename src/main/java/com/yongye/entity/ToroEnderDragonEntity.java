@@ -66,6 +66,12 @@ public class ToroEnderDragonEntity extends HostileEntity implements GeoEntity {
     /** m263:出场演出只在本次加载的第一个 tick 播一次(age 不持久化,区块重载重演=有意)。 */
     private boolean entrancePlayed = false;
 
+    // ===== m268 技能状态 =====
+    private int breathCooldown = 100;    // 龙息射线
+    private int diveCooldown = 160;      // 俯冲冲撞
+    private int diveTicks = 0;           // >0 = 俯冲中(命中或超时结算)
+    private boolean gravityUsed = false; // 重力撕裂只来一次
+
     @Override
     public void tick() {
         super.tick();
@@ -81,6 +87,106 @@ public class ToroEnderDragonEntity extends HostileEntity implements GeoEntity {
             this.bossBar.setName(this.getType().getName().copy().formatted(Formatting.LIGHT_PURPLE)
                     .append(Text.literal("\u2016" + String.format(java.util.Locale.ROOT, "%.0f", (double) this.getHealth()) + "/" + String.format(java.util.Locale.ROOT, "%.0f", (double) max))));
             this.bossBar.setPercent(max > 0 ? Math.max(0f, Math.min(1f, this.getHealth() / max)) : 0f);
+        }
+        if (!this.getWorld().isClient && this.isAlive()) BossNavAssist.tick(this); // m267 防转圈
+        if (!this.getWorld().isClient && this.isAlive()) this.tickSkills();          // m268 技能
+    }
+
+    // ===== m268:技能(全服务端:粒子+音效+伤害,零新实体) =====
+
+    private void tickSkills() {
+        if (!(this.getWorld() instanceof net.minecraft.server.world.ServerWorld sw)) return;
+        com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
+        net.minecraft.entity.LivingEntity t = this.getTarget();
+
+        // —— 俯冲冲撞:冲刺中(靠近即撞,超时收招) ——
+        if (this.diveTicks > 0) {
+            this.diveTicks--;
+            if (t != null) {
+                // 持续朝目标压过去(FlightMoveControl 高速档)
+                this.getMoveControl().moveTo(t.getX(), t.getY(), t.getZ(), 3.0);
+                sw.spawnParticles(net.minecraft.particle.ParticleTypes.DRAGON_BREATH,
+                        this.getX(), this.getY() + 1.5, this.getZ(), 4, 1.0, 1.0, 1.0, 0.02);
+                if (this.distanceTo(t) <= 5.0) {
+                    this.diveTicks = 0;
+                    sw.spawnParticles(net.minecraft.particle.ParticleTypes.EXPLOSION_EMITTER,
+                            t.getX(), t.getY() + 0.5, t.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+                    sw.playSound(null, t.getX(), t.getY(), t.getZ(),
+                            net.minecraft.sound.SoundEvents.ENTITY_DRAGON_FIREBALL_EXPLODE,
+                            net.minecraft.sound.SoundCategory.HOSTILE, 2.0f, 0.8f);
+                    for (net.minecraft.entity.player.PlayerEntity pl : sw.getEntitiesByClass(
+                            net.minecraft.entity.player.PlayerEntity.class,
+                            net.minecraft.util.math.Box.of(t.getPos(), 10.0, 6.0, 10.0),
+                            e -> e.squaredDistanceTo(t.getX(), t.getY(), t.getZ()) <= 25.0)) {
+                        pl.damage(sw.getDamageSources().magic(), (float) cfg.toroDiveDamage);
+                        double dx = pl.getX() - this.getX(), dz = pl.getZ() - this.getZ();
+                        pl.takeKnockback(2.0, -dx, -dz);
+                        if (pl instanceof ServerPlayerEntity spx)
+                            spx.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket(pl));
+                    }
+                }
+            } else this.diveTicks = 0;
+        }
+
+        // —— 俯冲冲撞:起手 ——
+        if (this.diveCooldown > 0) this.diveCooldown--;
+        else if (this.diveTicks == 0 && t != null) {
+            double d = this.distanceTo(t);
+            if (d >= 6.0 && d <= 30.0) {
+                this.diveTicks = 40;
+                sw.playSound(null, this.getX(), this.getY(), this.getZ(),
+                        net.minecraft.sound.SoundEvents.ENTITY_ENDER_DRAGON_GROWL,
+                        net.minecraft.sound.SoundCategory.HOSTILE, 2.0f, 1.1f);
+                this.diveCooldown = cfg.toroDiveCooldownTicks;
+            }
+        }
+
+        // —— 龙息射线:直线弹幕 ——
+        if (this.breathCooldown > 0) this.breathCooldown--;
+        else if (this.diveTicks == 0 && t != null && this.distanceTo(t) <= 28.0) {
+            net.minecraft.util.math.Vec3d from = this.getPos().add(0, this.getHeight() * 0.7, 0);
+            net.minecraft.util.math.Vec3d dir = t.getPos().add(0, t.getHeight() * 0.5, 0).subtract(from).normalize();
+            java.util.Set<net.minecraft.entity.player.PlayerEntity> hit = new java.util.HashSet<>();
+            for (int i = 1; i <= 36; i++) {
+                net.minecraft.util.math.Vec3d pt = from.add(dir.multiply(i * 0.8));
+                sw.spawnParticles(net.minecraft.particle.ParticleTypes.DRAGON_BREATH, pt.x, pt.y, pt.z, 3, 0.2, 0.2, 0.2, 0.01);
+                for (net.minecraft.entity.player.PlayerEntity pl : sw.getEntitiesByClass(
+                        net.minecraft.entity.player.PlayerEntity.class,
+                        net.minecraft.util.math.Box.of(pt, 3.6, 3.6, 3.6),
+                        e -> e.getPos().add(0, e.getHeight() * 0.5, 0).squaredDistanceTo(pt) <= 3.3)) {
+                    if (hit.add(pl)) {
+                        pl.damage(sw.getDamageSources().magic(), (float) cfg.toroBreathDamage);
+                        pl.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                                net.minecraft.entity.effect.StatusEffects.SLOWNESS, 60, 1));
+                    }
+                }
+            }
+            sw.playSound(null, this.getX(), this.getY(), this.getZ(),
+                    net.minecraft.sound.SoundEvents.ENTITY_ENDER_DRAGON_SHOOT,
+                    net.minecraft.sound.SoundCategory.HOSTILE, 1.8f, 0.9f);
+            this.breathCooldown = cfg.toroBreathCooldownTicks;
+        }
+
+        // —— 重力撕裂(一次性):龙威掀翻重力,范围玩家被抛上天 ——
+        if (!this.gravityUsed && this.getHealth() < this.getMaxHealth() * (float) cfg.toroGravityHealthThreshold) {
+            this.gravityUsed = true;
+            sw.playSound(null, this.getX(), this.getY(), this.getZ(),
+                    net.minecraft.sound.SoundEvents.ENTITY_ENDER_DRAGON_GROWL,
+                    net.minecraft.sound.SoundCategory.HOSTILE, 2.0f, 0.5f);
+            for (net.minecraft.entity.player.PlayerEntity pl : sw.getEntitiesByClass(
+                    net.minecraft.entity.player.PlayerEntity.class,
+                    net.minecraft.util.math.Box.of(this.getPos(), 48.0, 24.0, 48.0),
+                    e -> e.squaredDistanceTo(this) <= 576.0)) {
+                pl.damage(sw.getDamageSources().magic(), 20.0f);
+                pl.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                        net.minecraft.entity.effect.StatusEffects.LEVITATION, 60, 2, false, false, true));
+                sw.spawnParticles(net.minecraft.particle.ParticleTypes.DRAGON_BREATH,
+                        pl.getX(), pl.getY() + 0.5, pl.getZ(), 30, 0.6, 1.0, 0.6, 0.05);
+                sw.spawnParticles(net.minecraft.particle.ParticleTypes.PORTAL,
+                        pl.getX(), pl.getY() + 1.0, pl.getZ(), 20, 0.4, 0.8, 0.4, 0.1);
+            }
+            sw.getServer().getPlayerManager().broadcast(net.minecraft.text.Text.literal(
+                    "[末影龙] 龙威撕裂了重力——大地留不住你们！").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD), false);
         }
     }
 
