@@ -1,0 +1,185 @@
+{
+ "version": 3,
+ "name": "yongye_slash_lunge",
+ "author": "yongye",
+ "description": "疾跑突刺:直臂前刺",
+ "emote": {
+  "isLoop": false,
+  "beginTick": 0,
+  "endTick": 10,
+  "stopTick": 10,
+  "degrees": true,
+  "moves": [
+   {
+    "tick": 0,
+    "easing": "linear",
+    "torso": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "head": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "leftArm": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "rightLeg": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    }
+   },
+   {
+    "tick": 2,
+    "easing": "EASEOUTQUAD",
+    "torso": {
+     "pitch": 10,
+     "yaw": 26,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -7,
+     "yaw": -21,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": 22,
+     "yaw": -8,
+     "roll": 0
+    },
+    "leftArm": {
+     "pitch": -20,
+     "yaw": 0,
+     "roll": -10
+    },
+    "rightLeg": {
+     "pitch": 10,
+     "yaw": 4,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": -14,
+     "yaw": -4,
+     "roll": 0
+    }
+   },
+   {
+    "tick": 4,
+    "easing": "EASEINQUAD",
+    "torso": {
+     "pitch": 28,
+     "yaw": -16,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -20,
+     "yaw": 13,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -92,
+     "yaw": -4,
+     "roll": 0
+    },
+    "leftArm": {
+     "pitch": 24,
+     "yaw": 0,
+     "roll": -18
+    },
+    "rightLeg": {
+     "pitch": 26,
+     "yaw": 5,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": -38,
+     "yaw": -5,
+     "roll": 0
+    }
+   },
+   {
+    "tick": 6,
+    "easing": "linear",
+    "torso": {
+     "pitch": 24,
+     "yaw": -13,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -17,
+     "yaw": 11,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -90,
+     "yaw": -4,
+     "roll": 0
+    },
+    "leftArm": {
+     "pitch": 20,
+     "yaw": 0,
+     "roll": -15
+    },
+    "rightLeg": {
+     "pitch": 22,
+     "yaw": 4,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": -32,
+     "yaw": -4,
+     "roll": 0
+    }
+   },
+   {
+    "tick": 10,
+    "easing": "EASEINOUTQUAD",
+    "torso": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "head": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "leftArm": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "rightLeg": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    }
+   }
+  ]
+ }
+}

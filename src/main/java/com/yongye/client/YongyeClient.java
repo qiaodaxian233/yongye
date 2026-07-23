@@ -150,6 +150,14 @@ public class YongyeClient implements ClientModInitializer {
         // 主触发在 PlayerSlashSwingMixin(doAttack,含挥空);这里的 AttackEntityCallback 是兜底——
         // mixin 若因映射不符没挂上(require=0),命中实体时仍出轨迹;两路在 trySpawn 里 50ms 去重
         SlashFxManager.register();
+        // m254 真·骨骼拔刀动作(player-animator,JiJ 内置):所有库引用都隔离在 SlashAnimManager——
+        // 库缺失/版本冲突时该类加载即抛 NoClassDefFoundError,这里 Throwable 兜住,整体退回程序化姿态不崩游戏。
+        try {
+            SlashAnimManager.register();
+            SlashFxManager.animLibOk = true;
+        } catch (Throwable t) {
+            Yongye.LOGGER.warn("[夜蚀] player-animator 桥接失败,拔刀动作退回程序化姿态: {}", t.toString());
+        }
         net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (world.isClient) SlashFxManager.trySpawn(player);
             return net.minecraft.util.ActionResult.PASS;

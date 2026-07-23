@@ -1,0 +1,185 @@
+{
+ "version": 3,
+ "name": "yongye_slash_4",
+ "author": "yongye",
+ "description": "地面连击四式:横扫收式",
+ "emote": {
+  "isLoop": false,
+  "beginTick": 0,
+  "endTick": 14,
+  "stopTick": 14,
+  "degrees": true,
+  "moves": [
+   {
+    "tick": 0,
+    "easing": "linear",
+    "torso": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "head": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "leftArm": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "rightLeg": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    }
+   },
+   {
+    "tick": 3,
+    "easing": "EASEOUTQUAD",
+    "torso": {
+     "pitch": -4,
+     "yaw": 34,
+     "roll": 0
+    },
+    "head": {
+     "pitch": 2,
+     "yaw": -27,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -88,
+     "yaw": 42,
+     "roll": 6
+    },
+    "leftArm": {
+     "pitch": 16,
+     "yaw": 10,
+     "roll": -14
+    },
+    "rightLeg": {
+     "pitch": 10,
+     "yaw": 8,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": -12,
+     "yaw": -8,
+     "roll": 0
+    }
+   },
+   {
+    "tick": 5,
+    "easing": "EASEINQUAD",
+    "torso": {
+     "pitch": 10,
+     "yaw": -34,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -7,
+     "yaw": 27,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -86,
+     "yaw": -50,
+     "roll": -10
+    },
+    "leftArm": {
+     "pitch": 28,
+     "yaw": -6,
+     "roll": -26
+    },
+    "rightLeg": {
+     "pitch": 14,
+     "yaw": -6,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": -24,
+     "yaw": 6,
+     "roll": 0
+    }
+   },
+   {
+    "tick": 9,
+    "easing": "EASEOUTQUAD",
+    "torso": {
+     "pitch": 6,
+     "yaw": -20,
+     "roll": 0
+    },
+    "head": {
+     "pitch": -4,
+     "yaw": 16,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": -60,
+     "yaw": -30,
+     "roll": -6
+    },
+    "leftArm": {
+     "pitch": 14,
+     "yaw": -3,
+     "roll": -13
+    },
+    "rightLeg": {
+     "pitch": 8,
+     "yaw": -3,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": -12,
+     "yaw": 3,
+     "roll": 0
+    }
+   },
+   {
+    "tick": 14,
+    "easing": "EASEINOUTQUAD",
+    "torso": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "head": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "rightArm": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "leftArm": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "rightLeg": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    },
+    "leftLeg": {
+     "pitch": 0,
+     "yaw": 0,
+     "roll": 0
+    }
+   }
+  ]
+ }
+}

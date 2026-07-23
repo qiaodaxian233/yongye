@@ -18,6 +18,13 @@ repositories {
         url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
         content { includeGroupByRegex("software\\.bernie.*") }
     }
+    // player-animator(KosmX 官方 maven)——m254 真·骨骼拔刀动作前置。
+    // 国内网络若拉不动此源:挂代理重试,或手动下 jar(https://maven.kosmx.dev/dev/kosmx/player-anim/player-animation-lib-fabric/)
+    maven {
+        name = 'KosmX'
+        url = 'https://maven.kosmx.dev/'
+        content { includeGroupByRegex("dev\\.kosmx.*") }
+    }
     mavenCentral()
 }
 
@@ -35,6 +42,12 @@ dependencies {
         exclude group: "net.fabricmc.fabric-api"
     }
     include "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
+
+    // player-animator:真·骨骼级玩家动作(m254 拔刀七式)。照 GeckoLib 的 JiJ 口径:
+    // modImplementation 让 Loom 重映射到本项目 yarn;include 打进 jar,玩家只装本 mod 即可。
+    // 该库不带自己的 fabric-api 依赖,无需 exclude。
+    modImplementation "dev.kosmx.player-anim:player-animation-lib-fabric:${project.player_anim_version}"
+    include "dev.kosmx.player-anim:player-animation-lib-fabric:${project.player_anim_version}"
 }
 
 processResources {

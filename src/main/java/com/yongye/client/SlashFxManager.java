@@ -47,6 +47,10 @@ public final class SlashFxManager {
 
     private static final List<Trail> TRAILS = new ArrayList<>();
     private static long lastSwingNanos = 0L;
+    /** m254:player-animator 桥接是否就绪(YongyeClient 注册成功后置 true;运行期出错自动回落 false)。 */
+    public static boolean animLibOk = false;
+    /** m254:真动作播放让位窗——窗内本地玩家不再叠程序化姿态,避免双重动作。 */
+    private static long poseSuppressUntil = 0L;
     private static int combo = 0; // 地面连击 0 斜劈 / 1 反手 / 2 上撩 / 3 横扫收式,1.2 秒不出刀回到 0
 
     // 动作编号(m242,学 SlashBlade 的 upperslash / aerial_cleave / piercing / circle_slash 状态触发式):
@@ -84,6 +88,17 @@ public final class SlashFxManager {
             variant = combo;
         }
         lastSwingNanos = now;
+
+        // m254:真·骨骼动作(player-animator):本地玩家成功播放真动作,则 0.8 秒窗内程序化姿态让位。
+        // 运行期任何异常(库版本冲突等)一次性降级回程序化姿态,不再重试、不崩游戏。
+        if (animLibOk && player instanceof net.minecraft.client.network.AbstractClientPlayerEntity acp) {
+            try {
+                if (SlashAnimManager.playFor(acp, variant)) poseSuppressUntil = now + 800_000_000L;
+            } catch (Throwable t) {
+                animLibOk = false;
+                com.yongye.Yongye.LOGGER.warn("[夜蚀] 拔刀动作库运行期不可用,退回程序化姿态", t);
+            }
+        }
 
         // 七式参数:roll=斩面倾角(绕视线),dir=扫出方向
         float roll, sweep, radius; int dir;
@@ -132,10 +147,13 @@ public final class SlashFxManager {
         return (e.age / 18) % 4;
     }
 
-    /** 姿态用:该实体当前是否该摆拔刀姿态(开关 + 主手武器判定与轨迹同一套)。 */
+    /** 姿态用:该实体当前是否该摆拔刀姿态(开关 + 主手武器判定与轨迹同一套)。
+     *  m254:本地玩家在真动作让位窗内不摆程序化姿态(远端玩家仍走程序化,真动作不同步给别人)。 */
     public static boolean poseEligible(LivingEntity e) {
         YongyeConfig cfg = YongyeConfig.get();
         if (!cfg.slashFxPose) return false;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (e == mc.player && System.nanoTime() < poseSuppressUntil) return false;
         return eligible(cfg, e.getMainHandStack());
     }
 

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 51;
+    public static final int CURRENT_CONFIG_VERSION = 52;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -920,6 +920,10 @@ public class YongyeConfig {
     public boolean slashFxBends = true;
     /** 状态动作(m242,学 SlashBlade 的状态触发式):空中=回旋斩、疾跑=突进突刺、潜行=居合横斩;关=只保留地面连击。 */
     public boolean slashFxContextMoves = true;
+    /** 真·骨骼级拔刀动作(m254,player-animator 驱动的关键帧动画,含蓄力/爆发/弓步全身发力):
+     *  开=本地玩家挥砍播放七式真动作(程序化姿态自动让位);关=回 m243 程序化姿态。动作 JSON 在
+     *  assets/yongye/player_animations/,游戏内 F3+T 重载资源即可热调参。 */
+    public boolean slashFxAnimLib = true;
     /** 第三人称拔刀姿态幅度倍率(m248,0.3~2.5 生效钳制;1=旧版幅度,默认 1.35 更夸张跟手,嫌浮夸调回 1)。 */
     public double slashFxPoseScale = 1.35;
     /** 斩击轨迹大小倍率。 */
