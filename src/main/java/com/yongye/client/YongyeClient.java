@@ -139,6 +139,13 @@ public class YongyeClient implements ClientModInitializer {
                 context.client().execute(() -> MagicCircleFxManager.onCircle(
                         payload.color(), payload.x(), payload.y(), payload.z(), payload.radius())));
         MagicCircleFxManager.init();
+        // 疾跑收刀:玩家渲染器挂背部武器 feature(m247;藏手侧由 WeaponSheathMixin 负责)
+        net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback.EVENT.register(
+                (entityType, entityRenderer, registrationHelper, context) -> {
+                    if (entityRenderer instanceof net.minecraft.client.render.entity.PlayerEntityRenderer per) {
+                        registrationHelper.register(new WeaponBackFeatureRenderer(per));
+                    }
+                });
         // m240 拔刀剑式攻击动画:斩击轨迹(世界渲染)+ 近战命中兜底触发
         // 主触发在 PlayerSlashSwingMixin(doAttack,含挥空);这里的 AttackEntityCallback 是兜底——
         // mixin 若因映射不符没挂上(require=0),命中实体时仍出轨迹;两路在 trySpawn 里 50ms 去重

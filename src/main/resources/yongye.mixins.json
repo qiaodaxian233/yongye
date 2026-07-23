@@ -19,7 +19,8 @@
     "client.CameraShakeMixin",
     "client.FovKickMixin",
     "client.PlayerSlashSwingMixin",
-    "client.SlashPoseMixin"
+    "client.SlashPoseMixin",
+    "client.WeaponSheathMixin"
   ],
   "injectors": {
     "defaultRequire": 1
