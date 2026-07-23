@@ -15,7 +15,9 @@
     "client.TitleScreenMixin",
     "client.ParticleReducerMixin",
     "client.BossBarHudAccess",
-    "client.BossBarStyleMixin"
+    "client.BossBarStyleMixin",
+    "client.CameraShakeMixin",
+    "client.FovKickMixin"
   ],
   "injectors": {
     "defaultRequire": 1

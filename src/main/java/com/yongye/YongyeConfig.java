@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 41;
+    public static final int CURRENT_CONFIG_VERSION = 42;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -861,6 +861,20 @@ public class YongyeConfig {
     /** 被动:术士潜行AOE / 剑客剑气凌空 的攻击倍率(算完再乘持职业武器的 ×1.5)。 */
     public double warlockAoeAttackRatio     = 0.8;
     public double swordsmanPierceAttackRatio = 1.0;
+
+    // —— m239 沉浸式战斗手感(打击感:镜头微震 + FOV 顿挫 + 命中粒子 + 击杀闪光/确认音;纯视听反馈不改伤害) ——
+    /** 战斗手感总开关。 */
+    public boolean enableCombatFx = true;
+    /** 镜头抖动强度倍率(0=关抖动,1=默认,2=加倍)。 */
+    public double combatFxShakeScale = 1.0;
+    /** FOV 顿挫强度倍率(命中瞬间视野轻微拉近;0=关)。 */
+    public double combatFxFovKick = 1.0;
+    /** 命中/击杀时在怪身上补打击粒子(CRIT 火花,击杀加消散烟)。 */
+    public boolean combatFxParticles = true;
+    /** 击杀时屏幕淡金闪光一瞬。 */
+    public boolean combatFxKillFlash = true;
+    /** 击杀确认音(经典"叮")。 */
+    public boolean combatFxKillSound = true;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

@@ -184,6 +184,15 @@ public class DebugScreen extends Screen {
             }),
             // —— 配置(config)——
             new Page("配置", new Section[]{
+                    new Section("战斗手感(m239 镜头震/FOV顿挫/闪光/确认音)", new Btn[]{
+                            new Btn("战斗手感·开", "yongye config set enableCombatFx true"),
+                            new Btn("战斗手感·关", "yongye config set enableCombatFx false"),
+                            new Btn("震动·轻0.5", "yongye config set combatFxShakeScale 0.5"),
+                            new Btn("震动·默认1", "yongye config set combatFxShakeScale 1.0"),
+                            new Btn("震动·重2", "yongye config set combatFxShakeScale 2.0"),
+                            new Btn("闪光·关", "yongye config set combatFxKillFlash false"),
+                            new Btn("确认音·关", "yongye config set combatFxKillSound false"),
+                    }),
                     new Section("常用数值(config set 预设)", new Btn[]{
                             new Btn("技书精英0.001", "yongye config set skillBookDropChanceElite 0.001"),
                             new Btn("技书普通0.001", "yongye config set skillBookDropChanceNormal 0.001"),

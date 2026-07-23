@@ -129,6 +129,22 @@ public class YongyeClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.AttackSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.attackDamage = payload.atk()));
 
+        // m239 沉浸式战斗手感:收命中/击杀 FX 包 → 置入镜头震动/FOV 顿挫/闪光/确认音
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.CombatFxPayload.ID, (payload, context) ->
+                context.client().execute(() -> CombatFxManager.onFx(
+                        payload.kind(), payload.shake(), payload.fov(), payload.flash(), payload.sound())));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
+        // 击杀闪光:整屏淡金色一瞬,快速淡出(纯 ctx.fill,零新绘制 API)
+        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
+            int a = CombatFxManager.flashAlpha();
+            if (a <= 0) return;
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player == null || mc.options.hudHidden) return;
+            int w = mc.getWindow().getScaledWidth();
+            int h = mc.getWindow().getScaledHeight();
+            ctx.fill(0, 0, w, h, (a << 24) | 0xFFF2D8);
+        });
+
         // 灾厄核心定位器同步:更新方向箭头目标
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.CoreLocatorPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
