@@ -121,7 +121,7 @@ public final class MobEnhancementHandler {
         double prog = 1.0;
         prog += NightfallManager.getLevel() * cfg.mobScalingPerNightfall;
 
-        long day = mob.getWorld().getTimeOfDay() / 24000L;
+        long day = ProgressionManager.gameDay(mob.getWorld()); // m252:统一天数口径(睡觉跳夜也算一天)
         prog += Math.min(day, cfg.mobScalingMaxDays) * cfg.mobScalingPerDay;
 
         var nearest = mob.getWorld().getClosestPlayer(mob, 128.0);

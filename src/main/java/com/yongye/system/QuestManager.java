@@ -83,6 +83,8 @@ public final class QuestManager {
         for (int i = 0; i < 64; i++) {
             Item it = Registries.ITEM.get(rnd.nextInt(size));
             if (it == null || it == Items.AIR) continue;
+            // m253:只抽原版物品——本模组物品多为任务奖励/Boss 掉落,抽到=变相必败;顺带隔离他模组物品
+            if (!"minecraft".equals(Registries.ITEM.getId(it).getNamespace())) continue;
             if (it instanceof SpawnEggItem) continue;
             if (ANY_ITEM_BANNED.contains(it)) continue;
             if (isExtraBanned(it)) continue;
@@ -91,12 +93,21 @@ public final class QuestManager {
         return GATHER_POOL[rnd.nextInt(GATHER_POOL.length)].item();
     }
 
+    /** m253:追加黑名单匹配,支持通配——"xxx*"=前缀、"*xxx"=后缀、"*xxx*"=包含;默认清单见 YongyeConfig.QUEST_BANS_DEFAULT。
+     *  (顺手修 m250 笔误:分隔正则原写成 "[,\s]+" 的单反斜杠形态,Java 21 里 \s 转义=空格仍可编译,
+     *   但语义变成只认逗号/空格;现改为规范的逗号+任意空白。) */
     private static boolean isExtraBanned(Item it) {
         String bans = YongyeConfig.get().questBattleAnyItemExtraBans;
         if (bans == null || bans.isBlank()) return false;
-        String id = Registries.ITEM.getId(it).toString();
-        for (String s : bans.split("[,\s]+")) {
-            if (!s.isBlank() && s.trim().equalsIgnoreCase(id)) return true;
+        String id = Registries.ITEM.getId(it).toString(); // 恒小写,如 minecraft:elytra
+        for (String raw : bans.split("[,\\s]+")) {
+            String s = raw.trim().toLowerCase();
+            if (s.isBlank()) continue;
+            boolean pre = s.endsWith("*"), suf = s.startsWith("*");
+            if (pre && suf) { if (id.contains(s.substring(1, s.length() - 1))) return true; }
+            else if (pre)   { if (id.startsWith(s.substring(0, s.length() - 1))) return true; }
+            else if (suf)   { if (id.endsWith(s.substring(1))) return true; }
+            else if (s.equals(id)) return true;
         }
         return false;
     }

@@ -17,6 +17,10 @@ public final class ProgressionManager {
 
     private static double day1Time = -1;
 
+    /** 当前游戏天数(全模组按天逻辑的唯一口径,m252 收口)。
+     *  用 getTimeOfDay(昼夜时钟):玩家睡觉跳过黑夜时,原版会把它快进到次日清晨——**睡过去的夜也算一天**
+     *  (作者点名必须如此);/time set 同理生效。
+     *  ⚠ 严禁改成 getTime()(世界年龄):它睡觉不会跳,会把睡过的天漏掉。 */
     public static long gameDay(World world) {
         return world.getTimeOfDay() / 24000L;
     }

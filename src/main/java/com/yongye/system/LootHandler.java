@@ -231,7 +231,7 @@ public final class LootHandler {
     }
 
     private static boolean isEarlyGame(ServerWorld world, YongyeConfig cfg) {
-        return (world.getTimeOfDay() / 24000L) < cfg.skillBookEarlyGameDays;
+        return ProgressionManager.gameDay(world) < cfg.skillBookEarlyGameDays; // m252:统一天数口径(睡觉跳夜也算一天)
     }
 
     private static void drop(ServerWorld world, LivingEntity entity, ItemStack stack) {

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 50;
+    public static final int CURRENT_CONFIG_VERSION = 51;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -557,8 +557,12 @@ public class YongyeConfig {
     public boolean questBattleAnyItem = true;
     /** 抽奖滚动时长(tick,60=3 秒;0=不滚动直接揭晓)。滚动期间任务不判定成功/失败。 */
     public int questBattleRollTicks = 60;
-    /** 全物品随机的追加黑名单(物品 id 逗号/空格分隔,如 minecraft:dragon_egg,minecraft:elytra)。 */
-    public String questBattleAnyItemExtraBans = "";
+    /** m253:全物品随机追加黑名单的默认值——龙蛋/鞘翅/信标/图腾/下界合金一族/潜影盒/唱片/头颅等「前期不好拿」物(作者点名排除)。 */
+    public static final String QUEST_BANS_DEFAULT =
+            "minecraft:dragon_egg, minecraft:elytra, minecraft:nether_star, minecraft:beacon, minecraft:dragon_breath, minecraft:end_crystal, minecraft:totem_of_undying, minecraft:heavy_core, minecraft:trident, minecraft:ancient_debris, minecraft:netherite_*, minecraft:enchanted_golden_apple, minecraft:shulker_shell, *shulker_box, *smithing_template, minecraft:music_disc_*, minecraft:disc_fragment_5, minecraft:echo_shard, minecraft:recovery_compass, minecraft:sniffer_egg, *_head, *_skull";
+    /** 全物品随机的追加黑名单:物品 id 逗号/空格分隔;支持通配——"xxx*"=前缀匹配(如 minecraft:netherite_*)、
+     *  "*xxx"=后缀匹配(如 *shulker_box 含 16 色)。想解禁某项从这里删掉即可;清空会在下次启动被迁移回默认(留一个占位项可保持为空效果)。 */
+    public String questBattleAnyItemExtraBans = QUEST_BANS_DEFAULT;
 
     // ============ 背包神器(文档第 14 章)============
     public boolean enableArtifacts = true;
@@ -992,6 +996,9 @@ public class YongyeConfig {
                 if (INSTANCE.endDragonHealth == 1.0E9) INSTANCE.endDragonHealth = 1.0E19;
                 // m237:肉盾武器攻击折减默认值改版 0.5→0.3;仅当仍是旧默认值时迁移,自定义不动
                 if (INSTANCE.enhanceHybridDamageFraction == 0.5) INSTANCE.enhanceHybridDamageFraction = 0.3;
+                // m253:战斗爽全物品黑名单默认值改版 ""→内置「前期拿不到」清单;仅当仍为空(m250 旧默认)时迁移,自定义不动
+                if (INSTANCE.questBattleAnyItemExtraBans == null || INSTANCE.questBattleAnyItemExtraBans.isBlank())
+                    INSTANCE.questBattleAnyItemExtraBans = QUEST_BANS_DEFAULT;
                 // —— 陈旧检查:对比文件键 vs 当前字段,警告死键/缺失键/版本不符 ——
                 try {
                     JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
