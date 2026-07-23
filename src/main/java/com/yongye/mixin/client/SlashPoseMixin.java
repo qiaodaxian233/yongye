@@ -1,5 +1,6 @@
 package com.yongye.mixin.client;
 
+import com.yongye.YongyeConfig;
 import com.yongye.client.SlashFxManager;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
@@ -13,13 +14,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 拔刀剑式攻击动画(m240):第三人称挥砍姿态。
- * SlashBlade-Refabricated 的玩家动作靠外部 player-animator 库 + VMD 动作文件(硬依赖,不引入);
- * 本实现在 PlayerEntityModel.setAngles 末尾**叠加**三式连击姿态(斜劈/反手/横扫,与轨迹的 combo 同步):
- * 身体拧转 + 持械臂大弧度摆动 + 副手反向平衡 + 头部随动,包络 sin(p·π) 起收都归零。
- * 安全性:只在 handSwingProgress∈(0,1) 生效,而原版 animateArms 在攻击期间每帧都会**重新赋值**
- * body.yaw / 双臂角度 / head.yaw——叠加量不会跨帧累积;盔甲层渲染前 copyBipedStateTo 会照抄部件角度,
- * 盔甲跟着摆不穿模。require = 0:映射不符则静默不挂,只丢姿态不崩游戏。
+ * 拔刀剑式攻击动画(m240/m242)第三人称姿态 + MoBends 式全身发力(m243)。
+ * m243 学 MoBends(AttackSlashDown/WhirlSlash/Stance 逐帧扒过)三板斧:
+ *  ① 躯干大幅参与——body 拧身 + 前倾(他们 20~40°,原版三方风格都只动手臂,发力感来自这里);
+ *  ② 头部反向补偿——head 减去躯干旋转增量,身体甩出去、视线锁定目标不动(MoBends 的
+ *    head.orient(headYaw − bodyRotation) 手法,是「帅」的灵魂);
+ *  ③ 攻击弓步——副手侧腿前弓、持械侧腿后蹬(他们腿 orientX −30°+分腿;我们无膝关节做直腿弓步);
+ *  外加不对称包络:出手前反向蓄力 → 爆发过冲 → 收势缓落(他们 armSwing=clamp(t×3) 快打慢收)。
+ * 安全性同 m240:原版 setAngles 每帧对 body/head/双臂/双腿的旋转全部重新赋值(腿=limbSwing 公式
+ * 无条件赋值,body.pitch 有 else 归零分支),TAIL 叠加不跨帧累积;只碰旋转不碰 pivot(pivot 的
+ * 重置路径不保证,碰了会漂移);包络两端(p=0/1)均为 0。盔甲 copyBipedStateTo 照抄部件角度跟着摆。
+ * require = 0:映射不符则静默不挂,只丢姿态不崩游戏。slashFxBends=false 回 m242 简版(仅拧身+臂)。
  */
 @Mixin(PlayerEntityModel.class)
 public abstract class SlashPoseMixin {
@@ -35,47 +40,71 @@ public abstract class SlashPoseMixin {
         boolean rightHanded = entity.getMainArm() == Arm.RIGHT;
         ModelPart arm = rightHanded ? m.rightArm : m.leftArm;
         ModelPart off = rightHanded ? m.leftArm : m.rightArm;
+        ModelPart mainLeg = rightHanded ? m.rightLeg : m.leftLeg;   // 持械侧腿(后蹬)
+        ModelPart offLeg  = rightHanded ? m.leftLeg  : m.rightLeg;  // 副手侧腿(前弓)
         float dir = rightHanded ? 1f : -1f;
-        float e = MathHelper.sin(p * (float) Math.PI);    // 包络:起收归零,不与原版动画打架
 
+        boolean bends = YongyeConfig.get().slashFxBends;
+        float e = MathHelper.sin(p * (float) Math.PI);    // 拧身/弓步包络:起收归零(单向)
+        float w = bends ? yongye$strike(p) : e;           // 挥击包络:蓄力反向→爆发→缓落
+        float k = bends ? 1.6f : 1.0f;                    // MoBends 档拧身放大
+
+        float bYaw, bPitch;                               // 记录躯干增量,供头部反向补偿
         switch (SlashFxManager.poseVariant(entity)) {
-            case 0 -> { // 斜劈:举臂过肩斜挥下,身体前拧
-                m.body.yaw += -0.28f * e * dir;
-                arm.pitch  += -0.70f * e;
-                arm.roll   +=  0.40f * e * dir;
+            case 0 -> { // 斜劈:举臂过肩斜挥下,身体前拧前倾
+                bYaw = -0.28f * k * e * dir; bPitch = 0.18f * e;
+                arm.pitch += -0.75f * w;  arm.roll += 0.45f * w * dir;
             }
             case 1 -> { // 反手回斩:反向拧身,臂内旋
-                m.body.yaw +=  0.26f * e * dir;
-                arm.pitch  += -0.45f * e;
-                arm.roll   += -0.55f * e * dir;
+                bYaw =  0.26f * k * e * dir; bPitch = 0.14f * e;
+                arm.pitch += -0.50f * w;  arm.roll += -0.60f * w * dir;
             }
-            case 2 -> { // 上撩斩:臂从低处大弧挑上过头,身体轻仰拧
-                m.body.yaw +=  0.22f * e * dir;
-                arm.pitch  += -1.65f * e;
-                arm.roll   +=  0.25f * e * dir;
+            case 2 -> { // 上撩斩:前倾蓄势,臂从低处大弧挑上过头
+                bYaw =  0.19f * k * e * dir; bPitch = 0.22f * e;
+                arm.pitch += -1.80f * w;  arm.roll += 0.25f * w * dir;
             }
-            case 4 -> { // 空中回旋斩:大幅拧身带双臂横甩(躯干旋、腿不动,落地即收)
-                m.body.yaw += -1.15f * e * dir;
-                arm.pitch  += -1.30f * e;
-                arm.yaw    += -0.60f * e * dir;
-                off.yaw    +=  0.50f * e * dir;
+            case 4 -> { // 空中回旋斩:大幅拧身带双臂横甩 + 收腿剪(MoBends WhirlSlash)
+                bYaw = -0.80f * k * e * dir; bPitch = 0f;
+                arm.pitch += -1.35f * w;  arm.yaw += -0.65f * w * dir;
+                off.yaw   +=  0.55f * e * dir;
+                if (bends) { mainLeg.pitch += 0.50f * e; offLeg.pitch += -0.60f * e; }
             }
-            case 5 -> { // 疾跑突刺:持械臂直挺向前,肩部前送
-                m.body.yaw += -0.50f * e * dir;
-                arm.pitch  += -1.45f * e;
+            case 5 -> { // 疾跑突刺:深前倾,持械臂蓄力后收再直挺刺出
+                bYaw = -0.38f * k * e * dir; bPitch = 0.30f * e;
+                arm.pitch += -1.50f * w;
+                if (bends) { offLeg.pitch += -0.25f * e; mainLeg.pitch += 0.13f * e; } // 弓步加深
             }
             case 6 -> { // 潜行居合:低姿大横抽,臂平甩
-                m.body.yaw += -0.55f * e * dir;
-                arm.pitch  += -0.50f * e;
-                arm.yaw    += -0.75f * e * dir;
+                bYaw = -0.40f * k * e * dir; bPitch = 0.12f * e;
+                arm.pitch += -0.55f * w;  arm.yaw += -0.85f * w * dir;
             }
-            default -> { // 横扫收式(第四击):大拧身,臂抬平横甩
-                m.body.yaw += -0.36f * e * dir;
-                arm.pitch  += -1.05f * e;
-                arm.yaw    += -0.50f * e * dir;
+            default -> { // 横扫收式(第四击):最大拧身,臂抬平横甩
+                bYaw = -0.36f * k * e * dir; bPitch = 0.16f * e;
+                arm.pitch += -1.05f * w;  arm.yaw += -0.55f * w * dir;
             }
         }
-        off.pitch  += 0.22f * e;          // 副手反向摆一点,身体不僵
-        m.head.yaw += 0.10f * e * dir;    // 头部微随动
+
+        m.body.yaw += bYaw;
+        if (bends) {
+            m.body.pitch += bPitch;                        // 前倾发力(原版有 else 归零分支,叠加安全)
+            m.head.yaw   += -0.85f * bYaw;                 // MoBends 头部反补:身体甩、视线锁定
+            m.head.pitch += -0.80f * bPitch;
+            offLeg.pitch  += -0.45f * e;                   // 攻击弓步:副手侧前弓、持械侧后蹬
+            mainLeg.pitch +=  0.32f * e;
+            offLeg.yaw    += -0.12f * e * dir;             // 分腿站稳(MoBends 腿 rotateY ±25°)
+            mainLeg.yaw   +=  0.12f * e * dir;
+            off.roll      += -0.30f * e * dir;             // 副手外张护身(他们 offArm orientZ −80°)
+        } else {
+            m.head.yaw += 0.10f * e * dir;                 // 旧版:头部微随动
+        }
+        off.pitch += 0.22f * e;                            // 副手反向摆一点,身体不僵
+    }
+
+    /** 三段挥击包络(m243):蓄力反向(0~0.22,峰 −0.4)→ smoothstep 爆发到 1(~0.52)→ 二次缓落归零。 */
+    private static float yongye$strike(float p) {
+        if (p < 0.22f) { float t = p / 0.22f; return -0.40f * MathHelper.sin(t * 1.5708f); }
+        if (p < 0.52f) { float t = (p - 0.22f) / 0.30f; return -0.40f + 1.40f * (t * t * (3f - 2f * t)); }
+        float t = (p - 0.52f) / 0.48f;
+        return (1f - t) * (1f - t);
     }
 }

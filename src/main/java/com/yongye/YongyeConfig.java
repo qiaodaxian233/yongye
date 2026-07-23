@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 44;
+    public static final int CURRENT_CONFIG_VERSION = 45;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -883,6 +883,8 @@ public class YongyeConfig {
     public boolean slashFxPose = true;
     /** 原版近战武器(剑/斧/三叉戟)也出斩击;关=只有本模组武器出。外模组武器恒不出(伤害本就被过滤)。 */
     public boolean slashFxVanillaWeapons = true;
+    /** MoBends 式全身发力(m243):蓄力反向包络+躯干前倾大拧+头部视线锁定反补+攻击弓步;关=回 m242 简版姿态。 */
+    public boolean slashFxBends = true;
     /** 状态动作(m242,学 SlashBlade 的状态触发式):空中=回旋斩、疾跑=突进突刺、潜行=居合横斩;关=只保留地面连击。 */
     public boolean slashFxContextMoves = true;
     /** 斩击轨迹大小倍率。 */
