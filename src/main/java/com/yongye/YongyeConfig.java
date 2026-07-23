@@ -256,6 +256,7 @@ public class YongyeConfig {
     public int skillUpgradeCdFloor = 40;             // 冷却下限(tick,2s),再升级也不会更短
 
     // ===== 怪物随进度递增(血量/攻击跟着玩家变强) =====
+    /** m249 起弃用:按天数/永夜的进度成长恒开(作者点名「不能关」),此开关不再被读取,保留占位防旧 json 报死键。 */
     public boolean enableMobScaling = true;
     public double mobScalingPerNightfall = 0.8;       // 每级永夜 +60% 血
     public double mobScalingPerDay = 0.06;            // 每个游戏日 +4% 血
@@ -265,7 +266,7 @@ public class YongyeConfig {
     public double mobScalingMaxMultiplier = 60.0;     // 缩放倍率上限
 
     // ===== 动态对位缩放(按附近最强玩家的攻击/血量,把怪等比拔高,保证有来有回)=====
-    public boolean enableDynamicMobScaling = true;    // 总开关
+    public boolean enableDynamicMobScaling = true;    // 总开关(m249:其中「血量对位」还需世界难度≥地狱才生效;伤害对位不受难度门约束)
     public double dynamicMobScanRadius = 64.0;         // 怪生成时搜索最近玩家的半径
     public double dynamicMobTargetHits = 8.0;          // 普通怪:期望玩家砍多少下才杀死(怪血 = 玩家攻击 × 此值)
     public double dynamicMobSurviveHits = 30.0;        // 普通怪:期望玩家被打多少下才致命(怪伤 = 玩家最大生命 ÷ 此值)
@@ -273,7 +274,7 @@ public class YongyeConfig {
     public double dynamicMobBossSurviveHits = 12.0;    // BOSS版:期望承受次数(打得更疼)
 
     // ===== 动态爆率(玩家越强、掉率越低,减缓滚雪球,让怪物成长追得上)=====
-    public boolean enableDynamicLoot = true;           // 总开关
+    public boolean enableDynamicLoot = true;           // 总开关(m249:即便开着,也仅世界难度≥地狱才实际衰减;困难及以下恒 1.0)
     public double dynamicLootK = 150.0;                // 强度半衰常数:强度=此值时掉率减半,=3×时剩 1/4
     public double dynamicLootFloor = 0.15;             // 掉率下限:再强也保底这个倍率(避免完全不掉)
     public double dynamicLootEnhanceWeight = 2.0;      // 强化等级在强度里的权重(1级强化 ≈ 几级技能书)

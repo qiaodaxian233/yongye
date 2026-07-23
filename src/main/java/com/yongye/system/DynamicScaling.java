@@ -44,10 +44,11 @@ public final class DynamicScaling {
         double diffMult = com.yongye.system.DifficultyManager.mobMult();
 
         // —— 血量对位:目标 = 玩家每击攻击 × 期望击杀次数 × 难度,只增不减 ——
-        // m148:血量对位改为只在「永夜 V·灭世」(永夜等级 ≥ 5)才开。此前(m147)挂在世界难度「困难+」上仍太难;
-        //       改挂到「永夜等级」这条会随游戏推进/任务失败往上爬的线——前中期(永夜<5)怪不按攻击拔血,
-        //       只有世界沉入永夜 V 之后才开始堆血(永夜≥5 含其后「深渊 N 层」)。伤害对位仍未受此门约束(玩家未点名改它)。
-        boolean hpScalingOn = com.yongye.system.NightfallManager.getLevel() >= 5;  // 5 = 永夜 V·灭世
+        // 门的演进:m147 挂世界难度「困难+」→ m148 改挂永夜等级 ≥5 → m249 定版:
+        //   作者点名「血量加倍默认关闭,地狱以上才开」——改回挂世界难度,门槛提到「地狱(HELL)及以上」
+        //   (地狱/深渊/永夜/战斗爽 生效;游玩~困难 不按攻击拔血=默认关闭)。不再看永夜等级。
+        //   伤害对位仍未受此门约束(作者只点名血量)。
+        boolean hpScalingOn = DifficultyManager.atLeast(com.yongye.item.GameDifficulty.HELL);
         EntityAttributeInstance hpInst = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
         if (hpScalingOn && hpInst != null && targetHits > 0 && pAtk > 0) {
             double curHp = hpInst.getValue();

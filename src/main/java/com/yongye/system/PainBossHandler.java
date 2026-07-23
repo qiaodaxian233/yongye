@@ -336,7 +336,7 @@ public final class PainBossHandler {
         YongyeConfig cfg = YongyeConfig.get();
         // 时间线增强:复用怪物缩放公式(永夜等级 + 游戏天数 + 附近玩家强度 + 进化阶段,封顶 mobScalingMaxMultiplier)。
         // 血量按整倍率,攻击按 mobScalingAttackRatio 比例(与普通怪一致,避免攻击膨胀过猛)。
-        double prog = cfg.enableMobScaling ? MobEnhancementHandler.progressionMultiplier(pain, cfg) : 1.0;
+        double prog = MobEnhancementHandler.progressionMultiplier(pain, cfg); // m249:进度成长恒开(不再看 enableMobScaling)
         double atkProg = 1.0 + (prog - 1.0) * cfg.mobScalingAttackRatio;
         setBase(pain, EntityAttributes.GENERIC_MAX_HEALTH, cfg.painBossMaxHealth * prog);
         setBase(pain, EntityAttributes.GENERIC_ATTACK_DAMAGE, cfg.painBossAttack * atkProg);

@@ -29,6 +29,13 @@ public final class DifficultyManager {
     private static class State { int level = -1; }
 
     public static boolean isSet() { return level >= 0; }
+
+    /** m249 难度门:当前世界难度是否达到 d 档及以上。
+     *  战斗爽(BATTLE)ordinal 追加在枚举末尾(7)数值最大,天然通过任何「≥某档」的门(它按最高档对待);
+     *  未设定(-1)一律不达标。给「反滚雪球/血量对位只在地狱+生效」这类门统一用。 */
+    public static boolean atLeast(com.yongye.item.GameDifficulty d) {
+        return level >= d.ordinal();
+    }
     public static int getLevel() { return level; }
 
     /** 世界难度的怪物强度倍率;未设定按「适中」(1.0)。 */

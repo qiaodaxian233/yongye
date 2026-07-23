@@ -70,8 +70,10 @@ public final class MobEnhancementHandler {
             addFlat(mob, EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, ID_KB, cfg.mobKnockbackResistanceAdd);
             addFlat(mob, EntityAttributes.GENERIC_FOLLOW_RANGE, ID_FOLLOW, cfg.mobFollowRangeAdd);
 
-            // 随进度递增:怪物血量/攻击随永夜等级、天数、附近玩家强度成长
-            if (cfg.enableMobScaling) {
+            // 随进度递增:怪物血量/攻击随永夜等级、天数、附近玩家强度成长。
+            // m249:此块恒开——作者点名「按天数成长不能关」,不再受 enableMobScaling 约束
+            // (该开关弃用保留占位;enableMobEnhancement 总开关仍是全局最后保险)。
+            {
                 double prog = progressionMultiplier(mob, cfg);
                 if (prog > 1.0) {
                     addMultiplier(mob, EntityAttributes.GENERIC_MAX_HEALTH, ID_SCALE_HP, prog);

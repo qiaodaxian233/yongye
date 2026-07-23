@@ -33,6 +33,9 @@ public final class PlayerPower {
     public static double lootMultiplier(ServerPlayerEntity p) {
         YongyeConfig cfg = YongyeConfig.get();
         if (!cfg.enableDynamicLoot) return 1.0;
+        // m249:反滚雪球「默认关闭,地狱难度及以上才开」(作者点名)——
+        // 游玩/简单/适中/困难 恒 1.0 不衰减;地狱/深渊/永夜/战斗爽 才启用(战斗爽仍吃下方 m217 的减半回拉)。
+        if (!DifficultyManager.atLeast(com.yongye.item.GameDifficulty.HELL)) return 1.0;
         double m = 1.0 / (1.0 + score(p) / Math.max(1.0, cfg.dynamicLootK));
         m = Math.max(cfg.dynamicLootFloor, m);
         if (DifficultyManager.getLevel() == com.yongye.item.GameDifficulty.BATTLE.ordinal()) {
