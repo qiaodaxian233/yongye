@@ -16,7 +16,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.item.TridentItem;
+import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
@@ -44,6 +46,9 @@ public final class SlashFxManager {
     private static final long REVEAL_MS = 95;   // 扫出用时(拔刀剑的 progress 扫动)
     private static final int MAX_TRAILS = 10;   // 同屏上限(狂点保护)
     private static final int SEGMENTS = 18;     // 弧面分段
+
+    /** m256:刀光拖尾贴图(程序化拉丝质感,学 EpicACG 的贴图化刀光路线;白色亮度图,颜色由顶点色染)。 */
+    private static final Identifier TRAIL_TEX = Identifier.of("yongye", "textures/vfx/slash_trail.png");
 
     private static final List<Trail> TRAILS = new ArrayList<>();
     private static long lastSwingNanos = 0L;
@@ -157,6 +162,29 @@ public final class SlashFxManager {
         return eligible(cfg, e.getMainHandStack());
     }
 
+    /** m257 蓄力重斩用:该实体主手武器是否够格出刀光(公开口径,mixin/客户端管理器共用)。 */
+    public static boolean weaponEligible(LivingEntity e) {
+        return eligible(YongyeConfig.get(), e.getMainHandStack());
+    }
+
+    /** m257 蓄力重斩用:本地即刻放一道加大刀光(sweep 200°、半径 2.3×,重斩观感)。 */
+    public static void spawnHeavy(PlayerEntity player) {
+        if (player == null) return;
+        YongyeConfig cfg = YongyeConfig.get();
+        if (!cfg.enableSlashFx) return;
+        ItemStack stack = player.getMainHandStack();
+        if (!eligible(cfg, stack)) return;
+        long now = System.nanoTime();
+        lastSwingNanos = now;                                 // 与普通刀光共用去重时钟
+        float radius = 2.3f * (float) Math.max(0.3, cfg.slashFxSize);
+        Vec3d eye = player.getEyePos();
+        Vec3d look = player.getRotationVector();
+        int rgb = YongyeClient.weaponTintColor(stack) & 0xFFFFFF;
+        if (TRAILS.size() >= MAX_TRAILS) TRAILS.remove(0);
+        TRAILS.add(new Trail(eye.x + look.x * 0.50, eye.y + look.y * 0.50 - 0.18, eye.z + look.z * 0.50,
+                player.getYaw(), player.getPitch(), 8f, 1, 200f, radius, rgb, now));
+    }
+
     /** 武器判定:本模组武器恒生效;原版近战(剑/斧/三叉戟)按开关;
      *  外模组武器即便 extends SwordItem 也不给——它们的伤害本就被 m189 过滤,假刀不配发光。 */
     private static boolean eligible(YongyeConfig cfg, ItemStack st) {
@@ -181,6 +209,10 @@ public final class SlashFxManager {
         Vec3d cam = ctx.camera().getPos();
         long now = System.nanoTime();
         VertexConsumer vc = consumers.getBuffer(RenderLayer.getLightning()); // 位置+颜色,附加混合=发光
+        // m256:贴图化刀身(EntityTranslucentEmissive=m246 已编译验证的同一条链):
+        // 开着时,旧的纯色三带降为 45% 透明度当「辉光」底层,贴图刀身压在上面;关=回旧纯色观感。
+        boolean textured = YongyeConfig.get().slashFxTextured;
+        VertexConsumer tvc = textured ? consumers.getBuffer(RenderLayer.getEntityTranslucentEmissive(TRAIL_TEX)) : null;
 
         Iterator<Trail> it = TRAILS.iterator();
         while (it.hasNext()) {
@@ -190,9 +222,10 @@ public final class SlashFxManager {
 
             double fade = Math.pow(1.0 - ageMs / LIFE_MS, 1.4) * alphaCfg; // 整体淡出
             double reveal = Math.min(1.0, ageMs / (double) REVEAL_MS);     // 扫出进度
-            int aCore = (int) Math.round(230 * fade);                      // 白色刀芯
-            int aEdge = (int) Math.round(80 * fade);                       // 外缘武器色
-            if (aCore <= 1) { it.remove(); continue; }
+            double halo = textured ? 0.45 : 1.0;                           // m256:贴图开时纯色带降档当辉光
+            int aCore = (int) Math.round(230 * fade * halo);               // 白色刀芯
+            int aEdge = (int) Math.round(80 * fade * halo);                // 外缘武器色
+            if (aCore <= 1 && !textured) { it.remove(); continue; }
             int cr = (t.rgb >> 16) & 0xFF, cg = (t.rgb >> 8) & 0xFF, cb = t.rgb & 0xFF;
 
             // 手工基向量:F=视线,R=水平右手(F×上),再绕 F 转 roll 得斩面内的 R'
@@ -224,8 +257,44 @@ public final class SlashFxManager {
                         fx, fy, fz, sx, sy, sz,
                         rMid, s0, c0, rMid, s1, c1, rOut, s1, c1, rOut, s0, c0,
                         255, 255, 255, aCore, cr, cg, cb, aEdge);
+                // m256:贴图刀身(内缘白热→外缘武器色,亮度/拉丝形状由贴图承担;U=沿扫掠,V=径向)
+                if (tvc != null) {
+                    float u0 = i / (float) SEGMENTS, u1 = (i + 1) / (float) SEGMENTS;
+                    int aTex = (int) Math.round(250 * fade);
+                    texQuad(tvc, cam, t, fx, fy, fz, sx, sy, sz,
+                            t.radius * 0.42, s0, c0, s1, c1, rOut,
+                            u0, u1, aTex, cr, cg, cb);
+                }
             }
         }
+    }
+
+    /** m256:画一段贴图刀身(双面):内缘(v=0,白)→外缘(v=1,武器色);顶点链照 m246 已验证写法。 */
+    private static void texQuad(VertexConsumer vc, Vec3d cam, Trail t,
+                                double fx, double fy, double fz, double sx, double sy, double sz,
+                                double rIn, double s0, double c0, double s1, double c1, double rOut,
+                                float u0, float u1, int a, int cr, int cg, int cb) {
+        float ax = px(t.ox, cam.x, fx, sx, rIn, c0, s0), ay = px(t.oy, cam.y, fy, sy, rIn, c0, s0), az = px(t.oz, cam.z, fz, sz, rIn, c0, s0);
+        float bx = px(t.ox, cam.x, fx, sx, rIn, c1, s1), by = px(t.oy, cam.y, fy, sy, rIn, c1, s1), bz = px(t.oz, cam.z, fz, sz, rIn, c1, s1);
+        float cx = px(t.ox, cam.x, fx, sx, rOut, c1, s1), cy = px(t.oy, cam.y, fy, sy, rOut, c1, s1), cz = px(t.oz, cam.z, fz, sz, rOut, c1, s1);
+        float dx = px(t.ox, cam.x, fx, sx, rOut, c0, s0), dy = px(t.oy, cam.y, fy, sy, rOut, c0, s0), dz = px(t.oz, cam.z, fz, sz, rOut, c0, s0);
+        int light = 0xF000F0;
+        // 正面
+        tv(vc, ax, ay, az, 255, 255, 255, a, u0, 0f, light);
+        tv(vc, bx, by, bz, 255, 255, 255, a, u1, 0f, light);
+        tv(vc, cx, cy, cz, cr, cg, cb, a, u1, 1f, light);
+        tv(vc, dx, dy, dz, cr, cg, cb, a, u0, 1f, light);
+        // 反面(倒绕序,免疫背面剔除)
+        tv(vc, dx, dy, dz, cr, cg, cb, a, u0, 1f, light);
+        tv(vc, cx, cy, cz, cr, cg, cb, a, u1, 1f, light);
+        tv(vc, bx, by, bz, 255, 255, 255, a, u1, 0f, light);
+        tv(vc, ax, ay, az, 255, 255, 255, a, u0, 0f, light);
+    }
+
+    private static void tv(VertexConsumer vc, float x, float y, float z,
+                           int r, int g, int b, int a, float u, float v, int light) {
+        vc.vertex(x, y, z).color(r, g, b, a).texture(u, v)
+                .overlay(OverlayTexture.DEFAULT_UV).light(light).normal(0, 1, 0);
     }
 
     /** 画一个双面四边形:innerA(r,s,c)→innerB→outerB→outerA,内缘色/外缘色各带 alpha。 */

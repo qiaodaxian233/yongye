@@ -134,6 +134,8 @@ public class YongyeClient implements ClientModInitializer {
                 context.client().execute(() -> CombatFxManager.onFx(
                         payload.kind(), payload.shake(), payload.fov(), payload.flash(), payload.sound())));
         ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
+        // m257 蓄力重斩:按住攻击键蓄力检测(手感反馈+松开上报)
+        ClientTickEvents.END_CLIENT_TICK.register(ChargeSlashManager::tick);
         // 地面魔法阵特效(m246,法师技能包素材)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.MagicFxPayload.ID, (payload, context) ->
                 context.client().execute(() -> MagicCircleFxManager.onCircle(

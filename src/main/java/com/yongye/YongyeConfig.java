@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 53;
+    public static final int CURRENT_CONFIG_VERSION = 55;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -920,6 +920,22 @@ public class YongyeConfig {
     public boolean slashFxBends = true;
     /** 状态动作(m242,学 SlashBlade 的状态触发式):空中=回旋斩、疾跑=突进突刺、潜行=居合横斩;关=只保留地面连击。 */
     public boolean slashFxContextMoves = true;
+    // —— m257 蓄力重斩(学 Epic Fight 的按住派生:按住攻击键蓄力,松开放前方锥形重斩) ——
+    /** 蓄力重斩总开关。 */
+    public boolean enableChargeSlash = true;
+    /** 起蓄门槛(tick,按住不足此时长=普通攻击不触发,12=0.6 秒)。 */
+    public int chargeSlashMinTicks = 12;
+    /** 满蓄时长(tick,30=1.5 秒;蓄到即「叮」提示,再按住不涨)。 */
+    public int chargeSlashMaxTicks = 30;
+    /** 最低蓄力伤害倍率(刚过门槛就松开,伤害=攻击力×此值)。 */
+    public double chargeSlashDamageMultMin = 1.6;
+    /** 满蓄伤害倍率。 */
+    public double chargeSlashDamageMultMax = 3.2;
+    /** 重斩锥形范围(格)。 */
+    public double chargeSlashRange = 5.0;
+    /** 冷却(tick,100=5 秒)。 */
+    public int chargeSlashCooldownTicks = 100;
+
     // —— m255 武器技能特效夸张化(混沌斩剑气推进 / 吞噬吸魂漩涡 / 终焉血阵天罚,多帧演出) ——
     /** 武器技能大演出总开关(关=只留三招原有的简版粒子)。 */
     public boolean weaponSkillFancyFx = true;
@@ -932,6 +948,8 @@ public class YongyeConfig {
     public boolean slashFxAnimLib = true;
     /** 第三人称拔刀姿态幅度倍率(m248,0.3~2.5 生效钳制;1=旧版幅度,默认 1.35 更夸张跟手,嫌浮夸调回 1)。 */
     public double slashFxPoseScale = 1.35;
+    /** m256:贴图化刀光(拉丝质感刀身+旧纯色带降档当辉光,学 EpicACG 路线);关=回纯色刀光。 */
+    public boolean slashFxTextured = true;
     /** 斩击轨迹大小倍率。 */
     public double slashFxSize = 1.0;
     /** 斩击轨迹亮度(0~1,0=等效关闭)。 */

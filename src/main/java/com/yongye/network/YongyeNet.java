@@ -145,6 +145,12 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.system.WeaponSkillManager.upgradeSkill(p, payload.index()));
         });
+        // m257 蓄力重斩:客户端按住攻击键蓄力松开上报,服务端结算锥形重斩(校验/冷却在 handler 内)
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.ChargeSlashPayload.ID, com.yongye.network.ChargeSlashPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ChargeSlashPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.ChargeSlashHandler.perform(p, payload.chargeTicks()));
+        });
         // 登录:① 未选难度则弹「难度选择」界面(取代旧的强制选职弹窗);② 首次发一本「职业选择书」让玩家自选职业
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity pl = handler.player;
