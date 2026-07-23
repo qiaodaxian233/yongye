@@ -59,6 +59,7 @@ public final class ClassUltimateManager {
         boolean ok = cast(p, c, cfg);
         if (ok) {
             cooldownUntil.put(p.getUuid(), now + Math.max(20L, cfg.ultimateCooldownTicks));
+            SkillFxHelper.ultimateFx(p, c); // 职业色魔法阵 + 法师包音效(m246)
         }
     }
 

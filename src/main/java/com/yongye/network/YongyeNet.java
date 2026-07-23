@@ -19,6 +19,7 @@ public final class YongyeNet {
 
     public static void register() {
         PayloadTypeRegistry.playS2C().register(StatsPayload.ID, StatsPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.MagicFxPayload.ID, com.yongye.network.MagicFxPayload.CODEC); // 魔法阵特效(m246)
         PayloadTypeRegistry.playC2S().register(SkillUsePayload.ID, SkillUsePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(OpenAccessoryPayload.ID, OpenAccessoryPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(SkillUsePayload.ID, (payload, context) -> {

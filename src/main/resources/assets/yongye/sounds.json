@@ -1,7 +1,98 @@
 {
-  "pain_bgm": { "category": "music", "sounds": [ { "name": "yongye:pain_bgm", "stream": true } ] },
-  "pain_almighty_push": { "category": "hostile", "sounds": [ "yongye:pain_almighty_push" ] },
-  "pain_universal_pull": { "category": "hostile", "sounds": [ "yongye:pain_universal_pull" ] },
-  "pain_planetary": { "category": "hostile", "sounds": [ "yongye:pain_planetary" ] },
-  "him_jumpscare": { "category": "hostile", "sounds": [ { "name": "yongye:him_jumpscare", "stream": true } ] }
+  "pain_bgm": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "yongye:pain_bgm",
+        "stream": true
+      }
+    ]
+  },
+  "pain_almighty_push": {
+    "category": "hostile",
+    "sounds": [
+      "yongye:pain_almighty_push"
+    ]
+  },
+  "pain_universal_pull": {
+    "category": "hostile",
+    "sounds": [
+      "yongye:pain_universal_pull"
+    ]
+  },
+  "pain_planetary": {
+    "category": "hostile",
+    "sounds": [
+      "yongye:pain_planetary"
+    ]
+  },
+  "him_jumpscare": {
+    "category": "hostile",
+    "sounds": [
+      {
+        "name": "yongye:him_jumpscare",
+        "stream": true
+      }
+    ]
+  },
+  "skill_fallen_heart": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_fallen_heart"
+    ]
+  },
+  "skill_fallen_heart_heartpickup": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_fallen_heart_heartpickup"
+    ]
+  },
+  "skill_fire_armor": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_fire_armor"
+    ]
+  },
+  "skill_fire_armor_pickup": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_fire_armor_pickup"
+    ]
+  },
+  "skill_magic_defense": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_magic_defense"
+    ]
+  },
+  "skill_magic_defense_defense": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_magic_defense_defense"
+    ]
+  },
+  "skill_tree_heal": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_tree_heal"
+    ]
+  },
+  "skill_white_star": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_white_star"
+    ]
+  },
+  "skill_white_star_star": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_white_star_star"
+    ]
+  },
+  "skill_white_star_star_hit": {
+    "category": "players",
+    "sounds": [
+      "yongye:skill_white_star_star_hit"
+    ]
+  }
 }

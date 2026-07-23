@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 46;
+    public static final int CURRENT_CONFIG_VERSION = 47;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -33,6 +33,12 @@ public class YongyeConfig {
     public double lootCrateRollScale = 1.0;
     /** 传说宝箱开出随机职业武器的概率(0~1)。 */
     public double lootCrateWeaponChance = 0.20;
+
+    // —— 魔法阵技能特效(m246)——
+    /** 总开关:大招施放脚下展开职业色魔法阵+音效。 */
+    public boolean magicCircleEnabled = true;
+    /** 魔法阵大小缩放(1.0 ≈ 半径 2.6 格)。 */
+    public double magicCircleScale = 1.0;
 
     // ============ 总开关 ============
     public boolean enableMobEnhancement = true;
