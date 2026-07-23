@@ -94,6 +94,12 @@ public final class SlashFxManager {
         }
         lastSwingNanos = now;
 
+        // m258:空中回旋斩上报服务端结算一圈伤害(转一圈就该扫一圈;冷却与校验在服务端)
+        if (variant == V_AERIAL) {
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
+                    .send(new com.yongye.network.SpinSlashPayload());
+        }
+
         // m254:真·骨骼动作(player-animator):本地玩家成功播放真动作,则 0.8 秒窗内程序化姿态让位。
         // 运行期任何异常(库版本冲突等)一次性降级回程序化姿态,不再重试、不崩游戏。
         if (animLibOk && player instanceof net.minecraft.client.network.AbstractClientPlayerEntity acp) {

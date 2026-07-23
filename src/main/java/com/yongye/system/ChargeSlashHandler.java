@@ -92,8 +92,8 @@ public final class ChargeSlashHandler {
                 .formatted(tNorm >= 0.999 ? Formatting.GOLD : Formatting.YELLOW), true);
     }
 
-    /** 武器判定:与刀光(SlashFxManager.eligible)同一口径的服务端版。 */
-    private static boolean weaponOk(ItemStack st) {
+    /** 武器判定:与刀光(SlashFxManager.eligible)同一口径的服务端版(m258 回旋斩共用,故 public)。 */
+    public static boolean weaponOk(ItemStack st) {
         if (st == null || st.isEmpty()) return false;
         Item it = st.getItem();
         if (it instanceof ClassWeaponItem || it instanceof ChaosBladeItem) return true;

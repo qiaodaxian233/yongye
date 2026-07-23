@@ -145,6 +145,12 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.system.WeaponSkillManager.upgradeSkill(p, payload.index()));
         });
+        // m258 空中回旋斩:客户端空中挥砍触发即上报,服务端结算身周一圈伤害(校验/冷却在 handler 内)
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.SpinSlashPayload.ID, com.yongye.network.SpinSlashPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.SpinSlashPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.SpinSlashHandler.perform(p));
+        });
         // m257 蓄力重斩:客户端按住攻击键蓄力松开上报,服务端结算锥形重斩(校验/冷却在 handler 内)
         PayloadTypeRegistry.playC2S().register(com.yongye.network.ChargeSlashPayload.ID, com.yongye.network.ChargeSlashPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ChargeSlashPayload.ID, (payload, context) -> {

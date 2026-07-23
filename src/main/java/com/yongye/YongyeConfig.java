@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 55;
+    public static final int CURRENT_CONFIG_VERSION = 57;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -920,6 +920,34 @@ public class YongyeConfig {
     public boolean slashFxBends = true;
     /** 状态动作(m242,学 SlashBlade 的状态触发式):空中=回旋斩、疾跑=突进突刺、潜行=居合横斩;关=只保留地面连击。 */
     public boolean slashFxContextMoves = true;
+    // —— m259 武器右键格挡(法杖除外;有格挡值,被打掉即破防) ——
+    /** 武器格挡总开关。 */
+    public boolean enableWeaponGuard = true;
+    /** 格挡值上限=最大生命×此比例(跟随成长曲线,后期照样挡得动)。 */
+    public double guardMaxHealthFraction = 0.6;
+    /** 格挡值上限保底(开局血量低时不至于一戳就破)。 */
+    public double guardMinValue = 20.0;
+    /** 回复:每秒回 上限×此比例(0.08≈12.5 秒回满)。 */
+    public double guardRegenFractionPerSec = 0.08;
+    /** 回复延迟:距上次挡下超过此 tick 才开始回复(40=2 秒)。 */
+    public int guardRegenDelayTicks = 40;
+    /** 破防硬直:被击穿后多少 tick 内无法格挡,期满格挡值直接回满(100=5 秒)。 */
+    public int guardBreakRecoverTicks = 100;
+    /** 举盾心跳时长(tick):右键每 4t 重发一次交互,8=松开右键约 0.4 秒后自然放下。 */
+    public int guardHoldTicks = 8;
+    /** 正面判定:攻击者方向与视线的点积下限(0.15≈只挡前方约 160° 扇面,背刺挡不住)。 */
+    public double guardFrontalDot = 0.15;
+
+    // —— m258 空中回旋斩范围伤害(七式之四不再纯视觉:转一圈扫一圈) ——
+    /** 空中回旋斩范围伤害总开关。 */
+    public boolean enableSpinSlashAoe = true;
+    /** 回旋斩半径(格)。 */
+    public double spinSlashRadius = 3.5;
+    /** 回旋斩伤害=攻击力×此倍率(略低于正刀,毕竟是整圈)。 */
+    public double spinSlashDamageRatio = 0.8;
+    /** 回旋斩冷却(tick,12≈一次挥击节奏,防狂点叠圈)。 */
+    public int spinSlashCooldownTicks = 12;
+
     // —— m257 蓄力重斩(学 Epic Fight 的按住派生:按住攻击键蓄力,松开放前方锥形重斩) ——
     /** 蓄力重斩总开关。 */
     public boolean enableChargeSlash = true;
