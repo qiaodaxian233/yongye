@@ -134,6 +134,14 @@ public class YongyeClient implements ClientModInitializer {
                 context.client().execute(() -> CombatFxManager.onFx(
                         payload.kind(), payload.shake(), payload.fov(), payload.flash(), payload.sound())));
         ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
+        // m240 拔刀剑式攻击动画:斩击轨迹(世界渲染)+ 近战命中兜底触发
+        // 主触发在 PlayerSlashSwingMixin(doAttack,含挥空);这里的 AttackEntityCallback 是兜底——
+        // mixin 若因映射不符没挂上(require=0),命中实体时仍出轨迹;两路在 trySpawn 里 50ms 去重
+        SlashFxManager.register();
+        net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (world.isClient) SlashFxManager.trySpawn(player);
+            return net.minecraft.util.ActionResult.PASS;
+        });
         // 击杀闪光:整屏淡金色一瞬,快速淡出(纯 ctx.fill,零新绘制 API)
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             int a = CombatFxManager.flashAlpha();
@@ -386,7 +394,7 @@ public class YongyeClient implements ClientModInitializer {
     /** m211/m213:强化等级 → 染色(0xAARRGGBB,**必须带满 alpha**:1.21 起物品染色按 ARGB 解释,
      *  高 8 位是透明度,返回纯 RGB(高位=0)会把整件物品渲染成全透明=隐形,m212 后实机就是这么翻车的)。
      *  等级阶梯是指数型(100/250/500/1000/2500),用对数插值让各品质档的色变均匀。 */
-    private static int weaponTintColor(ItemStack stack) {
+    static int weaponTintColor(ItemStack stack) { // 包内可见:m240 斩击轨迹取同一套武器色
         com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
         if (!cfg.weaponTintEnabled) return 0xFFFFFFFF;
         int lvl = stack.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);

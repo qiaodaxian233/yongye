@@ -17,7 +17,9 @@
     "client.BossBarHudAccess",
     "client.BossBarStyleMixin",
     "client.CameraShakeMixin",
-    "client.FovKickMixin"
+    "client.FovKickMixin",
+    "client.PlayerSlashSwingMixin",
+    "client.SlashPoseMixin"
   ],
   "injectors": {
     "defaultRequire": 1

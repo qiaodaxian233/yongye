@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 42;
+    public static final int CURRENT_CONFIG_VERSION = 43;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // ============ 总开关 ============
@@ -875,6 +875,18 @@ public class YongyeConfig {
     public boolean combatFxKillFlash = true;
     /** 击杀确认音(经典"叮")。 */
     public boolean combatFxKillSound = true;
+
+    // —— m240 拔刀剑式攻击动画(学习 SlashBlade-Refabricated:斩击轨迹弧光 + 第三人称三式连击姿态;纯视觉零伤害改动) ——
+    /** 斩击轨迹总开关(挥砍出刀光,颜色随武器强化等级染色管线走)。 */
+    public boolean enableSlashFx = true;
+    /** 第三人称拔刀姿态(挥砍时身体拧转+持械臂大弧度摆动,三式连击循环)。 */
+    public boolean slashFxPose = true;
+    /** 原版近战武器(剑/斧/三叉戟)也出斩击;关=只有本模组武器出。外模组武器恒不出(伤害本就被过滤)。 */
+    public boolean slashFxVanillaWeapons = true;
+    /** 斩击轨迹大小倍率。 */
+    public double slashFxSize = 1.0;
+    /** 斩击轨迹亮度(0~1,0=等效关闭)。 */
+    public double slashFxAlpha = 0.75;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

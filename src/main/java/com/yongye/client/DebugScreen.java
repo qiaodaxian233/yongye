@@ -184,7 +184,7 @@ public class DebugScreen extends Screen {
             }),
             // —— 配置(config)——
             new Page("配置", new Section[]{
-                    new Section("战斗手感(m239 镜头震/FOV顿挫/闪光/确认音)", new Btn[]{
+                    new Section("战斗手感(m239 镜头震/顿挫/闪光 · m240 拔刀斩击)", new Btn[]{
                             new Btn("战斗手感·开", "yongye config set enableCombatFx true"),
                             new Btn("战斗手感·关", "yongye config set enableCombatFx false"),
                             new Btn("震动·轻0.5", "yongye config set combatFxShakeScale 0.5"),
@@ -192,6 +192,13 @@ public class DebugScreen extends Screen {
                             new Btn("震动·重2", "yongye config set combatFxShakeScale 2.0"),
                             new Btn("闪光·关", "yongye config set combatFxKillFlash false"),
                             new Btn("确认音·关", "yongye config set combatFxKillSound false"),
+                            new Btn("斩击轨迹·开", "yongye config set enableSlashFx true"),
+                            new Btn("斩击轨迹·关", "yongye config set enableSlashFx false"),
+                            new Btn("拔刀姿态·开", "yongye config set slashFxPose true"),
+                            new Btn("拔刀姿态·关", "yongye config set slashFxPose false"),
+                            new Btn("轨迹·大1.3", "yongye config set slashFxSize 1.3"),
+                            new Btn("轨迹·默认1", "yongye config set slashFxSize 1.0"),
+                            new Btn("仅本模组武器", "yongye config set slashFxVanillaWeapons false"),
                     }),
                     new Section("常用数值(config set 预设)", new Btn[]{
                             new Btn("技书精英0.001", "yongye config set skillBookDropChanceElite 0.001"),
