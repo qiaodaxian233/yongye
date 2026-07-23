@@ -49,10 +49,30 @@ public abstract class SlashPoseMixin {
                 arm.pitch  += -0.45f * e;
                 arm.roll   += -0.55f * e * dir;
             }
-            default -> { // 横扫收式:大拧身,臂抬平横甩
-                m.body.yaw += -0.34f * e * dir;
-                arm.pitch  += -1.00f * e;
-                arm.yaw    += -0.45f * e * dir;
+            case 2 -> { // 上撩斩:臂从低处大弧挑上过头,身体轻仰拧
+                m.body.yaw +=  0.22f * e * dir;
+                arm.pitch  += -1.65f * e;
+                arm.roll   +=  0.25f * e * dir;
+            }
+            case 4 -> { // 空中回旋斩:大幅拧身带双臂横甩(躯干旋、腿不动,落地即收)
+                m.body.yaw += -1.15f * e * dir;
+                arm.pitch  += -1.30f * e;
+                arm.yaw    += -0.60f * e * dir;
+                off.yaw    +=  0.50f * e * dir;
+            }
+            case 5 -> { // 疾跑突刺:持械臂直挺向前,肩部前送
+                m.body.yaw += -0.50f * e * dir;
+                arm.pitch  += -1.45f * e;
+            }
+            case 6 -> { // 潜行居合:低姿大横抽,臂平甩
+                m.body.yaw += -0.55f * e * dir;
+                arm.pitch  += -0.50f * e;
+                arm.yaw    += -0.75f * e * dir;
+            }
+            default -> { // 横扫收式(第四击):大拧身,臂抬平横甩
+                m.body.yaw += -0.36f * e * dir;
+                arm.pitch  += -1.05f * e;
+                arm.yaw    += -0.50f * e * dir;
             }
         }
         off.pitch  += 0.22f * e;          // 副手反向摆一点,身体不僵

@@ -47,7 +47,11 @@ public final class SlashFxManager {
 
     private static final List<Trail> TRAILS = new ArrayList<>();
     private static long lastSwingNanos = 0L;
-    private static int combo = 0; // 0 斜劈 / 1 反手 / 2 横扫,1.2 秒不出刀回到 0
+    private static int combo = 0; // 地面连击 0 斜劈 / 1 反手 / 2 上撩 / 3 横扫收式,1.2 秒不出刀回到 0
+
+    // 动作编号(m242,学 SlashBlade 的 upperslash / aerial_cleave / piercing / circle_slash 状态触发式):
+    // 0~3 = 地面四连击;4 = 空中回旋斩;5 = 疾跑突刺;6 = 潜行居合。
+    private static final int V_AERIAL = 4, V_LUNGE = 5, V_IAI = 6;
 
     /** 一道斩击:原点 + 朝向(yaw/pitch/roll)+ 扫向/张角/半径 + 武器色 + 出生时刻。 */
     private record Trail(double ox, double oy, double oz,
@@ -74,15 +78,23 @@ public final class SlashFxManager {
         long now = System.nanoTime();
         long gap = now - lastSwingNanos;
         if (gap < 50_000_000L) return;                       // 双触发点去重
-        combo = (gap > 1_200_000_000L) ? 0 : (combo + 1) % 3; // 断连回到第一式
+        int variant = contextVariant(player);                // 空中/疾跑/潜行的状态动作优先
+        if (variant < 0) {                                   // 地面普通挥砍才推进连击链
+            combo = (gap > 1_200_000_000L) ? 0 : (combo + 1) % 4; // 断连回到第一式
+            variant = combo;
+        }
         lastSwingNanos = now;
 
-        // 三式参数:roll=斩面倾角(绕视线),dir=扫出方向,横扫更大更宽
+        // 七式参数:roll=斩面倾角(绕视线),dir=扫出方向
         float roll, sweep, radius; int dir;
-        switch (combo) {
-            case 0 ->  { roll = -52f; dir =  1; sweep = 128f; radius = 1.60f; } // 右上→左下斜劈
-            case 1 ->  { roll =  52f; dir = -1; sweep = 128f; radius = 1.60f; } // 反手回斩
-            default -> { roll =   6f; dir =  1; sweep = 152f; radius = 1.88f; } // 横扫收式
+        switch (variant) {
+            case 0 ->      { roll = -52f; dir =  1; sweep = 128f; radius = 1.60f; } // 右上→左下斜劈
+            case 1 ->      { roll =  52f; dir = -1; sweep = 128f; radius = 1.60f; } // 反手回斩
+            case 2 ->      { roll =  96f; dir = -1; sweep = 136f; radius = 1.65f; } // 上撩斩(近垂直斩面向上挑)
+            case V_AERIAL -> { roll = 10f; dir =  1; sweep = 300f; radius = 1.70f; } // 空中回旋斩(近整圈)
+            case V_LUNGE ->  { roll =  0f; dir =  1; sweep =  26f; radius = 2.60f; } // 疾跑突刺(窄长向前)
+            case V_IAI ->    { roll =   3f; dir = -1; sweep = 205f; radius = 1.90f; } // 潜行居合(低平大横斩)
+            default ->     { roll =   6f; dir =  1; sweep = 168f; radius = 1.95f; } // 横扫收式(第四击,更大)
         }
         radius *= (float) Math.max(0.3, cfg.slashFxSize);
 
@@ -99,11 +111,25 @@ public final class SlashFxManager {
                 dir, sweep, radius, rgb, now));
     }
 
-    /** 姿态用:当前连击式(本地玩家=真实连击计数;其他玩家按 age 伪随机,只影响观感)。 */
+    /**
+     * 状态动作判定(m242):空中→回旋斩 / 疾跑→突刺 / 潜行→居合,都不是→-1(走地面连击链)。
+     * 玩家的 onGround/sprinting/sneaking 都是同步旗标,远端玩家的姿态也能按真实状态匹配。
+     */
+    public static int contextVariant(LivingEntity e) {
+        if (!YongyeConfig.get().slashFxContextMoves) return -1;
+        if (!e.isOnGround()) return V_AERIAL;
+        if (e.isSprinting()) return V_LUNGE;
+        if (e.isSneaking()) return V_IAI;
+        return -1;
+    }
+
+    /** 姿态用:当前动作式(状态动作优先;地面链本地玩家=真实连击计数,其他玩家按 age 伪随机)。 */
     public static int poseVariant(LivingEntity e) {
+        int cv = contextVariant(e);
+        if (cv >= 0) return cv;
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player != null && e == mc.player) return combo;
-        return (e.age / 18) % 3;
+        return (e.age / 18) % 4;
     }
 
     /** 姿态用:该实体当前是否该摆拔刀姿态(开关 + 主手武器判定与轨迹同一套)。 */

@@ -196,6 +196,8 @@ public class DebugScreen extends Screen {
                             new Btn("斩击轨迹·关", "yongye config set enableSlashFx false"),
                             new Btn("拔刀姿态·开", "yongye config set slashFxPose true"),
                             new Btn("拔刀姿态·关", "yongye config set slashFxPose false"),
+                            new Btn("状态动作·开", "yongye config set slashFxContextMoves true"),
+                            new Btn("状态动作·关", "yongye config set slashFxContextMoves false"),
                             new Btn("轨迹·大1.3", "yongye config set slashFxSize 1.3"),
                             new Btn("轨迹·默认1", "yongye config set slashFxSize 1.0"),
                             new Btn("仅本模组武器", "yongye config set slashFxVanillaWeapons false"),
