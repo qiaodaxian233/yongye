@@ -120,6 +120,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.ForeignDamageFilterHandler.register(); // m189 怪物伤害来源检测(只认原版+本模组武器)
         com.yongye.system.CombatFxHandler.register(); // m239 沉浸式战斗手感(必须排在伤害过滤之后:被取消的伤害不出打击感)
         WeaponSkillManager.init();
+        com.yongye.system.LootCrateHandler.init(); // 战利品宝箱掉落(m245)
         HardcoreSurvivalHandler.register();
         EndDragonHandler.register();  // m183 末地末影龙强化(10亿血/三命/脱战回血)
         ModSounds.init();

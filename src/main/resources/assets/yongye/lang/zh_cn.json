@@ -95,5 +95,9 @@
   "entity.yongye.anubis_wraith": "阿努比斯恶灵",
   "biome.yongye.nightblight": "夜蚀之地",
   "entity.yongye.gandi": "肝帝",
-  "item.yongye.class_weapon_summoner": "职业武器·鹰扬"
+  "item.yongye.class_weapon_summoner": "职业武器·鹰扬",
+  "item.yongye.loot_crate_normal": "战利品宝箱·普通",
+  "item.yongye.loot_crate_rare": "战利品宝箱·稀有",
+  "item.yongye.loot_crate_epic": "战利品宝箱·史诗",
+  "item.yongye.loot_crate_legendary": "战利品宝箱·传说"
 }

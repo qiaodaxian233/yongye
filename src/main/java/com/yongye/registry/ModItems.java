@@ -141,6 +141,18 @@ public final class ModItems {
                     .rarity(Rarity.EPIC)
                     .attributeModifiers(TankShieldItem.offhandAttributes())));
 
+    // —— 战利品宝箱(m245:BOSS 级怪掉落,右键开启;0普通/1稀有/2史诗/3传说)——
+    private static final Item[] LOOT_CRATES = {
+            register("loot_crate_normal",    new com.yongye.item.LootCrateItem(0, new Item.Settings().maxCount(16))),
+            register("loot_crate_rare",      new com.yongye.item.LootCrateItem(1, new Item.Settings().maxCount(16).rarity(Rarity.UNCOMMON))),
+            register("loot_crate_epic",      new com.yongye.item.LootCrateItem(2, new Item.Settings().maxCount(16).rarity(Rarity.RARE))),
+            register("loot_crate_legendary", new com.yongye.item.LootCrateItem(3, new Item.Settings().maxCount(16).rarity(Rarity.EPIC))),
+    };
+    /** 按品质取宝箱物品(0~3,越界取传说)。 */
+    public static Item lootCrate(int tier) {
+        return LOOT_CRATES[Math.max(0, Math.min(3, tier))];
+    }
+
 private static Item register(String name, Item item) {
         return Registry.register(Registries.ITEM, Identifier.of(Yongye.MOD_ID, name), item);
     }

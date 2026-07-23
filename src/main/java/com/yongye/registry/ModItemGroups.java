@@ -30,6 +30,7 @@ public final class ModItemGroups {
         ItemGroupEvents.modifyEntriesEvent(GENERAL_KEY).register(entries -> {
             // 技能书:放几本不同等级方便测试
             entries.add(ModItems.CHAOS_BLADE);
+            for (int t = 0; t <= 3; t++) entries.add(ModItems.lootCrate(t)); // 战利品宝箱(m245)
             entries.add(ModItems.WARD_BOOK);
             entries.add(ModItems.ENHANCE_PROTECT_SCROLL);
             for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
