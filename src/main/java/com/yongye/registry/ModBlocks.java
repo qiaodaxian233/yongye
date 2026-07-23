@@ -22,6 +22,14 @@ public final class ModBlocks {
                     .luminance(s -> 12)          // 自发光,夜里可见
                     .dropsNothing()));           // 不掉自身,奖励由管理器发放
 
+    /** 蚀矿(m264):只在夜蚀群系(被侵蚀的土地)生成/生长,钻石镐起挖,熔炼得蚀锭。
+     *  微光=矿脉里的紫纹在发光;requiresTool=徒手/低级镐挖了不掉。 */
+    public static final Block BLIGHT_ORE = register("blight_ore",
+            new Block(AbstractBlock.Settings.create()
+                    .strength(5.0f, 6.0f)
+                    .requiresTool()
+                    .luminance(s -> 5)));
+
     private static Block register(String name, Block block) {
         Block b = Registry.register(Registries.BLOCK, Identifier.of(Yongye.MOD_ID, name), block);
         Registry.register(Registries.ITEM, Identifier.of(Yongye.MOD_ID, name),

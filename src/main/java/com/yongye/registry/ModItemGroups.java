@@ -62,6 +62,12 @@ public final class ModItemGroups {
             entries.add(ModItems.ENDING_ESSENCE);
             // 方块
             entries.add(ModBlocks.CATASTROPHE_CORE);
+            entries.add(ModBlocks.BLIGHT_ORE);     // m264 蚀矿
+            entries.add(ModItems.BLIGHT_INGOT);    // m264 蚀锭
+            entries.add(ModItems.BLIGHT_HELMET);   // m265 夜蚀套装
+            entries.add(ModItems.BLIGHT_CHESTPLATE);
+            entries.add(ModItems.BLIGHT_LEGGINGS);
+            entries.add(ModItems.BLIGHT_BOOTS);
 
             // 背包神器:每种放 残破(1)/远古(3)/终焉(6) 三档示例
             for (com.yongye.item.ArtifactType t : com.yongye.item.ArtifactType.values()) {

@@ -5,6 +5,8 @@ import com.yongye.YongyeConfig;
 import com.yongye.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
@@ -53,6 +55,7 @@ public final class NightBlightHandler {
 
     private static int aggroTick = 0;
     private static int seedTick = 0;
+    private static int oreTick = 0;   // m264:蚀矿生长节拍
 
     public static void register() {
         // —— ② 全生物敌化(每 20 tick 扫一轮;扫描节奏本身就是被动生物的攻击冷却) ——
@@ -85,6 +88,23 @@ public final class NightBlightHandler {
                             // 敌对/中立怪:锁定目标即由它们自带的攻击 AI 接管
                             mob.setTarget(player);
                         }
+                    }
+                }
+            }
+
+            // —— m264:蚀矿在侵蚀区内缓慢生长(老侵蚀区/已播种区都能继续长新矿) ——
+            if (++oreTick >= Math.max(200, cfg.blightOreGrowIntervalTicks)) {
+                oreTick = 0;
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    if (!(player.getWorld() instanceof ServerWorld world)) continue;
+                    if (!world.getBiome(player.getBlockPos()).matchesKey(BIOME_KEY)) continue;
+                    if (world.getRandom().nextDouble() >= cfg.blightOreGrowChance) continue;
+                    for (int attempt = 0; attempt < 10; attempt++) {
+                        BlockPos pos = player.getBlockPos().add(
+                                world.getRandom().nextInt(25) - 12,
+                                world.getRandom().nextInt(17) - 12,
+                                world.getRandom().nextInt(25) - 12);
+                        if (convertToOre(world, pos)) break;   // 每人每轮最多长 1 块
                     }
                 }
             }
@@ -172,8 +192,41 @@ public final class NightBlightHandler {
                             server.getCommandSource().withWorld(world).withSilent(), cmd);
                 }
                 converted++;
+                seedOre(world, cx, cz);   // m264:新侵蚀区播种蚀矿脉
             }
         }
         return converted;
+    }
+
+    /** m264:在刚被侵蚀的区块里播种蚀矿脉——地下随机取点,把石头族原地转化成蚀矿(空气/矿洞位置静默跳过重试)。 */
+    private static void seedOre(ServerWorld world, int chunkX, int chunkZ) {
+        YongyeConfig cfg = YongyeConfig.get();
+        if (cfg.blightOreVeinsPerChunk <= 0) return;
+        Random rnd = world.getRandom();
+        int bottom = world.getBottomY();
+        for (int v = 0; v < cfg.blightOreVeinsPerChunk; v++) {
+            for (int attempt = 0; attempt < 8; attempt++) {
+                int x = (chunkX << 4) + rnd.nextInt(16);
+                int z = (chunkZ << 4) + rnd.nextInt(16);
+                int surface = world.getTopY(net.minecraft.world.Heightmap.Type.WORLD_SURFACE, x, z);
+                int span = Math.max(1, surface - 6 - (bottom + 8));
+                int y = bottom + 8 + rnd.nextInt(span);
+                BlockPos pos = new BlockPos(x, y, z);
+                if (!convertToOre(world, pos)) continue;   // 落到空气/水/矿物上就换个点重试
+                int size = Math.max(1, cfg.blightOreVeinSize);
+                for (int i = 1; i < size; i++) {
+                    convertToOre(world, pos.add(rnd.nextInt(3) - 1, rnd.nextInt(3) - 1, rnd.nextInt(3) - 1));
+                }
+                break;
+            }
+        }
+    }
+
+    /** 石头族(石/深板岩/花岗闪长安山/凝灰岩)→ 蚀矿;其余方块一律不动,返回是否转化成功。 */
+    private static boolean convertToOre(ServerWorld world, BlockPos pos) {
+        BlockState state = world.getBlockState(pos);
+        if (!(state.isOf(Blocks.STONE) || state.isOf(Blocks.DEEPSLATE) || state.isOf(Blocks.GRANITE)
+                || state.isOf(Blocks.DIORITE) || state.isOf(Blocks.ANDESITE) || state.isOf(Blocks.TUFF))) return false;
+        return world.setBlockState(pos, com.yongye.registry.ModBlocks.BLIGHT_ORE.getDefaultState());
     }
 }
