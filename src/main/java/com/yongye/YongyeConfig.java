@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 63;
+    public static final int CURRENT_CONFIG_VERSION = 64;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -822,6 +822,45 @@ public class YongyeConfig {
     // ============ m265:夜蚀套装(灵魂绑定) ============
     /** 夜蚀盔甲灵魂绑定总开关:认主(第一个拿到的人)、别人捡不起、死亡不掉落重生归还。 */
     public boolean blightArmorSoulbound = true;
+
+    // ============ m268:皮肤 BOSS 技能包(伤害均为施放时点的基础值,不吃成长缩放) ============
+    // —— 浴火凤凰 ——
+    /** 烈焰吐息:冷却 / 单段伤害(直线火舌,命中点燃)。 */
+    public int phoenixBeamCooldownTicks = 160;
+    public double phoenixBeamDamage = 30.0;
+    /** 火焰龙卷:冷却 / 伤害(目标脚下起火旋风,命中击飞+点燃)。 */
+    public int phoenixTornadoCooldownTicks = 300;
+    public double phoenixTornadoDamage = 25.0;
+    /** 浴火重生(一次性):血量跌破该比例时蜷入烈焰之卵 5 秒无敌,随后回复最大血量×healRatio 并爆炎。 */
+    public double phoenixRebirthThreshold = 0.30;
+    public double phoenixRebirthHealRatio = 0.40;
+    // —— 死亡法师 ——
+    /** 魂火锁定:冷却 / 伤害(目标脚下魂火标记 1.25 秒后爆燃,附凋零)。 */
+    public int mageStrikeCooldownTicks = 140;
+    public double mageStrikeDamage = 35.0;
+    /** 亡者音爆:冷却 / 伤害(近身范围击退+缓速)。 */
+    public int mageNovaCooldownTicks = 240;
+    public double mageNovaDamage = 25.0;
+    /** 虚影闪现:被贴脸挨打后闪现到目标侧后方的冷却。 */
+    public int mageBlinkCooldownTicks = 200;
+    // —— 红蜘蛛 ——
+    /** 蛛网陷阱:冷却(目标脚下铺蛛网+中毒)。 */
+    public int spiderWebCooldownTicks = 200;
+    /** 猛扑:冷却 / 落地范围伤害。 */
+    public int spiderPounceCooldownTicks = 160;
+    public double spiderPounceDamage = 25.0;
+    /** 蛛群咆哮(一次性):血量跌破该比例时怒吼召唤 spiderBroodCount 只毒液蜘蛛围攻。 */
+    public double spiderBroodHealthThreshold = 0.5;
+    public int spiderBroodCount = 4;
+    // —— 自建末影龙 ——
+    /** 龙息射线:冷却 / 伤害(直线龙息,命中缓速)。 */
+    public int toroBreathCooldownTicks = 140;
+    public double toroBreathDamage = 30.0;
+    /** 俯冲冲撞:冷却 / 撞击伤害(锁定目标高速俯冲,撞点范围伤害+大击退)。 */
+    public int toroDiveCooldownTicks = 220;
+    public double toroDiveDamage = 45.0;
+    /** 重力撕裂(一次性):血量跌破该比例时 24 格内玩家被龙威掀上天(漂浮+伤害)。 */
+    public double toroGravityHealthThreshold = 0.4;
 
     // ============ m217:战斗爽难度 ============
     /** m251 起弃用:反滚雪球在战斗爽已明确关闭(见 DifficultyManager.growthSuppressionOn),减半回拉不再被读取,保留占位防旧 json 报死键。 */

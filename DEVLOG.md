@@ -2297,3 +2297,31 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 物品图标 4 张程序化打底(调色板取自蚀锭),作者随时可用 GPT 生图替换 `textures/item/blight_*.png`(64×64,透明底)——**穿戴层那两张勿用 AI 生成**(UV 布局 AI 画不对)。
 - 配置 +1;**待编译验证(集中在盔甲注册,均照真实 1.21.1 源码,低险)**=Registries.ARMOR_MATERIAL / ArmorMaterial 七参构造+Layer / Registry.registerReference / ArmorItem.Type.getMaxDamage / SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE / ItemStack.OPTIONAL_CODEC.listOf() 附件 / 两个 mixin 目标(yarn 已核) / Inventory.size()/setStack(标准)。
 - 实机盯:烧锭合套穿上看穿戴层观感;A 捡起→B 去捡确认捡不动;A 死亡确认装备不掉、重生回背包+紫字提示;强化界面塞头盔确认能强化;tooltip 看「已认主」。
+
+## m266 永夜阶段/核心箭头 HUD 移到血条上方(2026-07-23)
+
+作者:「永夜阶段会被挡住,改到血条上面」。根因:阶段名画在屏幕中上 y=4,原版 BOSS 血条恰好也从顶部中央往下叠(名字 y≈3、条 y=12,每条 +19),m263 之后 BOSS 一多阶段名整个被压死。
+
+- 阶段名移到**玩家血条面板正上方**(HudCompactMixin 面板顶=h-55,阶段名放 h-66 居中),BOSS 血条再多也挡不到;
+- 顺手把**灾厄核心方向箭头**(原 y=30,两条 BOSS 血条就压住)也移到 h-82(阶段名上方),距离文字 h-74,和面板等级行(h-54)互不打架;
+- 低血量走原版心形时(≤60 HP 不接管),h-66/h-82 也在心形+护甲行(h-49)之上,无重叠。纯客户端,零配置。
+
+## m267 大体型 BOSS 原地转圈修复(2026-07-23)
+
+作者:「BOSS 走路总是原地转圈」。根因:原版寻路按实体宽度取整算通道——阿努比斯宽 2.5、红蜘蛛/巨蟹宽 3.0,需要 3 格宽无障碍走廊才算"有路",野外几乎处处寻路失败;MeleeAttackGoal 每秒重找路 → MoveControl 不停朝失败节点拧身子 = 原地转圈。贴脸时还有第二来源:目标点就在自己巨型 hitbox 边上,路径瞬间完成又瞬间重找。
+
+- 新 `entity/BossNavAssist`(每 tick,零 mixin):①近身(≤体宽×2+1)→ 停寻路+锁头锁身面向目标(出手判定走 Goal.canAttack 与寻路无关,照打);②寻路失败(navigation.isIdle 且有目标)→ 绕过路径图,MoveControl 直线压上;
+- 六只接入:阿努比斯/红蜘蛛/死亡法师/巨蟹(地面)+ 凤凰/自建龙(飞行,BirdNavigation 偶发失败同样兜底);
+- **跨步高度属性**(GENERIC_STEP_HEIGHT,1.20.5+ 原版属性):阿努比斯/红蜘蛛/巨蟹 1.6、法师 1.1——巨体直接踏上 1 格高低差,不跳不绕,穷追不舍(战斗帅方针);
+- **待编译验证(均低险)**:GENERIC_STEP_HEIGHT 字段(yarn 对注册表常量自动命名,注册 id generic.step_height)、MoveControl.moveTo/EntityNavigation.isIdle/stop/LookControl.lookAt(Entity,f,f)(全部 yarn 1.21.1 官方 mapping 已核:method_6239/6357/6340/6226)。
+
+## m268 四只皮肤 BOSS 技能包(2026-07-23)
+
+作者:「这些 BOSS 设计技能了吗,不能一个技能都没设计吧」。盘点:阿努比斯有(m174 狂怒/法术AoE/召唤恶灵)、佩恩有整套,**凤凰/死亡法师/红蜘蛛/自建龙 Stage1 光杆近战**。本轮全部补齐,全服务端(粒子+音效+伤害+位移),零新实体零 mixin;伤害/冷却/阈值全配置(+21,configVersion 63→**64**)。
+
+- **浴火凤凰**:①烈焰吐息(直线火舌 24 格,命中点燃,炎柱粒子+烈焰人音);②火焰龙卷(目标脚下 8 层螺旋火柱,命中击飞+点燃);③**浴火重生**(一次性招牌):血量跌破 30% 蜷入烈焰之卵——5 秒无敌、火焰螺旋收拢,破壳回复最大血量 40% + 爆炎 AoE 点燃击退 + 全服播报。
+- **死亡法师**:①魂火锁定(目标脚下魂火四点标记 1.25 秒后爆燃+凋零 II——给走位窗口的延迟爆点);②亡者音爆(近身 7 格触发:监守者音爆粒子+范围伤害+1.8 倍击退+缓速 II);③虚影闪现(被贴脸挨打 → 传送到目标侧后方 7 格,双端紫门粒子+末影人音——法师不陪你贴身互殴)。
+- **红蜘蛛**:①猛扑(4~14 格锁定飞扑,落地范围伤害+击退+尘土);②蛛网陷阱(目标脚下十字铺蛛网+中毒 I);③**蛛群咆哮**(一次性):血量跌破 50% 怒吼(掠夺兽吼)+ 环形召唤 4 只毒液蜘蛛(在树实体复用,继承目标)+ 范围缓速+黑暗;④毒刺(近战命中附中毒 II,覆写 tryAttack——yarn 核实在 LivingEntity,method_6121)。
+- **自建末影龙**:①龙息射线(28 格直线龙息,命中+缓速 II);②俯冲冲撞(6~30 格锁定,FlightMoveControl 3.0 速档压上 2 秒,贴近 5 格撞击:45 伤+2.0 击退+龙火爆音);③**重力撕裂**(一次性):血量跌破 40%,24 格内玩家漂浮 III 3 秒被掀上天+20 伤+龙息粒子+全服播报(摔落交给重力)。
+- 数值口径:技能伤害是固定基础值(不吃天数成长),BOSS 压迫感主要来自 m263 的百万级血量+属性成长,技能负责"帅"和逼走位;嫌疼/嫌轻改对应 cfg。
+- **待编译验证(低险)**:粒子 SONIC_BOOM/DRAGON_BREATH/ITEM_SLIME/EXPLOSION_EMITTER/CLOUD、音效 ENTITY_WARDEN_SONIC_BOOM/ENTITY_BLAZE_SHOOT/ENTITY_ENDERMAN_TELEPORT/ENTITY_RAVAGER_ROAR·STEP/ENTITY_ENDER_DRAGON_SHOOT·GROWL/ENTITY_DRAGON_FIREBALL_EXPLODE/ENTITY_SPIDER_AMBIENT·STEP/ITEM_FIRECHARGE_USE(注册表常量自动命名,全是普通 SoundEvent 档,刻意避开 RegistryEntry 型的 GENERIC_EXPLODE);setFireTicks/setInvulnerable/addVelocity/heal/tryAttack/velocityModified/hurtTime 全 yarn 已核。
