@@ -232,7 +232,10 @@ public class YongyeClient implements ClientModInitializer {
                     .formatted(net.minecraft.util.Formatting.DARK_RED, net.minecraft.util.Formatting.BOLD);
             int w = mc.textRenderer.getWidth(t);
             int x = (mc.getWindow().getScaledWidth() - w) / 2;
-            ctx.drawTextWithShadow(mc.textRenderer, t, x, 4, 0xFFFF5555);
+            // m266:原先画在屏幕中上 y=4,会被 BOSS 血条(y=12 起往下叠)整个压住;
+            // 改到玩家血条面板(HudCompactMixin,面板顶 = h-55)正上方,BOSS 再多也挡不到。
+            int y = mc.getWindow().getScaledHeight() - 66;
+            ctx.drawTextWithShadow(mc.textRenderer, t, x, y, 0xFFFF5555);
         });
 
         // 灾厄核心方向箭头 HUD:有目标核心时,在屏幕中上画一个指向它的旋转箭头 + 距离(像 boss 指示)。
@@ -256,7 +259,8 @@ public class YongyeClient implements ClientModInitializer {
             double bearingDeg = Math.toDegrees(Math.atan2(cross, dot));
 
             int cx = mc.getWindow().getScaledWidth() / 2;
-            int cy = 30; // 在永夜阶段名(y=4)下方;若与 boss 血条重叠可调
+            // m266:原 y=30 会被 2 条以上 BOSS 血条压住;改到底部状态区(永夜阶段名 h-66 的上方)
+            int cy = mc.getWindow().getScaledHeight() - 82;
 
             // 旋转箭头(▲ 默认指上=正前;按方位角绕 Z 旋转)
             net.minecraft.text.Text arrow = net.minecraft.text.Text.literal("▲")
