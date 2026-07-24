@@ -2518,3 +2518,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **龙账(默认参数)**:int 顶 21.4 亿级 → 攻击 ≈ 1.2e15;+10 亿级攻击书(同曲线)≈ 2.3e14;蓄力重斩 3.2 × 暴击 1.5 × 过龙甲(-32%)→ 单刀 ≈ 4~5e15,**跨过龙血 1e19 的 float 粒度墙**(单刀门槛 ≈ 8e11);一条龙命 ≈ 2000+ 刀、三条命一场史诗战(脱战回血 1%/s 仍在,别挂机)。m221「终焉挑战·击败末影龙」成就从永不可达变可达。世界怪物 DynamicScaling 按玩家攻击对位会跟着涨、唯独龙是定值——世界照常难、龙从死墙变能打。
 - **落点四处 + 攻击书**:withLevel 武器/HYBRID(hybrid 折减照乘在曲线总量上)、critBonusDamage、WeaponInfoScreen 显示(与实际属性同式,不再各算各的);攻击书原写死的 0.5/级开成 skillAttackPerLevel 并入同一条曲线,zh/en 两条 desc 同步提示拐点。
 - enableEnhanceCurve 关 = 全部回纯线性;配置 +4,CURRENT_CONFIG_VERSION 78→79;零新 API 零待编译验证(Math.pow/既有属性修饰全在树)。
+
+## m299 召唤物免友伤:傀儡/肝帝/暗影分身(2026-07-24)
+- 作者两点名:①召唤师的攻击会伤到自己的召唤物;②查一下分身术会不会同样。**核验结论:会**——WarlockCloneEntity(术士暗影分身 m262)是普通 PathAwareEntity,和铁傀儡一样吃主人横扫,一并修。
+- **病根**:自家范围技(回旋斩/蓄力重斩)的目标过滤本就只认 Monster/IS_ELITE,不会误伤;漏的是**原版路径**——横扫之刃对弧内一切 LivingEntity 结算、近战误点、弹射物,全走 damage()。
+- **修法**:新 SummonFriendlyFireHandler 挂 ALLOW_DAMAGE(取消式,口径同 ForeignDamageFilterHandler 先例):受击者是三类己方召唤物(召唤师铁傀儡 tag yongye_summon / 肝帝天团 GanDiEntity / 暗影分身 WarlockCloneEntity)且 source.getAttacker() 是玩家(直接近战、弹射物=射手)→ 取消。**不做「只豁免主人」**:召唤物只打怪从不打玩家,任何玩家对它们的伤害都只可能是误伤(联机队友横扫同理);GanDi/分身也没有公开 owner 取值口,按全体玩家免最稳。
+- 环境伤害(岩浆/摔落/无主爆炸)与怪物攻击照常生效,寿命到点自散/再召唤散场不受影响(不走玩家伤害)。开关 summonFriendlyFireImmune(默开),配置 +1,CURRENT_CONFIG_VERSION 79→80。
+- 顺带:横扫命中被取消后,连击/暴击等 ALLOW_DAMAGE 观察者对该目标不再误触发(打自己傀儡不该涨连击)。零新 API 零待编译验证。

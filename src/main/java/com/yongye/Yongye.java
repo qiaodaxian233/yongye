@@ -96,6 +96,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.CustomMobSpawnHandler.register();    // m176 五只新怪自然刷怪(BOSS事件+精英压力)
         com.yongye.system.NightBlightHandler.register();       // m212 夜蚀群系:侵蚀转化+全生物敌化+侵蚀掉落
         com.yongye.system.SummonerHandler.register();          // m223 召唤师:傀儡召唤/强化/寿命
+        com.yongye.system.SummonFriendlyFireHandler.register(); // m299 召唤物免友伤(傀儡/肝帝/暗影分身)
         com.yongye.system.SurvivalRankHandler.register();
         com.yongye.system.NightfallWeatherHandler.register();
         com.yongye.system.NightfallVisionHandler.register();

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 79; // m296 石滑动窗+15 · m297 书分档+5 · m298 曲线+4
+    public static final int CURRENT_CONFIG_VERSION = 80; // ...m298 曲线+4 · m299 召唤物免友伤+1
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -225,6 +225,9 @@ public class YongyeConfig {
     // —— m236 强化继承(强化界面:材料槽放已强化装备 → 等级按比例并入左边装备,来源销毁) ——
     public boolean enableEnhanceInherit = true;
     public double enhanceInheritKeepFraction = 0.8;   // 继承保留比例(0.8=转移80%,1.0=无损)
+    // ============ m299:召唤物免友伤 ============
+    public boolean summonFriendlyFireImmune = true;  // 玩家(横扫/误点/弹射物)打不伤己方召唤物:傀儡/肝帝/暗影分身
+
     // ============ m296:强化石滑动窗掉落(定稿设计) ============
     // 基准档 t:第1~5天=1;佩恩降临后=2;进永夜 I=4、每层+1;每次怪物进化(evolutionEveryDays)+1;封顶 stoneTierCap。
     public boolean enableEnhanceStoneDrops = true;   // 总开关:普通/精英/BOSS 按进度档位掉强化石
