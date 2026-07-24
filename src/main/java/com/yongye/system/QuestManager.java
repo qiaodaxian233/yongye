@@ -382,6 +382,12 @@ public final class QuestManager {
             drop(world, player, new ItemStack(mats[r.nextInt(mats.length)]));
         }
         if (r.nextDouble() < 0.08) drop(world, player, new ItemStack(Items.ENCHANTED_GOLDEN_APPLE));
+        // m276:自动卷轴按概率进奖池(随永夜小幅上浮)
+        var c = YongyeConfig.get();
+        if (r.nextDouble() < c.questAutoEnhanceScrollChance + nf * 0.02)
+            drop(world, player, new ItemStack(ModItems.AUTO_ENHANCE_SCROLL));
+        if (r.nextDouble() < c.questAutoBookScrollChance + nf * 0.02)
+            drop(world, player, new ItemStack(ModItems.AUTO_BOOK_SCROLL));
     }
 
     private static void drop(ServerWorld world, PlayerEntity player, ItemStack stack) {

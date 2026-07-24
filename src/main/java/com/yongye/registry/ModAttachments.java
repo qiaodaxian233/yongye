@@ -16,6 +16,20 @@ import net.minecraft.util.Identifier;
 public final class ModAttachments {
     private ModAttachments() {}
 
+    /** m276 自动强化卷:生效截止的世界时间(0=未激活)。persistent:下线重连不清零。 */
+    public static final AttachmentType<Long> AUTO_ENHANCE_UNTIL =
+            AttachmentRegistry.<Long>builder()
+                    .persistent(Codec.LONG)
+                    .initializer(() -> 0L)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "auto_enhance_until"));
+
+    /** m276 自动吃书卷:生效截止的世界时间(0=未激活)。 */
+    public static final AttachmentType<Long> AUTO_BOOK_UNTIL =
+            AttachmentRegistry.<Long>builder()
+                    .persistent(Codec.LONG)
+                    .initializer(() -> 0L)
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "auto_book_until"));
+
     public static final AttachmentType<Integer> LEARNED_HEALTH =
             AttachmentRegistry.<Integer>builder()
                     .persistent(Codec.INT)

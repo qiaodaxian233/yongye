@@ -27,11 +27,25 @@ public final class ProtectScrollHandler {
     public static void register() {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             YongyeConfig c = YongyeConfig.get();
-            if (!c.enableProtectScroll) return;
             if (!(entity instanceof Monster)) return;
             if (!(entity.getWorld() instanceof ServerWorld world)) return;
             if (!(source.getAttacker() instanceof ServerPlayerEntity killer)) return;
 
+            // m276:自动卷轴低概率掉落(独立于保护卷开关)
+            if (world.getRandom().nextDouble() < c.autoEnhanceScrollDropChance) {
+                ItemEntity ie = new ItemEntity(world, entity.getX(), entity.getY() + 0.5, entity.getZ(),
+                        new ItemStack(ModItems.AUTO_ENHANCE_SCROLL));
+                ie.setToDefaultPickupDelay();
+                world.spawnEntity(ie);
+            }
+            if (world.getRandom().nextDouble() < c.autoBookScrollDropChance) {
+                ItemEntity ie = new ItemEntity(world, entity.getX(), entity.getY() + 0.5, entity.getZ(),
+                        new ItemStack(ModItems.AUTO_BOOK_SCROLL));
+                ie.setToDefaultPickupDelay();
+                world.spawnEntity(ie);
+            }
+
+            if (!c.enableProtectScroll) return;
             // 1) 低概率直接掉落
             if (world.getRandom().nextDouble() < c.protectScrollDropChance) {
                 ItemEntity ie = new ItemEntity(world, entity.getX(), entity.getY() + 0.5, entity.getZ(),

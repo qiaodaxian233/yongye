@@ -33,6 +33,8 @@ public final class ModItemGroups {
             for (int t = 0; t <= 3; t++) entries.add(ModItems.lootCrate(t)); // 战利品宝箱(m245)
             entries.add(ModItems.WARD_BOOK);
             entries.add(ModItems.ENHANCE_PROTECT_SCROLL);
+            entries.add(ModItems.AUTO_ENHANCE_SCROLL);
+            entries.add(ModItems.AUTO_BOOK_SCROLL);
             for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
                 entries.add(ModItems.getClassBook(c));
             }

@@ -45,6 +45,14 @@ public final class ModItems {
     public static final Item ENHANCE_PROTECT_SCROLL = register("enhance_protect_scroll",
             new EnhanceProtectScrollItem(new Item.Settings().maxCount(16).rarity(Rarity.RARE)));
 
+    /** m276:限时自动卷轴 ×2(60 秒全自动强化 / 吃书,杀怪掉落+任务奖励)。 */
+    public static final Item AUTO_ENHANCE_SCROLL = register("auto_enhance_scroll",
+            new com.yongye.item.TimedAutoScrollItem(com.yongye.item.TimedAutoScrollItem.Kind.AUTO_ENHANCE,
+                    new Item.Settings().maxCount(16).rarity(Rarity.EPIC)));
+    public static final Item AUTO_BOOK_SCROLL = register("auto_book_scroll",
+            new com.yongye.item.TimedAutoScrollItem(com.yongye.item.TimedAutoScrollItem.Kind.AUTO_BOOK,
+                    new Item.Settings().maxCount(16).rarity(Rarity.EPIC)));
+
     public static final Item CHAOS_BLADE = register("chaos_blade",
             new ChaosBladeItem(new Item.Settings()
                     .maxDamage(2500)

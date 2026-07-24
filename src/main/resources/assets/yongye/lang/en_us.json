@@ -103,5 +103,7 @@
   "item.yongye.loot_crate_rare": "Loot Crate (Rare)",
   "item.yongye.loot_crate_epic": "Loot Crate (Epic)",
   "item.yongye.loot_crate_legendary": "Loot Crate (Legendary)",
-  "entity.yongye.warlock_clone": "Warlock Shadow Clone"
+  "entity.yongye.warlock_clone": "Warlock Shadow Clone",
+  "item.yongye.auto_enhance_scroll": "Auto-Enhance Scroll",
+  "item.yongye.auto_book_scroll": "Auto-Study Scroll"
 }

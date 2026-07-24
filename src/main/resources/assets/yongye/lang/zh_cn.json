@@ -106,5 +106,9 @@
   "item.yongye.loot_crate_rare": "战利品宝箱·稀有",
   "item.yongye.loot_crate_epic": "战利品宝箱·史诗",
   "item.yongye.loot_crate_legendary": "战利品宝箱·传说",
-  "entity.yongye.warlock_clone": "术士·暗影分身"
+  "entity.yongye.warlock_clone": "术士·暗影分身",
+  "item.yongye.auto_enhance_scroll": "自动强化卷",
+  "item.yongye.auto_enhance_scroll.desc": "使用后 60 秒内自动吞掉背包(含潜影盒)里的强化材料强化主手/盔甲。怪物低概率掉落 / 任务奖励",
+  "item.yongye.auto_book_scroll": "自动吃书卷",
+  "item.yongye.auto_book_scroll.desc": "使用后 60 秒内自动研读背包(含潜影盒)里的技能书/血量书。怪物低概率掉落 / 任务奖励"
 }
