@@ -32,7 +32,7 @@
   "item.yongye.enhance_protect_scroll": "Enhancement Protection Scroll",
   "item.yongye.ward_book.desc": "Right-click with a weapon in the other hand to make it immune to elite disarm",
   "item.yongye.skill_book.satiety.desc": "Continuously restores hunger; higher level = rarely hungry",
-  "item.yongye.skill_book.attack.desc": "Increases attack damage (+0.5 per level)",
+  "item.yongye.skill_book.attack.desc": "Increases attack damage (+0.5 per level; beyond level 10,000 each level is worth ever more — stack it high enough to hurt the Ender Dragon)",
   "item.yongye.skill_book.armor.desc": "Increases armor and armor toughness (+0.5 armor / +0.25 toughness per level)",
   "item.yongye.skill_book.regen.desc": "Continuous healing (heals level x0.1 per second; disabled while healing is blocked)",
   "item.yongye.skill_book.evasion.desc": "Chance to fully dodge a hit (+1% per level, cap 50%)",

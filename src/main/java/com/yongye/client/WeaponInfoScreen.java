@@ -105,7 +105,8 @@ public class WeaponInfoScreen extends Screen {
             // m237:肉盾系(HYBRID)攻击按折减显示(此前漏乘,显示虚高);攻速+暴击合并一行,
             // 腾出的行显示强化生命(普通武器 0.1/级,肉盾系 1.0/级)——仍 3 行,不破 m209 版面
             boolean hybrid = EquipmentEnhancer.kindOf(stack.getItem()) == EquipmentEnhancer.Kind.HYBRID;
-            double atk = level * c.enhanceDamagePerLevel * (hybrid ? c.enhanceHybridDamageFraction : 1.0);
+            double atk = EquipmentEnhancer.attackBonusFor(level, c.enhanceDamagePerLevel)
+                    * (hybrid ? c.enhanceHybridDamageFraction : 1.0); // m298 曲线(与实际属性同式)
             double hp = level * (hybrid ? c.enhanceHealthPerLevel : c.enhanceWeaponHealthPerLevel);
             ctx.drawTextWithShadow(this.textRenderer,
                     Text.literal("攻击力  +" + NumFmt.compact(atk)).formatted(Formatting.RED), rx, ry, 0xFFFF5555); ry += 12;

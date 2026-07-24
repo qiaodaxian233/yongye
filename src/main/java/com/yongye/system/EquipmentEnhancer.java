@@ -83,10 +83,30 @@ public final class EquipmentEnhancer {
         int lvl = getLevel(stack);
         if (lvl <= 0) return 0f;
         YongyeConfig c = YongyeConfig.get();
-        // hybrid 武器攻击成长被打折,暴击额外伤害同比例缩减
-        double dmgPerLvl = c.enhanceDamagePerLevel
-                * (kindOf(stack.getItem()) == Kind.HYBRID ? c.enhanceHybridDamageFraction : 1.0);
-        return (float) (lvl * dmgPerLvl * c.enhanceCritBonusMultiplier);
+        // hybrid 武器攻击成长被打折,暴击额外伤害同比例缩减;m298 攻击总量走超上限曲线
+        double frac = kindOf(stack.getItem()) == Kind.HYBRID ? c.enhanceHybridDamageFraction : 1.0;
+        return (float) (attackBonusFor(lvl, c.enhanceDamagePerLevel) * frac * c.enhanceCritBonusMultiplier);
+    }
+
+    /**
+     * m298 方案D「超上限成长曲线」(作者定稿:强化到后面就能打动末影龙):
+     * 攻击折算从纯线性改为**拐点后幂次增压**——
+     *   level ≤ 拐点 K:总加成 = perLevel × level(前中期手感零变化);
+     *   level >  K:每级增值 ×(level/K)^p,总加成用闭式积分(O(1) 无循环):
+     *       perLevel × [ K + K/(p+1) × ((L/K)^(p+1) − 1) ]
+     * 默认 K=1万(与强化失败曲线降底同点)、p=1.2:等级 21.4 亿(int 顶)时攻击 ≈ 1.2e15,
+     * 蓄力重斩 3.2×暴击 1.5 后单刀过龙甲(-32%)≈ 3.9e15,跨过龙血 1e19 的 float 粒度墙(单刀需 ≥ 约 8e11),
+     * 一条龙命 ≈ 2600 刀、三条命一场史诗战;世界怪物走 DynamicScaling 按玩家攻击对位会跟着涨,
+     * 唯独龙是定值——「世界照常难、龙从死墙变成能打」。关 enableEnhanceCurve 回纯线性。
+     */
+    public static double attackBonusFor(long level, double perLevel) {
+        if (level <= 0) return 0;
+        YongyeConfig c = YongyeConfig.get();
+        long knee = Math.max(1, c.enhanceCurveKneeLevel);
+        if (!c.enableEnhanceCurve || level <= knee) return perLevel * level;
+        double p = Math.max(0.0, c.enhanceCurveExponent);
+        double ratio = (double) level / knee;
+        return perLevel * (knee + knee / (p + 1.0) * (Math.pow(ratio, p + 1.0) - 1.0));
     }
 
     public static int materialValue(Item item) {
@@ -169,7 +189,7 @@ public final class EquipmentEnhancer {
         if (level > 0) {
             if (kind == Kind.WEAPON) {
                 result = result.with(EntityAttributes.GENERIC_ATTACK_DAMAGE,
-                        new EntityAttributeModifier(DMG_ID, level * c.enhanceDamagePerLevel,
+                        new EntityAttributeModifier(DMG_ID, attackBonusFor(level, c.enhanceDamagePerLevel), // m298 曲线
                                 EntityAttributeModifier.Operation.ADD_VALUE),
                         AttributeModifierSlot.MAINHAND);
                 // m237:普通武器强化也加血,但每级只 +0.1(可配)——十分之一于肉盾系(hybrid=1.0/级),拉不平
@@ -192,7 +212,7 @@ public final class EquipmentEnhancer {
                 result = result
                         .with(EntityAttributes.GENERIC_ATTACK_DAMAGE,
                                 new EntityAttributeModifier(DMG_ID,
-                                        level * c.enhanceDamagePerLevel * c.enhanceHybridDamageFraction,
+                                        attackBonusFor(level, c.enhanceDamagePerLevel) * c.enhanceHybridDamageFraction, // m298 曲线
                                         EntityAttributeModifier.Operation.ADD_VALUE), M)
                         .with(EntityAttributes.GENERIC_ARMOR,
                                 new EntityAttributeModifier(ARMOR_ID, level * c.enhanceArmorPerLevel,

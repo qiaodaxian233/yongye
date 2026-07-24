@@ -224,7 +224,9 @@ public final class SkillEffectManager {
         setModifier(p, EntityAttributes.GENERIC_ARMOR_TOUGHNESS, ID_TOUGH, armor * 0.25);
 
         int attack = getLearnedLevel(p, SkillType.ATTACK);
-        setModifier(p, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_ATTACK, attack * 0.5);
+        // m298:攻击书 0.5/级 由写死开成配置 skillAttackPerLevel,并入同一条超上限曲线
+        setModifier(p, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_ATTACK,
+                com.yongye.system.EquipmentEnhancer.attackBonusFor(attack, YongyeConfig.get().skillAttackPerLevel));
 
         // m291 迅捷:移速/攻速百分比(封顶);屹立:击退抗性(属性 0~1,封顶 0.6)
         YongyeConfig cfg = YongyeConfig.get();

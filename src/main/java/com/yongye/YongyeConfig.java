@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 78; // m296 强化石滑动窗+15 · m297 技能书分档+5
+    public static final int CURRENT_CONFIG_VERSION = 79; // m296 石滑动窗+15 · m297 书分档+5 · m298 曲线+4
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -207,7 +207,14 @@ public class YongyeConfig {
 
     // ===== 装备无限强化 / 品质 =====
     public boolean enableEquipmentEnhance = true;
-    public double enhanceDamagePerLevel = 0.5;     // 武器每级 +攻击力
+    public double enhanceDamagePerLevel = 0.5;     // 武器每级 +攻击力(拐点内;拐点外见 m298 曲线)
+    // ============ m298:方案D 超上限成长曲线(作者定稿:强化到后面就能打动末影龙) ============
+    // 拐点内每级原样;拐点外每级增值 ×(等级/拐点)^指数。默认 K=1万 p=1.2:int 顶级攻击 ≈ 1.2e15,
+    // 单刀过龙甲 ≈ 3.9e15 跨过龙血 1e19 的 float 粒度墙,一条龙命 ≈ 2600 刀。武器强化与攻击书同曲线。
+    public boolean enableEnhanceCurve = true;        // 关=回纯线性(每级恒 0.5)
+    public int enhanceCurveKneeLevel = 10000;        // 拐点等级 K(与强化失败曲线降底同点)
+    public double enhanceCurveExponent = 1.2;        // 增压指数 p(0=退化为线性)
+    public double skillAttackPerLevel = 0.5;         // 攻击书每级 +攻击(原写死 0.5,开成配置并入曲线)
     public double enhanceArmorPerLevel = 0.3;      // 盔甲每级 +护甲
     public double enhanceToughnessPerLevel = 0.1;  // 盔甲每级 +护甲韧性
     public double enhanceHealthPerLevel = 1.0;     // 盔甲每级 +最大生命

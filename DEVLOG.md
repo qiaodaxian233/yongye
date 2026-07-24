@@ -2511,3 +2511,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 接线三处 LootHandler(普通怪概率书/精英概率书/精英必爆套餐——套餐里血量书照旧走配置区间)+ BossHandler(改必掉 bossBookMinCount~Max 默 1~3 本、skillBookBossAttackBias 默 0.5 概率强制攻击书=**攻击书高档的主要出处**,随 bossDropMultiplier 放大);enableStagedSkillBooks 关掉全部回旧固定小等级。血量书体系(COMMON~GODLY 池 / BOSS V10~V20)不动。
 - 书名大数紧凑显示:SkillBookItem.getName 用 EnhanceStoneItem.cn(整万→V1万、整亿→V1亿);创造栏补攻击书 1万/100万/1亿 三档样本。
 - 配置 +5,CURRENT_CONFIG_VERSION 77→78;零新 API 零待编译验证。
+
+## m298 方案D:超上限成长曲线(强化到后面能打动末影龙)(2026-07-24)
+- 作者拍板方案 D:「强化到后面就能打动末影龙」。核心认知(m293/龙账那轮):打龙缺的不是等级上限,是**每一级值多少攻击**——等级存储一字节不动(零迁移风险),改折算曲线。
+- **曲线**:level ≤ 拐点 K(enhanceCurveKneeLevel,默 1万,与强化失败曲线降底同点)每级 perLevel 原样(前中期手感零变化);level > K 每级增值 ×(level/K)^p(enhanceCurveExponent,默 1.2),总加成用闭式积分 perLevel×[K + K/(p+1)×((L/K)^(p+1)−1)],O(1) 无循环、拐点处连续。
+- **龙账(默认参数)**:int 顶 21.4 亿级 → 攻击 ≈ 1.2e15;+10 亿级攻击书(同曲线)≈ 2.3e14;蓄力重斩 3.2 × 暴击 1.5 × 过龙甲(-32%)→ 单刀 ≈ 4~5e15,**跨过龙血 1e19 的 float 粒度墙**(单刀门槛 ≈ 8e11);一条龙命 ≈ 2000+ 刀、三条命一场史诗战(脱战回血 1%/s 仍在,别挂机)。m221「终焉挑战·击败末影龙」成就从永不可达变可达。世界怪物 DynamicScaling 按玩家攻击对位会跟着涨、唯独龙是定值——世界照常难、龙从死墙变能打。
+- **落点四处 + 攻击书**:withLevel 武器/HYBRID(hybrid 折减照乘在曲线总量上)、critBonusDamage、WeaponInfoScreen 显示(与实际属性同式,不再各算各的);攻击书原写死的 0.5/级开成 skillAttackPerLevel 并入同一条曲线,zh/en 两条 desc 同步提示拐点。
+- enableEnhanceCurve 关 = 全部回纯线性;配置 +4,CURRENT_CONFIG_VERSION 78→79;零新 API 零待编译验证(Math.pow/既有属性修饰全在树)。
