@@ -2590,3 +2590,14 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **紫色草地**:biome effects 补 `grass_color` 0xA36BE0(薰衣草紫)+ `foliage_color` 0x8F5BD4(深紫,叶/藤),与紫天 0x9C6CF0/紫雾同色系;水色 m305 已紫。石头/泥土不吃群系染色,整体紫罩由淡紫滤镜负责(设计如此)。
 - **旧档遗留**:之前落基岩层时自动建的那扇门还埋在 -62 附近的石头里,是孤儿门,不影响新落点(新门建在地表),介意就挖掉。
 - 零配置(仍 85)。**待编译验证两处同一行族**:`World.getChunk(int,int)` 与 `Chunk.sampleHeightmap`(均标准 API 首用,报错贴回即修,退路=保留 getTopY 但先 getChunk 强制加载)。
+
+## m307 烛之维度地形重铸:人神大战后的废土(2026-07-24)
+- 作者点名:不要泥土,整片土地要「异常破乱不堪——一场人神大战后留下的土地」。
+- **病根**:m305 的 dimension 直接引用 `minecraft:overworld` 生成设定,泥土/草地是它的原版表层规则带出来的;表层规则(surface_rule)与地体方块(default_block)都锁在 noise_settings 里,不能单改——必须整套自定义。
+- **修法**:新数据包 `worldgen/noise_settings/candle.json`,底子=**从 misode/mcmeta 拉取的原版 1.21.1 amplified.json 逐字副本**(不凭记忆手写巨型 worldgen JSON;amplified=撕裂式险峻地形——断崖/悬空碎块/深壑,天然一副被巨力轰碎的样子,零自造密度数学),只动三处:
+  - `default_block` stone→**deepslate**(地下整体=石化焦土,不再有泥土层);
+  - `surface_rule` 整套换自写废土版:基岩地板(照原版,防漏虚空)+ above_preliminary_surface 带内地表补丁——**哭泣黑曜石**(gravel 噪声>1.2,神血凝晶紫光疤)/**黑曜石**(0.8~1.2)/**岩浆块**(surface 噪声>1.1,灼痕)/**黑石**(0.35~1.1,焦土)/**圆石深板岩**(±0.35,瓦砾)/**裂纹深板岩砖**(-1.0~-0.35,被灭文明的断壁地基)/**凝灰岩**兜底(灰烬);表层下垫圆石深板岩;深层洞穴地板保持裸深板岩(原版 above_preliminary_surface 口径);
+  - dimension 的 `generator.settings` → `yongye:candle`。
+- 全文件无 dirt/grass 任何引用(grep 验过);水仍在(海平面 63,m305 已调紫);m306 的紫草配色留着无害(玩家自带树叶会显紫)。噪声 id `minecraft:surface`/`minecraft:gravel` 已对 mcmeta 1.21.1 注册表验证存在。
+- **旧档注意**:已生成过的旧区块(草地那批)不会重铸,新旧交界有断层——删存档里 `dimensions/yongye/candle/` 整个文件夹即可全维度重开(主世界/背包不受影响,门重点一次就行)。
+- 零 Java 零配置(仍 85)。**待验证=纯数据包**:worldgen JSON 错误会在启动/进维度时日志报 `Failed to parse yongye:candle`,报什么贴回来即修;退路=dimension 的 settings 改回 `minecraft:overworld` 一行即回 m306 状态。

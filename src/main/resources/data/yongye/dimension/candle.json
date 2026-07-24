@@ -2,7 +2,7 @@
   "type": "yongye:candle",
   "generator": {
     "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
+    "settings": "yongye:candle",
     "biome_source": {
       "type": "minecraft:fixed",
       "biome": "yongye:candle_wastes"
