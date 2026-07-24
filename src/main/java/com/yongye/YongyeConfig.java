@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 74;
+    public static final int CURRENT_CONFIG_VERSION = 75;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -77,6 +77,25 @@ public class YongyeConfig {
     public double skillStealMaxChance = 0.9;         // 抢夺概率上限
     public double skillLifestealPerLevel = 0.004;    // m290 吸血技能:每级回 造成伤害×0.4%(作者点名不能太高)
     public double skillLifestealMax = 0.08;          // 吸血比例封顶 8%(技能书上限 10 亿级,必须靠这条封死)
+
+    // —— m291 六新强化(百分比效果一律封顶,理由同吸血) ——
+    public double skillCritChancePerLevel = 0.002;    // 暴击:每级 +0.2% 触发概率
+    public double skillCritChanceMax = 0.25;          // 暴击概率封顶 25%
+    public double skillCritMultiplier = 1.5;          // 暴击总倍率(触发时追加 (倍率-1)×原伤,走玩家名义伤害)
+    public double skillSwiftMovePerLevel = 0.002;     // 迅捷:移速每级 +0.2%
+    public double skillSwiftMoveMax = 0.30;           // 移速封顶 +30%
+    public double skillSwiftAtkSpeedPerLevel = 0.002; // 迅捷:攻速每级 +0.2%
+    public double skillSwiftAtkSpeedMax = 0.25;       // 攻速封顶 +25%
+    public double skillPiercePerLevel = 0.003;        // 破甲:每级 +0.3% 无视护甲追加伤害(魔法伤)
+    public double skillPierceMax = 0.30;              // 破甲封顶 30%
+    public double skillSteadfastPerLevel = 0.005;     // 屹立:击退抗每级 +0.5%
+    public double skillSteadfastMax = 0.60;           // 击退抗封顶 60%(属性本身 0~1)
+    public double skillGreedXpPerLevel = 0.01;        // 贪婪:每级 +1% 额外击杀经验
+    public double skillGreedXpMax = 1.0;              // 额外经验封顶 +100%
+    public int skillGreedXpBase = 5;                  // 额外经验基准值(≈普通怪原生经验,额外经验=基准×比例)
+    public int skillRejuvenateDelayTicks = 160;       // 回春:脱战 8 秒后启动
+    public double skillRejuvenatePerLevel = 0.001;    // 回春:每级每秒回 最大生命×0.1%
+    public double skillRejuvenateMax = 0.03;          // 回春每秒封顶 3% 最大生命
 
     /** 属性技能书(攻击/护甲/恢复/闪避/反伤/抗性)掉落几率:普通怪 / 精英 / Boss。普通怪受永夜等级加成。 */
     public double skillBookDropChanceNormal = 0.001;

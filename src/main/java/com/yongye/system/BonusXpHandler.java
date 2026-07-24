@@ -37,6 +37,16 @@ public final class BonusXpHandler {
             if (bonus > 0) {
                 ExperienceOrbEntity.spawn(world, mob.getPos(), bonus);
             }
+
+            // m291 贪婪强化:玩家亲手击杀 → 额外经验 = 基准 × min(封顶, 等级×每级值)。与上面分档独立叠加。
+            if (source.getAttacker() instanceof net.minecraft.server.network.ServerPlayerEntity killer) {
+                int lv = SkillEffectManager.getLearnedLevel(killer, com.yongye.item.SkillType.GREED);
+                if (lv > 0) {
+                    double frac = Math.min(cfg.skillGreedXpMax, lv * cfg.skillGreedXpPerLevel);
+                    int extra = (int) Math.ceil(cfg.skillGreedXpBase * frac);
+                    if (extra > 0) ExperienceOrbEntity.spawn(world, mob.getPos(), extra);
+                }
+            }
         });
         Yongye.LOGGER.info("[夜蚀] 精英+ 额外经验系统已挂载");
     }

@@ -21,7 +21,14 @@ public enum SkillType {
     RESISTANCE("resistance"),
     SATIETY("satiety"),
     STEAL("steal"),
-    LIFESTEAL("lifesteal");
+    LIFESTEAL("lifesteal"),
+    // —— m291 六新强化(作者供图):追加在尾部保证既有枚举序号不漂移 ——
+    CRIT("crit"),             // 暴击:近战概率追加伤害
+    SWIFT("swift"),           // 迅捷:移速+攻速(百分比,封顶)
+    PIERCE("pierce"),         // 破甲:按比例追加无视护甲伤害
+    STEADFAST("steadfast"),   // 屹立:击退抗性(封顶)
+    GREED("greed"),           // 贪婪:击杀额外经验
+    REJUVENATE("rejuvenate"); // 回春:脱战后按最大生命百分比快速回血
 
     public final String id;
 

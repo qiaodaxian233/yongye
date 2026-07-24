@@ -112,5 +112,17 @@
   "item.yongye.auto_book_scroll": "自动吃书卷",
   "item.yongye.auto_book_scroll.desc": "使用后 60 秒内自动研读背包(含潜影盒)里的技能书/血量书。怪物低概率掉落 / 任务奖励",
   "item.yongye.skill_book.lifesteal": "吸血强化技能书",
-  "item.yongye.skill_book.lifesteal.desc": "亲手近战命中时按造成伤害的比例回血(每级 +0.4%,封顶 8%;禁疗期间无效)"
+  "item.yongye.skill_book.lifesteal.desc": "亲手近战命中时按造成伤害的比例回血(每级 +0.4%,封顶 8%;禁疗期间无效)",
+  "item.yongye.skill_book.crit": "暴击强化技能书",
+  "item.yongye.skill_book.crit.desc": "亲手近战概率打出暴击,追加原伤×0.5(每级 +0.2% 概率,封顶 25%)",
+  "item.yongye.skill_book.swift": "迅捷强化技能书",
+  "item.yongye.skill_book.swift.desc": "移速与攻速双修(每级各 +0.2%,移速封顶 +30%/攻速封顶 +25%)",
+  "item.yongye.skill_book.pierce": "破甲强化技能书",
+  "item.yongye.skill_book.pierce.desc": "亲手近战追加无视护甲的伤害(每级 +0.3%,封顶 30%;怪越肉越好用)",
+  "item.yongye.skill_book.steadfast": "屹立强化技能书",
+  "item.yongye.skill_book.steadfast.desc": "站桩换刀不被打飞:击退抗性每级 +0.5%,封顶 60%",
+  "item.yongye.skill_book.greed": "贪婪强化技能书",
+  "item.yongye.skill_book.greed.desc": "击杀怪物获得额外经验(每级 +1%,封顶 +100%)",
+  "item.yongye.skill_book.rejuvenate": "回春强化技能书",
+  "item.yongye.skill_book.rejuvenate.desc": "脱战 8 秒后每秒回复最大生命百分比(每级 +0.1%,封顶 3%;与持续恢复错位)"
 }

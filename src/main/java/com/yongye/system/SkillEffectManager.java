@@ -44,8 +44,13 @@ public final class SkillEffectManager {
     private static final Identifier ID_ARMOR = Identifier.of(Yongye.MOD_ID, "skill_armor");
     private static final Identifier ID_TOUGH = Identifier.of(Yongye.MOD_ID, "skill_toughness");
     private static final Identifier ID_ATTACK = Identifier.of(Yongye.MOD_ID, "skill_attack");
+    private static final Identifier ID_SWIFT_MOVE = Identifier.of(Yongye.MOD_ID, "skill_swift_move");   // m291
+    private static final Identifier ID_SWIFT_ASPD = Identifier.of(Yongye.MOD_ID, "skill_swift_aspd");   // m291
+    private static final Identifier ID_STEADFAST = Identifier.of(Yongye.MOD_ID, "skill_steadfast");     // m291
 
     private static int tickCounter = 0;
+    private static boolean procApplying = false;                       // m291 暴击/破甲追加伤害防重入
+    private static final Map<java.util.UUID, Long> REJUV_LAST_COMBAT = new HashMap<>(); // m291 回春:最近入战时刻
 
     public static int getLearnedLevel(ServerPlayerEntity player, SkillType type) {
         return player.getAttachedOrElse(ModAttachments.LEARNED_SKILLS, Map.of()).getOrDefault(type.id, 0);
@@ -106,6 +111,7 @@ public final class SkillEffectManager {
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
                 applyAttributes(p);
                 applyRegen(p);
+                applyRejuvenate(p);
                 applyResistance(p);
                 applySatiety(p);
             }
@@ -148,20 +154,62 @@ public final class SkillEffectManager {
         // 与处决同口径,弓/魔法/召唤物不吸);不吸玩家。回血走 heal(),禁疗系统照常拦得住。
         // 数值:每级 skillLifestealPerLevel(默 0.4%),封顶 skillLifestealMax(默 8%)——
         // 技能书等级上限 10 亿,必须靠封顶封死,不能按级裸乘。
+        // m291:该监听扩为「近战触发合流」——暴击 / 破甲 / 吸血共用一次判定,并顺带维护回春的战斗计时。
+        // 触发追加伤害时置 procApplying 防重入(追加伤害再进本监听直接放行,不二次触发/不二次吸血,口径保守)。
         net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
-            if (amount <= 0) return true;
+            if (amount <= 0 || procApplying) return true;
+            // 回春战斗计时:玩家挨打也算入战(攻击者是生物才算,摔落/环境伤不打断脱战)
+            if (entity instanceof ServerPlayerEntity hurt
+                    && source.getAttacker() instanceof net.minecraft.entity.LivingEntity a && a != hurt) {
+                REJUV_LAST_COMBAT.put(hurt.getUuid(), hurt.getWorld().getTime());
+            }
             if (!(source.getAttacker() instanceof ServerPlayerEntity p)) return true;
-            if (source.getSource() != p) return true;
+            REJUV_LAST_COMBAT.put(p.getUuid(), p.getWorld().getTime()); // 出手也算入战
+            if (source.getSource() != p) return true; // 只认亲手近战(与处决同口径,弓/魔法/召唤物不触发)
             if (entity instanceof net.minecraft.entity.player.PlayerEntity || entity == p) return true;
-            int lvl = getLearnedLevel(p, SkillType.LIFESTEAL);
-            if (lvl <= 0) return true;
             YongyeConfig cfg = YongyeConfig.get();
-            double pct = Math.min(cfg.skillLifestealMax, lvl * cfg.skillLifestealPerLevel);
-            if (pct > 0 && p.getHealth() < p.getMaxHealth()) p.heal((float) (amount * pct));
+
+            // 暴击(m291):概率触发,追加 (倍率-1)×原伤,走玩家名义伤害(吃护甲,能触发击杀归属)
+            int critLv = getLearnedLevel(p, SkillType.CRIT);
+            if (critLv > 0 && entity.getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
+                double cc = Math.min(cfg.skillCritChanceMax, critLv * cfg.skillCritChancePerLevel);
+                double extraMult = Math.max(0, cfg.skillCritMultiplier - 1.0);
+                if (extraMult > 0 && p.getRandom().nextDouble() < cc) {
+                    procApplying = true;
+                    entity.damage(p.getDamageSources().playerAttack(p), (float) (amount * extraMult));
+                    procApplying = false;
+                    sw.spawnParticles(net.minecraft.particle.ParticleTypes.CRIT,
+                            entity.getX(), entity.getBodyY(0.6), entity.getZ(), 12, 0.35, 0.4, 0.35, 0.25);
+                    sw.playSound(null, entity.getX(), entity.getY(), entity.getZ(),
+                            SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.9f, 1.25f);
+                }
+            }
+
+            // 破甲(m291):按比例追加无视护甲伤害(魔法伤,口径同高血量反制的穿甲刀)
+            int pierceLv = getLearnedLevel(p, SkillType.PIERCE);
+            if (pierceLv > 0) {
+                double pf = Math.min(cfg.skillPierceMax, pierceLv * cfg.skillPiercePerLevel);
+                if (pf > 0) {
+                    procApplying = true;
+                    entity.damage(p.getDamageSources().magic(), (float) (amount * pf));
+                    procApplying = false;
+                }
+            }
+
+            // 吸血(m290)
+            int lvl = getLearnedLevel(p, SkillType.LIFESTEAL);
+            if (lvl > 0) {
+                double pct = Math.min(cfg.skillLifestealMax, lvl * cfg.skillLifestealPerLevel);
+                if (pct > 0 && p.getHealth() < p.getMaxHealth()) p.heal((float) (amount * pct));
+            }
             return true;
         });
 
-        Yongye.LOGGER.info("[夜蚀] 技能书(护甲/恢复/闪避/反伤/抗性/饱食/抢夺)系统已挂载");
+        // m291 回春:玩家下线清战斗计时,防长开服累积(m286 同款口径)
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+                REJUV_LAST_COMBAT.remove(handler.player.getUuid()));
+
+        Yongye.LOGGER.info("[夜蚀] 技能书(护甲/恢复/闪避/反伤/抗性/饱食/抢夺/吸血/暴击/迅捷/破甲/屹立/贪婪/回春)系统已挂载");
     }
 
     private static void applyAttributes(ServerPlayerEntity p) {
@@ -171,16 +219,37 @@ public final class SkillEffectManager {
 
         int attack = getLearnedLevel(p, SkillType.ATTACK);
         setModifier(p, EntityAttributes.GENERIC_ATTACK_DAMAGE, ID_ATTACK, attack * 0.5);
+
+        // m291 迅捷:移速/攻速百分比(封顶);屹立:击退抗性(属性 0~1,封顶 0.6)
+        YongyeConfig cfg = YongyeConfig.get();
+        int swift = getLearnedLevel(p, SkillType.SWIFT);
+        setModifier(p, EntityAttributes.GENERIC_MOVEMENT_SPEED, ID_SWIFT_MOVE,
+                Math.min(cfg.skillSwiftMoveMax, swift * cfg.skillSwiftMovePerLevel),
+                EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
+        setModifier(p, EntityAttributes.GENERIC_ATTACK_SPEED, ID_SWIFT_ASPD,
+                Math.min(cfg.skillSwiftAtkSpeedMax, swift * cfg.skillSwiftAtkSpeedPerLevel),
+                EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
+        int steadfast = getLearnedLevel(p, SkillType.STEADFAST);
+        setModifier(p, EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, ID_STEADFAST,
+                Math.min(cfg.skillSteadfastMax, steadfast * cfg.skillSteadfastPerLevel),
+                EntityAttributeModifier.Operation.ADD_VALUE);
     }
 
     private static void setModifier(ServerPlayerEntity p,
                                     RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attr,
                                     Identifier id, double value) {
+        setModifier(p, attr, id, value, EntityAttributeModifier.Operation.ADD_VALUE);
+    }
+
+    private static void setModifier(ServerPlayerEntity p,
+                                    RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attr,
+                                    Identifier id, double value,
+                                    EntityAttributeModifier.Operation op) {
         EntityAttributeInstance inst = p.getAttributeInstance(attr);
         if (inst == null) return;
         inst.removeModifier(id);
         if (value > 0) {
-            inst.addTemporaryModifier(new EntityAttributeModifier(id, value, EntityAttributeModifier.Operation.ADD_VALUE));
+            inst.addTemporaryModifier(new EntityAttributeModifier(id, value, op));
         }
     }
 
@@ -192,6 +261,21 @@ public final class SkillEffectManager {
         long until = p.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L);
         if (p.getWorld().getTime() < until) return;
         p.heal((float) (regen * 0.1)); // 每秒回 等级×0.1 点
+    }
+
+    /** m291 回春:脱战满 skillRejuvenateDelayTicks 后,每秒回 最大生命×min(封顶, 等级×每级值)。 */
+    private static void applyRejuvenate(ServerPlayerEntity p) {
+        int lv = getLearnedLevel(p, SkillType.REJUVENATE);
+        if (lv <= 0) return;
+        if (p.getHealth() >= p.getMaxHealth()) return;
+        YongyeConfig cfg = YongyeConfig.get();
+        long now = p.getWorld().getTime();
+        long last = REJUV_LAST_COMBAT.getOrDefault(p.getUuid(), 0L);
+        if (now - last < cfg.skillRejuvenateDelayTicks) return; // 仍在战斗中
+        long until = p.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L);
+        if (now < until) return; // 禁疗期间无效
+        double pct = Math.min(cfg.skillRejuvenateMax, lv * cfg.skillRejuvenatePerLevel);
+        if (pct > 0) p.heal((float) (p.getMaxHealth() * pct));
     }
 
     private static void applyResistance(ServerPlayerEntity p) {
