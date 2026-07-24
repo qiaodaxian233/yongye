@@ -2447,3 +2447,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 行2「下一阶段:XXX mm:ss」:NightfallManager 新增 getNextLevelName(含深渊 N+1 层)/getEscalateRemainingSeconds(久留升层倒计时;未入永夜/久留关/已至上限=-1 只显示名);最后 60 秒倒计时转红;已至上限整行省略。任务失败等事件升层不预告(那是突发,预告的是"什么都不做也会到"的时间线)。
 - HudInfoPayload 每 20t 下发;开关 enableHudInfoPanel,配置 +1,CURRENT_CONFIG_VERSION 72→73。
 - 待编译验证(均极低险):writeVarLong/readVarLong(PacketByteBuf 标准方法首用)、Codec.LONG(Codec.INT 在树同类)。
+
+## m289 按天事件预告+看板挪位(2026-07-24)
+- 实机截图:左上被第三方小地图(Xaero类)整个压住——m288 选位没算第三方 HUD。挪到**左边缘垂直居中略上**(中线-10):左上/右上=小地图、左下=聊天、右中=计分板、顶中=BOSS血条、底中=面板,左中是整屏唯一没人抢的常空区。
+- 作者真正想要的是「第几天会出现什么」:全库 gameDay 门槛收口成一张预告表,按**实时配置值**取(改配置预告自动变)——佩恩(5)/怪物挖掘(5)/精英着装(5)/袭击队长(8)/怪物BOSS(10)/野生黑龙(10)/阿努比斯(10)/大地侵蚀(12)/红蜘蛛(12)/死亡法师(14)/浴火凤凰(16),外加周期事件怪物进化(每 evolutionEveryDays 天取下一整倍数日)。
+- 取最近一个未到的事件日,同日多件并列(最多 3 件+「等」),尾注(还有 N 天),只差 1 天转「(明天!)」整行橙红。口径:门槛判 gameDay>=minDay(0 起算),展示=minDay+1(第 1 天起算)。全部已过=只剩周期进化;都没有=整行省略。
+- HudInfoPayload 加 dayForecast 字段(构造点已全同步);看板第三行暖橙。零新 API(VarLong/String 上一笔已用)。

@@ -31,6 +31,8 @@ public final class ClientStats {
     public static String nextStageName = "";
     /** 距久留自动升层剩余秒数(-1=不适用,只显示阶段名)。 */
     public static int nextStageSeconds = -1;
+    /** m289 按天事件预告(服务端按实时配置拼好;""=无未到事件不显示)。 */
+    public static String dayForecast = "";
 
     public static void update(int h, int[] l, String cn) {
         health = h;

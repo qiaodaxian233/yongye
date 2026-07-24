@@ -7,14 +7,15 @@ import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
 /**
- * 服务端 → 客户端:战况看板数据(m288,左上角信息块)。
+ * 服务端 → 客户端:战况看板数据(m288/m289,左边缘信息块)。
  * kills:      累计杀怪总数(TOTAL_KILLS 附件,跨登录/死亡累计);
  * nextName:   下一阶段名(""=已至上限,不显示预告行);
- * nextSeconds:距久留自动升层剩余秒数(-1=不适用,只显示阶段名不显示倒计时)。
+ * nextSeconds:距久留自动升层剩余秒数(-1=不适用,只显示阶段名不显示倒计时);
+ * dayForecast:按天事件预告,服务端按**实时配置**拼好(""=没有未到的事件),如「第 6 天:佩恩降临 · 怪物学会挖掘(还有 3 天)」。
  * 天数不走包——昼夜时钟原版就同步到客户端,ProgressionManager.gameDay 客户端直接算。
  * 每 20 tick 下发一次(KillStatsHandler)。
  */
-public record HudInfoPayload(long kills, String nextName, int nextSeconds) implements CustomPayload {
+public record HudInfoPayload(long kills, String nextName, int nextSeconds, String dayForecast) implements CustomPayload {
 
     public static final CustomPayload.Id<HudInfoPayload> ID =
             new CustomPayload.Id<>(Identifier.of(Yongye.MOD_ID, "hud_info"));
@@ -24,8 +25,9 @@ public record HudInfoPayload(long kills, String nextName, int nextSeconds) imple
                 buf.writeVarLong(value.kills);
                 buf.writeString(value.nextName);
                 buf.writeVarInt(value.nextSeconds);
+                buf.writeString(value.dayForecast);
             },
-            buf -> new HudInfoPayload(buf.readVarLong(), buf.readString(), buf.readVarInt())
+            buf -> new HudInfoPayload(buf.readVarLong(), buf.readString(), buf.readVarInt(), buf.readString())
     );
 
     @Override

@@ -146,12 +146,13 @@ public class YongyeClient implements ClientModInitializer {
                     ClientStats.guardHolding = payload.holding();
                 }));
 
-        // m288 战况看板:收 击杀/下一阶段/倒计时 → 左上角信息块(天数客户端自算)
+        // m288/m289 战况看板:收 击杀/下一阶段/倒计时/按天预告 → 左边缘信息块(天数客户端自算)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.HudInfoPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
                     ClientStats.totalKills = payload.kills();
                     ClientStats.nextStageName = payload.nextName();
                     ClientStats.nextStageSeconds = payload.nextSeconds();
+                    ClientStats.dayForecast = payload.dayForecast();
                 }));
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
@@ -172,21 +173,37 @@ public class YongyeClient implements ClientModInitializer {
                             ClientStats.nextStageSeconds / 60, ClientStats.nextStageSeconds % 60);
                 }
             }
+            // 行3(m289):按天事件预告「第 N 天:XXX(还有 M 天)」
+            String l3 = ClientStats.dayForecast;
             int w1 = tr.getWidth(l1a + l1b);
             int w2 = l2.isEmpty() ? 0 : tr.getWidth(l2 + l2t);
-            int bw = Math.max(w1, w2) + 8;
-            int bh = l2.isEmpty() ? 13 : 24;
-            ctx.fill(3, 3, 3 + bw, 3 + bh, 0x66000000);                              // 半透明底,保证任何背景可读
-            ctx.fill(3, 3, 3 + bw, 4, 0x802E7AD0);                                   // 顶描边(面板同蓝系)
-            ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l1a), 7, 6, 0xFFFFD700);
-            ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l1b), 7 + tr.getWidth(l1a), 6, 0xFFFF7070);
+            int w3 = l3.isEmpty() ? 0 : tr.getWidth(l3);
+            int bw = Math.max(w1, Math.max(w2, w3)) + 8;
+            int lines = 1 + (l2.isEmpty() ? 0 : 1) + (l3.isEmpty() ? 0 : 1);
+            int bh = 2 + lines * 11;
+            // m289 位置:左边缘垂直居中(实机截图:左上被第三方小地图压)。左上/右上=小地图,左下=聊天,
+            // 右中=计分板,顶中=BOSS血条,底中=面板——左中是整屏唯一没人抢的常空区。
+            int bx = 3;
+            int by = mc.getWindow().getScaledHeight() / 2 - bh - 10;   // 中线略上,离聊天更远
+            ctx.fill(bx, by, bx + bw, by + bh, 0x66000000);                          // 半透明底,保证任何背景可读
+            ctx.fill(bx, by, bx + bw, by + 1, 0x802E7AD0);                           // 顶描边(面板同蓝系)
+            int ty = by + 3;
+            ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l1a), bx + 4, ty, 0xFFFFD700);
+            ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l1b), bx + 4 + tr.getWidth(l1a), ty, 0xFFFF7070);
             if (!l2.isEmpty()) {
-                ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l2), 7, 17, 0xFFC08CFF);
+                ty += 11;
+                ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l2), bx + 4, ty, 0xFFC08CFF);
                 if (!l2t.isEmpty()) {
                     // 最后一分钟倒计时转红,提醒要升层了
                     int tc = ClientStats.nextStageSeconds <= 60 ? 0xFFFF5555 : 0xFF9AA6B2;
-                    ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l2t), 7 + tr.getWidth(l2), 17, tc);
+                    ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l2t), bx + 4 + tr.getWidth(l2), ty, tc);
                 }
+            }
+            if (!l3.isEmpty()) {
+                ty += 11;
+                // 明天就来=橙红提醒,平时暖橙
+                int fc = l3.contains("明天") ? 0xFFFF6040 : 0xFFFFB050;
+                ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l3), bx + 4, ty, fc);
             }
         });
 
