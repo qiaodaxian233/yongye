@@ -265,7 +265,10 @@ public final class CatastropheCoreManager {
         drop(world, pos, new ItemStack(ModItems.RIFT_FRAGMENT, 1 + r.nextInt(2)));
         drop(world, pos, new ItemStack(ModItems.LIFE_CRYSTAL, 1 + r.nextInt(2)));
         SkillType st = SkillType.values()[r.nextInt(SkillType.values().length)];
-        drop(world, pos, SkillBookItem.create(st, 1 + r.nextInt(3)));
+        // m303 爆率复检:开分档时走阶段书档,关=旧 V1~V3
+        int coreBookLvl = YongyeConfig.get().enableStagedSkillBooks
+                ? EnhanceStoneDrops.bookLevelFor(world, st) : 1 + r.nextInt(3);
+        drop(world, pos, SkillBookItem.create(st, coreBookLvl));
         if (r.nextDouble() < 0.3) drop(world, pos, new ItemStack(ModItems.LIFE_CORE));
 
         if (world.getServer() != null) {

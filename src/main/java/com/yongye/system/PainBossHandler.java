@@ -374,7 +374,10 @@ public final class PainBossHandler {
         drop(world, pain, HealthSkillBookItem.create(15 + r.nextInt(16)));   // V15~V30
         for (int i = 0; i < 3; i++) {
             SkillType st = SkillType.values()[r.nextInt(SkillType.values().length)];
-            drop(world, pain, SkillBookItem.create(st, 5 + r.nextInt(11))); // V5~V15
+            // m303 爆率复检:开分档时走阶段书档(攻击书吃满/百分比钳前两档),关=旧 V5~V15
+            int lvl = YongyeConfig.get().enableStagedSkillBooks
+                    ? EnhanceStoneDrops.bookLevelFor(world, st) : 5 + r.nextInt(11);
+            drop(world, pain, SkillBookItem.create(st, lvl));
         }
         // 必掉一件高级神器
         ArtifactType at = ArtifactType.values()[r.nextInt(ArtifactType.values().length)];
