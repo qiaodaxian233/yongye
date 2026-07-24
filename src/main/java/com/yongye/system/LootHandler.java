@@ -188,6 +188,15 @@ public final class LootHandler {
             }
 
             // 强化材料掉落(规则:生命核心及以上仅精英会爆,普通怪只出碎片/结晶)
+            // m296 强化石滑动窗:普通怪按概率掉一颗(窗 t~t+2),精英必掉一颗(窗 t+1~t+3);
+            // 掉率不乘 lm——档位窗本身就是进度闸,BOSS 的 3~5 颗在 BossHandler。
+            if (cfg.enableEnhanceStoneDrops) {
+                if (elite) {
+                    drop(world, entity, EnhanceStoneDrops.rollElite(world, r));
+                } else if (r.nextDouble() < cfg.stoneDropChanceNormal) {
+                    drop(world, entity, EnhanceStoneDrops.rollNormal(world, r));
+                }
+            }
             // 生命碎片:按 lifeShardDropChance 概率掉(普通 1 个;精英 1~2 个)
             if (r.nextDouble() < cfg.lifeShardDropChance * lm) {
                 drop(world, entity, new ItemStack(ModItems.LIFE_SHARD, elite ? 1 + r.nextInt(2) : 1));

@@ -1,0 +1,77 @@
+package com.yongye.system;
+
+import com.yongye.YongyeConfig;
+import com.yongye.registry.ModItems;
+import net.minecraft.item.ItemStack;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.random.Random;
+
+/**
+ * m296 强化石滑动窗掉落(定稿设计):按进度算基准档 t,三类怪围着 t 开一扇小窗往上够。
+ * 基准档 t:
+ *   第 1~5 天(未进永夜)= 1;佩恩降临后(gameDay ≥ painSpawnMinDay)= 2;
+ *   进入永夜 I = 4,永夜每升一层 +1(即 3+永夜级,深渊 N 层继续 +1);
+ *   每次怪物进化(每 evolutionEveryDays 天)再 +1;封顶 stoneTierCap(默 10)。
+ * 掉法:普通怪 stoneDropChanceNormal 概率掉一颗(窗 t/t+1/t+2 = 70/25/5);
+ *       精英必掉一颗(窗 t+1/t+2/t+3 = 50/40/10);
+ *       BOSS 必掉 stoneBossMinCount~Max 颗(档均匀 t+2~t+4)。
+ * 封顶期收口:普通怪掉到最高档时降为次档(stoneTopTierEliteOnly,10 亿档只从精英/BOSS 出)。
+ * 概率/权重/颗数全配置;掉率**不乘动态爆率**——档位窗本身就是节奏闸,叠一层衰减会互相打架。
+ */
+public final class EnhanceStoneDrops {
+    private EnhanceStoneDrops() {}
+
+    /** 当前基准档 t(1..stoneTierCap)。 */
+    public static int baseTier(ServerWorld world) {
+        YongyeConfig c = YongyeConfig.get();
+        long day = ProgressionManager.gameDay(world);
+        long t = 1;
+        if (day >= c.painSpawnMinDay) t = 2;              // 佩恩降临后
+        int nf = NightfallManager.getLevel();
+        if (nf >= 1) t = 3L + nf;                         // 永夜 I=4,每层 +1
+        t += day / Math.max(1, c.evolutionEveryDays);     // 每次怪物进化 +1
+        return (int) Math.max(1, Math.min(c.stoneTierCap, t));
+    }
+
+    /** 普通怪:窗 t/t+1/t+2,权重 stoneNormalWeightT0/T1/T2;封顶期最高档降为次档。 */
+    public static ItemStack rollNormal(ServerWorld world, Random r) {
+        YongyeConfig c = YongyeConfig.get();
+        int tier = baseTier(world) + pick(r, c.stoneNormalWeightT0, c.stoneNormalWeightT1, c.stoneNormalWeightT2);
+        tier = clamp(c, tier);
+        if (c.stoneTopTierEliteOnly && tier >= c.stoneTierCap) {
+            tier = Math.max(1, c.stoneTierCap - 1); // 最高档只从精英/BOSS 出,普通怪主掉次档
+        }
+        return new ItemStack(ModItems.enhanceStone(tier));
+    }
+
+    /** 精英:必掉一颗,窗 t+1/t+2/t+3,权重 stoneEliteWeightT1/T2/T3。 */
+    public static ItemStack rollElite(ServerWorld world, Random r) {
+        YongyeConfig c = YongyeConfig.get();
+        int tier = baseTier(world) + 1 + pick(r, c.stoneEliteWeightT1, c.stoneEliteWeightT2, c.stoneEliteWeightT3);
+        return new ItemStack(ModItems.enhanceStone(clamp(c, tier)));
+    }
+
+    /** BOSS:单颗档位在 t+stoneBossMinOffset ~ t+stoneBossMaxOffset 间均匀。颗数由调用方定。 */
+    public static ItemStack rollBoss(ServerWorld world, Random r) {
+        YongyeConfig c = YongyeConfig.get();
+        int lo = Math.min(c.stoneBossMinOffset, c.stoneBossMaxOffset);
+        int hi = Math.max(c.stoneBossMinOffset, c.stoneBossMaxOffset);
+        int tier = baseTier(world) + lo + (hi > lo ? r.nextInt(hi - lo + 1) : 0);
+        return new ItemStack(ModItems.enhanceStone(clamp(c, tier)));
+    }
+
+    /** 三权重选 0/1/2 偏移(权重和不必为 1,按比例;全 0 时落 0 偏移)。 */
+    private static int pick(Random r, double w0, double w1, double w2) {
+        double total = w0 + w1 + w2;
+        if (total <= 0) return 0;
+        double roll = r.nextDouble() * total;
+        if (roll < w0) return 0;
+        if (roll < w0 + w1) return 1;
+        return 2;
+    }
+
+    private static int clamp(YongyeConfig c, int tier) {
+        int cap = Math.max(1, Math.min(10, c.stoneTierCap)); // 只有 10 档物品,硬上限 10
+        return Math.max(1, Math.min(cap, tier));
+    }
+}

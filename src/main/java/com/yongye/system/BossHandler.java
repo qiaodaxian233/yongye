@@ -99,6 +99,13 @@ public final class BossHandler {
             return com.yongye.item.SkillBookItem.create(ts[rr.nextInt(ts.length)], 3 + rr.nextInt(6));
         });
         dropMany(world, boss, scale(4, m), rr -> new ItemStack(ModItems.LIFE_CRYSTAL));
+        // m296 强化石:BOSS 必掉 stoneBossMinCount~Max 颗,档位 t+2~t+4(随 Boss 倍率放大)
+        if (cfg.enableEnhanceStoneDrops) {
+            int lo = Math.min(cfg.stoneBossMinCount, cfg.stoneBossMaxCount);
+            int hi = Math.max(cfg.stoneBossMinCount, cfg.stoneBossMaxCount);
+            int n = lo + (hi > lo ? r.nextInt(hi - lo + 1) : 0);
+            dropMany(world, boss, scale(n, m), rr -> EnhanceStoneDrops.rollBoss(world, rr));
+        }
         dropMany(world, boss, scale(2, m), rr -> new ItemStack(ModItems.LIFE_CORE));
         dropMany(world, boss, scale(1, m), rr -> new ItemStack(ModItems.CATASTROPHE_BLOOD_CORE));
         dropMany(world, boss, scale(2, m), rr -> new ItemStack(Items.DIAMOND_BLOCK));

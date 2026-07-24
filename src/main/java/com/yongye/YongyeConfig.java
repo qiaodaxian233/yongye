@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 76;
+    public static final int CURRENT_CONFIG_VERSION = 77; // m296 强化石滑动窗掉落 +15
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -218,6 +218,23 @@ public class YongyeConfig {
     // —— m236 强化继承(强化界面:材料槽放已强化装备 → 等级按比例并入左边装备,来源销毁) ——
     public boolean enableEnhanceInherit = true;
     public double enhanceInheritKeepFraction = 0.8;   // 继承保留比例(0.8=转移80%,1.0=无损)
+    // ============ m296:强化石滑动窗掉落(定稿设计) ============
+    // 基准档 t:第1~5天=1;佩恩降临后=2;进永夜 I=4、每层+1;每次怪物进化(evolutionEveryDays)+1;封顶 stoneTierCap。
+    public boolean enableEnhanceStoneDrops = true;   // 总开关:普通/精英/BOSS 按进度档位掉强化石
+    public double stoneDropChanceNormal = 0.05;      // 普通怪掉石概率(不乘动态爆率:档位窗本身就是节奏闸)
+    public double stoneNormalWeightT0 = 0.70;        // 普通怪窗权重:基准档 t
+    public double stoneNormalWeightT1 = 0.25;        //               t+1
+    public double stoneNormalWeightT2 = 0.05;        //               t+2
+    public double stoneEliteWeightT1 = 0.50;         // 精英必掉一颗:t+1
+    public double stoneEliteWeightT2 = 0.40;         //               t+2
+    public double stoneEliteWeightT3 = 0.10;         //               t+3
+    public int stoneBossMinCount = 3;                // BOSS 必掉颗数下限(随 bossDropMultiplier 放大)
+    public int stoneBossMaxCount = 5;                // 上限(含)
+    public int stoneBossMinOffset = 2;               // BOSS 档位窗:t+2
+    public int stoneBossMaxOffset = 4;               //              ~t+4(均匀)
+    public int stoneTierCap = 10;                    // 基准档封顶(最高档强化石,硬上限 10)
+    public boolean stoneTopTierEliteOnly = true;     // 封顶期收口:普通怪不出最高档(降为次档),10亿石只从精英/BOSS 出
+
     public int enhanceShardValue = 1;              // 生命碎片 = +1 级
     public int enhanceCrystalValue = 10;           // 生命结晶 = +10 级
     public int enhanceCoreValue = 100;             // 生命核心 = +100 级

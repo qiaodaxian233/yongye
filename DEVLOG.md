@@ -2495,3 +2495,12 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 定稿设计里的「10合1 向上合成」。3×3 工作台每格只扣 1 个、放不下 10 颗,故不走配方——改**右键整叠一次并完**:手持 N 颗第 t 档(t<10)右键,得 N/10 颗第 t+1 档,余数 N%10 留在手里;面值严格等值(10 颗 10^(t-1) = 1 颗 10^t),攒的小石头永远不废,顺手解决爆背包。
 - 10 档(爆裂魔瞳)到顶,右键提示不可再合成;不足 10 颗提示所需数量。合成产物 insertStack 进背包,满了掉脚下(SoulboundItemGuard 同款兜底)。ANVIL_USE 升调音效 + 金字 action bar 播报「X 颗 → Y 颗 上档名」。
 - tooltip 增加用法行(右键:整叠向上并);零配置(仍 76);零新 API 零待编译验证(use/TypedActionResult/insertStack/dropItem 全在树先例,照 SkillBookItem.use 口径)。
+
+## m296 强化石滑动窗掉落(2026-07-24)
+- 定稿设计的「按阶段掉落·滑动窗」。新 `EnhanceStoneDrops`(system 包):
+  - **基准档 t**:第 1~5 天=1;佩恩降临后(gameDay ≥ painSpawnMinDay,默 5)=2;进入永夜 I=4、每升一层 +1(即 3+NightfallManager.getLevel(),深渊层继续爬);每次怪物进化(每 evolutionEveryDays 天,默 10)再 +1;封顶 stoneTierCap(默 10)。每升层/每进化,地上的眼球肉眼可见换一个颜色——十档渐变按序见证。
+  - **普通怪** stoneDropChanceNormal(默 5%)掉一颗:70% t / 25% t+1 / 5% t+2。**不乘动态爆率 lm**——档位窗本身就是防滚雪球的进度闸,再叠一层强度衰减会互相打架(有意为之,权重可配)。
+  - **精英**必掉一颗:50% t+1 / 40% t+2 / 10% t+3(挂在 LootHandler 精英分支)。
+  - **BOSS**必掉 stoneBossMinCount~Max(默 3~5)颗、档位 t+2~t+4 均匀,颗数随 bossDropMultiplier 放大(挂在 BossHandler.dropBossRewards)。
+- **封顶期收口**:t 到顶后若普通怪也满地掉最高档,一晚全毕业——stoneTopTierEliteOnly(默开)把普通怪的最高档降为次档,10 亿石只从精英/BOSS 出(毕业节奏=几十只精英或几个 BOSS,可关)。
+- 配置 +15(开关/概率/三组窗权重/BOSS 颗数与偏移/封顶/收口),CURRENT_CONFIG_VERSION 76→77;零新 API 零待编译验证(全在树先例)。
