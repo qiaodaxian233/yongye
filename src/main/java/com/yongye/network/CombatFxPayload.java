@@ -18,8 +18,9 @@ import net.minecraft.util.Identifier;
  * @param fov   FOV 顿挫幅度(度,已乘服务端倍率)
  * @param flash 击杀时是否闪光(combatFxKillFlash)
  * @param sound 击杀时是否播确认音(combatFxKillSound)
+ * @param hitstop 顿帧 tick 数(m275:重击/击杀命中瞬间第一人称挥臂定住;0=无)
  */
-public record CombatFxPayload(int kind, float shake, float fov, boolean flash, boolean sound)
+public record CombatFxPayload(int kind, float shake, float fov, boolean flash, boolean sound, int hitstop)
         implements CustomPayload {
 
     public static final int HIT = 0, HEAVY = 1, KILL = 2;
@@ -34,9 +35,10 @@ public record CombatFxPayload(int kind, float shake, float fov, boolean flash, b
                 buf.writeFloat(value.fov);
                 buf.writeBoolean(value.flash);
                 buf.writeBoolean(value.sound);
+                buf.writeInt(value.hitstop);
             },
             buf -> new CombatFxPayload(buf.readInt(), buf.readFloat(), buf.readFloat(),
-                    buf.readBoolean(), buf.readBoolean())
+                    buf.readBoolean(), buf.readBoolean(), buf.readInt())
     );
 
     @Override

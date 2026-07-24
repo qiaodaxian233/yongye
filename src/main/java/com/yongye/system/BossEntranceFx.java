@@ -48,7 +48,7 @@ public final class BossEntranceFx {
             sp.networkHandler.sendPacket(new SubtitleS2CPacket(sub));
             // 镜头重震 + 整屏闪光(flash 客户端不分 kind,m239 管线直接吃)
             ServerPlayNetworking.send(sp, new CombatFxPayload(CombatFxPayload.HEAVY,
-                    (float) cfg.bossEntranceShake, 2.4f, true, false));
+                    (float) cfg.bossEntranceShake, 2.4f, true, false, 0));
             sp.playSoundToPlayer(SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.HOSTILE, 0.8f, 0.72f);
         }
 

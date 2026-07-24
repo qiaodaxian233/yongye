@@ -28,8 +28,21 @@ public final class CombatFxManager {
             com.yongye.Yongye.LOGGER.info("[夜蚀] 客户端注入已生效: {}", name);
     }
 
+    // ==== m275:击杀顿帧 ====
+    private static int hitstopTicks = 0;          // 剩余定帧 tick
+    private static int frozenSwingTicks = 0;      // 定住的挥臂帧
+    private static float frozenSwingProgress = 0f;
+
     /** 收到服务端 FX 包(已在客户端主线程)。 */
-    public static void onFx(int kind, float shake, float fov, boolean flash, boolean sound) {
+    public static void onFx(int kind, float shake, float fov, boolean flash, boolean sound, int hitstop) {
+        if (hitstop > 0) {
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player != null) {
+                hitstopTicks = Math.min(6, Math.max(hitstopTicks, hitstop)); // 连杀取最重,封顶防黏
+                frozenSwingTicks = mc.player.handSwingTicks;
+                frozenSwingProgress = mc.player.handSwingProgress;
+            }
+        }
         // 取 max 而不是叠加:连击时保持"最重那一下"的手感,不会震到失控
         shakeStrength = Math.min(2.5f, Math.max(shakeStrength, shake));
         fovPunch = Math.min(6f, Math.max(fovPunch, fov));
@@ -43,6 +56,21 @@ public final class CombatFxManager {
 
     /** 每客户端 tick 衰减(YongyeClient 挂 END_CLIENT_TICK)。 */
     public static void tick() {
+        // m275 顿帧:命中/击杀瞬间把第一人称挥臂按住不动几 tick(时停感),到点自然续上。
+        // 只回卷挥臂计时,不碰游戏逻辑——纯观感,不影响攻击冷却/判定。
+        // 待编译验证:lastHandSwingProgress 公有字段(handSwingTicks/handSwingProgress 在树已用);
+        // 若编译报此字段名,删掉那一行即可(只损失一帧插值平滑)。
+        if (hitstopTicks > 0) {
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player != null && mc.player.handSwinging) {
+                hitstopTicks--;
+                mc.player.handSwingTicks = frozenSwingTicks;
+                mc.player.handSwingProgress = frozenSwingProgress;
+                mc.player.lastHandSwingProgress = frozenSwingProgress;
+            } else {
+                hitstopTicks = 0; // 没在挥了就别按了
+            }
+        }
         shakeStrength *= 0.70f;
         if (shakeStrength < 0.02f) shakeStrength = 0f;
         fovPunch *= 0.66f;

@@ -130,7 +130,7 @@ public final class WeaponGuardHandler {
                 int buff = Math.max(20, cfg.parryBuffTicks);
                 p.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, buff, 1)); // 力量II反击窗口
                 p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, buff, 0));
-                ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HEAVY, 1.1f, 2.2f, true, true));
+                ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HEAVY, 1.1f, 2.2f, true, true, 3)); // m275:弹反瞬间也给顿帧,金铁交鸣感
                 p.sendMessage(Text.literal("完美格挡!弹反!").formatted(Formatting.GOLD, Formatting.BOLD), true);
                 return false;
             }
@@ -145,7 +145,7 @@ public final class WeaponGuardHandler {
                     Vec3d front = p.getPos().add(p.getRotationVector().multiply(0.8)).add(0, 1.2, 0);
                     sw.spawnParticles(ParticleTypes.CRIT, front.x, front.y, front.z, 8, 0.25, 0.25, 0.25, 0.15);
                 }
-                ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HIT, 0.6f, 1.2f, false, false));
+                ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HIT, 0.6f, 1.2f, false, false, 0));
                 p.sendMessage(gaugeBar(g.gauge, maxGauge(p, cfg), Formatting.AQUA), true);
                 return false;
             }

@@ -57,7 +57,10 @@ public final class CombatFxHandler {
             // 封顶 1.0→1.5,重击 FOV 1.4→2.4、轻击 0.6→1.1;倍率配置照乘,想回旧手感把两倍率设 0.6 即可。
             float shake = (float) (Math.min(1.5f, 0.55f + frac * 2.6f) * c.combatFxShakeScale);
             float fov   = (float) ((kind == CombatFxPayload.HEAVY ? 2.4f : 1.1f) * c.combatFxFovKick);
-            ServerPlayNetworking.send(p, new CombatFxPayload(kind, shake, fov, false, false));
+            // m275 击杀顿帧:重击 2t(轻击不停,避免连打发黏);击杀 4t 在下方死亡回调里发
+            int stop = (c.enableCombatFxHitstop && kind == CombatFxPayload.HEAVY)
+                    ? Math.max(1, (int) Math.round(2 * c.combatFxHitstopScale)) : 0;
+            ServerPlayNetworking.send(p, new CombatFxPayload(kind, shake, fov, false, false, stop));
 
             if (c.combatFxParticles && entity.getWorld() instanceof ServerWorld sw) {
                 int n = Math.min(14, 4 + (int) (frac * 24));
@@ -76,8 +79,10 @@ public final class CombatFxHandler {
 
             float shake = (float) (1.7f * c.combatFxShakeScale);   // m248:击杀冲击 1.1→1.7
             float fov   = (float) (2.8f * c.combatFxFovKick);      // m248:击杀顿挫 1.8→2.8
+            int stop = c.enableCombatFxHitstop
+                    ? Math.max(1, (int) Math.round(4 * c.combatFxHitstopScale)) : 0; // m275 击杀顿帧
             ServerPlayNetworking.send(p, new CombatFxPayload(
-                    CombatFxPayload.KILL, shake, fov, c.combatFxKillFlash, c.combatFxKillSound));
+                    CombatFxPayload.KILL, shake, fov, c.combatFxKillFlash, c.combatFxKillSound, stop));
 
             if (c.combatFxParticles && entity.getWorld() instanceof ServerWorld sw) {
                 sw.spawnParticles(ParticleTypes.CLOUD,

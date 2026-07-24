@@ -85,7 +85,7 @@ public final class ChargeSlashHandler {
         // 演出:剑气月牙推进(m255)+ 重震 + 重音;满蓄音调更低更狠
         WeaponSkillFx.chaosSlash(world, player, range);
         ServerPlayNetworking.send(player, new CombatFxPayload(CombatFxPayload.HEAVY,
-                (float) (1.0 + tNorm * 0.8), (float) (2.2 + tNorm * 1.6), false, false));
+                (float) (1.0 + tNorm * 0.8), (float) (2.2 + tNorm * 1.6), false, false, 0));
         world.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1.1f, (float) (0.9 - tNorm * 0.3));
         player.sendMessage(Text.literal("蓄力重斩 ×" + String.format("%.1f", mult) + (hit > 0 ? "(命中 " + hit + ")" : "(落空)"))

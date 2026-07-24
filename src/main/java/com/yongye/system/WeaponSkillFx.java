@@ -105,7 +105,7 @@ public final class WeaponSkillFx {
         ring(w, p.getPos(), 1.4, ParticleTypes.ENCHANTED_HIT, n(26, s), 1.0);
         w.playSound(null, p.getX(), p.getY(), p.getZ(),
                 SoundEvents.ENTITY_WITHER_SHOOT, SoundCategory.PLAYERS, 0.8f, 1.35f);
-        ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HEAVY, 1.2f, 2.6f, false, false));
+        ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HEAVY, 1.2f, 2.6f, false, false, 0));
 
         int ticks = 6;
         double step = Math.max(1.0, range) / ticks;
@@ -140,7 +140,7 @@ public final class WeaponSkillFx {
         double s = scale();
         w.playSound(null, p.getX(), p.getY(), p.getZ(),
                 SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.PLAYERS, 1.0f, 0.7f);
-        ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HEAVY, 0.9f, 2.0f, false, false));
+        ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HEAVY, 0.9f, 2.0f, false, false, 0));
 
         List<Vec3d> pts = victims.size() > 12 ? victims.subList(0, 12) : victims; // 灵魂源封顶防刷屏
         int ticks = 12;
@@ -198,7 +198,7 @@ public final class WeaponSkillFx {
         // 周围玩家集体重震 + 整屏闪光(末日感)
         for (ServerPlayerEntity sp : w.getServer().getPlayerManager().getPlayerList()) {
             if (sp.getWorld() == w && sp.squaredDistanceTo(p) < 24 * 24) {
-                ServerPlayNetworking.send(sp, new CombatFxPayload(CombatFxPayload.KILL, 1.8f, 3.5f, true, false));
+                ServerPlayNetworking.send(sp, new CombatFxPayload(CombatFxPayload.KILL, 1.8f, 3.5f, true, false, 0));
             }
         }
 

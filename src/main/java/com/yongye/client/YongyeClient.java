@@ -135,7 +135,8 @@ public class YongyeClient implements ClientModInitializer {
         // m239 沉浸式战斗手感:收命中/击杀 FX 包 → 置入镜头震动/FOV 顿挫/闪光/确认音
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.CombatFxPayload.ID, (payload, context) ->
                 context.client().execute(() -> CombatFxManager.onFx(
-                        payload.kind(), payload.shake(), payload.fov(), payload.flash(), payload.sound())));
+                        payload.kind(), payload.shake(), payload.fov(), payload.flash(), payload.sound(),
+                        payload.hitstop())));
         ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->

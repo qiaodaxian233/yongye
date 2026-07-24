@@ -96,7 +96,7 @@ public final class BossRageHandler {
             sp.networkHandler.sendPacket(new TitleFadeS2CPacket(3, 35, 12));
             sp.networkHandler.sendPacket(new TitleS2CPacket(title));
             sp.networkHandler.sendPacket(new SubtitleS2CPacket(sub));
-            ServerPlayNetworking.send(sp, new CombatFxPayload(CombatFxPayload.HEAVY, 1.6f, 2.6f, true, false));
+            ServerPlayNetworking.send(sp, new CombatFxPayload(CombatFxPayload.HEAVY, 1.6f, 2.6f, true, false, 0));
             sp.playSoundToPlayer(SoundEvents.ENTITY_ENDER_DRAGON_GROWL, SoundCategory.HOSTILE, 0.9f, 0.8f);
         }
 
