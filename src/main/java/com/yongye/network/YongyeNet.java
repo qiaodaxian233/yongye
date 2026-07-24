@@ -72,6 +72,7 @@ public final class YongyeNet {
         PayloadTypeRegistry.playS2C().register(com.yongye.network.CombatFxPayload.ID, com.yongye.network.CombatFxPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.ComboPayload.ID, com.yongye.network.ComboPayload.CODEC); // m273 连击同步
         PayloadTypeRegistry.playS2C().register(com.yongye.network.GuardSyncPayload.ID, com.yongye.network.GuardSyncPayload.CODEC); // m278 格挡值→血条面板
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.HudInfoPayload.ID, com.yongye.network.HudInfoPayload.CODEC); // m288 战况看板
         // 爆率编辑器:C2S 请求当前值 → S2C 回传(key=value 多行)
         PayloadTypeRegistry.playC2S().register(com.yongye.network.RequestConfigPayload.ID, com.yongye.network.RequestConfigPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.ConfigValuesPayload.ID, com.yongye.network.ConfigValuesPayload.CODEC);

@@ -146,6 +146,50 @@ public class YongyeClient implements ClientModInitializer {
                     ClientStats.guardHolding = payload.holding();
                 }));
 
+        // m288 战况看板:收 击杀/下一阶段/倒计时 → 左上角信息块(天数客户端自算)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.HudInfoPayload.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    ClientStats.totalKills = payload.kills();
+                    ClientStats.nextStageName = payload.nextName();
+                    ClientStats.nextStageSeconds = payload.nextSeconds();
+                }));
+        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player == null || mc.world == null || mc.options.hudHidden) return;
+            if (!com.yongye.YongyeConfig.get().enableHudInfoPanel) return;
+            var tr = mc.textRenderer;
+            // 行1:第 N 天 · 击杀 X(天数客户端按昼夜时钟直算,睡觉跳夜也算天——m252 收口同源)
+            long day = com.yongye.system.ProgressionManager.gameDay(mc.world) + 1;   // 第 1 天起算
+            String l1a = "第 " + day + " 天";
+            String l1b = " · 击杀 " + NumFmt.compact(ClientStats.totalKills);
+            // 行2:下一阶段:XXX (mm:ss)——空名=已至上限,整行省略
+            String l2 = "";
+            String l2t = "";
+            if (!ClientStats.nextStageName.isEmpty()) {
+                l2 = "下一阶段:" + ClientStats.nextStageName;
+                if (ClientStats.nextStageSeconds >= 0) {
+                    l2t = String.format(" %02d:%02d",
+                            ClientStats.nextStageSeconds / 60, ClientStats.nextStageSeconds % 60);
+                }
+            }
+            int w1 = tr.getWidth(l1a + l1b);
+            int w2 = l2.isEmpty() ? 0 : tr.getWidth(l2 + l2t);
+            int bw = Math.max(w1, w2) + 8;
+            int bh = l2.isEmpty() ? 13 : 24;
+            ctx.fill(3, 3, 3 + bw, 3 + bh, 0x66000000);                              // 半透明底,保证任何背景可读
+            ctx.fill(3, 3, 3 + bw, 4, 0x802E7AD0);                                   // 顶描边(面板同蓝系)
+            ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l1a), 7, 6, 0xFFFFD700);
+            ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l1b), 7 + tr.getWidth(l1a), 6, 0xFFFF7070);
+            if (!l2.isEmpty()) {
+                ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l2), 7, 17, 0xFFC08CFF);
+                if (!l2t.isEmpty()) {
+                    // 最后一分钟倒计时转红,提醒要升层了
+                    int tc = ClientStats.nextStageSeconds <= 60 ? 0xFFFF5555 : 0xFF9AA6B2;
+                    ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l2t), 7 + tr.getWidth(l2), 17, tc);
+                }
+            }
+        });
+
         // 攻击伤害同步:服务端终值(原版 GENERIC_ATTACK_DAMAGE 不下发客户端,成长面板要显示真值)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.AttackSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.attackDamage = payload.atk()));

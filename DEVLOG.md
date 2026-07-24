@@ -2440,3 +2440,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 ## m287 濒死危机演出(2026-07-24)
 - 战斗帅方针:血量≤lowHpFxThreshold(默 20%)→ 屏幕边缘血红渐晕(视野压缩同款分级 fill 画法)随心跳呼吸,越残越浓越大越急;配监守者心跳音(间隔 26t→12t、音量音调随残血抬升)。
 - 纯客户端观感,开关 enableLowHpFx;配置 +2,CURRENT_CONFIG_VERSION 71→72。待编译验证:ENTITY_WARDEN_HEARTBEAT(家族在树,常量首用,报错换 ENTITY_WARDEN_AMBIENT)。
+
+## m288 战况看板:杀怪统计+天数+阶段预告(2026-07-24)
+- 位置选定**左上角**(3,3):底部中列/右列 m283 刚排满,顶部中央是 BOSS 血条区,左上是整屏唯一长期空闲区;半透明黑底+蓝顶描边保证任何背景可读。
+- 行1「第 N 天 · 击杀 X」:天数不走包——昼夜时钟原版就同步,客户端直接 ProgressionManager.gameDay(m252 收口,睡觉跳夜也算天)+1 起算;击杀走 TOTAL_KILLS 附件(persistent+copyOnDeath,口径=Monster+玩家击杀,与保护卷完全一致),NumFmt 紧凑显示。
+- 行2「下一阶段:XXX mm:ss」:NightfallManager 新增 getNextLevelName(含深渊 N+1 层)/getEscalateRemainingSeconds(久留升层倒计时;未入永夜/久留关/已至上限=-1 只显示名);最后 60 秒倒计时转红;已至上限整行省略。任务失败等事件升层不预告(那是突发,预告的是"什么都不做也会到"的时间线)。
+- HudInfoPayload 每 20t 下发;开关 enableHudInfoPanel,配置 +1,CURRENT_CONFIG_VERSION 72→73。
+- 待编译验证(均极低险):writeVarLong/readVarLong(PacketByteBuf 标准方法首用)、Codec.LONG(Codec.INT 在树同类)。

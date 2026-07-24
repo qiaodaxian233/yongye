@@ -279,6 +279,12 @@ public final class ModAttachments {
                     .persistent(Codec.BOOL).initializer(() -> false).copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "enhance_protected"));
 
+    /** TOTAL_KILLS(m288): 累计杀怪总数(战况看板显示;跨登录累计、死亡保留;口径=Monster+玩家击杀,同保护卷)。 */
+    public static final AttachmentType<Long> TOTAL_KILLS =
+            AttachmentRegistry.<Long>builder()
+                    .persistent(Codec.LONG).initializer(() -> 0L).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "total_kills"));
+
     /** SCROLL_KILLS(m159): 朝下一个保护卷累计的击杀数(每次兑换后扣除当前阈值,跨登录累计、死亡保留)。 */
     public static final AttachmentType<Integer> SCROLL_KILLS =
             AttachmentRegistry.<Integer>builder()

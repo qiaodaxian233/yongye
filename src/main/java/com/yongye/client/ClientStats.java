@@ -24,6 +24,14 @@ public final class ClientStats {
     /** 本帧面板是否画了格挡条(HudCompactMixin 每帧回写)——永夜阶段名/核心箭头据此连锁上移 6px。 */
     public static boolean guardBarShown = false;
 
+    // ===== m288 战况看板(由 HudInfoPayload 每 20t 更新) =====
+    /** 累计杀怪总数。 */
+    public static long totalKills = 0;
+    /** 下一阶段名(""=已至上限不显示预告)。 */
+    public static String nextStageName = "";
+    /** 距久留自动升层剩余秒数(-1=不适用,只显示阶段名)。 */
+    public static int nextStageSeconds = -1;
+
     public static void update(int h, int[] l, String cn) {
         health = h;
         levels = l;

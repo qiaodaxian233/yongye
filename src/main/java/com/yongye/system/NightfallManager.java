@@ -51,6 +51,23 @@ public final class NightfallManager {
         return "永夜 · 深渊 " + (level - 5) + " 层";
     }
 
+    /** m288 阶段预告:下一阶段名;已至上限(非无尽)返回 ""。 */
+    public static String getNextLevelName() {
+        if (level >= effectiveCap()) return "";
+        int next = level + 1;
+        if (next < NAMES.length) return NAMES[next];
+        return "永夜 · 深渊 " + (next - 5) + " 层";
+    }
+
+    /** m288 阶段预告:距久留自动升层剩余秒数;不适用(未入永夜/久留升层关/已至上限)返回 -1。
+     *  注:任务失败等事件也会立即升层,这里只预告"什么都不做也会到"的时间线。 */
+    public static int getEscalateRemainingSeconds() {
+        YongyeConfig cfg = YongyeConfig.get();
+        if (level < 1 || !cfg.nightfallTimeEscalate || level >= effectiveCap()) return -1;
+        int needSec = Math.max(1, cfg.nightfallTimeEscalateMinutes) * 60;
+        return Math.max(0, needSec - secondsInNightfall);
+    }
+
     public static double getEliteChanceMultiplier() {
         double[] arr = YongyeConfig.get().nightfallEliteChanceMultiplier;
         return arr[Math.max(0, Math.min(arr.length - 1, level))];

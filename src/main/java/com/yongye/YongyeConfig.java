@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 72;
+    public static final int CURRENT_CONFIG_VERSION = 73;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -1070,6 +1070,8 @@ public class YongyeConfig {
     public boolean enableLowHpFx = true;
     /** m287 濒死阈值:血量比例低于此值触发危机演出。 */
     public double lowHpFxThreshold = 0.20;
+    /** m288 战况看板:左上角显示 天数 · 累计击杀 · 下一阶段预告(含久留升层倒计时)。 */
+    public boolean enableHudInfoPanel = true;
 
     // ============ m274:BOSS 半血狂暴 ============
     /** BOSS 阶段转换开关:六只皮肤 BOSS + 佩恩血量跌破阈值 → 狂暴变招 + 全场演出。 */
