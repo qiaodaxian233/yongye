@@ -35,6 +35,9 @@ public class YongyeClient implements ClientModInitializer {
 
     private static boolean pendingClassSelect = false;
     private static boolean pendingDifficulty = false;
+    /** m273 连击 HUD 状态:当前连击数 + 跳动帧(计数增加瞬间放大回落) */
+    private static int comboCount = 0;
+    private static int comboPopTicks = 0;
     /** 永夜 HUD 状态(由 NightfallSyncPayload 更新):等级 + 阶段名 + 视野压缩强度 */
     public static int nightfallLevel = 0;
     public static String nightfallName = "";
@@ -134,6 +137,40 @@ public class YongyeClient implements ClientModInitializer {
                 context.client().execute(() -> CombatFxManager.onFx(
                         payload.kind(), payload.shake(), payload.fov(), payload.flash(), payload.sound())));
         ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
+        // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    if (payload.count() > comboCount) comboPopTicks = 4;
+                    comboCount = payload.count();
+                }));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> { if (comboPopTicks > 0) comboPopTicks--; });
+        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
+            if (comboCount < 2) return; // 1 连不值得画
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player == null || mc.options.hudHidden) return;
+            int tier = comboCount / 5;
+            // 档位越高颜色越燥:白→黄→金→橙红→亮紫
+            int col = switch (Math.min(tier, 4)) {
+                case 0 -> 0xFFFFFFFF; case 1 -> 0xFFFFFF55; case 2 -> 0xFFFFAA00;
+                case 3 -> 0xFFFF5533; default -> 0xFFFF55FF;
+            };
+            String main = comboCount + " 连击";
+            int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
+            int x = w / 2 + 108, y = h - 62;
+            var m = ctx.getMatrices();
+            m.push();
+            float scale = 1.15f + comboPopTicks * 0.09f; // 计数跳动瞬间放大回落
+            m.translate(x, y, 0);
+            m.scale(scale, scale, 1f);
+            ctx.drawTextWithShadow(mc.textRenderer, net.minecraft.text.Text.literal(main)
+                    .formatted(net.minecraft.util.Formatting.BOLD), 0, 0, col);
+            m.pop();
+            if (tier > 0) {
+                // 展示按默认档速算(每档 攻+4%/速+3%,封顶 40/30);真实数值在服务端 ComboHandler 按配置算
+                String bonus = "攻+" + Math.min(40, tier * 4) + "% 速+" + Math.min(30, tier * 3) + "%";
+                ctx.drawTextWithShadow(mc.textRenderer, net.minecraft.text.Text.literal(bonus), x, y + 12, 0xFFB0C4FF);
+            }
+        });
         // m257 蓄力重斩:按住攻击键蓄力检测(手感反馈+松开上报)
         ClientTickEvents.END_CLIENT_TICK.register(ChargeSlashManager::tick);
         // m260 站姿状态机(战斗待机/格挡姿态):库不可用时同一套降级口径
