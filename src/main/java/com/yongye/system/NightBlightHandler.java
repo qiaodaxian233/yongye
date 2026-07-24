@@ -147,7 +147,7 @@ public final class NightBlightHandler {
             if (!(entity instanceof MobEntity mob)) return;
             if (!(entity.getWorld() instanceof ServerWorld world)) return;
             if (!world.getBiome(entity.getBlockPos()).matchesKey(BIOME_KEY)) return;
-            if (cfg.blightDropRequirePlayerKill && !(source.getAttacker() instanceof PlayerEntity)) return;
+            if (cfg.blightDropRequirePlayerKill && SummonerHandler.creditedKiller(source) == null) return; // m300
 
             Random r = mob.getRandom();
             if (r.nextDouble() < cfg.blightDustChance) {

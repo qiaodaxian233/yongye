@@ -130,7 +130,8 @@ public final class QuestManager {
                     fail(victim);
                 }
             }
-            if (!(source.getAttacker() instanceof ServerPlayerEntity killer)) return;
+            ServerPlayerEntity killer = SummonerHandler.creditedKiller(source); // m300 召唤物击杀记主人
+            if (killer == null) return;
             Quest q = ACTIVE.get(killer.getUuid());
             if (q == null || q.done) return;
             boolean elite = entity.getAttachedOrElse(ModAttachments.IS_ELITE, false);

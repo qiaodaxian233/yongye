@@ -34,6 +34,11 @@ public class WarlockCloneEntity extends PathAwareEntity {
     private UUID owner;
     private int lifeTicks;
 
+    /** m300:击杀归属用。 */
+    public UUID getOwner() {
+        return owner;
+    }
+
     public WarlockCloneEntity(EntityType<? extends PathAwareEntity> type, World world) {
         super(type, world);
     }

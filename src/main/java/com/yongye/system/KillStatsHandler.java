@@ -23,7 +23,8 @@ public final class KillStatsHandler {
     public static void register() {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (!(entity instanceof Monster)) return;
-            if (!(source.getAttacker() instanceof ServerPlayerEntity killer)) return;
+            ServerPlayerEntity killer = SummonerHandler.creditedKiller(source); // m300 召唤物击杀记主人
+            if (killer == null) return;
             killer.setAttached(ModAttachments.TOTAL_KILLS,
                     killer.getAttachedOrElse(ModAttachments.TOTAL_KILLS, 0L) + 1L);
         });

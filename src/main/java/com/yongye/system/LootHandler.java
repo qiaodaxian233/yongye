@@ -123,7 +123,8 @@ public final class LootHandler {
             if (!cfg.enableRandomLoot) return;
             if (!(entity instanceof Monster)) return;
             if (!(entity.getWorld() instanceof ServerWorld world)) return;
-            if (cfg.lootRequirePlayerKill && !(damageSource.getAttacker() instanceof PlayerEntity)) return;
+            ServerPlayerEntity credited = SummonerHandler.creditedKiller(damageSource); // m300 召唤物击杀记主人
+            if (cfg.lootRequirePlayerKill && credited == null) return;
             // Boss 掉落由 BossHandler 负责,避免重复
             if (entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_BOSS, false)) return;
 
@@ -131,8 +132,7 @@ public final class LootHandler {
             boolean elite = entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_ELITE, false);
 
             // —— 动态爆率:按击杀者强度算掉率倍率(玩家越强越低) ——
-            double baseLm = (damageSource.getAttacker() instanceof ServerPlayerEntity killer)
-                    ? PlayerPower.lootMultiplier(killer) : 1.0;
+            double baseLm = credited != null ? PlayerPower.lootMultiplier(credited) : 1.0; // m300 动态爆率随主人强度
             // —— 难度奖励(m150):世界难度越高掉落越丰厚;保底 difficultyLootFloor(默认 1.0 即低难度不减) ——
             double dm = cfg.enableDifficultyLootBonus
                     ? Math.max(cfg.difficultyLootFloor, DifficultyManager.mobMult()) : 1.0;

@@ -2525,3 +2525,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **修法**:新 SummonFriendlyFireHandler 挂 ALLOW_DAMAGE(取消式,口径同 ForeignDamageFilterHandler 先例):受击者是三类己方召唤物(召唤师铁傀儡 tag yongye_summon / 肝帝天团 GanDiEntity / 暗影分身 WarlockCloneEntity)且 source.getAttacker() 是玩家(直接近战、弹射物=射手)→ 取消。**不做「只豁免主人」**:召唤物只打怪从不打玩家,任何玩家对它们的伤害都只可能是误伤(联机队友横扫同理);GanDi/分身也没有公开 owner 取值口,按全体玩家免最稳。
 - 环境伤害(岩浆/摔落/无主爆炸)与怪物攻击照常生效,寿命到点自散/再召唤散场不受影响(不走玩家伤害)。开关 summonFriendlyFireImmune(默开),配置 +1,CURRENT_CONFIG_VERSION 79→80。
 - 顺带:横扫命中被取消后,连击/暴击等 ALLOW_DAMAGE 观察者对该目标不再误触发(打自己傀儡不该涨连击)。零新 API 零待编译验证。
+
+## m300 击杀归属统一:召唤物击杀记主人(2026-07-24)
+- 作者实机反馈(选召唤师):「杀了一堆怪物,击杀只显示 2」「爆率不对吧」「召唤物击杀也算这个人击杀,要么就没意思了」。
+- **病根**:爆率没坏,是**归属坏了**——全库「玩家击杀」口径只认 source.getAttacker() instanceof Player。召唤师绝大多数怪是傀儡杀的:看板 TOTAL_KILLS 不涨;LootHandler 的 lootRequirePlayerKill(默开)直接 return = 随机掉落/强化石/技能书全部跳过;保护卷计数、贪婪经验、击杀任务、蚀域掉落同理。
+- **修法**:SummonerHandler 新增 **creditedKiller(DamageSource)** 统一口径——攻击者是玩家 → 本人;是己方召唤物 → 折算到主人(在线才算):肝帝/暗影分身各补 public getOwner(),傀儡用内存表 byOwner 反查(量小直扫)。六处全改走它:
+  ① KillStatsHandler 看板计数(作者截图那行);② LootHandler 掉落门 + baseLm 动态爆率按主人强度算(防召唤师白嫖满爆率);③ ProtectScrollHandler(保护卷计数+自动卷轴掉落);④ BonusXpHandler 贪婪额外经验(傀儡杀怪原版本就不掉经验球,这份保底经验归主人,召唤师不至于零经验);⑤ QuestManager 击杀/猎精英任务;⑥ NightBlightHandler 蚀域掉落门。
+- **不动**:武僧「空手击杀拳意+1」仍只认亲手空手(机制本义);连击/暴击/吸血/处决是命中系个人技,不涉击杀归属。
+- 开关 summonKillsCreditOwner(默开,关=回只认亲手);配置 +1,CURRENT_CONFIG_VERSION 80→81;零新 API 零待编译验证(getPlayerByUuid 在树先例=GanDi 台词)。

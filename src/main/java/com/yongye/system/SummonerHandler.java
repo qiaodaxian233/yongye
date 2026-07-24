@@ -46,6 +46,34 @@ public final class SummonerHandler {
     /** m226:肝帝天团按召唤者跟踪——重复施放先散上一批,修「连按癫狂叠好几队」。 */
     private static final Map<UUID, List<com.yongye.entity.GanDiEntity>> gandiByOwner = new HashMap<>();
 
+    /**
+     * m300 击杀归属(作者:「召唤物击杀也算这个人击杀,要么就没意思了」):
+     * 攻击者是玩家 → 本人;是己方召唤物(傀儡 tag/肝帝/暗影分身)→ 折算到主人(主人在线才算)。
+     * 全库六处「玩家击杀」口径统一走这里:看板计数/随机掉落门+动态爆率/保护卷/贪婪经验/击杀任务/蚀域掉落。
+     * 关 summonKillsCreditOwner 回「只认亲手」。
+     */
+    public static ServerPlayerEntity creditedKiller(net.minecraft.entity.damage.DamageSource source) {
+        net.minecraft.entity.Entity a = source.getAttacker();
+        if (a instanceof ServerPlayerEntity p) return p;
+        if (a == null || !YongyeConfig.get().summonKillsCreditOwner) return null;
+        UUID owner = null;
+        if (a instanceof com.yongye.entity.GanDiEntity g) owner = g.getOwner();
+        else if (a instanceof com.yongye.entity.WarlockCloneEntity w) owner = w.getOwner();
+        else if (a instanceof IronGolemEntity ig && ig.getCommandTags().contains(TAG)) owner = ownerOf(ig);
+        if (owner == null || !(a.getWorld() instanceof ServerWorld sw)) return null;
+        return sw.getPlayerByUuid(owner) instanceof ServerPlayerEntity sp ? sp : null;
+    }
+
+    /** m300:反查傀儡主人(内存表,量小直扫)。 */
+    private static UUID ownerOf(IronGolemEntity g) {
+        for (Map.Entry<UUID, List<Tracked>> e : byOwner.entrySet()) {
+            for (Tracked t : e.getValue()) {
+                if (t.golem() == g) return e.getKey();
+            }
+        }
+        return null;
+    }
+
     public static void register() {
         // 寿命管理:每 20 tick 扫一轮(m233 顺带做傀儡回血+统御被动)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
