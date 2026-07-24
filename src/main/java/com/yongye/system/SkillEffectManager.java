@@ -60,7 +60,7 @@ public final class SkillEffectManager {
         int max = YongyeConfig.get().skillBookMaxLevel;
         int cur = getLearnedLevel(player, type);
         if (cur >= max) return LearnResult.CAPPED;
-        int next = Math.min(max, cur + Math.max(1, level));
+        int next = (int) Math.min(max, (long) cur + Math.max(1, level)); // m293:先 long 后钳,防 cur+level 溢出
         Map<String, Integer> copy = new HashMap<>(player.getAttachedOrElse(ModAttachments.LEARNED_SKILLS, Map.of()));
         copy.put(type.id, next);
         player.setAttached(ModAttachments.LEARNED_SKILLS, copy);
@@ -81,12 +81,15 @@ public final class SkillEffectManager {
             ItemStack s = inv.getStack(i);
             if (s.isEmpty()) continue;
             if (s.getItem() instanceof com.yongye.item.SkillBookItem sb) {
-                int total = com.yongye.item.SkillBookItem.getLevel(s) * s.getCount();   // 等级×数量
+                // m293:等级近 10 亿 × 一叠 64 本 = 6.4e10,int 乘法先溢出,改 long 再钳
+                int total = (int) Math.min(Integer.MAX_VALUE,
+                        (long) com.yongye.item.SkillBookItem.getLevel(s) * s.getCount());
                 learn(player, sb.getType(), total);
                 booksUsed += s.getCount();
                 inv.setStack(i, ItemStack.EMPTY);
             } else if (s.getItem() instanceof com.yongye.item.HealthSkillBookItem) {
-                int total = com.yongye.item.HealthSkillBookItem.getLevel(s) * s.getCount();
+                int total = (int) Math.min(Integer.MAX_VALUE,
+                        (long) com.yongye.item.HealthSkillBookItem.getLevel(s) * s.getCount()); // m293 同上
                 PlayerSkillManager.learnHealth(player, total);
                 healthGained += total;
                 booksUsed += s.getCount();

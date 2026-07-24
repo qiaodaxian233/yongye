@@ -32,7 +32,7 @@ public final class PlayerSkillManager {
         if (cur >= max) {
             return LearnResult.CAPPED;
         }
-        int next = Math.min(max, cur + Math.max(1, level));
+        int next = (int) Math.min(max, (long) cur + Math.max(1, level)); // m293:先 long 后钳,防溢出
         player.setAttached(ModAttachments.LEARNED_HEALTH, next);
         applyHealthModifier(player);
         com.yongye.network.YongyeNet.sendStats(player);

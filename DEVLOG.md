@@ -2459,3 +2459,26 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 效果:ALLOW_DAMAGE 观察者永远放行只旁听,口径同处决=只认「玩家直接近战」(source.getSource()==攻击者;弓/魔法/召唤物不吸),不吸玩家;回血走 heal(),禁疗系统照常拦。
 - 数值(作者点名「不能太高」):每级 +0.4%(skillLifestealPerLevel),**封顶 8%**(skillLifestealMax)——技能书等级上限 10 亿,必须靠封顶封死不能按级裸乘;与武器强化吸血(+1000 级起 10%~50%)是两条线,叠加后仍远低于伤害本身。
 - 配置 +2,CURRENT_CONFIG_VERSION 73→74;双语 lang 两条;零新 API 零待编译验证。
+
+## m291 六新强化技能书(2026-07-24)
+- 作者供图六张(暴击/迅捷/破甲/屹立/贪婪/回春)全部实装。图标管线本轮升级:上传图是**白底 RGB**(非透明 alpha),固定管线前加「边缘泛洪抠图」——只有与图像边界连通的近白区判背景(保住书面内部白色星点),再做 24 轮透明区颜色外扩(防 LANCZOS 缩图白晕),64×64 + alpha<25 清尘。
+- SkillType 尾部追加 CRIT/SWIFT/PIERCE/STEADFAST/GREED/REJUVENATE(尾部追加保证既有序号不漂移);注册/创造栏/掉落池/佩恩与核心奖励/命令全 values() 循环自动覆盖,零逐处接线。
+- 效果与数值(百分比一律封顶,口径同 m290 吸血):
+  - **暴击**:亲手近战概率追加 (倍率1.5-1)×原伤,走 playerAttack(吃护甲、能触发击杀归属),CRIT 粒子+暴击音;每级 +0.2% 概率封顶 25%。与 m290 吸血监听合流为「近战触发合流」一次判定,追加伤害置 procApplying 防重入(套路同 HighHpCounter 的 applying,proven)。
+  - **破甲**:亲手近战追加 amount×比例 的 magic 伤害(无视护甲,口径同高血量反制穿甲刀);每级 +0.3% 封顶 30%。
+  - **迅捷**:移速/攻速 ADD_MULTIPLIED_TOTAL 百分比,每级各 +0.2%,封顶 +30%/+25%;走 applyAttributes,setModifier 加 Operation 重载(原三参转调,零行为变化)。
+  - **屹立**:击退抗 ADD_VALUE 每级 +0.5% 封顶 60%(属性本身 0~1)。
+  - **贪婪**:玩家亲手击杀 → 额外经验 = 基准5 × min(100%, 级×1%),挂 BonusXpHandler AFTER_DEATH,与精英+分档独立叠加。
+  - **回春**:脱战 160t(8s)后每秒回 最大生命×min(3%, 级×0.1%);REJUV_LAST_COMBAT 出手/挨打双向记时,DISCONNECT 下线即清(m286 口径),与持续恢复(平铺常时)错位互补。
+- 配置 +17,CURRENT_CONFIG_VERSION 74→75;模型 json×6 + 双语 lang×12;零新 API 零待编译验证。
+
+## m292 禁疗改版「重创减疗」+ 饕餮心脏免疫(2026-07-24)
+- 作者四点名逐条落地:①**减疗而非全禁**——期间治疗 ×(1-healBlockHealReduction=0.7),新 ArtifactManager.healFactor 统一系数,六个回血入口全接(技能恢复/饱食回血/回春/吸血/吞噬技能/饕餮击杀回血),全仓 NO_HEAL_UNTIL 裸判清零只剩三个合法住址;②**只 BOSS 触发**——healBlockBossOnly 默认 true,精英与永夜普通怪退出施加名单;③**免疫 CD**——结束后 400t(20s)内不可再施加,判 `now >= prevUntil + CD` 一条式同时防「生效中叠加」与「无缝续」;④**神器免疫**——饕餮心脏 ≥4 级(神话)完全免疫(免疫时写零时长记录吃 CD、顺带节流金字提示),未达级每级缩短时长 15% 保底 1s。
+- **纠错入册**:m290 注释声称「回血走 heal(),禁疗照常拦得住」——不实。禁疗从来是**逐入口手动判**,heal() 本身无拦截,m290 吸血当时并没有接检查,禁疗期间照吸。本轮借 healFactor 统一真接上。教训:声称「X 系统会管住」前先确认 X 的作用机制是拦截式还是自觉式。
+- 施加/免疫各配 action bar 播报(深红「伤口被缝住了!治疗效果 -70%」/金字「饕餮心脏吞噬了重创诅咒」);DifficultyScreen 简介与 regen/lifesteal 双语 desc 同步改词「重创减疗」。
+- 配置 +5,CURRENT_CONFIG_VERSION 75→76;零新 API 零待编译验证。
+
+## m293 等级加法整型溢出加固(2026-07-24)
+- 起因=作者问「18,446,744,073,709,551,615 是游戏里最大的数值,应该不止 10 亿吧」。**答疑对齐**:2^64=18.4Qi 是 m220 抬的**属性上限**(血攻甲韧,存 double);技能书**等级**是另一个数,上限=10 亿(m149 定的,存 int,int 上限 21.4 亿);百分比类效果全靠封顶封死,等级再高也只到封顶,平铺类(攻击书 0.5/级)10 亿级=+5 亿攻已够摸属性上限,故等级存储不升 long(大手术零收益)。
+- 但审出**真隐患**:等级加法多处裸 int 运算,堆近 21.4 亿再加会回卷负数——最狠的是 EquipmentEnhancer.addLevels 回卷后被 withLevel 钳 0 = **装备等级一夜清零**。七处全部改 long 运算后钳 [0, Integer.MAX_VALUE]:addLevels/attempt 免失败直通端/保护卷预判比较/安全段后到顶停推/循环内 level++ 防回卷、SkillEffectManager.learn 与 useAllBooks 两处「等级×数量」(1e9×64=6.4e10 乘法先溢出)、PlayerSkillManager.learnHealth。
+- 纯防御性修复,常规数值零行为变化;零配置(仍 76)零新 API 零待编译验证。

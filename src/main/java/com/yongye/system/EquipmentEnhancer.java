@@ -194,7 +194,9 @@ public final class EquipmentEnhancer {
     }
 
     public static ItemStack addLevels(ItemStack equipment, int delta) {
-        return withLevel(equipment, getLevel(equipment) + delta);
+        // m293:long 运算防 int 溢出(等级堆近 21.4 亿再加会回卷成负数→被 withLevel 钳 0=一夜清零)
+        long v = (long) getLevel(equipment) + delta;
+        return withLevel(equipment, (int) Math.max(0, Math.min(Integer.MAX_VALUE, v)));
     }
 
     /**
@@ -241,7 +243,7 @@ public final class EquipmentEnhancer {
         int startLevel = getLevel(equipment);
         if (budget < 0) budget = 0;
         if (!c.enableEnhanceFailure) {
-            int end = startLevel + budget;
+            int end = (int) Math.min(Integer.MAX_VALUE, (long) startLevel + budget); // m293 防溢出
             return new EnhanceResult(withLevel(equipment, end), startLevel, end, budget, 0, false, false);
         }
         net.minecraft.util.math.random.Random rng =
@@ -255,7 +257,7 @@ public final class EquipmentEnhancer {
         //       (优先用已激活的手动护盾),这一整次强化都不碎裂(不管里面尝试多少次)。
         //       开关 enhanceProtectPerOperation(/yongye protectperop 或调试菜单可关)。
         boolean opProtected = false;
-        if (p != null && canBreak && c.enhanceProtectPerOperation && startLevel + budget >= c.enhanceBreakLevel) {
+        if (p != null && canBreak && c.enhanceProtectPerOperation && (long) startLevel + budget >= c.enhanceBreakLevel) { // m293 防溢出
             if (p.getAttachedOrElse(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false)) {
                 p.setAttached(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
                 opProtected = true; usedProtect = true;
@@ -268,10 +270,12 @@ public final class EquipmentEnhancer {
             int bulk = Math.min(remain, c.enhanceFailStartLevel - level);
             level += bulk; remain -= bulk; ok += bulk;
         }
+        if (level == Integer.MAX_VALUE) remain = 0; // m293:已到 int 顶,不再推进(防回卷)
         while (remain > 0 && !broke) {
             remain--;
             if (rng.nextDouble() < successRate(level)) {
-                level++; ok++;
+                if (level < Integer.MAX_VALUE) level++; // m293 防回卷
+                ok++;
             } else {
                 fail++;
                 if (canBreak && level >= c.enhanceBreakLevel) {
