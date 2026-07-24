@@ -142,6 +142,7 @@ public final class EliteHandler {
             ItemStack held = player.getMainHandStack();
             if (!held.isEmpty() && EquipmentEnhancer.isWeapon(held)
                     && !held.getOrDefault(com.yongye.registry.ModComponents.DISARM_PROOF, false)
+                    && !com.yongye.item.BlightArmorItem.isSoulbound(held)   // m281:灵魂绑定装备精英抢不走
                     && player.getRandom().nextDouble() < cfg.eliteDisarmChance) {
                 player.setAttached(ModAttachments.LOST_WEAPON_ENHANCE, Math.max(
                         player.getAttachedOrElse(ModAttachments.LOST_WEAPON_ENHANCE, 0), EquipmentEnhancer.getLevel(held)));
@@ -161,6 +162,7 @@ public final class EliteHandler {
                     ItemStack worn = player.getEquippedStack(s);
                     if (worn.isEmpty()) continue;                                                            // 空槽
                     if (worn.getOrDefault(com.yongye.registry.ModComponents.DISARM_PROOF, false)) continue;  // 已被守护
+                    if (com.yongye.item.BlightArmorItem.isSoulbound(worn)) continue;                         // m281:灵魂绑定装备精英抢不走
                     if (s == EquipmentSlot.OFFHAND) {
                         // 副手:只夺装备类(盾/武器),可覆盖精英自带的免费盾(同主手夺武器逻辑,后期精英也带盾)
                         if (!EquipmentEnhancer.isWardable(worn)) continue;

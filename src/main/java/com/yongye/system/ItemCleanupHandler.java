@@ -74,7 +74,9 @@ public final class ItemCleanupHandler {
             // 先收集再删除,避免遍历途中结构性修改
             List<ItemEntity> items = new ArrayList<>();
             for (Entity e : world.iterateEntities()) {        // 待编译验证:ServerWorld.iterateEntities() 全实体遍历(失败则改用 getEntitiesByType(EntityType.ITEM, ...))
-                if (e instanceof ItemEntity ie && ie.isAlive()) items.add(ie);
+                if (e instanceof ItemEntity ie && ie.isAlive()
+                        && !com.yongye.item.BlightArmorItem.isSoulbound(ie.getStack()))   // m281:灵魂绑定装备豁免清理
+                    items.add(ie);
             }
             for (ItemEntity ie : items) { ie.discard(); total++; }
         }

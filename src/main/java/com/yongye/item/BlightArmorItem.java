@@ -33,13 +33,32 @@ public class BlightArmorItem extends ArmorItem {
     public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
         super.inventoryTick(stack, world, entity, slot, selected);
         if (world.isClient) return;
-        if (!YongyeConfig.get().blightArmorSoulbound) return;
-        // 认主:未绑定 + 在玩家背包里 → 绑给这名玩家
-        if (stack.get(ModComponents.BLIGHT_OWNER) == null && entity instanceof ServerPlayerEntity p) {
+        // 认主:未绑定 + 在玩家背包里 → 绑给这名玩家(受 blightArmorSoulbound 门控)
+        if (YongyeConfig.get().blightArmorSoulbound
+                && stack.get(ModComponents.BLIGHT_OWNER) == null && entity instanceof ServerPlayerEntity p) {
             stack.set(ModComponents.BLIGHT_OWNER, p.getUuid().toString() + "|" + p.getGameProfile().getName());
             p.sendMessage(Text.literal("【夜蚀】" + stack.getName().getString() + " 与你的灵魂缔结了契约")
                     .formatted(Formatting.LIGHT_PURPLE), true);
         }
+        // m281 装备无法被破坏·耐久面:补上原版 UNBREAKABLE 组件,耐久永不下降永不损毁
+        // (tooltip 自带一行"无法破坏";老存档里已造好的装备走这里自动补齐)
+        // 【待编译验证】DataComponentTypes.UNBREAKABLE / UnbreakableComponent(boolean)——类路径已核 yarn 1.21.1
+        //  (net.minecraft.component.type.UnbreakableComponent=class_9300);报错时把这两行注释掉即可,掉落物保护不受影响。
+        if (YongyeConfig.get().blightArmorIndestructible
+                && stack.get(net.minecraft.component.DataComponentTypes.UNBREAKABLE) == null) {
+            stack.set(net.minecraft.component.DataComponentTypes.UNBREAKABLE,
+                    new net.minecraft.component.type.UnbreakableComponent(true));
+        }
+    }
+
+    /**
+     * m281:这件物品是否受灵魂绑定保护——夜蚀盔甲本体,或任何已带认主组件的物品。
+     * 掉落物免伤/永不消失/虚空归还/怪物捡不走/精英缴械豁免/定时清理豁免 全部走这一个口径。
+     */
+    public static boolean isSoulbound(ItemStack stack) {
+        return !stack.isEmpty()
+                && (stack.getItem() instanceof BlightArmorItem
+                    || stack.get(ModComponents.BLIGHT_OWNER) != null);
     }
 
     @Override
@@ -51,6 +70,9 @@ public class BlightArmorItem extends ArmorItem {
             tooltip.add(Text.literal("已认主:" + owner).formatted(Formatting.LIGHT_PURPLE));
         }
         tooltip.add(Text.literal("灵魂绑定 · 死亡不掉落 · 他人无法拾取").formatted(Formatting.DARK_PURPLE));
+        if (YongyeConfig.get().blightArmorIndestructible) {
+            tooltip.add(Text.literal("不可摧毁 · 火/爆炸/虚空不灭 · 怪物与精英抢不走").formatted(Formatting.DARK_PURPLE));
+        }
         var c = YongyeConfig.get();
         tooltip.add(Text.literal(String.format("夜蚀共鸣:每件 生命+%d%% 攻击+%d%%,集齐 4 件 移速+%d%%",
                 Math.round(c.blightSetHpPct * 100), Math.round(c.blightSetAtkPct * 100),

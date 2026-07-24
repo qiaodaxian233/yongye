@@ -10,7 +10,9 @@
     "EnderDragonFightAccessor",
     "MonsterDeathGuardMixin",
     "SoulboundDropMixin",
-    "SoulboundPickupMixin"
+    "SoulboundPickupMixin",
+    "SoulboundItemGuardMixin",
+    "SoulboundMobLootMixin"
   ],
   "client": [
     "client.HudCompactMixin",
