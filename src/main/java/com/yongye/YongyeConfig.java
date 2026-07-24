@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 65;
+    public static final int CURRENT_CONFIG_VERSION = 70;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -1040,6 +1040,60 @@ public class YongyeConfig {
     public double executeThresholdFraction = 0.12;
     /** 最大血量 ≥ 此值的目标豁免处决(BOSS 该一刀一刀磨;m263 后 BOSS 全在 25 万+)。 */
     public double executeBossHpExempt = 50000.0;
+
+    // ============ m272:夜蚀共鸣(套装加成) ============
+    /** 每穿 1 件夜蚀盔甲:最大生命 +此比例(乘基础值,随成长曲线走)。 */
+    public double blightSetHpPct = 0.10;
+    /** 每穿 1 件夜蚀盔甲:攻击力 +此比例。 */
+    public double blightSetAtkPct = 0.06;
+    /** 集齐 4 件夜蚀盔甲:移动速度 +此比例。 */
+    public double blightSetSpeedPct = 0.10;
+
+    // ============ m273:连击计数器 ============
+    /** 连击系统开关:命中累计连击数,HUD 显示,高连击加攻速/伤害。 */
+    public boolean enableCombo = true;
+    /** 断连时限(tick):这么久没打中任何怪,连击清零(100=5 秒)。 */
+    public int comboTimeoutTicks = 100;
+    /** 每 5 连击:伤害 +此比例(ADD_MULTIPLIED_TOTAL)。 */
+    public double comboDamagePerTier = 0.04;
+    /** 连击伤害加成封顶。 */
+    public double comboDamageCap = 0.40;
+    /** 每 5 连击:攻速 +此比例。 */
+    public double comboSpeedPerTier = 0.03;
+    /** 连击攻速加成封顶。 */
+    public double comboSpeedCap = 0.30;
+
+    // ============ m274:BOSS 半血狂暴 ============
+    /** BOSS 阶段转换开关:六只皮肤 BOSS + 佩恩血量跌破阈值 → 狂暴变招 + 全场演出。 */
+    public boolean enableBossRage = true;
+    /** 狂暴触发阈值(血量比例)。 */
+    public double bossRageThreshold = 0.5;
+    /** 狂暴后攻击力 +此比例。 */
+    public double bossRageAtkPct = 0.35;
+    /** 狂暴后移动速度 +此比例。 */
+    public double bossRageSpeedPct = 0.25;
+
+    // ============ m275:击杀顿帧 ============
+    /** 顿帧开关:重击/击杀命中瞬间,第一人称挥臂定住几个 tick(时停感)。 */
+    public boolean enableCombatFxHitstop = true;
+    /** 顿帧时长倍率(重击 2t、击杀 4t 的基准上乘;0.5~2 合理)。 */
+    public double combatFxHitstopScale = 1.0;
+
+    // ============ m276:自动强化卷 / 自动吃书卷 ============
+    /** 自动卷轴时长(tick,1200=60 秒;重复使用叠加,封顶 5 分钟)。 */
+    public int autoScrollDurationTicks = 1200;
+    /** 自动强化间隔(tick):生效期间每隔这么久,吞掉背包(含潜影盒)全部强化材料强化一次。 */
+    public int autoEnhanceIntervalTicks = 60;
+    /** 自动吃书间隔(tick):生效期间每隔这么久,自动学一本背包(含潜影盒)里的技能书/血量书。 */
+    public int autoBookIntervalTicks = 30;
+    /** 敌对怪死亡掉落自动强化卷的概率。 */
+    public double autoEnhanceScrollDropChance = 0.003;
+    /** 敌对怪死亡掉落自动吃书卷的概率。 */
+    public double autoBookScrollDropChance = 0.003;
+    /** 任务奖励里出自动强化卷的基础概率(随永夜等级小幅上浮)。 */
+    public double questAutoEnhanceScrollChance = 0.10;
+    /** 任务奖励里出自动吃书卷的基础概率(随永夜等级小幅上浮)。 */
+    public double questAutoBookScrollChance = 0.10;
 
     // —— m258 空中回旋斩范围伤害(七式之四不再纯视觉:转一圈扫一圈) ——
     /** 空中回旋斩范围伤害总开关。 */

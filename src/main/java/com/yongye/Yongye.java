@@ -123,6 +123,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.ForeignDamageFilterHandler.register(); // m189 怪物伤害来源检测(只认原版+本模组武器)
         WeaponGuardHandler.register(); // m259 武器右键格挡(在打击感之前注册:挡下的伤害不出打击感;在伤害过滤/职业受击之后:坦克折减先行)
         com.yongye.system.ExecuteHandler.register(); // m270 处决斩杀(取消原伤害+嵌套补致死刀,须在打击感之前)
+        com.yongye.system.BlightSetHandler.register(); // m272 夜蚀共鸣(套装百分比加成)
         com.yongye.system.CombatFxHandler.register(); // m239 沉浸式战斗手感(必须排在伤害过滤之后:被取消的伤害不出打击感)
         WeaponSkillFx.register(); // m255 武器技能特效编排器(混沌斩/吞噬/终焉的多帧大演出)
         WeaponSkillManager.init();

@@ -51,6 +51,10 @@ public class BlightArmorItem extends ArmorItem {
             tooltip.add(Text.literal("已认主:" + owner).formatted(Formatting.LIGHT_PURPLE));
         }
         tooltip.add(Text.literal("灵魂绑定 · 死亡不掉落 · 他人无法拾取").formatted(Formatting.DARK_PURPLE));
+        var c = YongyeConfig.get();
+        tooltip.add(Text.literal(String.format("夜蚀共鸣:每件 生命+%d%% 攻击+%d%%,集齐 4 件 移速+%d%%",
+                Math.round(c.blightSetHpPct * 100), Math.round(c.blightSetAtkPct * 100),
+                Math.round(c.blightSetSpeedPct * 100))).formatted(Formatting.LIGHT_PURPLE));
         super.appendTooltip(stack, context, tooltip, type);
     }
 }
