@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 77; // m296 强化石滑动窗掉落 +15
+    public static final int CURRENT_CONFIG_VERSION = 78; // m296 强化石滑动窗+15 · m297 技能书分档+5
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -234,6 +234,13 @@ public class YongyeConfig {
     public int stoneBossMaxOffset = 4;               //              ~t+4(均匀)
     public int stoneTierCap = 10;                    // 基准档封顶(最高档强化石,硬上限 10)
     public boolean stoneTopTierEliteOnly = true;     // 封顶期收口:普通怪不出最高档(降为次档),10亿石只从精英/BOSS 出
+
+    // ============ m297:技能书 ×100 分五档(1/100/1万/100万/1亿),随石档折半爬 ============
+    public boolean enableStagedSkillBooks = true;    // 总开关:属性技能书等级走阶段书档(关=回旧的固定小等级)
+    public int skillBookPercentTierCap = 2;          // 百分比类书最高档(2=100级;封顶都极低,高档纯浪费掉落位)
+    public double skillBookBossAttackBias = 0.5;     // BOSS 书强制攻击书的概率(攻击书高档主要出处)
+    public int bossBookMinCount = 1;                 // BOSS 必掉技能书本数下限
+    public int bossBookMaxCount = 3;                 // 上限(含,随 bossDropMultiplier 放大)
 
     public int enhanceShardValue = 1;              // 生命碎片 = +1 级
     public int enhanceCrystalValue = 10;           // 生命结晶 = +10 级

@@ -50,8 +50,9 @@ public class SkillBookItem extends Item {
 
     @Override
     public Text getName(ItemStack stack) {
+        // m297:大数用中文单位紧凑显示(V1万 / V1亿),小数原样
         return Text.translatable("item.yongye.skill_book." + type.id)
-                .append(Text.literal(" V" + getLevel(stack)).formatted(Formatting.AQUA));
+                .append(Text.literal(" V" + EnhanceStoneItem.cn(getLevel(stack))).formatted(Formatting.AQUA));
     }
 
     @Override

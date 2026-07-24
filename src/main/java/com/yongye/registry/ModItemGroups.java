@@ -53,6 +53,10 @@ public final class ModItemGroups {
                 entries.add(com.yongye.item.SkillBookItem.create(st, 10));
                 entries.add(com.yongye.item.SkillBookItem.create(st, 100));
             }
+            // m297 攻击书独占高档:1万 / 100万 / 1亿 三档样本进创造栏
+            for (int lv : new int[]{10_000, 1_000_000, 100_000_000}) {
+                entries.add(com.yongye.item.SkillBookItem.create(com.yongye.item.SkillType.ATTACK, lv));
+            }
             // 材料
             entries.add(ModItems.LIFE_SHARD);
             entries.add(ModItems.LIFE_CRYSTAL);

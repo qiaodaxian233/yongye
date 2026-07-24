@@ -93,11 +93,28 @@ public final class BossHandler {
         double m = cfg.bossDropMultiplier;
 
         dropMany(world, boss, scale(3, m), rr -> HealthSkillBookItem.create(10 + rr.nextInt(11))); // V10~V20
-        // 属性技能书:随机类型 V3~V8,数本
-        dropMany(world, boss, scale(3, m), rr -> {
-            com.yongye.item.SkillType[] ts = com.yongye.item.SkillType.values();
-            return com.yongye.item.SkillBookItem.create(ts[rr.nextInt(ts.length)], 3 + rr.nextInt(6));
-        });
+        // 属性技能书:m297 开分档=BOSS 掉 1~3 本阶段书档(skillBookBossAttackBias 概率强制攻击书——
+        // 攻击书高档的主要出处,百分比类照旧钳前两档);关分档=旧「3 本 V3~V8」。
+        if (cfg.enableStagedSkillBooks) {
+            int blo = Math.min(cfg.bossBookMinCount, cfg.bossBookMaxCount);
+            int bhi = Math.max(cfg.bossBookMinCount, cfg.bossBookMaxCount);
+            int bn = blo + (bhi > blo ? r.nextInt(bhi - blo + 1) : 0);
+            dropMany(world, boss, scale(bn, m), rr -> {
+                com.yongye.item.SkillType t;
+                if (rr.nextDouble() < cfg.skillBookBossAttackBias) {
+                    t = com.yongye.item.SkillType.ATTACK;
+                } else {
+                    com.yongye.item.SkillType[] ts = com.yongye.item.SkillType.values();
+                    t = ts[rr.nextInt(ts.length)];
+                }
+                return com.yongye.item.SkillBookItem.create(t, EnhanceStoneDrops.bookLevelFor(world, t));
+            });
+        } else {
+            dropMany(world, boss, scale(3, m), rr -> {
+                com.yongye.item.SkillType[] ts = com.yongye.item.SkillType.values();
+                return com.yongye.item.SkillBookItem.create(ts[rr.nextInt(ts.length)], 3 + rr.nextInt(6));
+            });
+        }
         dropMany(world, boss, scale(4, m), rr -> new ItemStack(ModItems.LIFE_CRYSTAL));
         // m296 强化石:BOSS 必掉 stoneBossMinCount~Max 颗,档位 t+2~t+4(随 Boss 倍率放大)
         if (cfg.enableEnhanceStoneDrops) {

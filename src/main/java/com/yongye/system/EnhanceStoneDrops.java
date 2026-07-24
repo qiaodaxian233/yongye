@@ -60,6 +60,34 @@ public final class EnhanceStoneDrops {
         return new ItemStack(ModItems.enhanceStone(clamp(c, tier)));
     }
 
+    // ============ m297:技能书 ×100 分五档,随同一进度基准档爬 ============
+    // 书档 b 面值 = 100^(b-1):1 / 100 / 1万 / 100万 / 1亿(不做 10亿 单本——一本满级会把成长线一刀砍死,
+    // 留「十本 1亿 大书」的收集过程)。书档随石档折半爬:b = (t+1)/2(石 ×10 一档、书 ×100 一档,量级对齐)。
+    // 十几种书里只有攻击书吃得下大数(0.5/级平铺无封顶);百分比类封顶都极低(吸血 8%/暴击 25%/破甲 30%…),
+    // 掉百万级纯浪费掉落位——只掉前 skillBookPercentTierCap(默 2)档,攻击书独占高档。
+
+    /** 书档面值:100^(bookTier-1),long 计算钳 int(5 档 = 1 亿,在 int 内)。 */
+    public static int bookTierLevel(int bookTier) {
+        long v = 1L;
+        for (int i = 1; i < bookTier; i++) v *= 100L;
+        return (int) Math.min(Integer.MAX_VALUE, v);
+    }
+
+    /** 当前书基准档 b = (石基准档 t + 1) / 2,钳 [1,5]。 */
+    public static int stageBookTier(ServerWorld world) {
+        return Math.max(1, Math.min(5, (baseTier(world) + 1) / 2));
+    }
+
+    /** 按类型给书等级:攻击书吃满当前书档,百分比类钳到 skillBookPercentTierCap。 */
+    public static int bookLevelFor(ServerWorld world, com.yongye.item.SkillType type) {
+        YongyeConfig c = YongyeConfig.get();
+        int b = stageBookTier(world);
+        if (type != com.yongye.item.SkillType.ATTACK) {
+            b = Math.min(b, Math.max(1, c.skillBookPercentTierCap));
+        }
+        return bookTierLevel(b);
+    }
+
     /** 三权重选 0/1/2 偏移(权重和不必为 1,按比例;全 0 时落 0 偏移)。 */
     private static int pick(Random r, double w0, double w1, double w2) {
         double total = w0 + w1 + w2;

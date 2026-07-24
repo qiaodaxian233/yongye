@@ -2504,3 +2504,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
   - **BOSS**必掉 stoneBossMinCount~Max(默 3~5)颗、档位 t+2~t+4 均匀,颗数随 bossDropMultiplier 放大(挂在 BossHandler.dropBossRewards)。
 - **封顶期收口**:t 到顶后若普通怪也满地掉最高档,一晚全毕业——stoneTopTierEliteOnly(默开)把普通怪的最高档降为次档,10 亿石只从精英/BOSS 出(毕业节奏=几十只精英或几个 BOSS,可关)。
 - 配置 +15(开关/概率/三组窗权重/BOSS 颗数与偏移/封顶/收口),CURRENT_CONFIG_VERSION 76→77;零新 API 零待编译验证(全在树先例)。
+
+## m297 技能书×100分五档+按阶段掉落(2026-07-24)
+- 定稿设计的书分档:**×100 一档、共 5 档**(1 / 100 / 1万 / 100万 / 1亿)。不做 10 亿单本——一本直接满级等于把成长线一刀砍死,留「十本 1 亿大书」的收集过程。书档 b = (石档 t + 1) / 2(石 ×10 一档、书 ×100 一档,量级对齐),与强化石共用同一进度基准(EnhanceStoneDrops 新增 bookTierLevel / stageBookTier / bookLevelFor)。
+- **攻击书独占高档**:十几种书里只有它是平铺无封顶(0.5/级)、吃得下大数;百分比类(吸血 8%/暴击 25%/破甲 30%/闪避 50%…)封顶都极低,掉百万级纯浪费掉落位——钳 skillBookPercentTierCap(默 2 档=100 级,两本内全能摸各自封顶)。
+- 接线三处 LootHandler(普通怪概率书/精英概率书/精英必爆套餐——套餐里血量书照旧走配置区间)+ BossHandler(改必掉 bossBookMinCount~Max 默 1~3 本、skillBookBossAttackBias 默 0.5 概率强制攻击书=**攻击书高档的主要出处**,随 bossDropMultiplier 放大);enableStagedSkillBooks 关掉全部回旧固定小等级。血量书体系(COMMON~GODLY 池 / BOSS V10~V20)不动。
+- 书名大数紧凑显示:SkillBookItem.getName 用 EnhanceStoneItem.cn(整万→V1万、整亿→V1亿);创造栏补攻击书 1万/100万/1亿 三档样本。
+- 配置 +5,CURRENT_CONFIG_VERSION 77→78;零新 API 零待编译验证。

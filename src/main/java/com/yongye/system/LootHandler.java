@@ -66,6 +66,25 @@ public final class LootHandler {
         return SkillBookItem.create(types[pick - 1], lvl);
     }
 
+    /** m297:随机一本属性技能书,等级走阶段书档(攻击书吃满当前档,百分比类钳前两档)。 */
+    private static ItemStack stagedSkillBook(ServerWorld world, Random r) {
+        SkillType[] types = SkillType.values();
+        SkillType t = types[r.nextInt(types.length)];
+        return SkillBookItem.create(t, EnhanceStoneDrops.bookLevelFor(world, t));
+    }
+
+    /** m297:精英必爆套餐版——血量书照旧走配置等级区间,属性书走阶段书档。 */
+    private static ItemStack stagedAnySkillBook(ServerWorld world, Random r, int hMin, int hMax) {
+        SkillType[] types = SkillType.values();
+        int pick = r.nextInt(types.length + 1); // 0 = 血量书,其余 = 属性书
+        if (pick == 0) {
+            int lvl = hMin + (hMax > hMin ? r.nextInt(hMax - hMin + 1) : 0);
+            return HealthSkillBookItem.create(lvl);
+        }
+        SkillType t = types[pick - 1];
+        return SkillBookItem.create(t, EnhanceStoneDrops.bookLevelFor(world, t));
+    }
+
     private static final List<LootFactory> COMMON = List.of(
             item(Items.DIRT, 1, 4), item(Items.COBBLESTONE, 1, 4), item(Items.STICK, 1, 3),
             item(Items.ROTTEN_FLESH, 1, 3), item(Items.WHEAT_SEEDS, 1, 3), item(Items.STRING, 1, 3),
@@ -135,17 +154,22 @@ public final class LootHandler {
                         drop(world, entity, new ItemStack(ModItems.LIFE_CRYSTAL, gCrystals));
                     }
                     for (int i = 0; i < gBooks; i++) {
-                        drop(world, entity, randomAnySkillBook(r,
-                                cfg.eliteGuaranteedSkillBookMinLevel, cfg.eliteGuaranteedSkillBookMaxLevel));
+                        // m297:开分档时属性书走阶段书档(血量书仍走配置区间)
+                        drop(world, entity, cfg.enableStagedSkillBooks
+                                ? stagedAnySkillBook(world, r,
+                                        cfg.eliteGuaranteedSkillBookMinLevel, cfg.eliteGuaranteedSkillBookMaxLevel)
+                                : randomAnySkillBook(r,
+                                        cfg.eliteGuaranteedSkillBookMinLevel, cfg.eliteGuaranteedSkillBookMaxLevel));
                     }
                 }
                 // 精英:技能书改为按概率掉(skillBookDropChanceElite,默认已调极低)+ 一件稀有以上战利品 + 概率材料
                 if (r.nextDouble() < cfg.skillBookDropChanceElite * lm) {
                     drop(world, entity, HealthSkillBookItem.create(1 + r.nextInt(3))); // V1~V3
                 }
-                // 概率掉一本属性技能书(V1~V3)
+                // 概率掉一本属性技能书(m297 开分档=阶段书档;关=旧 V1~V3)
                 if (r.nextDouble() < cfg.skillBookDropChanceElite * lm) {
-                    drop(world, entity, randomSkillBook(r, 1, 3));
+                    drop(world, entity, cfg.enableStagedSkillBooks
+                            ? stagedSkillBook(world, r) : randomSkillBook(r, 1, 3));
                 }
                 List<LootFactory> hi = switch (r.nextInt(3)) {
                     case 0 -> RARE;
@@ -183,7 +207,9 @@ public final class LootHandler {
                 double sbChance = cfg.skillBookDropChanceNormal * nfMult * lm;
                 if (isEarlyGame(world, cfg)) sbChance *= cfg.skillBookEarlyGameChance;
                 if (r.nextDouble() < sbChance) {
-                    drop(world, entity, randomSkillBook(r, 1, 1));
+                    // m297 开分档=阶段书档(攻击书吃满档,百分比类钳前两档);关=旧 V1
+                    drop(world, entity, cfg.enableStagedSkillBooks
+                            ? stagedSkillBook(world, r) : randomSkillBook(r, 1, 1));
                 }
             }
 
