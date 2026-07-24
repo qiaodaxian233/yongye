@@ -24,7 +24,7 @@ public class EquipmentEnhanceRecipe extends SpecialCraftingRecipe {
     @Override
     public boolean matches(CraftingRecipeInput input, World world) {
         int equipCount = 0;
-        int materialLevels = 0;
+        long materialLevels = 0; // m294:强化石面值最高 10 亿,int 求和会溢出
         for (int i = 0; i < input.getSize(); i++) {
             ItemStack s = input.getStackInSlot(i);
             if (s.isEmpty()) continue;
@@ -43,7 +43,7 @@ public class EquipmentEnhanceRecipe extends SpecialCraftingRecipe {
     @Override
     public ItemStack craft(CraftingRecipeInput input, RegistryWrapper.WrapperLookup lookup) {
         ItemStack equipment = ItemStack.EMPTY;
-        int materialLevels = 0;
+        long materialLevels = 0; // m294 防溢出
         for (int i = 0; i < input.getSize(); i++) {
             ItemStack s = input.getStackInSlot(i);
             if (s.isEmpty()) continue;
@@ -54,7 +54,7 @@ public class EquipmentEnhanceRecipe extends SpecialCraftingRecipe {
             }
         }
         if (equipment.isEmpty() || materialLevels <= 0) return ItemStack.EMPTY;
-        return EquipmentEnhancer.addLevels(equipment, materialLevels);
+        return EquipmentEnhancer.addLevels(equipment, (int) Math.min(Integer.MAX_VALUE, materialLevels));
     }
 
     @Override

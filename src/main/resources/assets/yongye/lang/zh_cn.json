@@ -124,5 +124,15 @@
   "item.yongye.skill_book.greed": "贪婪强化技能书",
   "item.yongye.skill_book.greed.desc": "击杀怪物获得额外经验(每级 +1%,封顶 +100%)",
   "item.yongye.skill_book.rejuvenate": "回春强化技能书",
-  "item.yongye.skill_book.rejuvenate.desc": "脱战 8 秒后每秒回复最大生命百分比(每级 +0.1%,封顶 3%;与持续恢复错位)"
+  "item.yongye.skill_book.rejuvenate.desc": "脱战 8 秒后每秒回复最大生命百分比(每级 +0.1%,封顶 3%;与持续恢复错位)",
+  "item.yongye.enhance_stone_1": "强化石·平静之瞳",
+  "item.yongye.enhance_stone_2": "强化石·觉醒之瞳",
+  "item.yongye.enhance_stone_3": "强化石·尖刺之瞳",
+  "item.yongye.enhance_stone_4": "强化石·嗜血之瞳",
+  "item.yongye.enhance_stone_5": "强化石·狂怒之瞳",
+  "item.yongye.enhance_stone_6": "强化石·触须魔瞳",
+  "item.yongye.enhance_stone_7": "强化石·缠丝魔瞳",
+  "item.yongye.enhance_stone_8": "强化石·裂变魔瞳",
+  "item.yongye.enhance_stone_9": "强化石·深渊魔瞳",
+  "item.yongye.enhance_stone_10": "强化石·爆裂魔瞳"
 }

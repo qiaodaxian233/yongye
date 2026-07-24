@@ -58,6 +58,7 @@ public final class ModItemGroups {
             entries.add(ModItems.LIFE_CRYSTAL);
             entries.add(ModItems.LIFE_CORE);
             entries.add(ModItems.CATASTROPHE_BLOOD_CORE);
+            for (net.minecraft.item.Item stone : ModItems.ENHANCE_STONES) entries.add(stone); // m294 强化石十档
             entries.add(ModItems.ENDLESS_NIGHT_DUST);
             entries.add(ModItems.RIFT_FRAGMENT);
             entries.add(ModItems.ABYSS_SOUL_CRYSTAL);

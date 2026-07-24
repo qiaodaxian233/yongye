@@ -82,20 +82,20 @@ public final class AutoScrollHandler {
         }
         if (target == null) return; // 没有可强化的目标,材料原封不动
 
-        // ② 深扫吞材料(含潜影盒)
-        final int[] total = { 0 };
+        // ② 深扫吞材料(含潜影盒)。m294:强化石直加/传统材料 RNG 分账 + long 防溢出
+        final EquipmentEnhancer.MaterialSum total = new EquipmentEnhancer.MaterialSum();
         InventoryDeepScan.scan(p, s -> {
             if (!s.isEmpty() && EquipmentEnhancer.isMaterial(s.getItem())) {
-                total[0] += s.getCount() * EquipmentEnhancer.materialValue(s.getItem());
+                total.add(s);
                 return s.getCount();
             }
             return 0;
         });
-        if (total[0] <= 0) return;
+        if (!total.any()) return;
 
-        // ③ 正规管线强化(碎裂/被动保护卷/成功率与手动完全一致)
+        // ③ 正规管线强化(强化石必得直加;传统材料的碎裂/被动保护卷/成功率与手动完全一致)
         ItemStack eq = p.getEquippedStack(target);
-        EquipmentEnhancer.EnhanceResult res = EquipmentEnhancer.attempt(p, eq, total[0]);
+        EquipmentEnhancer.EnhanceResult res = EquipmentEnhancer.enhanceWith(p, eq, total);
         if (res.broke) {
             p.equipStack(target, ItemStack.EMPTY);
             p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(),

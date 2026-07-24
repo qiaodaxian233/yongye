@@ -2482,3 +2482,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 起因=作者问「18,446,744,073,709,551,615 是游戏里最大的数值,应该不止 10 亿吧」。**答疑对齐**:2^64=18.4Qi 是 m220 抬的**属性上限**(血攻甲韧,存 double);技能书**等级**是另一个数,上限=10 亿(m149 定的,存 int,int 上限 21.4 亿);百分比类效果全靠封顶封死,等级再高也只到封顶,平铺类(攻击书 0.5/级)10 亿级=+5 亿攻已够摸属性上限,故等级存储不升 long(大手术零收益)。
 - 但审出**真隐患**:等级加法多处裸 int 运算,堆近 21.4 亿再加会回卷负数——最狠的是 EquipmentEnhancer.addLevels 回卷后被 withLevel 钳 0 = **装备等级一夜清零**。七处全部改 long 运算后钳 [0, Integer.MAX_VALUE]:addLevels/attempt 免失败直通端/保护卷预判比较/安全段后到顶停推/循环内 level++ 防回卷、SkillEffectManager.learn 与 useAllBooks 两处「等级×数量」(1e9×64=6.4e10 乘法先溢出)、PlayerSkillManager.learnHealth。
 - 纯防御性修复,常规数值零行为变化;零配置(仍 76)零新 API 零待编译验证。
+
+## m294 强化石十档:物品+四入口接线+大额溢出加固(2026-07-24)
+- 起因=作者供十眼渐变图一张 + 定稿的掉落机制设计(十档数值+合成+书分档+滑动窗),本笔先落"物品与接入"。
+- 面值 = 10^(档-1):1 / 10 / 100 / 1000 / 1万 / 10万 / 100万 / 1000万 / 1亿 / 10亿。**封顶 10 亿不做 100 亿**:强化等级存 int(顶 21.4 亿,m293 已加固),100 亿一颗只能吃进 21.4 亿、七成八直接蒸发;10 亿档两颗多一点正好摸顶,是"整颗都有效"的最大档。
+- **强化石直加等级、必得不碎**:口径同工作台 EquipmentEnhanceRecipe.addLevels 与强化继承 m236("等级本就是材料+概率挣来的,不再赌一次");传统材料照旧走 attempt() 逐级 RNG(失败/碎裂/保护卷全套不变)。新 EquipmentEnhancer.MaterialSum(direct/budget 两账,全 long)+ enhanceWith(先直加后 RNG,合并 EnhanceResult)。
+- 四条强化入口全接线:enhanceFromInventory(背包一键)/EnhanceScreenHandler.applyUpgrade(界面)/EquipmentEnhanceRecipe(工作台,本就直加,仅 long 化)/AutoScrollHandler(自动卷轴深扫)。previewLevels 与 totalMaterialLevels 同步 long 化后钳 int——**10 亿面值 × 一叠 64 = 6.4e10,原裸 int 乘法/求和会先溢出**(m293 同款隐患,本笔审出四处全修)。
+- 贴图管线:作者原图自带 alpha,按 alpha>25 连通域切出十档包围盒 → 方形留 4% 边 → LANCZOS 缩 64×64 → alpha<25 清尘;肉眼核过渐变顺序与细节。模型 json×10(item/generated),lang 双语十条(强化石·平静之瞳 → 爆裂魔瞳),稀有度 1-3 普通/4-5 罕见/6-7 稀有/8-10 史诗,创造栏排在血核之后。
+- 零配置(仍 76)零新 API 零待编译验证(Rarity/appendTooltip/TooltipType 全在树先例)。

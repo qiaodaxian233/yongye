@@ -86,6 +86,26 @@ public final class ModItems {
             new com.yongye.item.BlightArmorItem(ModArmorMaterials.BLIGHT, ArmorItem.Type.BOOTS,
                     new Item.Settings().maxDamage(ArmorItem.Type.BOOTS.getMaxDamage(45)).rarity(Rarity.EPIC).fireproof()));
 
+    // —— 强化石十档(m294,作者供图):enhance_stone_1..10,面值 10^(档-1),1 → 10亿 ——
+    public static final java.util.List<Item> ENHANCE_STONES;
+
+    static {
+        java.util.List<Item> stones = new java.util.ArrayList<>();
+        for (int t = 1; t <= 10; t++) {
+            Rarity r = t <= 3 ? Rarity.COMMON
+                    : t <= 5 ? Rarity.UNCOMMON
+                    : t <= 7 ? Rarity.RARE : Rarity.EPIC;
+            stones.add(register("enhance_stone_" + t,
+                    new com.yongye.item.EnhanceStoneItem(t, new Item.Settings().rarity(r))));
+        }
+        ENHANCE_STONES = java.util.List.copyOf(stones);
+    }
+
+    /** 强化石(档位 1~10)。 */
+    public static Item enhanceStone(int tier) {
+        return ENHANCE_STONES.get(Math.max(1, Math.min(10, tier)) - 1);
+    }
+
     // —— 背包神器(文档第 14 章)——
     private static final Map<ArtifactType, Item> ARTIFACTS = new EnumMap<>(ArtifactType.class);
 

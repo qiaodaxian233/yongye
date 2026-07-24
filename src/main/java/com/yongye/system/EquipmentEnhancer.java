@@ -95,7 +95,49 @@ public final class EquipmentEnhancer {
         if (item == ModItems.LIFE_CRYSTAL) return c.enhanceCrystalValue;
         if (item == ModItems.LIFE_CORE) return c.enhanceCoreValue;
         if (item == ModItems.CATASTROPHE_BLOOD_CORE) return c.enhanceBloodCoreValue;
+        // m294 强化石:面值 10^(档-1),最高 10 亿——直加等级,不走 RNG(见 MaterialSum/enhanceWith)
+        if (item instanceof com.yongye.item.EnhanceStoneItem stone) {
+            return com.yongye.item.EnhanceStoneItem.valueOf(stone.tier);
+        }
         return 0;
+    }
+
+    /**
+     * m294 材料分账:强化石(直加等级、必得不碎)与传统材料(逐级 RNG 尝试)分开累计。
+     * 全程 long——10 亿面值 × 一叠 64 颗 = 6.4e10,int 乘法/求和会先溢出(m293 同款隐患)。
+     */
+    public static final class MaterialSum {
+        public long direct;  // 强化石面值合计 → 直加等级
+        public long budget;  // 传统材料合计 → RNG 尝试次数
+        public void add(ItemStack s) {
+            if (s.isEmpty()) return;
+            long v = (long) s.getCount() * materialValue(s.getItem());
+            if (v <= 0) return;
+            if (s.getItem() instanceof com.yongye.item.EnhanceStoneItem) direct += v;
+            else budget += v;
+        }
+        public boolean any() { return direct > 0 || budget > 0; }
+        public int directClamped() { return (int) Math.min(Integer.MAX_VALUE, direct); }
+        public int budgetClamped() { return (int) Math.min(Integer.MAX_VALUE, budget); }
+    }
+
+    /**
+     * m294 组合强化:先把强化石面值直加(addLevels,必得不碎),再拿传统材料走 attempt() 逐级 RNG。
+     * 返回合并结果:startLevel=最初等级,succeeded 含直加部分,失败/碎裂/保护卷只可能来自 RNG 段。
+     */
+    public static EnhanceResult enhanceWith(net.minecraft.server.network.ServerPlayerEntity p,
+                                            ItemStack equipment, MaterialSum sum) {
+        int start = getLevel(equipment);
+        ItemStack cur = equipment;
+        int directGain = 0;
+        if (sum.direct > 0) {
+            cur = addLevels(cur, sum.directClamped());
+            directGain = getLevel(cur) - start; // 摸到 int 顶时被钳掉的部分不计入
+        }
+        EnhanceResult r = attempt(p, cur, sum.budgetClamped());
+        return new EnhanceResult(r.stack, start, r.endLevel,
+                (int) Math.min(Integer.MAX_VALUE, (long) directGain + r.succeeded),
+                r.failed, r.broke, r.usedProtect);
     }
 
     public static boolean isMaterial(Item item) {
@@ -331,14 +373,14 @@ public final class EquipmentEnhancer {
         return armorSlotOf(base);
     }
 
-    /** 背包里所有强化材料合计能提供的强化级数(数量×单值)。 */
+    /** 背包里所有强化材料合计能提供的强化级数(数量×单值)。m294:long 求和后钳 int,防 10 亿石溢出。 */
     public static int totalMaterialLevels(net.minecraft.entity.player.PlayerInventory inv) {
-        int sum = 0;
+        long sum = 0;
         for (int i = 0; i < inv.size(); i++) {
             ItemStack s = inv.getStack(i);
-            if (!s.isEmpty() && isMaterial(s.getItem())) sum += s.getCount() * materialValue(s.getItem());
+            if (!s.isEmpty() && isMaterial(s.getItem())) sum += (long) s.getCount() * materialValue(s.getItem());
         }
-        return sum;
+        return (int) Math.min(Integer.MAX_VALUE, sum);
     }
 
     /**
@@ -353,9 +395,13 @@ public final class EquipmentEnhancer {
             p.sendMessage(net.minecraft.text.Text.literal("该物品不可强化").formatted(net.minecraft.util.Formatting.RED), true);
             return;
         }
-        int add = totalMaterialLevels(inv);
-        if (add <= 0) {
-            p.sendMessage(net.minecraft.text.Text.literal("背包里没有强化材料(生命碎片/结晶/核心/血核)")
+        MaterialSum sum = new MaterialSum(); // m294:强化石直加 / 传统材料 RNG 分账
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack s = inv.getStack(i);
+            if (!s.isEmpty() && isMaterial(s.getItem())) sum.add(s);
+        }
+        if (!sum.any()) {
+            p.sendMessage(net.minecraft.text.Text.literal("背包里没有强化材料(强化石/生命碎片/结晶/核心/血核)")
                     .formatted(net.minecraft.util.Formatting.YELLOW), true);
             return;
         }
@@ -364,7 +410,7 @@ public final class EquipmentEnhancer {
             ItemStack s = inv.getStack(i);
             if (!s.isEmpty() && isMaterial(s.getItem())) inv.setStack(i, ItemStack.EMPTY);
         }
-        EnhanceResult res = attempt(p, target, add);
+        EnhanceResult res = enhanceWith(p, target, sum);
         if (res.broke) {
             inv.setStack(slot, ItemStack.EMPTY);
             p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(),

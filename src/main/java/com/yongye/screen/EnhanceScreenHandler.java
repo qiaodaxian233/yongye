@@ -67,7 +67,9 @@ public class EnhanceScreenHandler extends ScreenHandler {
         ItemStack mat = input.getStack(MAT_SLOT);
         if (equip.isEmpty() || !EquipmentEnhancer.isEnhanceable(equip.getItem())) return 0;
         if (mat.isEmpty() || !EquipmentEnhancer.isMaterial(mat.getItem())) return 0;
-        return mat.getCount() * EquipmentEnhancer.materialValue(mat.getItem());
+        // m294:long 后钳 int——10 亿强化石 × 一叠会把 int 乘法先爆掉
+        return (int) Math.min(Integer.MAX_VALUE,
+                (long) mat.getCount() * EquipmentEnhancer.materialValue(mat.getItem()));
     }
 
     /** 预览用:装备槽里装备的当前强化等级。 */
@@ -113,11 +115,12 @@ public class EnhanceScreenHandler extends ScreenHandler {
             return;
         }
         if (mat.isEmpty() || !EquipmentEnhancer.isMaterial(mat.getItem())) return;
-        int add = mat.getCount() * EquipmentEnhancer.materialValue(mat.getItem());
-        if (add <= 0) return;
+        EquipmentEnhancer.MaterialSum sum = new EquipmentEnhancer.MaterialSum(); // m294 分账+防溢出
+        sum.add(mat);
+        if (!sum.any()) return;
         net.minecraft.server.network.ServerPlayerEntity sp =
                 (player instanceof net.minecraft.server.network.ServerPlayerEntity s) ? s : null;
-        EquipmentEnhancer.EnhanceResult res = EquipmentEnhancer.attempt(sp, equip, add);
+        EquipmentEnhancer.EnhanceResult res = EquipmentEnhancer.enhanceWith(sp, equip, sum);
         input.setStack(MAT_SLOT, ItemStack.EMPTY); // 整组材料全部消耗(成败都耗)
         if (res.broke) {
             input.setStack(EQUIP_SLOT, ItemStack.EMPTY);

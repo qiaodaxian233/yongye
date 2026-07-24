@@ -119,5 +119,15 @@
   "item.yongye.skill_book.greed": "Greed Skill Book",
   "item.yongye.skill_book.greed.desc": "Bonus XP on kills (+1%/level, capped at +100%)",
   "item.yongye.skill_book.rejuvenate": "Rejuvenation Skill Book",
-  "item.yongye.skill_book.rejuvenate.desc": "After 8s out of combat, regen % of max health per second (+0.1%/level, capped at 3%)"
+  "item.yongye.skill_book.rejuvenate.desc": "After 8s out of combat, regen % of max health per second (+0.1%/level, capped at 3%)",
+  "item.yongye.enhance_stone_1": "Enhance Stone: Calm Eye",
+  "item.yongye.enhance_stone_2": "Enhance Stone: Waking Eye",
+  "item.yongye.enhance_stone_3": "Enhance Stone: Spiked Eye",
+  "item.yongye.enhance_stone_4": "Enhance Stone: Bloodthirst Eye",
+  "item.yongye.enhance_stone_5": "Enhance Stone: Fury Eye",
+  "item.yongye.enhance_stone_6": "Enhance Stone: Tendril Eye",
+  "item.yongye.enhance_stone_7": "Enhance Stone: Silkbound Eye",
+  "item.yongye.enhance_stone_8": "Enhance Stone: Fission Eye",
+  "item.yongye.enhance_stone_9": "Enhance Stone: Abyss Eye",
+  "item.yongye.enhance_stone_10": "Enhance Stone: Burst Eye"
 }
