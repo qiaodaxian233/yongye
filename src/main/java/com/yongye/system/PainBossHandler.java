@@ -65,6 +65,11 @@ public final class PainBossHandler {
     private static final Map<UUID, PainState> STATES = new HashMap<>();
     /** m180:佩恩 BOSS 血条(此前长门一直没血条;客户端画框按「佩恩·天道」字面量名匹配)。 */
     private static final Map<MobEntity, ServerBossBar> PAIN_BARS = new HashMap<>();
+
+    /** m304:格挡系统识别口——该实体是否佩恩本体(在 PAIN_BARS 记账即是)。 */
+    public static boolean isPain(net.minecraft.entity.LivingEntity e) {
+        return e instanceof MobEntity m && PAIN_BARS.containsKey(m);
+    }
     private static int tick = 0;
 
     /** 当前存活的长门(全局唯一);null 表示不存在。 */
@@ -109,7 +114,8 @@ public final class PainBossHandler {
                 float max = mob.getMaxHealth();
                 // m187:佩恩血量嵌入血条名
                 bar.setName(Text.literal(NAME).formatted(Formatting.DARK_RED)
-                        .append(Text.literal("\u2016" + String.format(java.util.Locale.ROOT, "%.0f", (double) mob.getHealth()) + "/" + String.format(java.util.Locale.ROOT, "%.0f", (double) max))));
+                        .append(Text.literal("\u2016" + String.format(java.util.Locale.ROOT, "%.0f", (double) mob.getHealth()) + "/" + String.format(java.util.Locale.ROOT, "%.0f", (double) max)
+                                + BossGuardHandler.barSuffix(mob))));  // m304 格挡段
                 bar.setPercent(max > 0 ? Math.max(0f, Math.min(1f, mob.getHealth() / max)) : 0f);
                 for (ServerPlayerEntity sp : server.getPlayerManager().getPlayerList()) {
                     boolean near = sp.getWorld() == mob.getWorld() && sp.squaredDistanceTo(mob) < 64 * 64;

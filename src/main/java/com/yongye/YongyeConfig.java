@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 83; // ...m301 石档天数墙+1 · m302 审计收口+1
+    public static final int CURRENT_CONFIG_VERSION = 84; // ...m302 审计收口+1 · m304 BOSS格挡+6
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -247,6 +247,14 @@ public class YongyeConfig {
     public int stoneTierCap = 10;                    // 基准档封顶(最高档强化石,硬上限 10)
     public int stoneDaysPerTier = 3;                 // m301 天数硬顶:最终掉落档≤1+天数/此值(3=第9天起才出1000级档;0=关)
     public int autoScrollMaxStoneTier = 5;           // m302 自动强化卷轴最多自动吞的石档(5=只吞≤1万;0=石头全不吞;10=全吞)
+
+    // ============ m304:皮肤 BOSS 格挡条 + 攻击平衡 ============
+    public boolean enableBossGuard = true;           // 六只皮肤BOSS带格挡条:格挡在=减伤,打空=破防窗口全额
+    public double bossGuardFraction = 0.20;          // 格挡上限 = 最大生命 × 此比例
+    public double bossGuardDamageCut = 0.5;          // 格挡在时伤害减免比例(0.5=只吃一半)
+    public int bossGuardBreakTicks = 200;            // 破防窗口时长(tick,200=10秒),窗口结束格挡回满
+    public double bossGuardBreakDamageMult = 1.25;   // 破防期间伤害额外倍率(1=仅全额无加成)
+    public double bossHitCapFraction = 0.35;         // 攻击平衡:皮肤BOSS对玩家单击≤最大生命×此比例(0=关)
     public boolean stoneTopTierEliteOnly = true;     // 封顶期收口:普通怪不出最高档(降为次档),10亿石只从精英/BOSS 出
 
     // ============ m297:技能书 ×100 分五档(1/100/1万/100万/1亿),随石档折半爬 ============

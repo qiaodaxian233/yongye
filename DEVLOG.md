@@ -2562,3 +2562,12 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 查出**最后两处写死等级的书源**:①佩恩死亡奖励 3 本属性书 V5~V15;②灾厄核心被摧毁的奖励书 V1~V3——都在分档体系外,佩恩第 6 天就来,掉 V15 攻击书与"第 9 天才见 1000 级石"的节奏错拍。两处均接入:开 enableStagedSkillBooks 走 EnhanceStoneDrops.bookLevelFor(攻击书吃满当前档、百分比钳前两档、随天数墙),关=回旧区间。血量书两处照旧(未入分档,遗留同 m302)。
 - 复检其余结论:LootCrate 查证不掉书;战斗爽下 lm 含难度奖励 ×3.2(m150「难度越高掉落越丰厚」+爽档简介「掉落更多」)是设计口径非 bug;石掉率有意不乘 lm(m296);精英必掉石走自家总开关(m296)。
 - 零配置(仍 83)零新 API 零待编译验证。
+
+## m304 皮肤BOSS格挡条+攻击平衡(2026-07-24)
+- 作者点名:「boss 也要有格挡条,就是有皮肤的那些;攻击也要平衡」。
+- **格挡机制**(新 BossGuardHandler):六只皮肤 BOSS(阿努比斯/浴火凤凰/死亡法师/红蜘蛛/自建龙 + 佩恩——佩恩是带皮肤的 Husk,经 PainBossHandler 新增 isPain(PAIN_BARS 记账)识别)各带格挡值 = 最大生命 × bossGuardFraction(默 20%)。格挡在:实体伤害打 bossGuardDamageCut 折(默五折),格挡值按**原始伤害**消耗;打空 → **破防** bossGuardBreakTicks(默 10 秒):伤害全额 ×bossGuardBreakDamageMult(默 1.25),盾裂音效+给破防者金字播报「破防!」;窗口结束格挡回满,循环。环境伤害不吃格挡。减伤走坦克真减伤 m208 同款「取消+守卫重放」(REAPPLY set),真实伤害一并被格。
+- **攻击平衡**:皮肤 BOSS 对玩家的单击伤害钳到 玩家最大生命 × bossHitCapFraction(默 35%)——m298 曲线后世界数值会跑很大,这道钳保证任何阶段至少三刀才可能带走玩家;同款取消+重放(CAP_REAPPLY),0=关。
+- **同步零新网络包**:走血条名 ‖ 通道(m187 先例)追加「‖G当前/上限/破防剩余tick」段——五只实体的 10t 名字刷新语句 + 佩恩 bar 循环统一接 barSuffix(破防到点的懒恢复也在这);客户端 BossBarStyleMixin:parseHp 先截断格挡段(否则 "max‖G..." 会把血量解析炸回百分比兜底)、新 parseGuard、血条槽正下方画 3px 格挡条(青蓝余量/破防红色呼吸闪,和玩家格挡条同一套视觉语言);合并组 ×N 不画(成员格挡各自独立,合着画会撒谎)。
+- **已知取舍(m208 同款既有行为)**:重放的伤害会再次经过其它 ALLOW_DAMAGE 观察者——连击等命中系对 BOSS 计两次;保留原伤害源不破坏击杀归属/处决口径,故不改。
+- 静态自查逮住一个错:五处实体嵌名替换少一个右括号(setName 层未闭),已修并逐文件配平复核。
+- 配置 +6,CURRENT_CONFIG_VERSION 83→84;零新 API 零待编译验证(ctx.fill=HudCompactMixin 在树/ITEM_SHIELD_BLOCK=ClassSkillHandler 在树/取消重放=m208 在树)。

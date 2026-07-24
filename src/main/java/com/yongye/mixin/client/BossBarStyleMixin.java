@@ -162,6 +162,24 @@ public abstract class BossBarStyleMixin {
                     slotCy - 4.5f * hpScale,
                     hpScale, 0xFFFFFF);
 
+            // m304 BOSS 格挡条:血条槽正下方 3px——青蓝=格挡余量(同玩家格挡条视觉),
+            // 破防=红色呼吸闪烁;仅单成员条绘制(合并组 ×N 的格挡各自独立,合着画会撒谎)。
+            if (g.members.size() == 1) {
+                float[] guard = yongye$parseGuard(g.members.get(0));
+                if (guard != null && guard[1] > 0) {
+                    int gx = fx(cx, fw) + ox;
+                    int gy = fy0 + oy + slotH + 1;
+                    ctx.fill(gx, gy, gx + slotW, gy + 3, 0xAA000000);
+                    if (guard[2] > 0) {
+                        int a = 120 + (int) (100 * Math.abs(Math.sin(System.currentTimeMillis() / 180.0)));
+                        ctx.fill(gx, gy, gx + slotW, gy + 3, (a << 24) | 0xFF2020);
+                    } else {
+                        int fillW = (int) (slotW * Math.max(0f, Math.min(1f, guard[0] / guard[1])));
+                        if (fillW > 0) ctx.fill(gx, gy, gx + fillW, gy + 3, 0xFF35D8E8);
+                    }
+                }
+            }
+
             // 成分标注(怪物BOSS版/玩家BOSS混名组)
             String ann = yongye$annotation(g);
             if (ann != null) {
@@ -215,7 +233,10 @@ public abstract class BossBarStyleMixin {
         String s = bar.getName().getString();
         int idx = s.indexOf('\u2016'); // ‖
         if (idx < 0) return null;
-        String[] parts = s.substring(idx + 1).split("/", 2);
+        String seg = s.substring(idx + 1);
+        int idx2 = seg.indexOf('\u2016'); // m304:后面可能还挂着 ‖G 格挡段,先截断
+        if (idx2 >= 0) seg = seg.substring(0, idx2);
+        String[] parts = seg.split("/", 2);
         if (parts.length < 2) return null;
         try {
             return new double[]{Double.parseDouble(parts[0].trim()), Double.parseDouble(parts[1].trim())};
@@ -239,6 +260,24 @@ public abstract class BossBarStyleMixin {
     /** 紧凑血量格式(m220 起通道全 double:服务端 %.0f 写入、此处 parseDouble,u64 级血量不再被 int/long 卡住)。 */
     private static String yongye$fmtHp(double n) {
         return com.yongye.client.NumFmt.compact(n);
+    }
+
+    /** m304:从血条名的 ‖G当前/上限/破防剩余tick 段解析格挡;无该段或解析失败返回 null。 */
+    private static float[] yongye$parseGuard(ClientBossBar bar) {
+        String s = bar.getName().getString();
+        int idx = s.indexOf("\u2016G");
+        if (idx < 0) return null;
+        String seg = s.substring(idx + 2);
+        int idx2 = seg.indexOf('\u2016');
+        if (idx2 >= 0) seg = seg.substring(0, idx2);
+        String[] parts = seg.split("/", 3);
+        if (parts.length < 3) return null;
+        try {
+            return new float[]{Float.parseFloat(parts[0].trim()), Float.parseFloat(parts[1].trim()),
+                    Float.parseFloat(parts[2].trim())};
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /** 从血条名的字符串中剥去 ‖hp 后缀,返回纯名字字符串。 */
