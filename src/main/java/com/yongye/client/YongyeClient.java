@@ -38,6 +38,13 @@ public class YongyeClient implements ClientModInitializer {
     /** m273 连击 HUD 状态:当前连击数 + 跳动帧(计数增加瞬间放大回落) */
     private static int comboCount = 0;
     private static int comboPopTicks = 0;
+    /** m279 连击特效状态:升档冲击环(12→0 外扩淡出)/称号弹字(24→0 上浮)/断连提示(30→0 下沉) */
+    private static int comboRingTicks = 0;
+    private static int comboRingTier = 0;
+    private static int comboTitleTicks = 0;
+    private static String comboTitle = "";
+    private static int comboBreakTicks = 0;
+    private static int comboBreakCount = 0;
     /** 永夜 HUD 状态(由 NightfallSyncPayload 更新):等级 + 阶段名 + 视野压缩强度 */
     public static int nightfallLevel = 0;
     public static String nightfallName = "";
@@ -148,35 +155,104 @@ public class YongyeClient implements ClientModInitializer {
                         payload.hitstop())));
         ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
+        // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
-                    if (payload.count() > comboCount) comboPopTicks = 4;
-                    comboCount = payload.count();
+                    boolean fancy = YongyeConfig.get().enableComboFancyFx;
+                    int nc = payload.count();
+                    if (fancy && nc == 0 && comboCount >= 10) {          // 断连反馈
+                        comboBreakTicks = 30;
+                        comboBreakCount = comboCount;
+                    }
+                    if (nc > comboCount) {
+                        comboPopTicks = 4;
+                        int newTier = nc / 5;
+                        if (fancy && newTier > comboCount / 5 && newTier >= 1) {   // 升档瞬间
+                            comboRingTicks = 12;
+                            comboRingTier = newTier;
+                            comboTitleTicks = 24;
+                            comboTitle = comboTitleFor(newTier);
+                            var mc0 = net.minecraft.client.MinecraftClient.getInstance();
+                            if (mc0.player != null) mc0.player.playSound(                 // 经验球叮声随档位升调
+                                    net.minecraft.sound.SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                                    0.9f, Math.min(2.0f, 0.8f + 0.2f * newTier));
+                        }
+                    }
+                    comboCount = nc;
                 }));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (comboPopTicks > 0) comboPopTicks--;
+            if (comboRingTicks > 0) comboRingTicks--;    // m279 特效计时
+            if (comboTitleTicks > 0) comboTitleTicks--;
+            if (comboBreakTicks > 0) comboBreakTicks--;
             if (ClientStats.guardBroken > 0) ClientStats.guardBroken--;   // m278:破防倒计时平滑
         });
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
-            if (comboCount < 2) return; // 1 连不值得画
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
             if (mc.player == null || mc.options.hudHidden) return;
+            boolean fancy = YongyeConfig.get().enableComboFancyFx;
+            int x = mc.getWindow().getScaledWidth() / 2 + 108;
+            int y = mc.getWindow().getScaledHeight() - 62;
+            // m279 断连提示(独立于当前连击数):10 连以上被断,灰字「连击中断 ×N」下沉淡出
+            if (fancy && comboBreakTicks > 0 && comboCount < 2) {
+                float t = 1f - comboBreakTicks / 30f;
+                int a = Math.max(0x20, (int) (0xFF * (1f - t)));
+                ctx.drawTextWithShadow(mc.textRenderer,
+                        net.minecraft.text.Text.literal("连击中断 ×" + comboBreakCount),
+                        x, y + (int) (t * 10), (a << 24) | 0xAAAAAA);
+            }
+            if (comboCount < 2) return; // 1 连不值得画
             int tier = comboCount / 5;
             // 档位越高颜色越燥:白→黄→金→橙红→亮紫
             int col = switch (Math.min(tier, 4)) {
                 case 0 -> 0xFFFFFFFF; case 1 -> 0xFFFFFF55; case 2 -> 0xFFFFAA00;
                 case 3 -> 0xFFFF5533; default -> 0xFFFF55FF;
             };
+            // m279 升档冲击环:档位色双方环(直角+45°)从数字中心外扩淡出
+            if (fancy && comboRingTicks > 0) {
+                float t = 1f - comboRingTicks / 12f;
+                int r = 6 + (int) (t * 26);
+                int a = Math.max(0x18, (int) (0xC0 * (1f - t)));
+                int ringCol = (a << 24) | (switch (Math.min(comboRingTier, 4)) {
+                    case 1 -> 0xFFFF55; case 2 -> 0xFFAA00; case 3 -> 0xFF5533; default -> 0xFF55FF;
+                });
+                var m0 = ctx.getMatrices();
+                m0.push();
+                m0.translate(x + 18, y + 3, 0);
+                comboRing(ctx, r, ringCol);
+                m0.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Z.rotationDegrees(45f));
+                comboRing(ctx, Math.max(3, (int) (r * 0.72f)), ringCol);
+                m0.pop();
+            }
+            // m279 称号弹字:升档瞬间在数字上方上浮淡出(凌厉/狂怒/无双/灭世)
+            if (fancy && comboTitleTicks > 0 && !comboTitle.isEmpty()) {
+                float t = 1f - comboTitleTicks / 24f;
+                int a = Math.max(0x20, (int) (0xFF * (1f - t * t)));
+                ctx.drawTextWithShadow(mc.textRenderer,
+                        net.minecraft.text.Text.literal(comboTitle).formatted(net.minecraft.util.Formatting.BOLD),
+                        x + 2, y - 14 - (int) (t * 8), (a << 24) | (col & 0xFFFFFF));
+            }
             String main = comboCount + " 连击";
-            int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
-            int x = w / 2 + 108, y = h - 62;
             var m = ctx.getMatrices();
             m.push();
             float scale = 1.15f + comboPopTicks * 0.09f; // 计数跳动瞬间放大回落
-            m.translate(x, y, 0);
+            int jx = 0, jy = 0;
+            if (fancy && tier >= 3) {                    // m279:3 档起 1px 高频抖动
+                long jt = System.currentTimeMillis() / 50;
+                jx = (int) (jt % 3) - 1;
+                jy = (int) ((jt / 3) % 3) - 1;
+            }
+            m.translate(x + jx, y + jy, 0);
             m.scale(scale, scale, 1f);
-            ctx.drawTextWithShadow(mc.textRenderer, net.minecraft.text.Text.literal(main)
-                    .formatted(net.minecraft.util.Formatting.BOLD), 0, 0, col);
+            var mainTxt = net.minecraft.text.Text.literal(main).formatted(net.minecraft.util.Formatting.BOLD);
+            if (fancy && tier >= 2) {                    // m279:2 档起伪辉光(低透明同色八向描一圈)
+                int glow = 0x38000000 | (col & 0xFFFFFF);
+                for (int dx = -1; dx <= 1; dx++) for (int dy = -1; dy <= 1; dy++) {
+                    if (dx == 0 && dy == 0) continue;
+                    ctx.drawText(mc.textRenderer, mainTxt, dx, dy, glow, false);
+                }
+            }
+            ctx.drawTextWithShadow(mc.textRenderer, mainTxt, 0, 0, col);
             m.pop();
             if (tier > 0) {
                 // 展示按默认档速算(每档 攻+4%/速+3%,封顶 40/30);真实数值在服务端 ComboHandler 按配置算
@@ -512,5 +588,20 @@ public class YongyeClient implements ClientModInitializer {
             default -> { r = v; g = p; b = q; }
         }
         return ((int) (r * 255.0f) << 16) | ((int) (g * 255.0f) << 8) | (int) (b * 255.0f);
+    }
+
+    /** m279:升档称号(1档凌厉/2档狂怒/3档无双/4档+灭世)。 */
+    private static String comboTitleFor(int tier) {
+        return switch (Math.min(tier, 4)) {
+            case 1 -> "凌厉"; case 2 -> "狂怒"; case 3 -> "无双"; default -> "灭世";
+        };
+    }
+
+    /** m279:以当前矩阵原点为中心画 1px 方环(冲击环用;fill 为在树画法,无新 API)。 */
+    private static void comboRing(net.minecraft.client.gui.DrawContext ctx, int r, int color) {
+        ctx.fill(-r, -r, r, -r + 1, color);          // 上边
+        ctx.fill(-r, r - 1, r, r, color);            // 下边
+        ctx.fill(-r, -r + 1, -r + 1, r - 1, color);  // 左边
+        ctx.fill(r - 1, -r + 1, r, r - 1, color);    // 右边
     }
 }
