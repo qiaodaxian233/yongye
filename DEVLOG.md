@@ -2343,3 +2343,41 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 配置 +3(enableExecute/executeThresholdFraction/executeBossHpExempt),两笔合并 **configVersion 64→65**。
 - **待编译验证 0**:全部符号在树已编(HostileEntity/WitherEntity(entity.boss 包,BossHandler 先例)/takeKnockback/timeUntilRegen/playerAttack/SWEEP_ATTACK 粒子=原版横扫月牙)。
 - 实机盯:①掐点右键格挡骷髅箭/僵尸拳看金字弹反、怪被弹飞、自己 3 秒力量;②按住右键不放确认蹭不出弹反只出普通格挡;③把僵尸打到残血看「处决!」魂柱一刀收;④打 BOSS 确认不触发处决。
+
+
+## m271 强化保护卷全被动化(2026-07-24)
+- 实机反馈「为什么不是消耗还需要去用,进永夜没时间用」——根因=保护卷主路径是右键激活护盾,m198 的整次预扣只在会摸到碎裂等级时兜底,玩家心智负担仍在。
+- 修=碎裂瞬间直接从背包**自动扣一张**抵挡(attempt 碎裂分支新增 consumeOneProtectScroll 兜底),右键改纯说明不消耗;旧存档已激活护盾仍被优先认,零迁移成本。
+- 新增 system/InventoryDeepScan 深扫助手:背包全槽位 + 深入一层「原版容器组件」物品(潜影盒等),保护卷/自动强化材料/自动吃书共用。
+- **精妙背包(SophisticatedBackpacks)查证结论**(clone 其 1.21.x 分支核实):NeoForge 端 + 内容存世界数据(contentsUuid→BackpackStorage)不在物品本体——与本 Fabric 模组既装不到一起也读不到,**无法支持**,结论写入助手类注释防止以后再查一遍。
+- 待编译验证:ContainerComponent 三符号(DataComponentTypes.CONTAINER / iterateNonEmpty / fromStacks)。写回经组件重建,空位可能压缩(不丢物品只影响摆放)。
+
+## m272 夜蚀装备属性提升(2026-07-24)
+- 实机反馈「夜蚀装备属性太低」。材质=总防 33→48(9/13/17/9)、韧性 6→12、每件击退抗 0.1→0.2、附魔亲和 20→25。
+- 新增「夜蚀共鸣」BlightSetHandler:每穿 1 件 +10% 生命 +6% 攻击(ADD_MULTIPLIED_BASE 乘基础值,随成长曲线走后期不缩水),集齐 4 件额外 +10% 移速;每秒重算、值不变不重挂(防生命上限重挂闪血条);盔甲 tooltip 同步显示。
+- 配置 +3(blightSetHpPct/AtkPct/SpeedPct)。**本笔一并预写 m272~m276 全部配置字段,configVersion 65→70 一次到位**。
+- 待编译验证 0(applyAttribute 照 ArtifactManager、getModifier 照 PlayerUpkeepHandler)。
+
+## m273 连击计数器(2026-07-24)
+- 命中累计连击(同 tick 横扫/回旋多目标只算 1 连),comboTimeoutTicks(默 5 秒)没打中清零;每 5 连一档给 攻击+4%/攻速+3%(ADD_MULTIPLIED_TOTAL,封顶 40%/30%,五项全可配)。
+- ComboPayload 实时同步;HUD 在热栏右上画「N 连击」,档位越高颜色越燥(白→黄→金→橙红→亮紫),计数跳动瞬间放大回落(getMatrices push/scale 照 TitleScreenMixin),tier≥1 附小字加成速览(展示按默认档速算,真实值在服务端)。
+- 观察者挂 ALLOW_DAMAGE 永远放行;注册排在过滤/格挡之后=被取消的伤害不涨连击;下线即清。待编译验证 0。
+
+## m274 BOSS 阶段转换·半血狂暴(2026-07-24)
+- 五只皮肤 BOSS(阿努比斯/龙/凤凰/法师/红蛛)+ 佩恩(按名「佩恩·天道」识别,PainBossHandler 同口径)血量跌破 bossRageThreshold(默 50%)一次性狂暴:攻击 +35%、移速 +25%(可配)。
+- 演出照 BossEntranceFx 口径:48 格内血红大字「狂 暴」+ 副标「XX 被激怒了 · 它不再留手」+ 重震闪光 + 龙吼 + 怒焰双螺旋(FLAME+ANGRY_VILLAGER)+ 熔岩爆点。
+- 一次性=打怪物命令标签 yongye_raged(存档持久,重载/凤凰重生回血都不二次触发);用「扣完这刀后的血量」判越线,直接打死不演。
+- 配置 +4。待编译验证:Entity#addCommandTag/getCommandTags(yarn 命令标签标准名,原版 /tag 同源,低险)。
+
+## m275 击杀顿帧(2026-07-24)
+- CombatFxPayload 加 hitstop 字段(全部构造点九处同步补参);服务端重击发 2t / 击杀发 4t(×combatFxHitstopScale,enableCombatFxHitstop 总开关;轻击不停避免连打发黏);m269 完美格挡弹反也给 3t 金铁交鸣感。
+- 客户端收到后把第一人称挥臂计时按住 N tick 到点自然续上——只回卷挥臂观感,不碰攻击冷却/判定;连杀取最重封顶 6t;没在挥手立即放行。
+- 待编译验证:lastHandSwingProgress 公有字段(另两个挥臂字段在树已用;报错删那一行只损失一帧插值平滑)。
+
+## m276 自动强化卷 + 自动吃书卷(2026-07-24)
+- 作者两张卷轴图走固定管线(洪泛清白底→裁剪→64×64)入库;TimedAutoScrollItem 一类两 Kind,模型/双语 lang 齐。
+- 右键激活 autoScrollDurationTicks(默 60 秒),重复使用叠时长封顶 5 分钟;截止时间存持久附件(下线重连不清零),到期边沿播报。
+- 自动强化:每 3 秒深扫背包+潜影盒吞全部强化材料,强化主手(不可强化则等级最低的一件身上盔甲);走 EquipmentEnhancer.attempt 正规管线——碎裂/被动保护卷(m271)/成功率与手动完全一致,自动化不解锁任何超模路径。
+- 自动吃书:每 1.5 秒研读一本技能书/血量书(SkillEffectManager.learn / PlayerSkillManager.learnHealth,满级跳过找下一本)。
+- 获取:杀怪掉落(0.3%×2,独立于保护卷开关)+ 任务奖励概率进池(10% 起随永夜每级 +2%)。
+- 实机盯:①保护卷放背包直接强化到碎裂线看自动抵挡;②穿夜蚀 4 件套看共鸣 tooltip 与移速;③连砍看 HUD 连击与断连清零;④把佩恩/凤凰打到半血看「狂 暴」演出与攻速变化(凤凰 30% 浴火重生回血后不二次狂暴);⑤重击/击杀感受挥臂定帧;⑥两张卷轴各激活一轮:塞一叠材料+几本书进潜影盒验证也能被吃到。
