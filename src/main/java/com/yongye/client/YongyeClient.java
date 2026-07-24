@@ -191,8 +191,10 @@ public class YongyeClient implements ClientModInitializer {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
             if (mc.player == null || mc.options.hudHidden) return;
             boolean fancy = com.yongye.YongyeConfig.get().enableComboFancyFx;
+            // m283:原 y=h-62 正好压在面板右侧标签区(护甲数/20\u002F20/坚守),实机截图字全叠一起;
+            // 整块上移到 h-112(加成行 h-100),右侧一列自下而上=面板标签 → 连击块,互不压。
             int x = mc.getWindow().getScaledWidth() / 2 + 108;
-            int y = mc.getWindow().getScaledHeight() - 62;
+            int y = mc.getWindow().getScaledHeight() - 112;
             // m279 断连提示(独立于当前连击数):10 连以上被断,灰字「连击中断 ×N」下沉淡出
             if (fancy && comboBreakTicks > 0 && comboCount < 2) {
                 float t = 1f - comboBreakTicks / 30f;
@@ -386,9 +388,10 @@ public class YongyeClient implements ClientModInitializer {
             double bearingDeg = Math.toDegrees(Math.atan2(cross, dot));
 
             int cx = mc.getWindow().getScaledWidth() / 2;
-            // m266:原 y=30 会被 2 条以上 BOSS 血条压住;改到底部状态区(永夜阶段名 h-66 的上方)
-            // m278:随格挡条连锁上移 6px(同阶段名)
-            int cy = mc.getWindow().getScaledHeight() - 82 - (ClientStats.guardBarShown ? 6 : 0);
+            // m266:原 y=30 会被 2 条以上 BOSS 血条压住;改到底部状态区。
+            // m283:action bar 抬到 h-86 后,箭头再上移到 h-108(距离字 h-100),三层互不压:
+            //   阶段名 h-66/-72 → action bar h-86 → 箭头块 h-100~h-113。不再随格挡条位移。
+            int cy = mc.getWindow().getScaledHeight() - 108;
 
             // 旋转箭头(▲ 默认指上=正前;按方位角绕 Z 旋转)
             net.minecraft.text.Text arrow = net.minecraft.text.Text.literal("▲")

@@ -174,7 +174,8 @@ public class HudCompactMixin {
         }
     }
 
-    /** m278 格挡条:和血条同一套质感(渐变+高光+末端光头)。破防=整条红色呼吸闪烁+右侧倒计时;余量<30%=橙色预警。 */
+    /** m278 格挡条:和血条同一套质感(渐变+高光+末端光头)。破防=整条红色呼吸闪烁+左侧倒计时;余量<30%=橙色预警。
+     *  m283:标签/倒计时改画在条**左侧**(面板外)——右侧上下两行「坚守」「格挡」只隔 6px,CJK 字高 9px 必然叠字(实机截图证实)。 */
     private static void yongye$renderGuardBar(DrawContext ctx, TextRenderer tr, int left, int top) {
         int broken = ClientStats.guardBroken;
         if (broken > 0) {
@@ -183,7 +184,7 @@ public class HudCompactMixin {
             ctx.fill(left, top, left + BAR_W, top + GUARD_H, (a << 24) | 0xC01818);
             ctx.fill(left, top, left + BAR_W, top + 1, 0x60000000);
             String s = "破防 " + (int) Math.ceil(broken / 20.0) + "s";
-            ctx.drawTextWithShadow(tr, Text.literal(s), left + BAR_W + 6, top - 2, 0xFFFF5555);
+            ctx.drawTextWithShadow(tr, Text.literal(s), left - tr.getWidth(s) - 5, top - 2, 0xFFFF5555);
             return;
         }
         float max = Math.max(1f, ClientStats.guardMax);
@@ -192,7 +193,8 @@ public class HudCompactMixin {
         int fillW = (int) (BAR_W * frac);
         if (low) yongye$bar(ctx, left, top, BAR_W, GUARD_H, 0xFF2A1804, fillW, 0xFFFFB040, 0xFFB06810, 0xFFFFE0A0);
         else     yongye$bar(ctx, left, top, BAR_W, GUARD_H, 0xFF06242E, fillW, 0xFF3CD9E8, 0xFF157F9E, 0xFFA8F4FF);
-        ctx.drawTextWithShadow(tr, Text.literal("格挡"), left + BAR_W + 6, top - 2, low ? 0xFFFFB040 : 0xFF7FDCEC);
+        String lb = "格挡";
+        ctx.drawTextWithShadow(tr, Text.literal(lb), left - tr.getWidth(lb) - 5, top - 2, low ? 0xFFFFB040 : 0xFF7FDCEC);
     }
 
     private static void yongye$renderMpBar(DrawContext ctx, TextRenderer tr, int left, int top) {
@@ -276,6 +278,32 @@ public class HudCompactMixin {
         float total = player.getMaxHealth() + player.getAbsorptionAmount();
         if (total > THRESHOLD) ci.cancel();
     }
+
+    /** m283:action bar(处决!/完美格挡!/蓄力条等 overlay 消息)原版画在 h-68,正好压在永夜阶段名(h-66)
+     *  和加高后的面板顶上(实机截图证实重叠)。面板接管期整体上抬 18px 到 h-86,落进阶段名与核心箭头之间的空档。
+     *  push/pop 成对包住整个方法,矩阵不外漏。
+     *  【待编译验证】renderOverlayMessage 方法名+RenderTickCounter 形参(yarn 1.21.1 官方 mapping method_55800/
+     *  class_9779=net.minecraft.client.render.RenderTickCounter 已核,仓库首用);require=0,失败=不抬、只回截图那种重叠,不崩。 */
+    @Inject(method = "renderOverlayMessage", at = @At("HEAD"), require = 0)
+    private void yongye$liftActionBarPush(DrawContext ctx, net.minecraft.client.render.RenderTickCounter tickCounter, CallbackInfo ci) {
+        PlayerEntity player = MinecraftClient.getInstance().player;
+        yongye$actionBarLifted = player != null
+                && player.getMaxHealth() + player.getAbsorptionAmount() > THRESHOLD;
+        if (yongye$actionBarLifted) {
+            ctx.getMatrices().push();
+            ctx.getMatrices().translate(0, -18, 0);
+        }
+    }
+
+    @Inject(method = "renderOverlayMessage", at = @At("RETURN"), require = 0)
+    private void yongye$liftActionBarPop(DrawContext ctx, net.minecraft.client.render.RenderTickCounter tickCounter, CallbackInfo ci) {
+        if (yongye$actionBarLifted) {
+            ctx.getMatrices().pop();
+            yongye$actionBarLifted = false;
+        }
+    }
+
+    private static boolean yongye$actionBarLifted = false;
 
     /**
      * 取消原版食物条(已整合到血条右侧)。
