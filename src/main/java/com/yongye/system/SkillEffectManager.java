@@ -199,7 +199,10 @@ public final class SkillEffectManager {
             // 吸血(m290)
             int lvl = getLearnedLevel(p, SkillType.LIFESTEAL);
             if (lvl > 0) {
-                double pct = Math.min(cfg.skillLifestealMax, lvl * cfg.skillLifestealPerLevel);
+                // m292 修正:m290 注释声称「禁疗照常拦」但当时并没有接检查(禁疗是逐入口手动判的,
+                // heal() 本身不拦)——本轮接上 healFactor,重创期间按比例减疗。
+                double hf = ArtifactManager.healFactor(p);
+                double pct = Math.min(cfg.skillLifestealMax, lvl * cfg.skillLifestealPerLevel) * hf;
                 if (pct > 0 && p.getHealth() < p.getMaxHealth()) p.heal((float) (amount * pct));
             }
             return true;
@@ -257,10 +260,9 @@ public final class SkillEffectManager {
         int regen = getLearnedLevel(p, SkillType.REGEN);
         if (regen <= 0) return;
         if (p.getHealth() >= p.getMaxHealth()) return;
-        // 禁疗期间不回血
-        long until = p.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L);
-        if (p.getWorld().getTime() < until) return;
-        p.heal((float) (regen * 0.1)); // 每秒回 等级×0.1 点
+        double hf = ArtifactManager.healFactor(p); // m292 重创期间减疗
+        if (hf <= 0) return;
+        p.heal((float) (regen * 0.1 * hf)); // 每秒回 等级×0.1 点
     }
 
     /** m291 回春:脱战满 skillRejuvenateDelayTicks 后,每秒回 最大生命×min(封顶, 等级×每级值)。 */
@@ -272,10 +274,10 @@ public final class SkillEffectManager {
         long now = p.getWorld().getTime();
         long last = REJUV_LAST_COMBAT.getOrDefault(p.getUuid(), 0L);
         if (now - last < cfg.skillRejuvenateDelayTicks) return; // 仍在战斗中
-        long until = p.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L);
-        if (now < until) return; // 禁疗期间无效
+        double hf = ArtifactManager.healFactor(p); // m292 重创期间减疗
+        if (hf <= 0) return;
         double pct = Math.min(cfg.skillRejuvenateMax, lv * cfg.skillRejuvenatePerLevel);
-        if (pct > 0) p.heal((float) (p.getMaxHealth() * pct));
+        if (pct > 0) p.heal((float) (p.getMaxHealth() * pct * hf));
     }
 
     private static void applyResistance(ServerPlayerEntity p) {
@@ -306,10 +308,10 @@ public final class SkillEffectManager {
         hm.setFoodLevel(20);
         hm.setSaturationLevel(Math.min(20f, 8f + s * 0.2f));
         hm.setExhaustion(0f);
-        // 饱食充盈时缓慢回血(尊重禁疗),让血量也能动
-        long until = p.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L);
-        if (p.getWorld().getTime() >= until && p.getHealth() < p.getMaxHealth()) {
-            p.heal(Math.min(3f, 0.5f + s * 0.02f));
+        // 饱食充盈时缓慢回血(m292:重创期间按系数减疗),让血量也能动
+        double hf = ArtifactManager.healFactor(p);
+        if (hf > 0 && p.getHealth() < p.getMaxHealth()) {
+            p.heal((float) (Math.min(3f, 0.5f + s * 0.02f) * hf));
         }
     }
 

@@ -119,12 +119,12 @@ public final class WeaponSkillManager {
             world.spawnParticles(ParticleTypes.PORTAL, le.getX(), le.getBodyY(0.6), le.getZ(),
                     10, 0.3, 0.5, 0.3, 0.4);
         }
-        // 禁疗时不回血;单次治疗上限按最大生命百分比封顶
-        boolean healBlocked = player.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L) > player.getWorld().getTime();
-        boolean actuallyHealed = healed > 0 && !healBlocked;
+        // m292:重创期间按系数减疗(原为全禁);单次治疗上限按最大生命百分比封顶
+        double hf = ArtifactManager.healFactor(player);
+        boolean actuallyHealed = healed > 0 && hf > 0;
         if (actuallyHealed) {
             double cap = player.getMaxHealth() * cfg.skillDevourHealMaxPct;
-            player.heal((float) Math.min(healed, cap));
+            player.heal((float) (Math.min(healed, cap) * hf));
         }
         WeaponSkillFx.abyssDevour(world, player, radius, victims, actuallyHealed); // m255:吞魂大演出
         world.spawnParticles(ParticleTypes.REVERSE_PORTAL, player.getX(), player.getBodyY(0.6), player.getZ(),

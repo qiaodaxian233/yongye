@@ -92,8 +92,9 @@ public final class ArtifactManager {
             if (killer == entity) return;
             int lvl = getActiveLevel(killer, ArtifactType.GLUTTON_HEART);
             if (lvl <= 0) return;
-            if (isHealBlocked(killer)) return;
-            double heal = GLUTTON_HEAL[lvl - 1];
+            double hf = healFactor(killer); // m292:重创期间减疗而非归零
+            if (hf <= 0) return;
+            double heal = GLUTTON_HEAL[lvl - 1] * hf;
             boolean elite = entity.getAttachedOrElse(ModAttachments.IS_ELITE, false)
                     || entity.getAttachedOrElse(ModAttachments.IS_BOSS, false);
             if (lvl >= 6 && elite) heal *= 4;
@@ -256,5 +257,11 @@ public final class ArtifactManager {
     public static boolean isHealBlocked(ServerPlayerEntity player) {
         long until = player.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L);
         return player.getWorld().getTime() < until;
+    }
+
+    /** m292 重创减疗系数:重创期间治疗效果 ×(1-healBlockHealReduction),平时 =1。全部回血入口统一乘它。 */
+    public static double healFactor(ServerPlayerEntity player) {
+        if (!isHealBlocked(player)) return 1.0;
+        return Math.max(0.0, Math.min(1.0, 1.0 - YongyeConfig.get().healBlockHealReduction));
     }
 }

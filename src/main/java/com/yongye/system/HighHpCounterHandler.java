@@ -85,12 +85,31 @@ public final class HighHpCounterHandler {
                 applying = false;
             }
 
-            // 禁疗
-            if (player.getRandom().nextDouble() < cfg.healBlockChance) {
-                long until = player.getWorld().getTime() + cfg.healBlockDurationTicks;
-                player.setAttached(ModAttachments.NO_HEAL_UNTIL, until);
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.HUNGER,
-                        cfg.healBlockDurationTicks, 0, true, false, false));
+            // 禁疗 → m292 改版「重创减疗」:①默认只有 BOSS 施加 ②生效中/结束后免疫CD内不可重复施加
+            // ③饕餮心脏≥免疫级=完全免疫,未达级=按级缩短时长 ④效果由全禁改为减疗(消费端走 ArtifactManager.healFactor)
+            if ((boss || !cfg.healBlockBossOnly) && player.getRandom().nextDouble() < cfg.healBlockChance) {
+                long now = player.getWorld().getTime();
+                long prevUntil = player.getAttachedOrElse(ModAttachments.NO_HEAL_UNTIL, 0L);
+                if (now >= prevUntil + cfg.healBlockImmunityTicks) {
+                    int heart = ArtifactManager.getActiveLevel(player, ArtifactType.GLUTTON_HEART);
+                    if (cfg.healBlockImmuneHeartLevel > 0 && heart >= cfg.healBlockImmuneHeartLevel) {
+                        // 免疫:写入零时长记录只为吃掉免疫CD(顺带节流提示,不产生任何减疗)
+                        player.setAttached(ModAttachments.NO_HEAL_UNTIL, now);
+                        player.sendMessage(net.minecraft.text.Text.literal("饕餮心脏吞噬了重创诅咒")
+                                .formatted(net.minecraft.util.Formatting.GOLD), true);
+                    } else {
+                        int dur = cfg.healBlockDurationTicks;
+                        if (heart > 0) {
+                            dur = (int) Math.max(20, dur * (1.0 - heart * cfg.healBlockHeartReducePerLevel));
+                        }
+                        player.setAttached(ModAttachments.NO_HEAL_UNTIL, now + dur);
+                        player.addStatusEffect(new StatusEffectInstance(StatusEffects.HUNGER,
+                                dur, 0, true, false, false));
+                        player.sendMessage(net.minecraft.text.Text.literal(
+                                "伤口被缝住了!治疗效果 -" + Math.round(cfg.healBlockHealReduction * 100) + "%")
+                                .formatted(net.minecraft.util.Formatting.DARK_RED), true);
+                    }
+                }
             }
 
             // 最大生命压制(仅 Boss,概率触发)

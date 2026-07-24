@@ -107,7 +107,7 @@
   "item.yongye.auto_enhance_scroll": "Auto-Enhance Scroll",
   "item.yongye.auto_book_scroll": "Auto-Study Scroll",
   "item.yongye.skill_book.lifesteal": "Lifesteal Skill Book",
-  "item.yongye.skill_book.lifesteal.desc": "Melee hits heal you for a share of damage dealt (+0.4%/level, capped at 8%)",
+  "item.yongye.skill_book.lifesteal.desc": "Melee hits heal you for a share of damage dealt (+0.4%/level, capped at 8%; reduced while Grievous)",
   "item.yongye.skill_book.crit": "Critical Skill Book",
   "item.yongye.skill_book.crit.desc": "Melee hits may crit for +50% bonus damage (+0.2% chance/level, capped at 25%)",
   "item.yongye.skill_book.swift": "Swiftness Skill Book",

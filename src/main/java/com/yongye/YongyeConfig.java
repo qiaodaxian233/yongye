@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 75;
+    public static final int CURRENT_CONFIG_VERSION = 76;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -650,6 +650,12 @@ public class YongyeConfig {
     /** 命中时施加禁疗的概率与时长(tick) */
     public double healBlockChance = 0.25;
     public int healBlockDurationTicks = 100;
+    // —— m292 禁疗改版(作者三点名:减疗而非全禁/只BOSS触发/要有CD)——
+    public boolean healBlockBossOnly = true;           // 只有 BOSS 级(IS_BOSS)命中才可施加
+    public double healBlockHealReduction = 0.7;        // 「重创减疗」:期间治疗效果 ×(1-此值),默认减 70%
+    public int healBlockImmunityTicks = 400;           // 一次重创结束后的免疫 CD(20秒),期间不可被再次施加
+    public int healBlockImmuneHeartLevel = 4;          // 饕餮心脏 ≥ 此等级(神话)完全免疫重创;0=关闭免疫
+    public double healBlockHeartReducePerLevel = 0.15; // 未达免疫级时,饕餮心脏每级缩短重创时长 15%
 
     // ============ m70:精英装备格挡 / 永夜尸潮 / 追杀微调 / 终焉神髓掉率 ============
     /** 精英专属:终焉神髓掉率(生命核心链最高一档) */
