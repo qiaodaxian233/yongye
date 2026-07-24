@@ -41,6 +41,16 @@ public final class DifficultyManager {
     }
     public static int getLevel() { return level; }
 
+    /** m302 强度顺序序号(0 弱 → 7 强):游玩/简单/适中/困难/地狱/战斗爽/深渊/永夜。
+     *  战斗爽 ordinal=7(m217 存档兼容)但强度 3.2 介于地狱(2.5)与深渊(4.0)之间——
+     *  做「难度 ≥ 档位」比较必须用本序而非 ordinal(全库唯一一处 >= 比较=碎裂门槛,已收口)。
+     *  未设定(-1)按「适中」=2。 */
+    private static final int[] STRENGTH_RANK = {0, 1, 2, 3, 4, 6, 7, 5}; // 按 ordinal 索引 → 强度序
+    public static int strengthRank() {
+        int lv = getLevel();
+        return (lv < 0 || lv >= STRENGTH_RANK.length) ? 2 : STRENGTH_RANK[lv];
+    }
+
     /** 世界难度的怪物强度倍率;未设定按「适中」(1.0)。 */
     public static double mobMult() {
         return level < 0 ? GameDifficulty.NORMAL.mobMult : GameDifficulty.byOrdinal(level).mobMult;

@@ -82,20 +82,32 @@ public final class AutoScrollHandler {
         }
         if (target == null) return; // 没有可强化的目标,材料原封不动
 
-        // ② 深扫吞材料(含潜影盒)。m294:强化石直加/传统材料 RNG 分账 + long 防溢出
+        // ② 深扫吞材料(含潜影盒)。m294 分账+防溢出;m302:高档强化石(> autoScrollMaxStoneTier)
+        //    不自动吞——亿级石该由玩家亲手决定砸哪件;入池的石头也**成功后才扣**(碎裂不消耗)
+        final int stoneTierLimit = YongyeConfig.get().autoScrollMaxStoneTier;
         final EquipmentEnhancer.MaterialSum total = new EquipmentEnhancer.MaterialSum();
         InventoryDeepScan.scan(p, s -> {
-            if (!s.isEmpty() && EquipmentEnhancer.isMaterial(s.getItem())) {
+            if (s.isEmpty() || !EquipmentEnhancer.isMaterial(s.getItem())) return 0;
+            if (s.getItem() instanceof com.yongye.item.EnhanceStoneItem stone) {
+                if (stone.tier > stoneTierLimit) return 0; // 高档石留给玩家手动
                 total.add(s);
-                return s.getCount();
+                return 0; // 石头此遍只记账,成功后第二遍再扣
             }
-            return 0;
+            total.add(s);
+            return s.getCount(); // 传统材料照旧当场扣(碎裂也不退,老规矩)
         });
         if (!total.any()) return;
 
         // ③ 正规管线强化(强化石必得直加;传统材料的碎裂/被动保护卷/成功率与手动完全一致)
         ItemStack eq = p.getEquippedStack(target);
         EquipmentEnhancer.EnhanceResult res = EquipmentEnhancer.enhanceWith(p, eq, total);
+        if (!res.broke && total.direct > 0) {
+            InventoryDeepScan.scan(p, s -> {
+                if (!s.isEmpty() && s.getItem() instanceof com.yongye.item.EnhanceStoneItem stone
+                        && stone.tier <= stoneTierLimit) return s.getCount();
+                return 0;
+            });
+        }
         if (res.broke) {
             p.equipStack(target, ItemStack.EMPTY);
             p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(),

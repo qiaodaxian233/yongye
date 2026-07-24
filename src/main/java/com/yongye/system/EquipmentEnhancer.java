@@ -148,16 +148,19 @@ public final class EquipmentEnhancer {
     public static EnhanceResult enhanceWith(net.minecraft.server.network.ServerPlayerEntity p,
                                             ItemStack equipment, MaterialSum sum) {
         int start = getLevel(equipment);
-        ItemStack cur = equipment;
-        int directGain = 0;
-        if (sum.direct > 0) {
-            cur = addLevels(cur, sum.directClamped());
-            directGain = getLevel(cur) - start; // 摸到 int 顶时被钳掉的部分不计入
+        // m302 审计修:改为**先跑传统材料 RNG、后加强化石**——碎裂只可能发生在 RNG 段,
+        // 碎了直接返回、强化石段不执行,配合入口「碎裂不消耗强化石」兑现"必得不碎"
+        // (原顺序先加石再 RNG:混料一键强化碎裂会连 10 亿石一起蒸发)。顺带 RNG 在较低等级段跑,
+        // 成功率只高不低,对玩家有利。
+        EnhanceResult r = attempt(p, equipment, sum.budgetClamped());
+        if (r.broke || sum.direct <= 0) {
+            return new EnhanceResult(r.stack, start, r.endLevel, r.succeeded, r.failed, r.broke, r.usedProtect);
         }
-        EnhanceResult r = attempt(p, cur, sum.budgetClamped());
-        return new EnhanceResult(r.stack, start, r.endLevel,
-                (int) Math.min(Integer.MAX_VALUE, (long) directGain + r.succeeded),
-                r.failed, r.broke, r.usedProtect);
+        ItemStack cur = addLevels(r.stack, sum.directClamped());
+        int directGain = getLevel(cur) - r.endLevel; // 摸到 int 顶时被钳掉的部分不计入
+        return new EnhanceResult(cur, start, getLevel(cur),
+                (int) Math.min(Integer.MAX_VALUE, (long) r.succeeded + directGain),
+                r.failed, false, r.usedProtect);
     }
 
     public static boolean isMaterial(Item item) {
@@ -314,7 +317,7 @@ public final class EquipmentEnhancer {
         boolean broke = false, usedProtect = false;
         // m199:碎裂难度门——世界难度 ≥ enhanceBreakMinDifficulty(默 3=困难)才可能碎裂;
         //       低于此档(或难度未设定 getLevel()=-1)一律不碎、也不消耗保护卷。
-        boolean canBreak = c.enableEnhanceBreak && DifficultyManager.getLevel() >= c.enhanceBreakMinDifficulty;
+        boolean canBreak = c.enableEnhanceBreak && DifficultyManager.strengthRank() >= c.enhanceBreakMinDifficulty; // m302 按强度序(战斗爽 ordinal=7 但强度介于地狱深渊间)
         // m198:整次强化保护——开启且本次会摸到碎裂等级(≥enhanceBreakLevel)时,消耗一张保护卷
         //       (优先用已激活的手动护盾),这一整次强化都不碎裂(不管里面尝试多少次)。
         //       开关 enhanceProtectPerOperation(/yongye protectperop 或调试菜单可关)。
@@ -425,12 +428,19 @@ public final class EquipmentEnhancer {
                     .formatted(net.minecraft.util.Formatting.YELLOW), true);
             return;
         }
-        // 扣掉所有强化材料
+        // 扣材料:传统材料先扣(碎裂也不退,老规矩);强化石**成功后才扣**(m302:碎裂不消耗,必得不碎)
         for (int i = 0; i < inv.size(); i++) {
             ItemStack s = inv.getStack(i);
-            if (!s.isEmpty() && isMaterial(s.getItem())) inv.setStack(i, ItemStack.EMPTY);
+            if (!s.isEmpty() && isMaterial(s.getItem())
+                    && !(s.getItem() instanceof com.yongye.item.EnhanceStoneItem)) inv.setStack(i, ItemStack.EMPTY);
         }
         EnhanceResult res = enhanceWith(p, target, sum);
+        if (!res.broke && sum.direct > 0) {
+            for (int i = 0; i < inv.size(); i++) {
+                ItemStack s = inv.getStack(i);
+                if (!s.isEmpty() && s.getItem() instanceof com.yongye.item.EnhanceStoneItem) inv.setStack(i, ItemStack.EMPTY);
+            }
+        }
         if (res.broke) {
             inv.setStack(slot, ItemStack.EMPTY);
             p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(),
@@ -438,7 +448,7 @@ public final class EquipmentEnhancer {
                     net.minecraft.sound.SoundCategory.PLAYERS, 1.0f, 0.7f);
             p.sendMessage(net.minecraft.text.Text.literal(
                     "强化失败!装备在 Lv." + res.startLevel + " 时碎裂了(成功 " + res.succeeded
-                    + " / 失败 " + res.failed + ")")
+                    + " / 失败 " + res.failed + ")" + (sum.direct > 0 ? " [强化石未消耗]" : ""))
                     .formatted(net.minecraft.util.Formatting.DARK_RED), true);
             return;
         }
