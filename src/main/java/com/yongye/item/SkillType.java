@@ -10,6 +10,7 @@ package com.yongye.item;
  *  - RESISTANCE 抗性强化:抗火 + 削弱/清除负面状态
  *  - SATIETY 饱食度强化:持续补充饱食度与饱和度,等级越高越不会饿
  *  - STEAL 抢夺强化:命中怪物时按等级概率夺取其手持物品,等级越高越稳
+ *  - LIFESTEAL 吸血强化(m290):亲手近战命中按造成伤害比例回血——作者点名「不能太高」,每级 +0.4%,封顶 8%
  */
 public enum SkillType {
     ATTACK("attack"),
@@ -19,7 +20,8 @@ public enum SkillType {
     THORNS("thorns"),
     RESISTANCE("resistance"),
     SATIETY("satiety"),
-    STEAL("steal");
+    STEAL("steal"),
+    LIFESTEAL("lifesteal");
 
     public final String id;
 

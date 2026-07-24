@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 73;
+    public static final int CURRENT_CONFIG_VERSION = 74;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -75,6 +75,8 @@ public class YongyeConfig {
     public int skillBookMaxLevel = 1000000000;       // 技能书等级上限(10亿,与 m127 属性上限 10亿 对齐;int 上限约 21.4 亿,装得下)
     public double skillStealChancePerLevel = 0.005; // 抢夺技能每级 +0.5% 夺取概率
     public double skillStealMaxChance = 0.9;         // 抢夺概率上限
+    public double skillLifestealPerLevel = 0.004;    // m290 吸血技能:每级回 造成伤害×0.4%(作者点名不能太高)
+    public double skillLifestealMax = 0.08;          // 吸血比例封顶 8%(技能书上限 10 亿级,必须靠这条封死)
 
     /** 属性技能书(攻击/护甲/恢复/闪避/反伤/抗性)掉落几率:普通怪 / 精英 / Boss。普通怪受永夜等级加成。 */
     public double skillBookDropChanceNormal = 0.001;

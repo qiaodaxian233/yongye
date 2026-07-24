@@ -143,6 +143,24 @@ public final class SkillEffectManager {
             return ActionResult.PASS;
         });
 
+        // —— 吸血(m290,作者点名「不能太高」):亲手近战命中,按造成伤害比例回血 ——
+        // 观察者口径:挂 ALLOW_DAMAGE 永远放行只旁听;只认「玩家直接近战」(source.getSource()==攻击者,
+        // 与处决同口径,弓/魔法/召唤物不吸);不吸玩家。回血走 heal(),禁疗系统照常拦得住。
+        // 数值:每级 skillLifestealPerLevel(默 0.4%),封顶 skillLifestealMax(默 8%)——
+        // 技能书等级上限 10 亿,必须靠封顶封死,不能按级裸乘。
+        net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            if (amount <= 0) return true;
+            if (!(source.getAttacker() instanceof ServerPlayerEntity p)) return true;
+            if (source.getSource() != p) return true;
+            if (entity instanceof net.minecraft.entity.player.PlayerEntity || entity == p) return true;
+            int lvl = getLearnedLevel(p, SkillType.LIFESTEAL);
+            if (lvl <= 0) return true;
+            YongyeConfig cfg = YongyeConfig.get();
+            double pct = Math.min(cfg.skillLifestealMax, lvl * cfg.skillLifestealPerLevel);
+            if (pct > 0 && p.getHealth() < p.getMaxHealth()) p.heal((float) (amount * pct));
+            return true;
+        });
+
         Yongye.LOGGER.info("[夜蚀] 技能书(护甲/恢复/闪避/反伤/抗性/饱食/抢夺)系统已挂载");
     }
 

@@ -110,5 +110,7 @@
   "item.yongye.auto_enhance_scroll": "自动强化卷",
   "item.yongye.auto_enhance_scroll.desc": "使用后 60 秒内自动吞掉背包(含潜影盒)里的强化材料强化主手/盔甲。怪物低概率掉落 / 任务奖励",
   "item.yongye.auto_book_scroll": "自动吃书卷",
-  "item.yongye.auto_book_scroll.desc": "使用后 60 秒内自动研读背包(含潜影盒)里的技能书/血量书。怪物低概率掉落 / 任务奖励"
+  "item.yongye.auto_book_scroll.desc": "使用后 60 秒内自动研读背包(含潜影盒)里的技能书/血量书。怪物低概率掉落 / 任务奖励",
+  "item.yongye.skill_book.lifesteal": "吸血强化技能书",
+  "item.yongye.skill_book.lifesteal.desc": "亲手近战命中时按造成伤害的比例回血(每级 +0.4%,封顶 8%;禁疗期间无效)"
 }
