@@ -31,6 +31,11 @@ public abstract class SoulboundDropMixin {
     private void yongye$stashSoulbound(CallbackInfo ci) {
         if (!((Object) this instanceof ServerPlayerEntity player)) return;
         if (!YongyeConfig.get().blightArmorSoulbound) return;
+        // m285(实机反馈):开了死亡不掉落(keepInventory)时装备本来就不会掉——完全不介入、不截留,
+        // 自然也不触发「灵魂契约生效——装备回到了身边」的多余播报。m265 注释里"keepInventory 时
+        // dropInventory 不会被调"的假设在 1.21.1 不成立(实机证实照样触发),这里显式判 gamerule 兜死。
+        // 【待编译验证】GameRules.KEEP_INVENTORY / getBoolean(常量+标准取法,首用;报错把这一行删掉即回旧行为)
+        if (player.getWorld().getGameRules().getBoolean(net.minecraft.world.GameRules.KEEP_INVENTORY)) return;
         List<ItemStack> kept = new ArrayList<>();
         PlayerInventory inv = player.getInventory();
         for (int i = 0; i < inv.size(); i++) {

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 71;
+    public static final int CURRENT_CONFIG_VERSION = 72;
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -1066,6 +1066,10 @@ public class YongyeConfig {
     public boolean enableComboFancyFx = true;
     /** m281 夜蚀装备不可摧毁:掉落物免疫火/岩浆/爆炸、永不消失、虚空自动归还主人、怪物捡不走、精英缴械抢不走、定时清理豁免、耐久永不损毁。 */
     public boolean blightArmorIndestructible = true;
+    /** m287 濒死危机演出:血量低于阈值,屏幕边缘血红渐晕随心跳呼吸+监守者心跳音,越残越浓越急(纯客户端观感)。 */
+    public boolean enableLowHpFx = true;
+    /** m287 濒死阈值:血量比例低于此值触发危机演出。 */
+    public double lowHpFxThreshold = 0.20;
 
     // ============ m274:BOSS 半血狂暴 ============
     /** BOSS 阶段转换开关:六只皮肤 BOSS + 佩恩血量跌破阈值 → 狂暴变招 + 全场演出。 */

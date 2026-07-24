@@ -2428,3 +2428,15 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 作者:「连击要多做一些颜色,名称也要多写一些」。档位色 5→10 档:白→黄→金→橙红→亮紫→青→天蓝→品红→血红→白金;50 连(10 档)以上彩虹流转(色相 1.8s 循环,复用在树 hsvToRgb)。
 - 称号 4→10 阶:凌厉/迅猛/狂怒/无双/修罗/鬼神/灭世/弑神/超凡入圣/万象俱灭。
 - 冲击环/称号/辉光全部同走 comboColor(tier) 统一取色,顶档环也是彩虹。零新 API 零待编译验证。
+
+## m285 灵魂绑定兼容 keepInventory(2026-07-24)
+- 实机反馈:开死亡不掉落时仍触发「灵魂契约生效——装备回到了身边」——m265 注释里"keepInventory 时 dropInventory 不会被调"在 1.21.1 不成立。
+- SoulboundDropMixin 显式判 GameRules.KEEP_INVENTORY:开着=完全不介入不截留(原版本来就全保留),播报自然消失;关着=截留/归还照旧。
+- 待编译验证:KEEP_INVENTORY/getBoolean(标准常量+取法首用,报错删那一行回旧行为)。
+
+## m286 状态泄漏清理(2026-07-24)
+- WeaponGuardHandler.STATES 与 ClassSkillHandler 的 lastCombat/lastAtkSync/tankLastMove/tankLastPos 五个按 UUID 的 Map 此前只增不减,长开服务器缓慢累积——统一挂 ServerPlayConnectionEvents.DISCONNECT(JOIN 在树同类)下线即清。纯服务端,零行为变化。
+
+## m287 濒死危机演出(2026-07-24)
+- 战斗帅方针:血量≤lowHpFxThreshold(默 20%)→ 屏幕边缘血红渐晕(视野压缩同款分级 fill 画法)随心跳呼吸,越残越浓越大越急;配监守者心跳音(间隔 26t→12t、音量音调随残血抬升)。
+- 纯客户端观感,开关 enableLowHpFx;配置 +2,CURRENT_CONFIG_VERSION 71→72。待编译验证:ENTITY_WARDEN_HEARTBEAT(家族在树,常量首用,报错换 ENTITY_WARDEN_AMBIENT)。

@@ -203,6 +203,10 @@ public final class WeaponGuardHandler {
             }
         });
 
+        // m286:下线清状态(此前离线玩家的 Guard 条目会永久留在 Map 里,长开服务器缓慢累积)
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register(
+                (handler, server) -> STATES.remove(handler.getPlayer().getUuid()));
+
         com.yongye.Yongye.LOGGER.info("[夜蚀] 武器格挡系统已挂载(右键举盾,法杖除外)");
     }
 

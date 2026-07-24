@@ -45,6 +45,8 @@ public class YongyeClient implements ClientModInitializer {
     private static String comboTitle = "";
     private static int comboBreakTicks = 0;
     private static int comboBreakCount = 0;
+    /** m287 濒死心跳计时(客户端本地) */
+    private static int lowHpBeatTicks = 0;
     /** 永夜 HUD 状态(由 NightfallSyncPayload 更新):等级 + 阶段名 + 视野压缩强度 */
     public static int nightfallLevel = 0;
     public static String nightfallName = "";
@@ -255,6 +257,50 @@ public class YongyeClient implements ClientModInitializer {
                 // 展示按默认档速算(每档 攻+4%/速+3%,封顶 40/30);真实数值在服务端 ComboHandler 按配置算
                 String bonus = "攻+" + Math.min(40, tier * 4) + "% 速+" + Math.min(30, tier * 3) + "%";
                 ctx.drawTextWithShadow(mc.textRenderer, net.minecraft.text.Text.literal(bonus), x, y + 12, 0xFFB0C4FF);
+            }
+        });
+        // m287 濒死危机演出:血量≤阈值 → 屏幕边缘血红渐晕随心跳呼吸(越残越浓越大),配监守者心跳音越残越急。
+        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player == null || mc.options.hudHidden) return;
+            var c = com.yongye.YongyeConfig.get();
+            if (!c.enableLowHpFx) return;
+            float thr = (float) Math.max(0.01, Math.min(0.9, c.lowHpFxThreshold));
+            float frac = mc.player.getHealth() / Math.max(1f, mc.player.getMaxHealth());
+            if (mc.player.getHealth() <= 0 || frac > thr) return;
+            float sev = 1f - frac / thr;                                             // 0~1 越残越大
+            float pulse = 0.5f + 0.5f * (float) Math.sin(
+                    System.currentTimeMillis() / (220.0 - 120.0 * sev));             // 呼吸,越残频率越高
+            int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
+            int reachX = (int) (w * (0.10 + 0.12 * sev));
+            int reachY = (int) (h * (0.10 + 0.12 * sev));
+            int maxA = (int) ((0x38 + 0x58 * sev) * (0.55 + 0.45 * pulse));
+            int steps = 7;                                                           // 分级渐晕(视野压缩同画法)
+            for (int i = 0; i < steps; i++) {
+                int a = maxA * (steps - i) / steps;
+                int col = (a << 24) | 0xB00000;
+                int x1 = reachX * i / steps, x2 = reachX * (i + 1) / steps;
+                int y1 = reachY * i / steps, y2 = reachY * (i + 1) / steps;
+                ctx.fill(x1, 0, x2, h, col);                // 左缘
+                ctx.fill(w - x2, 0, w - x1, h, col);        // 右缘
+                ctx.fill(0, y1, w, y2, col);                // 上缘
+                ctx.fill(0, h - y2, w, h - y1, col);        // 下缘
+            }
+        });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            var p = client.player;
+            if (p == null) { lowHpBeatTicks = 0; return; }
+            var c = com.yongye.YongyeConfig.get();
+            if (!c.enableLowHpFx) return;
+            float thr = (float) Math.max(0.01, Math.min(0.9, c.lowHpFxThreshold));
+            float frac = p.getHealth() / Math.max(1f, p.getMaxHealth());
+            if (p.getHealth() <= 0 || frac > thr) { lowHpBeatTicks = 0; return; }
+            float sev = 1f - frac / thr;
+            if (++lowHpBeatTicks >= (int) (26 - 14 * sev)) {                         // 心跳间隔 26t→12t
+                lowHpBeatTicks = 0;
+                // 【待编译验证】ENTITY_WARDEN_HEARTBEAT(监守者家族 SONIC_BOOM 在树已用,此常量首用;报错换 ENTITY_WARDEN_AMBIENT)
+                p.playSound(net.minecraft.sound.SoundEvents.ENTITY_WARDEN_HEARTBEAT,
+                        0.5f + 0.5f * sev, 1.0f + 0.3f * sev);
             }
         });
         // m257 蓄力重斩:按住攻击键蓄力检测(手感反馈+松开上报)

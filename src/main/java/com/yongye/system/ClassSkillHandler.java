@@ -456,6 +456,15 @@ public final class ClassSkillHandler {
             }
         });
 
+        // m286:下线清状态(四个按 UUID 的 Map 此前只增不减,长开服务器缓慢累积)
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            java.util.UUID id = handler.getPlayer().getUuid();
+            lastCombat.remove(id);
+            lastAtkSync.remove(id);
+            tankLastMove.remove(id);
+            tankLastPos.remove(id);
+        });
+
         Yongye.LOGGER.info("[夜蚀] 职业专属技能已挂载");
     }
 
