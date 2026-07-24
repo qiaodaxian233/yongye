@@ -2533,3 +2533,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
   ① KillStatsHandler 看板计数(作者截图那行);② LootHandler 掉落门 + baseLm 动态爆率按主人强度算(防召唤师白嫖满爆率);③ ProtectScrollHandler(保护卷计数+自动卷轴掉落);④ BonusXpHandler 贪婪额外经验(傀儡杀怪原版本就不掉经验球,这份保底经验归主人,召唤师不至于零经验);⑤ QuestManager 击杀/猎精英任务;⑥ NightBlightHandler 蚀域掉落门。
 - **不动**:武僧「空手击杀拳意+1」仍只认亲手空手(机制本义);连击/暴击/吸血/处决是命中系个人技,不涉击杀归属。
 - 开关 summonKillsCreditOwner(默开,关=回只认亲手);配置 +1,CURRENT_CONFIG_VERSION 80→81;零新 API 零待编译验证(getPlayerByUuid 在树先例=GanDi 台词)。
+
+## m300a 编译修复:GanDiEntity.getOwner 补丁未命中(2026-07-24)
+- 作者 build 报错:SummonerHandler 引用 GanDiEntity.getOwner() 找不到符号。
+- 根因:m300 用脚本批量打补丁,GanDi 的 setOwner 实际比我拿来匹配的旧文本多一行 this.setPersistent(),str.replace 未命中= **静默跳过**,而脚本无条件打印"成功"——假阳性。WarlockCloneEntity 的 getter 是真落上了。
+- 修复:补上 getOwner 纯一行 getter;其余 m300 六处接线不受影响。
+- **教训(入册)**:脚本化替换后必须逐符号 grep 回验(getOwner 两个文件都该各有一处),不能信脚本自己的打印。

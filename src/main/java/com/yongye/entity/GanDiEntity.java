@@ -122,6 +122,11 @@ public class GanDiEntity extends PathAwareEntity {
         this.setPersistent();
     }
 
+    /** m300:击杀归属用。 */
+    public UUID getOwner() {
+        return owner;
+    }
+
     @Override
     public void tick() {
         super.tick();
