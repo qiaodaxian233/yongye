@@ -38,6 +38,10 @@ public record ConfigValuesPayload(String data) implements CustomPayload {
             "xpBonusMobBoss",
             "xpBonusVanillaBoss",
             "xpBonusPain",
+            // m301:强化石三旋钮进爆率编辑器(作者:「这个爆率没写进DEBUG吗」)
+            "stoneDropChanceNormal",
+            "stoneDaysPerTier",
+            "stoneTierCap",
     };
 
     /** 字段 → 中文标签(客户端显示用);未列出的字段直接显示 key 原文。 */
@@ -57,6 +61,9 @@ public record ConfigValuesPayload(String data) implements CustomPayload {
             case "xpBonusMobBoss" -> "怪物BOSS额外经验";
             case "xpBonusVanillaBoss" -> "原版Boss额外经验";
             case "xpBonusPain" -> "长门额外经验";
+            case "stoneDropChanceNormal" -> "强化石爆率(普通)";
+            case "stoneDaysPerTier" -> "强化石档位天数墙(N天升1档)";
+            case "stoneTierCap" -> "强化石档位封顶";
             default -> key;
         };
     }

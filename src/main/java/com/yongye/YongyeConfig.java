@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 81; // ...m299 免友伤+1 · m300 击杀归属+1
+    public static final int CURRENT_CONFIG_VERSION = 82; // ...m300 击杀归属+1 · m301 石档天数墙+1
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -245,6 +245,7 @@ public class YongyeConfig {
     public int stoneBossMinOffset = 2;               // BOSS 档位窗:t+2
     public int stoneBossMaxOffset = 4;               //              ~t+4(均匀)
     public int stoneTierCap = 10;                    // 基准档封顶(最高档强化石,硬上限 10)
+    public int stoneDaysPerTier = 3;                 // m301 天数硬顶:最终掉落档≤1+天数/此值(3=第9天起才出1000级档;0=关)
     public boolean stoneTopTierEliteOnly = true;     // 封顶期收口:普通怪不出最高档(降为次档),10亿石只从精英/BOSS 出
 
     // ============ m297:技能书 ×100 分五档(1/100/1万/100万/1亿),随石档折半爬 ============

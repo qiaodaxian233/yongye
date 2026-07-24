@@ -33,10 +33,23 @@ public final class EnhanceStoneDrops {
         return (int) Math.max(1, Math.min(c.stoneTierCap, t));
     }
 
+    /**
+     * m301 天数硬顶(作者实机:第 2 天任务失败把永夜提早推到 I,基准档直接=4,普通怪开出 1万级石——
+     * 「怎么也得十天以后才会爆 1000 级以上」):无论永夜/进化把档位信号推多高,
+     * **最终掉落档 ≤ 1 + 游戏天数 / stoneDaysPerTier**(默 3:第 0~2 天只出 1 档,第 9 天起才可能 4 档=1000 级,
+     * 第 12 天起 5 档=1万,第 27 天起才摸 10 档)。窗口偏移(+1~+4)同样被顶住。0=关闭天数墙。
+     */
+    private static int dayCeiling(ServerWorld world) {
+        int per = YongyeConfig.get().stoneDaysPerTier;
+        if (per <= 0) return Integer.MAX_VALUE;
+        return (int) Math.min(10, 1 + ProgressionManager.gameDay(world) / per);
+    }
+
     /** 普通怪:窗 t/t+1/t+2,权重 stoneNormalWeightT0/T1/T2;封顶期最高档降为次档。 */
     public static ItemStack rollNormal(ServerWorld world, Random r) {
         YongyeConfig c = YongyeConfig.get();
         int tier = baseTier(world) + pick(r, c.stoneNormalWeightT0, c.stoneNormalWeightT1, c.stoneNormalWeightT2);
+        tier = Math.min(tier, dayCeiling(world)); // m301 天数硬顶
         tier = clamp(c, tier);
         if (c.stoneTopTierEliteOnly && tier >= c.stoneTierCap) {
             tier = Math.max(1, c.stoneTierCap - 1); // 最高档只从精英/BOSS 出,普通怪主掉次档
@@ -48,6 +61,7 @@ public final class EnhanceStoneDrops {
     public static ItemStack rollElite(ServerWorld world, Random r) {
         YongyeConfig c = YongyeConfig.get();
         int tier = baseTier(world) + 1 + pick(r, c.stoneEliteWeightT1, c.stoneEliteWeightT2, c.stoneEliteWeightT3);
+        tier = Math.min(tier, dayCeiling(world)); // m301 天数硬顶
         return new ItemStack(ModItems.enhanceStone(clamp(c, tier)));
     }
 
@@ -57,6 +71,7 @@ public final class EnhanceStoneDrops {
         int lo = Math.min(c.stoneBossMinOffset, c.stoneBossMaxOffset);
         int hi = Math.max(c.stoneBossMinOffset, c.stoneBossMaxOffset);
         int tier = baseTier(world) + lo + (hi > lo ? r.nextInt(hi - lo + 1) : 0);
+        tier = Math.min(tier, dayCeiling(world)); // m301 天数硬顶
         return new ItemStack(ModItems.enhanceStone(clamp(c, tier)));
     }
 
@@ -73,9 +88,10 @@ public final class EnhanceStoneDrops {
         return (int) Math.min(Integer.MAX_VALUE, v);
     }
 
-    /** 当前书基准档 b = (石基准档 t + 1) / 2,钳 [1,5]。 */
+    /** 当前书基准档 b = (石基准档 t + 1) / 2,钳 [1,5]。m301:石档先吃天数硬顶,书随之被顶住。 */
     public static int stageBookTier(ServerWorld world) {
-        return Math.max(1, Math.min(5, (baseTier(world) + 1) / 2));
+        int t = Math.min(baseTier(world), dayCeiling(world));
+        return Math.max(1, Math.min(5, (t + 1) / 2));
     }
 
     /** 按类型给书等级:攻击书吃满当前书档,百分比类钳到 skillBookPercentTierCap。 */
