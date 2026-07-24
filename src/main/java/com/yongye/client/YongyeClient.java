@@ -158,7 +158,7 @@ public class YongyeClient implements ClientModInitializer {
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
-                    boolean fancy = YongyeConfig.get().enableComboFancyFx;
+                    boolean fancy = com.yongye.YongyeConfig.get().enableComboFancyFx;
                     int nc = payload.count();
                     if (fancy && nc == 0 && comboCount >= 10) {          // 断连反馈
                         comboBreakTicks = 30;
@@ -190,7 +190,7 @@ public class YongyeClient implements ClientModInitializer {
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
             if (mc.player == null || mc.options.hudHidden) return;
-            boolean fancy = YongyeConfig.get().enableComboFancyFx;
+            boolean fancy = com.yongye.YongyeConfig.get().enableComboFancyFx;
             int x = mc.getWindow().getScaledWidth() / 2 + 108;
             int y = mc.getWindow().getScaledHeight() - 62;
             // m279 断连提示(独立于当前连击数):10 连以上被断,灰字「连击中断 ×N」下沉淡出
