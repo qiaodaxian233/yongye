@@ -2412,3 +2412,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 抢不走:④MobEntity.loot HEAD 取消(僵尸系/精英怪捡地上的装备全拦);⑤精英缴械(EliteHandler)夺武器/扒护甲两分支豁免;⑥ItemCleanupHandler 定时清理豁免。
 - 耐久面:inventoryTick 自动补 UNBREAKABLE 组件(耐久永不下降,tooltip 自带"无法破坏"行,老装备自动补齐);tooltip 加"不可摧毁·火/爆炸/虚空不灭·怪物与精英抢不走"。
 - 开关 blightArmorIndestructible(默认开)。待编译验证三处、互不依赖各有退路:loot 注入点(报错删 mixins.json 该行)、DataComponentTypes.UNBREAKABLE/UnbreakableComponent(报错注释 inventoryTick 两行)、fireproof(报错删 .fireproof())。
+
+## m282 穿戴层换 AvaritiaNeo 底·头盔恢复显示(2026-07-24)
+- 作者:「如果是用 AvaritiaNeo 里的皮肤改的话就不用隐藏了」。clone 核验:MIT(Copyright 2025 Aqua3,全仓库单一许可无资产限制)→ 可改作,署名入 THIRD_PARTY_NOTICES.md(本仓库首次实际引入第三方资产)。
+- 以其 infinity_layer_{1,2}.png(64×32)为底:专业画师层图头盔顶/背全覆盖(头区 268px),根治 m277"AI 只画主要面"的镂空病根;m280 的头区清空随整图替换自动撤销=头盔恢复显示。
+- 它的宇宙感来自着色器蒙版(mask 那几张),不接;改静态烤入:保留原甲片线稿明暗(lum),整体重映射为夜蚀紫色阶(暗10,6,26→亮214,178,255)+40 簇紫青水晶辉光(轻,线稿担主角)+零星星点。
+- alpha 归一为 0/255 两档,cutout 渲染安全。纯资源零 Java 零配置(v 仍 71)。实机盯:穿全套 F5 转一圈看头盔在、各面无镂空、紫青质感;嫌头盔造型不好看再说,那就回"隐藏头盔"一行方案。
