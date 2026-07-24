@@ -28,18 +28,14 @@ public class EnhanceProtectScrollItem extends Item {
 
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+        // m271:全被动化——不再需要右键激活,放在背包里即自动生效(碎裂瞬间自动扣一张抵挡)。
+        // 右键只做说明,不消耗;旧存档里已手动激活的护盾(ENHANCE_PROTECTED)仍被强化器优先认。
         ItemStack stack = user.getStackInHand(hand);
         if (world.isClient) return TypedActionResult.success(stack, true);
         if (user instanceof ServerPlayerEntity sp) {
-            if (sp.getAttachedOrElse(ModAttachments.ENHANCE_PROTECTED, false)) {
-                sp.sendMessage(Text.literal("强化保护已在生效中,无需重复使用。").formatted(Formatting.GRAY), true);
-                return TypedActionResult.fail(stack);
-            }
-            sp.setAttached(ModAttachments.ENHANCE_PROTECTED, true);
-            stack.decrement(1);
             sp.getWorld().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                    SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.PLAYERS, 0.8f, 1.4f);
-            sp.sendMessage(Text.literal("强化保护已启动:下一次强化失败时,装备不会碎裂。")
+                    SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.PLAYERS, 0.6f, 1.5f);
+            sp.sendMessage(Text.literal("保护卷是被动生效的:放在背包里即可,强化碎裂时会自动消耗抵挡。")
                     .formatted(Formatting.LIGHT_PURPLE), true);
         }
         return TypedActionResult.success(stack, false);
@@ -52,7 +48,7 @@ public class EnhanceProtectScrollItem extends Item {
 
     @Override
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.literal("使用后,下一次装备强化失败时,装备不会损坏。").formatted(Formatting.GRAY));
+        tooltip.add(Text.literal("被动生效:放在背包里,强化碎裂时自动消耗抵挡,装备不会损坏。").formatted(Formatting.GRAY));
         tooltip.add(Text.literal("稀有物品 · 无法合成,仅怪物掉落 / 杀怪兑换").formatted(Formatting.DARK_GRAY));
     }
 }

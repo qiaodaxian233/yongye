@@ -283,6 +283,9 @@ public final class EquipmentEnhancer {
                         if (prot) {
                             p.setAttached(com.yongye.registry.ModAttachments.ENHANCE_PROTECTED, false);
                             usedProtect = true;
+                        } else if (p != null && consumeOneProtectScroll(p)) {
+                            // m271:保护卷全被动——碎裂瞬间直接从背包(含潜影盒)扣一张抵挡,不再需要右键激活
+                            usedProtect = true;
                         } else if (rng.nextDouble() < c.enhanceBreakChance) {
                             broke = true;
                         }
@@ -294,17 +297,20 @@ public final class EquipmentEnhancer {
         return new EnhanceResult(out, startLevel, level, ok, fail, broke, usedProtect);
     }
 
-    /** m198:从背包扣一张强化保护卷(从前往后逐栈找),扣到返回 true。 */
+    /** m198→m271:从背包扣一张强化保护卷(深扫,潜影盒等容器里的也认),扣到返回 true。 */
     private static boolean consumeOneProtectScroll(net.minecraft.server.network.ServerPlayerEntity p) {
-        var inv = p.getInventory();
-        for (int i = 0; i < inv.size(); i++) {
-            ItemStack s = inv.getStack(i);
-            if (s.getItem() == com.yongye.registry.ModItems.ENHANCE_PROTECT_SCROLL) {
-                s.decrement(1);
-                return true;
+        final boolean[] got = { false };
+        InventoryDeepScan.scan(p, new InventoryDeepScan.StackVisitor() {
+            @Override public int visit(ItemStack s) {
+                if (!got[0] && s.getItem() == com.yongye.registry.ModItems.ENHANCE_PROTECT_SCROLL) {
+                    got[0] = true;
+                    return 1;
+                }
+                return 0;
             }
-        }
-        return false;
+            @Override public boolean done() { return got[0]; }
+        });
+        return got[0];
     }
 
 
