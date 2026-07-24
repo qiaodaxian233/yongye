@@ -2581,3 +2581,12 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **百倍刷怪 + 实体优化**:原版地表刷怪≈每玩家 400t 一波;这里每玩家 candleDimSpawnIntervalTicks(默 4t)一波 1~3 只,恰约百倍;落点地表环带 12~40、无视亮度;亡灵出生戴皮革帽掉率 0(固定正午会点燃亡灵,帽子替它烧,husk 口径)。**三重实体闸**(NightfallHordeHandler 无全局闸拖崩 TPS 的教训,照 HardcoreSurvival 口径):①每玩家 48 格内 ≥120 停刷;②全维度 ≥400 硬预算;③每 100t discard 离所有玩家 >96 格的敌对。全部配置。
 - **滤镜**:HudRenderCallback 整屏淡紫 fill(candleDimFilterAlpha 默 40,0=关),与 m287 濒死渐晕同挂点同画法。
 - 配置 +7,CURRENT_CONFIG_VERSION 84→85。**待编译验证五处,各有独立退路**:①UseBlockCallback(player 事件模块在树=AttackEntityCallback,本类首用);②ServerPlayerEntity.teleport(ServerWorld,…) 跨维传送(原版标准方法,首用);③BlockRenderLayerMap cutout(报错删 YongyeClient 那一行,门退实心渲染);④CandlePortalBlock 一组 Block API 首用(HORIZONTAL_AXIS/noCollision/nonOpaque/getOutlineShape 等,全挂 @Override 编译期即验);⑤getStateForNeighborUpdate 签名(报错删该方法=门不自动塌,功能不受影响)。数据包 JSON 结构(1.21.1 biome/dimension 必填字段)也请 build 后进游戏首验。
+
+## m306 烛之维度落点修复+紫色草地(2026-07-24)
+- 作者实机:传送落在基岩层而不是地表;草地颜色也该跟着紫。
+- **基岩层病根查实**:`World.getTopY` 对未加载区块有 `isChunkLoaded` 早退——不生成区块、直接返回世界底(-64);新维度首次进入时目标区块必然未加载,落点被 `Math.max(bottomY+2, y)` 钳到 **-62 正好是基岩层**,自动回程门也跟着建进石头里。刷怪侧(CandleSpawnHandler)有 `sy <= bottomY` 守卫且刷在玩家已加载区块内,无此病。
+- **修法**:`findOrBuildArrival` 先 `dest.getChunk(x>>4, z>>4)` 强制把目标区块同步生成到 FULL,再从区块自身高度图 `chunk.sampleHeightmap(MOTION_BLOCKING)+1` 采样(绕开 getTopY 的早退分支,这是 getTopY 已加载路径的同款内部调用);`y <= bottomY+2` 兜底落海平面。双向都走此函数,回主世界同修。
+- **顺手加固**:自动搭门的落脚平台上方清三格净空——斜坡/山体处到达不再有把玩家埋进土里的窗口。
+- **紫色草地**:biome effects 补 `grass_color` 0xA36BE0(薰衣草紫)+ `foliage_color` 0x8F5BD4(深紫,叶/藤),与紫天 0x9C6CF0/紫雾同色系;水色 m305 已紫。石头/泥土不吃群系染色,整体紫罩由淡紫滤镜负责(设计如此)。
+- **旧档遗留**:之前落基岩层时自动建的那扇门还埋在 -62 附近的石头里,是孤儿门,不影响新落点(新门建在地表),介意就挖掉。
+- 零配置(仍 85)。**待编译验证两处同一行族**:`World.getChunk(int,int)` 与 `Chunk.sampleHeightmap`(均标准 API 首用,报错贴回即修,退路=保留 getTopY 但先 getChunk 强制加载)。

@@ -5,6 +5,8 @@
   "effects": {
     "sky_color": 10251504,
     "fog_color": 12096767,
+    "grass_color": 10709984,
+    "foliage_color": 9395156,
     "water_color": 8081368,
     "water_fog_color": 3809894,
     "mood_sound": {

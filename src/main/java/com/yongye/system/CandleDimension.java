@@ -166,8 +166,14 @@ public final class CandleDimension {
 
     /** 到达点:地表落脚;24 格内已有门就落门口,没有就在落点旁搭一扇 4×5 门并点好。 */
     private static BlockPos findOrBuildArrival(ServerWorld dest, int x, int z) {
-        int y = dest.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z);
-        BlockPos landing = new BlockPos(x, Math.max(dest.getBottomY() + 2, y), z);
+        // m306 修「传送落在基岩层」:World.getTopY 对未加载区块有 isChunkLoaded 早退,
+        // 不生成区块、直接返回世界底(-64)——新维度首次进入时目标区块必然未加载,
+        // 落点被 Math.max 钳到 bottomY+2 = -62 正好是基岩层,回程门也跟着埋进石头里。
+        // 修法:先强制把目标区块同步生成到 FULL,再从区块自身高度图采样(绕开早退)。
+        var chunk = dest.getChunk(x >> 4, z >> 4); // 待编译验证:World.getChunk(int,int) 首用(标准API,同步生成)
+        int y = chunk.sampleHeightmap(Heightmap.Type.MOTION_BLOCKING, x & 15, z & 15) + 1; // 待编译验证:Chunk.sampleHeightmap 首用(getTopY 内部同款调用)
+        if (y <= dest.getBottomY() + 2) y = dest.getSeaLevel() + 1; // 兜底:全空气柱按海平面落
+        BlockPos landing = new BlockPos(x, y, z);
         // 附近找现成门(±24 水平 / ±16 垂直,粗扫足够)
         for (BlockPos p : BlockPos.iterate(landing.add(-24, -16, -24), landing.add(24, 16, 24))) {
             if (isPortal(dest.getBlockState(p))) {
@@ -184,8 +190,11 @@ public final class CandleDimension {
                 dest.setBlockState(p, border ? frame
                         : ModBlocks.CANDLE_PORTAL.getDefaultState().with(CandlePortalBlock.AXIS, Direction.Axis.X), 18);
             }
-            // 门前落脚平台
+            // 门前落脚平台 + 上方三格净空(斜坡/山体里到达时不至于把玩家埋进土里)
             dest.setBlockState(base.add(w, -1, 1), frame, 18);
+            for (int h = 0; h <= 2; h++) {
+                dest.setBlockState(base.add(w, h, 1), net.minecraft.block.Blocks.AIR.getDefaultState(), 18);
+            }
         }
         return base.add(0, 0, 1);
     }
