@@ -80,7 +80,8 @@ public final class WeaponGuardHandler {
             if (now >= g.guardUntil) g.raiseTick = now;   // m269:非心跳续期=全新起手
             g.guardUntil = now + Math.max(2, cfg.guardHoldTicks);
             p.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 10, 0)); // 举盾负重
-            p.sendMessage(gaugeBar(g.gauge, maxGauge(p, cfg), Formatting.AQUA), true);
+            if (!panelTakesOver(p))    // m278:面板接管后格挡条画在血条面板里,不再每 4t 刷 action bar
+                p.sendMessage(gaugeBar(g.gauge, maxGauge(p, cfg), Formatting.AQUA), true);
             return TypedActionResult.pass(stack);
         });
 
@@ -146,7 +147,8 @@ public final class WeaponGuardHandler {
                     sw.spawnParticles(ParticleTypes.CRIT, front.x, front.y, front.z, 8, 0.25, 0.25, 0.25, 0.15);
                 }
                 ServerPlayNetworking.send(p, new CombatFxPayload(CombatFxPayload.HIT, 0.6f, 1.2f, false, false, 0));
-                p.sendMessage(gaugeBar(g.gauge, maxGauge(p, cfg), Formatting.AQUA), true);
+                if (!panelTakesOver(p))
+                    p.sendMessage(gaugeBar(g.gauge, maxGauge(p, cfg), Formatting.AQUA), true);
                 return false;
             }
             // 被击穿:这一下全额命中,破防硬直,期满回满
@@ -162,28 +164,58 @@ public final class WeaponGuardHandler {
             return true;
         });
 
-        // —— 回复:每秒结算 —— //
+        // —— 回复:每秒结算;面板同步:每 5t(m278,格挡条进血条面板) —— //
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTicks() % 20 != 0 || STATES.isEmpty()) return;
             YongyeConfig cfg = YongyeConfig.get();
             long now = server.getTicks();
-            STATES.forEach((id, g) -> {
-                if (g.gauge < 0) return;
-                ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
-                if (p == null) return;
-                double max = maxGauge(p, cfg);
-                if (g.brokenUntil > 0 && now >= g.brokenUntil) {
-                    g.brokenUntil = 0;
-                    g.gauge = max;                                  // 破防期满直接回满
-                    p.sendMessage(Text.literal("格挡已恢复").formatted(Formatting.GREEN), true);
-                } else if (g.brokenUntil == 0 && g.gauge < max
-                        && now - g.lastBlockTick > Math.max(0, cfg.guardRegenDelayTicks)) {
-                    g.gauge = Math.min(max, g.gauge + max * Math.max(0.0, cfg.guardRegenFractionPerSec));
+            if (now % 20 == 0 && !STATES.isEmpty()) {
+                STATES.forEach((id, g) -> {
+                    if (g.gauge < 0) return;
+                    ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
+                    if (p == null) return;
+                    double max = maxGauge(p, cfg);
+                    if (g.brokenUntil > 0 && now >= g.brokenUntil) {
+                        g.brokenUntil = 0;
+                        g.gauge = max;                                  // 破防期满直接回满
+                        if (!panelTakesOver(p))
+                            p.sendMessage(Text.literal("格挡已恢复").formatted(Formatting.GREEN), true);
+                    } else if (g.brokenUntil == 0 && g.gauge < max
+                            && now - g.lastBlockTick > Math.max(0, cfg.guardRegenDelayTicks)) {
+                        g.gauge = Math.min(max, g.gauge + max * Math.max(0.0, cfg.guardRegenFractionPerSec));
+                    }
+                });
+            }
+            // m278 面板同步:持械即建档(条能立刻显示满值),之后状态在就持续下发;不持械且从未格挡的玩家不发。
+            if (now % 5 == 0 && cfg.enableWeaponGuard) {
+                for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                    boolean holding = holdingGuardWeapon(p);
+                    Guard g = STATES.get(p.getUuid());
+                    if (g == null || g.gauge < 0) {
+                        if (!holding) continue;
+                        g = STATES.computeIfAbsent(p.getUuid(), k -> new Guard());
+                        if (g.gauge < 0) g.gauge = maxGauge(p, cfg);
+                    }
+                    double max = maxGauge(p, cfg);
+                    int broken = (int) Math.max(0, g.brokenUntil - now);
+                    ServerPlayNetworking.send(p, new com.yongye.network.GuardSyncPayload(
+                            (float) Math.min(g.gauge, max), (float) max, broken, holding));
                 }
-            });
+            }
         });
 
         com.yongye.Yongye.LOGGER.info("[夜蚀] 武器格挡系统已挂载(右键举盾,法杖除外)");
+    }
+
+    /** m278:主手是否持有可格挡武器(与举盾入口同口径:武器 OK 且非法杖)。 */
+    private static boolean holdingGuardWeapon(ServerPlayerEntity p) {
+        ItemStack held = p.getMainHandStack();
+        if (!ChargeSlashHandler.weaponOk(held)) return false;
+        return !(held.getItem() instanceof ClassWeaponItem cwi && cwi.playerClass == PlayerClass.WARLOCK);
+    }
+
+    /** m278:血条面板是否已接管(HudCompactMixin 阈值 60 同口径)——接管后 action bar 十格条降级为兜底不再刷。 */
+    private static boolean panelTakesOver(ServerPlayerEntity p) {
+        return p.getMaxHealth() + p.getAbsorptionAmount() > 60.0f;
     }
 
     /** 格挡值上限=最大生命×比例(跟随成长,后期照样挡得动),保底 guardMinValue。 */

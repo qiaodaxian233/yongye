@@ -128,6 +128,15 @@ public class YongyeClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.MpSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.mp = payload.mp()));
 
+        // m278 格挡值同步:进血条面板画青蓝格挡条(破防红闪+倒计时;HudCompactMixin 绘制)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.GuardSyncPayload.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    ClientStats.guardCur = payload.cur();
+                    ClientStats.guardMax = payload.max();
+                    ClientStats.guardBroken = payload.broken();
+                    ClientStats.guardHolding = payload.holding();
+                }));
+
         // 攻击伤害同步:服务端终值(原版 GENERIC_ATTACK_DAMAGE 不下发客户端,成长面板要显示真值)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.AttackSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> ClientStats.attackDamage = payload.atk()));
@@ -144,7 +153,10 @@ public class YongyeClient implements ClientModInitializer {
                     if (payload.count() > comboCount) comboPopTicks = 4;
                     comboCount = payload.count();
                 }));
-        ClientTickEvents.END_CLIENT_TICK.register(client -> { if (comboPopTicks > 0) comboPopTicks--; });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (comboPopTicks > 0) comboPopTicks--;
+            if (ClientStats.guardBroken > 0) ClientStats.guardBroken--;   // m278:破防倒计时平滑
+        });
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             if (comboCount < 2) return; // 1 连不值得画
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
@@ -272,7 +284,8 @@ public class YongyeClient implements ClientModInitializer {
             int x = (mc.getWindow().getScaledWidth() - w) / 2;
             // m266:原先画在屏幕中上 y=4,会被 BOSS 血条(y=12 起往下叠)整个压住;
             // 改到玩家血条面板(HudCompactMixin,面板顶 = h-55)正上方,BOSS 再多也挡不到。
-            int y = mc.getWindow().getScaledHeight() - 66;
+            // m278:面板画格挡条时整块加高上移 6px,这里连锁上移不打架。
+            int y = mc.getWindow().getScaledHeight() - 66 - (ClientStats.guardBarShown ? 6 : 0);
             ctx.drawTextWithShadow(mc.textRenderer, t, x, y, 0xFFFF5555);
         });
 
@@ -298,7 +311,8 @@ public class YongyeClient implements ClientModInitializer {
 
             int cx = mc.getWindow().getScaledWidth() / 2;
             // m266:原 y=30 会被 2 条以上 BOSS 血条压住;改到底部状态区(永夜阶段名 h-66 的上方)
-            int cy = mc.getWindow().getScaledHeight() - 82;
+            // m278:随格挡条连锁上移 6px(同阶段名)
+            int cy = mc.getWindow().getScaledHeight() - 82 - (ClientStats.guardBarShown ? 6 : 0);
 
             // 旋转箭头(▲ 默认指上=正前;按方位角绕 Z 旋转)
             net.minecraft.text.Text arrow = net.minecraft.text.Text.literal("▲")

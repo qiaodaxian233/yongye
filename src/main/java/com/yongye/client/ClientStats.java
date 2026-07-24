@@ -14,6 +14,16 @@ public final class ClientStats {
     /** 服务端同步的最终攻击伤害(由 AttackSyncPayload 更新;<0 = 尚未收到) */
     public static double attackDamage = -1;
 
+    // ===== m278 格挡状态(由 GuardSyncPayload 每 5t 更新) =====
+    /** 当前格挡值 / 上限(上限=最大生命×比例)。 */
+    public static float guardCur = 0f, guardMax = 0f;
+    /** 破防剩余 tick(>0=硬直中;客户端每 tick 递减,倒计时平滑)。 */
+    public static int guardBroken = 0;
+    /** 是否正持有可格挡武器(不持械且满值时面板隐藏格挡条)。 */
+    public static boolean guardHolding = false;
+    /** 本帧面板是否画了格挡条(HudCompactMixin 每帧回写)——永夜阶段名/核心箭头据此连锁上移 6px。 */
+    public static boolean guardBarShown = false;
+
     public static void update(int h, int[] l, String cn) {
         health = h;
         levels = l;

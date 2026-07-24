@@ -32,6 +32,7 @@ public class HudCompactMixin {
     private static final int BAR_H = 6;
     private static final int MP_H  = 4;
     private static final int FOOD_H = 6;
+    private static final int GUARD_H = 4;   // m278 格挡条(MP 条下方)
     private static final int GAP   = 2;
 
     private static final Identifier HEART = Identifier.ofVanilla("hud/heart/full");
@@ -45,20 +46,27 @@ public class HudCompactMixin {
         if (player == null) return;
         float maxHp = player.getMaxHealth();
         float absHp = player.getAbsorptionAmount();
-        if (maxHp + absHp <= THRESHOLD) return;  // 低血量交回原版,不接管
+        if (maxHp + absHp <= THRESHOLD) { ClientStats.guardBarShown = false; return; }  // 低血量交回原版,不接管
         TextRenderer tr = mc.textRenderer;
+
+        // m278 格挡条:持械 / 没回满 / 破防中 才占一行;不相关时不占地方。回写 guardBarShown 供阶段名/箭头连锁上移。
+        boolean guardShown = ClientStats.guardMax > 0.5f
+                && (ClientStats.guardHolding
+                    || ClientStats.guardCur < ClientStats.guardMax - 0.5f
+                    || ClientStats.guardBroken > 0);
+        ClientStats.guardBarShown = guardShown;
 
         float curHp = player.getHealth();
         int   armor = player.getArmor();
         int   food  = player.getHungerManager().getFoodLevel();
         float rate  = HealthRateTracker.getRatePerSec();
 
-        // 锚点:整个 HUD 块下移,贴近物品栏上方
+        // 锚点:整个 HUD 块下移,贴近物品栏上方;m278 有格挡条时整块上移一行,不压进物品栏
         int left = mc.getWindow().getScaledWidth() / 2 - 91;
-        int top  = mc.getWindow().getScaledHeight() - 44;
+        int top  = mc.getWindow().getScaledHeight() - 44 - (guardShown ? GAP + GUARD_H : 0);
 
         // 底衬(m142 方案A 精致玻璃):2px 切角圆角 + 玻璃描边 + 顶亮底暗渐变;配色仍蓝系
-        int totalH = BAR_H + GAP + MP_H + GAP + FOOD_H;
+        int totalH = BAR_H + GAP + MP_H + GAP + FOOD_H + (guardShown ? GAP + GUARD_H : 0);
         yongye$panel(ctx, left, top - 11, BAR_W, totalH + 13, 0xCC1B5288, 0xCC0C2C50, 0xFF2E7AD0);
 
         // ===== 等级行(本命职业 Lv.X · 名)在血条正上方 =====
@@ -114,6 +122,11 @@ public class HudCompactMixin {
         // ===== MP/资源 条(食物条下方) =====
         yongye$renderMpBar(ctx, tr, left, top + BAR_H + GAP + FOOD_H + GAP);
 
+        // ===== 格挡条(m278,MP 条下方;青蓝渐变,低于30%转橙,破防整条红闪+倒计时) =====
+        if (guardShown) {
+            yongye$renderGuardBar(ctx, tr, left, top + BAR_H + GAP + FOOD_H + GAP + MP_H + GAP);
+        }
+
         ci.cancel();
     }
 
@@ -159,6 +172,27 @@ public class HudCompactMixin {
             ctx.fill(x, y, x + fw, y + 1, 0x90FFFFFF);            // 顶高光
             if (fw >= 2) ctx.fill(x + fw - 2, y, x + fw, y + h, head);  // 末端光头
         }
+    }
+
+    /** m278 格挡条:和血条同一套质感(渐变+高光+末端光头)。破防=整条红色呼吸闪烁+右侧倒计时;余量<30%=橙色预警。 */
+    private static void yongye$renderGuardBar(DrawContext ctx, TextRenderer tr, int left, int top) {
+        int broken = ClientStats.guardBroken;
+        if (broken > 0) {
+            float pulse = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() / 120.0);  // 呼吸闪烁
+            int a = 0x70 + (int) (0x8F * pulse);
+            ctx.fill(left, top, left + BAR_W, top + GUARD_H, (a << 24) | 0xC01818);
+            ctx.fill(left, top, left + BAR_W, top + 1, 0x60000000);
+            String s = "破防 " + (int) Math.ceil(broken / 20.0) + "s";
+            ctx.drawTextWithShadow(tr, Text.literal(s), left + BAR_W + 6, top - 2, 0xFFFF5555);
+            return;
+        }
+        float max = Math.max(1f, ClientStats.guardMax);
+        float frac = Math.max(0f, Math.min(1f, ClientStats.guardCur / max));
+        boolean low = frac < 0.30f;
+        int fillW = (int) (BAR_W * frac);
+        if (low) yongye$bar(ctx, left, top, BAR_W, GUARD_H, 0xFF2A1804, fillW, 0xFFFFB040, 0xFFB06810, 0xFFFFE0A0);
+        else     yongye$bar(ctx, left, top, BAR_W, GUARD_H, 0xFF06242E, fillW, 0xFF3CD9E8, 0xFF157F9E, 0xFFA8F4FF);
+        ctx.drawTextWithShadow(tr, Text.literal("格挡"), left + BAR_W + 6, top - 2, low ? 0xFFFFB040 : 0xFF7FDCEC);
     }
 
     private static void yongye$renderMpBar(DrawContext ctx, TextRenderer tr, int left, int top) {
