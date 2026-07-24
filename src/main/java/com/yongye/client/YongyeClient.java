@@ -205,19 +205,14 @@ public class YongyeClient implements ClientModInitializer {
             }
             if (comboCount < 2) return; // 1 连不值得画
             int tier = comboCount / 5;
-            // 档位越高颜色越燥:白→黄→金→橙红→亮紫
-            int col = switch (Math.min(tier, 4)) {
-                case 0 -> 0xFFFFFFFF; case 1 -> 0xFFFFFF55; case 2 -> 0xFFFFAA00;
-                case 3 -> 0xFFFF5533; default -> 0xFFFF55FF;
-            };
+            // m284:档位色扩到 10 档,10 档以上彩虹流转(见 comboColor)
+            int col = comboColor(tier);
             // m279 升档冲击环:档位色双方环(直角+45°)从数字中心外扩淡出
             if (fancy && comboRingTicks > 0) {
                 float t = 1f - comboRingTicks / 12f;
                 int r = 6 + (int) (t * 26);
                 int a = Math.max(0x18, (int) (0xC0 * (1f - t)));
-                int ringCol = (a << 24) | (switch (Math.min(comboRingTier, 4)) {
-                    case 1 -> 0xFFFF55; case 2 -> 0xFFAA00; case 3 -> 0xFF5533; default -> 0xFF55FF;
-                });
+                int ringCol = (a << 24) | (comboColor(comboRingTier) & 0xFFFFFF);   // m284:环色同档位色(含彩虹)
                 var m0 = ctx.getMatrices();
                 m0.push();
                 m0.translate(x + 18, y + 3, 0);
@@ -593,10 +588,26 @@ public class YongyeClient implements ClientModInitializer {
         return ((int) (r * 255.0f) << 16) | ((int) (g * 255.0f) << 8) | (int) (b * 255.0f);
     }
 
-    /** m279:升档称号(1档凌厉/2档狂怒/3档无双/4档+灭世)。 */
+    /** m279/m284:升档称号,5 连一档共十阶——凌厉/迅猛/狂怒/无双/修罗/鬼神/灭世/弑神/超凡入圣/万象俱灭。 */
     private static String comboTitleFor(int tier) {
-        return switch (Math.min(tier, 4)) {
-            case 1 -> "凌厉"; case 2 -> "狂怒"; case 3 -> "无双"; default -> "灭世";
+        return switch (Math.min(tier, 10)) {
+            case 1 -> "凌厉";  case 2 -> "迅猛";  case 3 -> "狂怒";  case 4 -> "无双";
+            case 5 -> "修罗";  case 6 -> "鬼神";  case 7 -> "灭世";  case 8 -> "弑神";
+            case 9 -> "超凡入圣"; default -> "万象俱灭";
+        };
+    }
+
+    /** m284:档位色十档(白→黄→金→橙红→亮紫→青→天蓝→品红→血红→白金),50 连(10 档)以上彩虹流转。 */
+    private static int comboColor(int tier) {
+        if (tier >= 10) {   // 彩虹流转:色相随时间循环,复用在树 hsvToRgb
+            float hue = (System.currentTimeMillis() % 1800L) / 1800.0f;
+            return 0xFF000000 | hsvToRgb(hue, 1.0f, 1.0f);
+        }
+        return switch (tier) {
+            case 0 -> 0xFFFFFFFF; case 1 -> 0xFFFFFF55; case 2 -> 0xFFFFAA00;
+            case 3 -> 0xFFFF5533; case 4 -> 0xFFFF55FF; case 5 -> 0xFF55FFEE;
+            case 6 -> 0xFF55AAFF; case 7 -> 0xFFFF3399; case 8 -> 0xFFFF3020;
+            default -> 0xFFFFF0C0;
         };
     }
 
