@@ -126,6 +126,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.BlightSetHandler.register(); // m272 夜蚀共鸣(套装百分比加成)
         com.yongye.system.CombatFxHandler.register(); // m239 沉浸式战斗手感(必须排在伤害过滤之后:被取消的伤害不出打击感)
         com.yongye.system.ComboHandler.register(); // m273 连击计数器(同口径:排在过滤/格挡之后,被取消的伤害不涨连击)
+        com.yongye.system.BossRageHandler.register(); // m274 BOSS 半血狂暴(阶段转换演出+变招)
         WeaponSkillFx.register(); // m255 武器技能特效编排器(混沌斩/吞噬/终焉的多帧大演出)
         WeaponSkillManager.init();
         com.yongye.system.LootCrateHandler.init(); // 战利品宝箱掉落(m245)
