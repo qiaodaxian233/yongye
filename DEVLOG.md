@@ -2490,3 +2490,8 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 四条强化入口全接线:enhanceFromInventory(背包一键)/EnhanceScreenHandler.applyUpgrade(界面)/EquipmentEnhanceRecipe(工作台,本就直加,仅 long 化)/AutoScrollHandler(自动卷轴深扫)。previewLevels 与 totalMaterialLevels 同步 long 化后钳 int——**10 亿面值 × 一叠 64 = 6.4e10,原裸 int 乘法/求和会先溢出**(m293 同款隐患,本笔审出四处全修)。
 - 贴图管线:作者原图自带 alpha,按 alpha>25 连通域切出十档包围盒 → 方形留 4% 边 → LANCZOS 缩 64×64 → alpha<25 清尘;肉眼核过渐变顺序与细节。模型 json×10(item/generated),lang 双语十条(强化石·平静之瞳 → 爆裂魔瞳),稀有度 1-3 普通/4-5 罕见/6-7 稀有/8-10 史诗,创造栏排在血核之后。
 - 零配置(仍 76)零新 API 零待编译验证(Rarity/appendTooltip/TooltipType 全在树先例)。
+
+## m295 强化石十合一向上合成(2026-07-24)
+- 定稿设计里的「10合1 向上合成」。3×3 工作台每格只扣 1 个、放不下 10 颗,故不走配方——改**右键整叠一次并完**:手持 N 颗第 t 档(t<10)右键,得 N/10 颗第 t+1 档,余数 N%10 留在手里;面值严格等值(10 颗 10^(t-1) = 1 颗 10^t),攒的小石头永远不废,顺手解决爆背包。
+- 10 档(爆裂魔瞳)到顶,右键提示不可再合成;不足 10 颗提示所需数量。合成产物 insertStack 进背包,满了掉脚下(SoulboundItemGuard 同款兜底)。ANVIL_USE 升调音效 + 金字 action bar 播报「X 颗 → Y 颗 上档名」。
+- tooltip 增加用法行(右键:整叠向上并);零配置(仍 76);零新 API 零待编译验证(use/TypedActionResult/insertStack/dropItem 全在树先例,照 SkillBookItem.use 口径)。

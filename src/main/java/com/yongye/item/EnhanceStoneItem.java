@@ -1,13 +1,19 @@
 package com.yongye.item;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
+import net.minecraft.util.TypedActionResult;
+import net.minecraft.world.World;
 
 import java.util.List;
-
 /**
  * 强化石(m294,作者供图十档"眼球"渐变,一图一档):
  * 面值 = 10^(档-1):1 / 10 / 100 / 1000 / 1万 / 10万 / 100万 / 1000万 / 1亿 / 10亿。
@@ -45,6 +51,47 @@ public class EnhanceStoneItem extends Item {
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
         tooltip.add(Text.literal("强化材料:一颗 = +" + cn(valueOf(tier)) + " 级(必得,不碎)")
                 .formatted(Formatting.GRAY));
+        if (tier < 10) {
+            tooltip.add(Text.literal("右键:整叠向上并——每 10 颗合成 1 颗上一档").formatted(Formatting.DARK_GRAY));
+        }
         tooltip.add(Text.literal("第 " + tier + "/10 档").formatted(Formatting.DARK_GRAY));
+    }
+
+    /**
+     * m295 十合一向上合成:右键把手上整叠一次并完——每 10 颗换 1 颗上一档,余数留在手里
+     * (面值 10 颗=上一档 1 颗,严格等值,小石头永远不废、顺手治爆背包)。10 档到顶不可再并。
+     */
+    @Override
+    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+        ItemStack stack = user.getStackInHand(hand);
+        if (world.isClient) {
+            return TypedActionResult.success(stack, true);
+        }
+        if (user instanceof ServerPlayerEntity player) {
+            if (tier >= 10) {
+                player.sendMessage(Text.literal("已是最高档强化石,不可再合成").formatted(Formatting.YELLOW), true);
+                return TypedActionResult.pass(stack);
+            }
+            int count = stack.getCount();
+            int up = count / 10;
+            if (up <= 0) {
+                player.sendMessage(Text.literal("需要 10 颗同档强化石才能合成上一档(当前 " + count + " 颗)")
+                        .formatted(Formatting.YELLOW), true);
+                return TypedActionResult.pass(stack);
+            }
+            int remain = count - up * 10;
+            stack.setCount(remain); // 余数留在手里(0 = 清空)
+            ItemStack made = new ItemStack(com.yongye.registry.ModItems.enhanceStone(tier + 1), up);
+            Text madeName = made.getName();
+            if (!player.getInventory().insertStack(made) && !made.isEmpty()) {
+                player.dropItem(made, false); // 背包满则掉脚下(灵魂绑定同款兜底)
+            }
+            world.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.BLOCK_ANVIL_USE, SoundCategory.PLAYERS, 0.7f, 1.5f);
+            player.sendMessage(Text.literal("强化石合成:" + (up * 10) + " 颗 → " + up + " 颗 ")
+                    .formatted(Formatting.GOLD).append(madeName.copy().formatted(Formatting.LIGHT_PURPLE)), true);
+            return TypedActionResult.success(stack, false);
+        }
+        return TypedActionResult.pass(stack);
     }
 }
