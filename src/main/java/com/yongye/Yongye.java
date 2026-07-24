@@ -98,6 +98,8 @@ public class Yongye implements ModInitializer {
         com.yongye.system.SummonerHandler.register();          // m223 召唤师:傀儡召唤/强化/寿命
         com.yongye.system.SummonFriendlyFireHandler.register(); // m299 召唤物免友伤(傀儡/肝帝/暗影分身)
         com.yongye.system.BossGuardHandler.register();          // m304 皮肤BOSS格挡条+攻击平衡
+        com.yongye.system.CandleDimension.register();           // m305 烛之维度:烛块门/传送
+        com.yongye.system.CandleSpawnHandler.register();        // m305 烛之维度:百倍刷怪+实体闸
         com.yongye.system.SurvivalRankHandler.register();
         com.yongye.system.NightfallWeatherHandler.register();
         com.yongye.system.NightfallVisionHandler.register();

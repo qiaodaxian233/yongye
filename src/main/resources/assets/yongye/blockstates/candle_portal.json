@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "yongye:block/candle_portal_ns"
+    },
+    "axis=z": {
+      "model": "yongye:block/candle_portal_ew"
+    }
+  }
+}

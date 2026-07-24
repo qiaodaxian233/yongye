@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 84; // ...m302 审计收口+1 · m304 BOSS格挡+6
+    public static final int CURRENT_CONFIG_VERSION = 85; // ...m304 BOSS格挡+6 · m305 烛之维度+7
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -255,6 +255,15 @@ public class YongyeConfig {
     public int bossGuardBreakTicks = 200;            // 破防窗口时长(tick,200=10秒),窗口结束格挡回满
     public double bossGuardBreakDamageMult = 1.25;   // 破防期间伤害额外倍率(1=仅全额无加成)
     public double bossHitCapFraction = 0.35;         // 攻击平衡:皮肤BOSS对玩家单击≤最大生命×此比例(0=关)
+
+    // ============ m305:烛之维度(烛块门/紫天/百倍刷怪+实体闸) ============
+    public boolean enableCandleDimension = true;     // 总开关:点门/传送/维度刷怪
+    public int candleDimSpawnIntervalTicks = 4;      // 每玩家刷怪波间隔(原版地表≈400t一波,4t≈百倍)
+    public int candleDimSpawnRadius = 40;            // 刷怪环带外半径(内固定12)
+    public int candleDimMaxNearbyHostiles = 120;     // 实体闸①:每玩家48格内敌对上限
+    public int candleDimGlobalMaxHostiles = 400;     // 实体闸②:全维度敌对硬预算
+    public int candleDimCleanupDistance = 96;        // 实体闸③:离所有玩家超此距离的敌对定期清除
+    public int candleDimFilterAlpha = 40;            // 淡紫滤镜浓度(0~160,0=关)
     public boolean stoneTopTierEliteOnly = true;     // 封顶期收口:普通怪不出最高档(降为次档),10亿石只从精英/BOSS 出
 
     // ============ m297:技能书 ×100 分五档(1/100/1万/100万/1亿),随石档折半爬 ============

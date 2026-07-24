@@ -320,6 +320,20 @@ public class YongyeClient implements ClientModInitializer {
                 ctx.drawTextWithShadow(mc.textRenderer, net.minecraft.text.Text.literal(bonus), x, y + 12, 0xFFB0C4FF);
             }
         });
+        // m305 烛之维度淡紫滤镜:身在 yongye:candle 即整屏罩一层淡紫(alpha 走配置)。
+        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player == null || mc.world == null) return;
+            if (mc.world.getRegistryKey() != com.yongye.system.CandleDimension.WORLD_KEY) return;
+            int a = Math.max(0, Math.min(160, com.yongye.YongyeConfig.get().candleDimFilterAlpha));
+            if (a == 0) return;
+            int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
+            ctx.fill(0, 0, w, h, (a << 24) | 0xB387FF);
+        });
+        // m305 门块走 cutout(贴图带透明孔)。待编译验证:BlockRenderLayerMap 仓库首用——报错删下面这行,
+        // 门块退回实心渲染,功能不受影响。
+        net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
+                com.yongye.registry.ModBlocks.CANDLE_PORTAL, net.minecraft.client.render.RenderLayer.getCutout());
         // m287 濒死危机演出:血量≤阈值 → 屏幕边缘血红渐晕随心跳呼吸(越残越浓越大),配监守者心跳音越残越急。
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();

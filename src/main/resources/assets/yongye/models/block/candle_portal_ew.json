@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/nether_portal_ew",
+  "textures": {
+    "portal": "yongye:block/candle_portal",
+    "particle": "yongye:block/candle_portal"
+  }
+}

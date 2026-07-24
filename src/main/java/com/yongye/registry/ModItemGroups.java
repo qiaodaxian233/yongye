@@ -70,6 +70,7 @@ public final class ModItemGroups {
             // 方块
             entries.add(ModBlocks.CATASTROPHE_CORE);
             entries.add(ModBlocks.BLIGHT_ORE);     // m264 蚀矿
+            entries.add(ModBlocks.CANDLE_BLOCK);   // m305 烛块(维度门框)
             entries.add(ModItems.BLIGHT_INGOT);    // m264 蚀锭
             entries.add(ModItems.BLIGHT_HELMET);   // m265 夜蚀套装
             entries.add(ModItems.BLIGHT_CHESTPLATE);

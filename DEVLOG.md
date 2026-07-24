@@ -2571,3 +2571,13 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **已知取舍(m208 同款既有行为)**:重放的伤害会再次经过其它 ALLOW_DAMAGE 观察者——连击等命中系对 BOSS 计两次;保留原伤害源不破坏击杀归属/处决口径,故不改。
 - 静态自查逮住一个错:五处实体嵌名替换少一个右括号(setName 层未闭),已修并逐文件配平复核。
 - 配置 +6,CURRENT_CONFIG_VERSION 83→84;零新 API 零待编译验证(ctx.fill=HudCompactMixin 在树/ITEM_SHIELD_BLOCK=ClassSkillHandler 在树/取消重放=m208 在树)。
+
+## m305 烛之维度:烛块门/紫天/淡紫滤镜/百倍刷怪+实体闸(2026-07-24)
+- 作者供「烛块」贴图并点名五件事:烛块搭地狱门形状打火石点燃进入 / 维度内淡紫滤镜 / 紫色天空 / 刷怪一百倍 / 但要实体优化。
+- **维度**:数据包三件套——dimension_type(固定正午 6000 亮堂展示紫天、床不炸、非 natural)、dimension(noise 生成用 minecraft:overworld 设定 + 固定群系)、biome candle_wastes(紫天 0x9C6CF0/紫雾/紫水,无降水无特征,原生 spawners 也配了高权重怪表)。
+- **烛块/门**:candle_block(作者图 LANCZOS→64,自发光,创造栏);candle_portal 门芯(无物品、无碰撞、AXIS 薄板照下界门口径,视觉模型直接 parent 原版 nether_portal_ns/ew 换贴图,程序化紫焰噪点带透明孔走 cutout);框失支撑连锁塌门。
+- **点燃**:UseBlockCallback——打火石右键烛块,点击面外一格空气起扫:沉底找内空矩形(宽 2~21 高 3~21),四边全烛块即整片填门 + 燧石音 + 紫字播报。
+- **传送**:门内碰撞、80t 冷却、双向 1:1 坐标;到达取地表,±24 格找现成门,没有就地搭一扇 4×5 烛块门(点好)+ 落脚台,保证能回。**非玩家实体不传送**——猎场怪涌回主世界会炸档,有意为之。
+- **百倍刷怪 + 实体优化**:原版地表刷怪≈每玩家 400t 一波;这里每玩家 candleDimSpawnIntervalTicks(默 4t)一波 1~3 只,恰约百倍;落点地表环带 12~40、无视亮度;亡灵出生戴皮革帽掉率 0(固定正午会点燃亡灵,帽子替它烧,husk 口径)。**三重实体闸**(NightfallHordeHandler 无全局闸拖崩 TPS 的教训,照 HardcoreSurvival 口径):①每玩家 48 格内 ≥120 停刷;②全维度 ≥400 硬预算;③每 100t discard 离所有玩家 >96 格的敌对。全部配置。
+- **滤镜**:HudRenderCallback 整屏淡紫 fill(candleDimFilterAlpha 默 40,0=关),与 m287 濒死渐晕同挂点同画法。
+- 配置 +7,CURRENT_CONFIG_VERSION 84→85。**待编译验证五处,各有独立退路**:①UseBlockCallback(player 事件模块在树=AttackEntityCallback,本类首用);②ServerPlayerEntity.teleport(ServerWorld,…) 跨维传送(原版标准方法,首用);③BlockRenderLayerMap cutout(报错删 YongyeClient 那一行,门退实心渲染);④CandlePortalBlock 一组 Block API 首用(HORIZONTAL_AXIS/noCollision/nonOpaque/getOutlineShape 等,全挂 @Override 编译期即验);⑤getStateForNeighborUpdate 签名(报错删该方法=门不自动塌,功能不受影响)。数据包 JSON 结构(1.21.1 biome/dimension 必填字段)也请 build 后进游戏首验。

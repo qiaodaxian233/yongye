@@ -30,6 +30,26 @@ public final class ModBlocks {
                     .requiresTool()
                     .luminance(s -> 5)));
 
+    /** m305 烛块(作者供图):搭地狱门形状,打火石点燃 → 烛之维度。自发光紫纹。 */
+    public static final Block CANDLE_BLOCK = register("candle_block",
+            new Block(AbstractBlock.Settings.create()
+                    .strength(2.0f)
+                    .luminance(s -> 9)));
+
+    /** m305 烛焰之门(门内芯):不可获得、无碰撞、自发光;逻辑见 CandlePortalBlock/CandleDimension。 */
+    public static final Block CANDLE_PORTAL = registerBlockOnly("candle_portal",
+            new com.yongye.block.CandlePortalBlock(AbstractBlock.Settings.create()
+                    .strength(-1.0f)
+                    .luminance(s -> 11)
+                    .dropsNothing()
+                    .noCollision()
+                    .nonOpaque()));
+
+    /** 只注册方块不发 BlockItem(门芯这类不可获得方块用)。 */
+    private static Block registerBlockOnly(String name, Block block) {
+        return Registry.register(Registries.BLOCK, Identifier.of(Yongye.MOD_ID, name), block);
+    }
+
     private static Block register(String name, Block block) {
         Block b = Registry.register(Registries.BLOCK, Identifier.of(Yongye.MOD_ID, name), block);
         Registry.register(Registries.ITEM, Identifier.of(Yongye.MOD_ID, name),
