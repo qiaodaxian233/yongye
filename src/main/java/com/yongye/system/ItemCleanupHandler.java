@@ -35,7 +35,22 @@ public final class ItemCleanupHandler {
             int interval = Math.max(1, cfg.itemCleanupIntervalMinutes) * TICKS_PER_MINUTE;
             long t = server.getTicks();
 
-            // 到点清理:首次在 first,之后每 interval 一次
+            // m335:分帧排水——待删队列每 tick 只删一小批,把瞬时卡顿摊平成无感
+            if (!PENDING.isEmpty()) {
+                int batch = Math.max(20, cfg.itemCleanupBatchPerTick);
+                while (batch-- > 0 && !PENDING.isEmpty()) {
+                    net.minecraft.entity.ItemEntity ie = PENDING.poll();
+                    if (ie != null && ie.isAlive()) { ie.discard(); CLEANED++; }
+                }
+                if (PENDING.isEmpty() && CLEANED > 0) {
+                    server.getPlayerManager().broadcast(
+                            Text.literal("【清理】已清除地面掉落物 " + CLEANED + " 个。").formatted(Formatting.GRAY), false);
+                    Yongye.LOGGER.info("[夜蚀] 定时清理掉落物:{} 个(分帧)", CLEANED);
+                    CLEANED = 0;
+                }
+            }
+
+            // 到点清理:首次在 first,之后每 interval 一次(只收集入队,不当场删)
             if (t >= first && (t - first) % interval == 0) {
                 doCleanup(server);
                 return;
@@ -68,22 +83,21 @@ public final class ItemCleanupHandler {
         server.getPlayerManager().broadcast(msg, overlay);
     }
 
+    /** m335:待删队列(分帧排水)与累计计数。 */
+    private static final java.util.ArrayDeque<ItemEntity> PENDING = new java.util.ArrayDeque<>();
+    private static int CLEANED = 0;
+
+    /** m335 改分帧:这里只**收集入队**(typed 查询替代全实体遍历,收集本身也快一个量级),
+     *  实际 discard 由 tick 侧每帧一小批排水——「提示一出来卡一下」的瞬时尖峰被摊平成无感。 */
     private static void doCleanup(MinecraftServer server) {
-        int total = 0;
+        int queued = 0;
         for (ServerWorld world : server.getWorlds()) {
-            // 先收集再删除,避免遍历途中结构性修改
-            List<ItemEntity> items = new ArrayList<>();
-            for (Entity e : world.iterateEntities()) {        // 待编译验证:ServerWorld.iterateEntities() 全实体遍历(失败则改用 getEntitiesByType(EntityType.ITEM, ...))
-                if (e instanceof ItemEntity ie && ie.isAlive()
-                        && !com.yongye.item.BlightArmorItem.isSoulbound(ie.getStack()))   // m281:灵魂绑定装备豁免清理
-                    items.add(ie);
+            for (ItemEntity ie : world.getEntitiesByType(net.minecraft.entity.EntityType.ITEM,
+                    e -> e.isAlive() && !com.yongye.item.BlightArmorItem.isSoulbound(e.getStack()))) { // m281 灵魂绑定豁免
+                PENDING.add(ie);
+                queued++;
             }
-            for (ItemEntity ie : items) { ie.discard(); total++; }
         }
-        if (total > 0) {
-            server.getPlayerManager().broadcast(
-                    Text.literal("【清理】已清除地面掉落物 " + total + " 个。").formatted(Formatting.GRAY), false);
-        }
-        Yongye.LOGGER.info("[夜蚀] 定时清理掉落物:{} 个", total);
+        Yongye.LOGGER.info("[夜蚀] 定时清理掉落物:已入队 {} 个,分帧删除中", queued);
     }
 }

@@ -63,6 +63,7 @@ public final class NightfallHordeHandler {
                 int want = Math.min(cfg.nightfallHordeBatch, localTarget - existing);
                 // 别一次补过全局预算余量,避免单 tick 把总量顶到上限后下一批继续涌
                 want = Math.min(want, cfg.globalMaxHostilesNearby - globalHostiles);
+                want = LagGuard.scale(world.getServer(), want);   // m335 卡顿护栏:按 MSPT 降量/跳波
                 if (want <= 0) continue;
 
                 int spawned = 0;

@@ -72,7 +72,8 @@ public final class CandleSpawnHandler {
                 if (nearby >= cfg.candleDimMaxNearbyHostiles) continue;
 
                 var r = world.getRandom();
-                int burst = 1 + r.nextInt(3);
+                int burst = LagGuard.scale(world.getServer(), 1 + r.nextInt(3));  // m335 卡顿护栏
+                if (burst <= 0) continue;
                 for (int i = 0; i < burst; i++) {
                     double ang = r.nextDouble() * Math.PI * 2;
                     double dist = 12 + r.nextDouble() * Math.max(1, cfg.candleDimSpawnRadius - 12);

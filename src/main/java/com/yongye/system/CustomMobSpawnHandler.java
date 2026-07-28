@@ -152,6 +152,7 @@ public final class CustomMobSpawnHandler {
             int globalHostiles = world.getEntitiesByClass(MobEntity.class, gbox,
                     m -> m.isAlive() && m instanceof Monster).size();
             if (globalHostiles >= cfg.globalMaxHostilesNearby) continue;
+            if (LagGuard.spawnFactor(world.getServer()) <= 0.0) continue;   // m335 卡顿硬闸:先让服务器喘气
 
             var r = world.getRandom();
             double dist = 14.0 + r.nextDouble() * 14.0;

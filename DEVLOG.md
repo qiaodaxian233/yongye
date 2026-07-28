@@ -2745,3 +2745,8 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **① 悬空卡怪**:支撑方块**正下方两格全空**(浮空平台/断桥;普通接地土柱不会触发)+ pillarCheeseMobRadius(16 格)内有敌对怪(和平建筑不误伤)→ 宽限 5s(半程 actionbar 警告)后每秒 -5% 最大生命(magic 源不吃护甲)。
 - **② 泡水躲怪**:连续泡水超 waterCheeseGraceTicks(60s,半程警告,离水清零)→ 每秒 -3% 最大生命,且每 5s 在身旁水里召 waterCheeseSummonCount 只溺尸索敌(走 MobEnhancementHandler 全套成长缩放,越后期越疼)。
 - 两机制跳过创造/旁观/骑乘;每秒一检零开销;配置 +9 全数值可调,**configVersion 100→101**。待编译验证:无(isTouchingWater/DROWNED/magic 源/refreshPositionAndAngles 全在树)。实机盯:浮空平台旁放只僵尸站 5s 看扣血、接地土柱不触发、泡水 60s 看溺尸出水+掉血、离水计时清零。
+
+## m335 性能护栏:清理分帧+卡顿节流刷怪(作者双点名,2026-07-28)
+- **清理卡顿修复**:旧 doCleanup 单 tick 全实体遍历+批量 discard=瞬时尖峰(「提示一出来卡一下」实为清理落地那一下)。改**分帧排水**:收集改 `getEntitiesByType(EntityType.ITEM,…)` typed 查询(快一个量级)只入队,tick 侧每帧删 itemCleanupBatchPerTick(默认 150)个,删完才播「已清除 N 个」;顺手消掉旧的 iterateEntities 待编译验证项。
+- **卡顿护栏 LagGuard**:以 `server.getAverageTickTime()`(yarn method_54832 已核)为准——MSPT≤soft(35ms)全量、soft~hard(48ms)线性降量、≥hard 本波跳过先喘气。接入三处波次刷怪:夜袭尸潮(want 缩放)/烛光域爆发(burst 缩放)/自定义 BOSS·精英投放(硬闸);**任务刷怪不节流**(据点守卫等任务必须能完成)。
+- 配置+4,**configVersion 101→102**;待编译验证:无(getEntitiesByType typed 全域查询为原版标准面,getServer/getAverageTickTime 均核过)。实机盯:清理到点看还卡不卡(应只见灰字无顿挫)、/forge tps 类工具压到 45ms+ 看尸潮明显变稀、松了自动回满。

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 101; // m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 102; // m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -254,6 +254,11 @@ public class YongyeConfig {
     public boolean enableNgPlus = true;              // m330 永夜+总开关(状态仍持久,关=倍率不生效)
     public double ngPlusMobMult = 2.0;               // m330 二周目怪物血/攻倍率(封顶后乘)
     public double ngPlusLootMult = 2.0;              // m330 二周目掉落倍率(概率与保底数量)
+    // ============ m335 性能护栏 ============
+    public boolean lagGuardEnabled = true;           // 卡顿护栏:按 MSPT 节流波次刷怪(尸潮/烛光域/自定义投放)
+    public double lagGuardSoftMspt = 35.0;           // 软阈值:低于全量,高于开始线性降量
+    public double lagGuardHardMspt = 48.0;           // 硬阈值:达到即本波跳过
+    public int itemCleanupBatchPerTick = 150;        // 掉落物清理每 tick 删除批量(分帧摊平尖峰)
     // ============ m334 反卡BUG(悬空卡怪/泡水躲怪) ============
     public boolean pillarCheesePunish = true;        // 悬空卡怪反制总开关
     public int pillarCheeseGraceTicks = 100;         // 宽限(5s):支撑块下两格悬空+附近有怪才计时
