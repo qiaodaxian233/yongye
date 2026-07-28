@@ -2676,3 +2676,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **设置屏**:照 DebugScreen 骨架(页签+4 列分区网格+clearAndInit 翻页,零新 API 面),两页把散落的观感项集中:①「镜头·特效」=打击震动(0/0.5/1/1.5)/BOSS 登场震/FOV 冲击/打击顿帧/战斗粒子/击杀闪光/击杀音效/刀光(开关·贴图·大小·亮度);②「姿态·怪物」=拔刀姿态/全身发力/姿态幅度/疾跑姿态(m316)/跑姿幅度/怪物红眼/怪物紫气/紫气浓度。
 - **机制**:每钮=sendCommand("yongye config set …")(与 DebugScreen/爆率编辑器同一条即时生效+写盘链路);shouldPause=false 边调边看;「返回背包」回父界面。
 - 零配置零版本号变更(本身就是设置 UI);待编译验证:无(全在树写法:Screens.getButtons/YongyeButton/ButtonWidget.builder/clearAndInit/sendCommand 均有先例)。实机盯:背包右侧見「设置」、两页签切换、点震动·关后挨打无震、跑姿开关即时生效、返回回背包。
+
+## m318 强化洗掉原生属性修复(作者实机截图:钻石甲+8护甲强化后只剩+0.3,2026-07-28)
+- **根因(已用 misode/mcmeta 1.21.1 官方数据 dump 实锤)**:1.21.1 原版装备的基础属性**不在 attribute_modifiers 组件里**(钻石胸甲默认组件 modifiers=[]),基础 +8/+2 挂在 `Item#getAttributeModifiers()` 上、仅当组件为空时兜底生效;强化显式 set 非空组件 → 兜底被绕过 → 原生数值蒸发。截图里槽位组从"穿在身上时"变"穿戴时"也是同一根因(armorSlotOf 在空基础里找不到胸甲槽只能回退通用槽)。
+- **修复**:新 `baseOf(Item)`——组件非空(模组物品出厂已写)用组件,否则取 `Item.getAttributeModifiers()`(方法名已按 FabricMC/yarn 1.21.1 官方映射核对,method_7844,零编译风险);`withLevel` 与 `kindOf` 改从它起算。**存量已洗坏的装备再强化任意一次即自愈**(withLevel 本就每次从基础重算)。
+- **深扒出的同根潜伏 bug 一并修好**:旧 `kindOf` 读空组件 → 原版剑/斧/三叉戟 hasDmg=false → 判 NONE **不可强化**;改 baseOf 后原版武器正常判 WEAPON 可强化、强化保留原生攻击力;盔甲槽位组回归"穿在身上时"等正确分组。
+- 零配置零版本号;待编译验证:无(getAttributeModifiers 已核官方映射)。实机盯:钻石甲强化+1 应显示 +8.3 护甲/+2.1 韧性/+1 生命(基础+加成同槽合并)、旧的坏甲再喂一颗石头自愈、原版钻石剑现在可强化且保留 +7 攻击。

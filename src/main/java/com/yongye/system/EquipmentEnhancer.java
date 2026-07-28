@@ -31,9 +31,22 @@ public final class EquipmentEnhancer {
 
     public enum Kind { WEAPON, ARMOR, HYBRID, NONE }
 
-    public static Kind kindOf(Item item) {
-        AttributeModifiersComponent def = new ItemStack(item)
+    /**
+     * m318:物品「真实基础属性」。1.21.1 的坑:原版装备的基础值**不在组件里**——钻石胸甲默认
+     * attribute_modifiers 组件是 {"modifiers":[]}(misode/mcmeta 1.21.1-summary 数据 dump 实锤),
+     * 基础 +8 护甲/+2 韧性挂在 {@code Item#getAttributeModifiers()} 上,仅当组件为空时由原版兜底生效。
+     * 一旦显式 set 非空组件,兜底被绕过 → 原生数值蒸发(作者钻石甲强化+1 只剩 +0.3 护甲的实机截图)。
+     * 所以任何"从基础起算"的逻辑都必须从这里取:组件非空(模组物品出厂已写入)用组件,否则用 Item 默认。
+     */
+    public static AttributeModifiersComponent baseOf(Item item) {
+        AttributeModifiersComponent comp = new ItemStack(item)
                 .getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS, AttributeModifiersComponent.DEFAULT);
+        if (!comp.modifiers().isEmpty()) return comp;   // 模组物品(本命武器/镇魂等):出厂写进组件
+        return item.getAttributeModifiers();            // 原版装备:基础值在 Item 上(yarn 1.21.1 已核映射)
+    }
+
+    public static Kind kindOf(Item item) {
+        AttributeModifiersComponent def = baseOf(item); // m318:改读真实基础(顺带修好原版剑/斧被判 NONE 不可强化)
         boolean hasArmor = false, hasDmg = false;
         for (AttributeModifiersComponent.Entry e : def.modifiers()) {
             if (e.attribute().equals(EntityAttributes.GENERIC_ARMOR)) hasArmor = true;
@@ -185,9 +198,9 @@ public final class EquipmentEnhancer {
 
         ItemStack pristine = new ItemStack(item);
 
-        // 从物品默认属性起算(不在已强化基础上继续叠)
-        AttributeModifiersComponent result = pristine
-                .getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS, AttributeModifiersComponent.DEFAULT);
+        // 从物品「真实基础属性」起算(不在已强化基础上继续叠):m318 修复——原版装备基础值不在组件里,
+        // 必须走 baseOf 合并 Item 默认,否则显式 set 组件后钻石甲 +8 护甲这类原生数值被洗掉
+        AttributeModifiersComponent result = baseOf(item);
 
         if (level > 0) {
             if (kind == Kind.WEAPON) {
