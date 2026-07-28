@@ -142,6 +142,11 @@ public class YongyeClient implements ClientModInitializer {
         // 守护界面:收到 S2C(右键守护书触发)即打开 WardScreen。
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenWardPayload.ID, (payload, context) ->
                 context.client().execute(() -> context.client().setScreen(new WardScreen())));
+        // m328 任务书:右键书 → 开界面;进度快照 → 刷新界面
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenQuestBookPayload.ID, (payload, context) ->
+                context.client().execute(() -> context.client().setScreen(new QuestBookScreen(null))));
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.MainQuestSyncPayload.ID, (payload, context) ->
+                context.client().execute(() -> QuestBookScreen.onSync(payload)));
 
         // 永夜同步:更新 HUD 状态
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.NightfallSyncPayload.ID, (payload, context) ->
@@ -620,6 +625,9 @@ public class YongyeClient implements ClientModInitializer {
                 // 合书:背包所有技能书/血量书按类型一键合并成一本(升级机制,免每级手搓;m323)
                 Screens.getButtons(screen).add(new YongyeButton(guiLeft + 176 + 4, guiTop + 5 + pitch, bw, bh,
                         Text.literal("合书"), b -> ClientPlayNetworking.send(new com.yongye.network.MergeBooksPayload())));
+                // 任务:主线任务书界面(m328,与右键任务书同款)
+                Screens.getButtons(screen).add(new YongyeButton(guiLeft + 176 + 4, guiTop + 5 + pitch * 2, bw, bh,
+                        Text.literal("任务"), b -> client.setScreen(new QuestBookScreen(screen))));
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(

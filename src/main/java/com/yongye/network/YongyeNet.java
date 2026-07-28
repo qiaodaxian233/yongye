@@ -125,6 +125,19 @@ public final class YongyeNet {
         });
         // 守护界面:S2C 开界面(右键守护书触发) + C2S 对指定背包槽位施加守护(服务端校验+扣书)
         PayloadTypeRegistry.playS2C().register(com.yongye.network.OpenWardPayload.ID, com.yongye.network.OpenWardPayload.CODEC);
+        // m328 任务书
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.OpenQuestBookPayload.ID, com.yongye.network.OpenQuestBookPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.MainQuestSyncPayload.ID, com.yongye.network.MainQuestSyncPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.RequestMainQuestPayload.ID, com.yongye.network.RequestMainQuestPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.ClaimMainQuestPayload.ID, com.yongye.network.ClaimMainQuestPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.RequestMainQuestPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.MainQuestLine.sync(p));
+        });
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ClaimMainQuestPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.MainQuestLine.claim(p));
+        });
         PayloadTypeRegistry.playC2S().register(com.yongye.network.WardApplyPayload.ID, com.yongye.network.WardApplyPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.WardApplyPayload.ID, (payload, context) -> {
             ServerPlayerEntity p = context.player();
@@ -180,6 +193,12 @@ public final class YongyeNet {
                     && !pl.getAttachedOrElse(ModAttachments.STARTING_CLASS_CHOSEN, false)) {
                 pl.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.CLASS_SELECT_BOOK));
                 pl.setAttached(ModAttachments.GOT_CLASS_BOOK, true);
+            }
+            // m328:首次发一本「任务书」(每人一次;进度在玩家身上,书仅是入口)
+            if (com.yongye.YongyeConfig.get().giveQuestBook
+                    && !pl.getAttachedOrElse(ModAttachments.GOT_QUEST_BOOK, false)) {
+                pl.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.QUEST_BOOK));
+                pl.setAttached(ModAttachments.GOT_QUEST_BOOK, true);
             }
             // 弹难度选择:世界难度还没设定、且本玩家是房主/OP(单机房主无需开作弊)时,首次进入弹一次;选定后全局锁定,其他人永不弹
             if (cfg.enableDifficultySelect && !com.yongye.system.DifficultyManager.isSet()

@@ -40,6 +40,9 @@ public final class ModItems {
     // —— 职业选择书:右键开全职业选择界面,选定本命职业(取代旧的登录强制弹窗) ——
     public static final Item CLASS_SELECT_BOOK = register("class_select_book",
             new com.yongye.item.ClassSelectBookItem(new Item.Settings().maxCount(1)));
+    /** m328 任务书:右键打开主线任务界面(进度存玩家附件,书丢不丢进度)。 */
+    public static final Item QUEST_BOOK = register("quest_book",
+            new com.yongye.item.QuestBookItem(new Item.Settings().maxCount(1).rarity(net.minecraft.util.Rarity.UNCOMMON)));
 
     // —— 强化保护卷(m159):右键使用,挡下一次强化失败导致的碎裂。无法合成,仅掉落/杀怪兑换 ——
     public static final Item ENHANCE_PROTECT_SCROLL = register("enhance_protect_scroll",

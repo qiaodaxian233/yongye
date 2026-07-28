@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 96; // m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 97; // m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -250,6 +250,8 @@ public class YongyeConfig {
     public boolean summonFriendlyFireImmune = true;  // 玩家(横扫/误点/弹射物)打不伤己方召唤物:傀儡/肝帝/暗影分身
     // ============ m300:击杀归属 ============
     public boolean summonKillsCreditOwner = true;    // 召唤物(傀儡/肝帝/暗影分身)击杀记主人:看板/掉落/保护卷/贪婪/任务/蚀域全口径
+    public boolean enableMainQuest = true;           // m328 主线任务书(16 阶段,终点=讨伐末影龙)
+    public boolean giveQuestBook = true;             // m328 首次进服发任务书(每人一次)
     public double questFleeWeight = 0.35;            // m325 逃离/走格任务抽取权重(其余类型各1.0;调0=不再派)
     public boolean healthKeepRatio = true;           // m326 最大生命变化时按百分比保血(切武器不再血条跳变)
     public int sprintWeaponStyle = 2;                // m327 疾跑武器样式:0=原版持刀 1=收背后(旧) 2=拖刀(新默认)

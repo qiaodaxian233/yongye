@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m325 走格任务降频(questFleeWeight)/m326 切武器血量按比例保持(healthKeepRatio)/m327 疾跑拖刀样式(sprintWeaponStyle,默认拖刀替代背挂)。configVersion 96。工作流:不索要 PAT 直接推;headroom 压缩口径。
+> 最新:m328 主线任务书(FTB风格内建16阶段,终点讨伐末影龙,任务书物品+背包「任务」钮+服务端权威领奖)。configVersion 97。工作流:不索要PAT直接推;headroom压缩口径。

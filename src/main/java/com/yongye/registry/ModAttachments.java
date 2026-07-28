@@ -30,6 +30,36 @@ public final class ModAttachments {
                     .initializer(() -> 0L)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "auto_book_until"));
 
+    // ============ m328 主线任务书 ============
+    public static final AttachmentType<Integer> MAIN_QUEST_STAGE =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "main_quest_stage"));
+    public static final AttachmentType<Long> MAIN_KILLS =
+            AttachmentRegistry.<Long>builder()
+                    .persistent(Codec.LONG).initializer(() -> 0L).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "main_kills"));
+    public static final AttachmentType<Integer> MAIN_ELITE_KILLS =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "main_elite_kills"));
+    public static final AttachmentType<Integer> MAIN_BOSS_KILLS =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "main_boss_kills"));
+    public static final AttachmentType<Boolean> MAIN_PAIN_SLAIN =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL).initializer(() -> false).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "main_pain_slain"));
+    public static final AttachmentType<Boolean> MAIN_DRAGON_SLAIN =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL).initializer(() -> false).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "main_dragon_slain"));
+    public static final AttachmentType<Boolean> GOT_QUEST_BOOK =
+            AttachmentRegistry.<Boolean>builder()
+                    .persistent(Codec.BOOL).initializer(() -> false).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "got_quest_book"));
+
     public static final AttachmentType<Integer> LEARNED_HEALTH =
             AttachmentRegistry.<Integer>builder()
                     .persistent(Codec.INT)
