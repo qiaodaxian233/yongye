@@ -3,7 +3,7 @@
   "id": "yongye",
   "version": "${version}",
   "name": "夜蚀 NightBlight",
-  "description": "《夜蚀》——极难灾变生存玩法：白天跑图，夜晚逃命，永夜追杀，靠装备血量、技能书(V65535)、背包神器与随机掉落反向变强。Fabric 1.21.1。",
+  "description": "《夜蚀》——极难灾变生存。白天跑图搜刮，夜晚逃命，永夜降临后全图追杀；怪物随天数反向进化，你靠装备、血量、技能书与专属夜蚀套装无限强化，用拔刀连招、格挡弹反、处决斩杀正面硬刚。Fabric 1.21.1。",
   "authors": ["qiaodaxian233"],
   "contact": {
     "homepage": "https://github.com/qiaodaxian233/yongye",

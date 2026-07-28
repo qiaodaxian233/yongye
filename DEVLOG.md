@@ -2654,3 +2654,6 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 作者提供新版《夜蚀》圆形徽标(源 377×377 RGBA,月蚀+紫黑城塞主题)。按仓库既有规格 Lanczos 升采样到 **512×512**、optimize 压缩后覆盖 `assets/yongye/icon.png`。
 - **纯资源改动**:`fabric.mod.json` 的 `icon` 字段路径不变(仍 `assets/yongye/icon.png`),零代码、零配置,configVersion **不变(89)**。
 - 验证:进游戏 mods 列表即显新图;圆形徽标自带深色外环,深色 mods 背景下同样清晰。嫌太大/太小只需重存不同尺寸覆盖同名文件,不用改代码。
+
+## m314 mod 介绍改写(作者点名,2026-07-28)
+- `fabric.mod.json` description 重写:保留"白天跑图/夜晚逃命/永夜追杀"核心钩子,精简堆砌,补入帅气战斗卖点(拔刀连招/格挡弹反/处决),删除突兀的 `技能书(V65535)`/封顶数字,统一为"无限强化"(作者点名删封顶)。纯元数据,零代码零配置,configVersion 不变(89)。
