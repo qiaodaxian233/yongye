@@ -638,6 +638,13 @@ public class YongyeClient implements ClientModInitializer {
             }
         });
 
+        // m322:无直接配方物品的「获取:」提示(集中式 SourceHints;itemSourceTooltips 可关)
+        ItemTooltipCallback.EVENT.register((stack, ctx, type, lines) -> {
+            if (!com.yongye.YongyeConfig.get().itemSourceTooltips) return;
+            String src = SourceHints.of(stack.getItem());
+            if (src != null) lines.add(Text.literal("获取:" + src).formatted(Formatting.DARK_GRAY));
+        });
+
         // 武器主动技能按键(默认 R / G / V)→ 发包给服务端施放
         KeyBinding[] skillKeys = new KeyBinding[]{
                 KeyBindingHelper.registerKeyBinding(new KeyBinding(
