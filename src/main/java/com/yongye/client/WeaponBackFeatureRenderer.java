@@ -39,12 +39,14 @@ public class WeaponBackFeatureRenderer
 
     /** 收刀条件(渲染背挂与藏手共用):开关开 + 疾跑 + 不在挥击 + 主手是武器。 */
     public static boolean shouldSheath(AbstractClientPlayerEntity p) {
-        if (!YongyeConfig.get().weaponOnBackEnabled) return false;
+        YongyeConfig cfg = YongyeConfig.get();
+        if (!cfg.weaponOnBackEnabled || cfg.sprintWeaponStyle != 1) return false; // m327:仅「背后」样式走收刀
         if (!p.isSprinting() || p.handSwinging) return false;
         return isWeapon(p.getMainHandStack());
     }
 
-    private static boolean isWeapon(ItemStack stack) {
+    /** m327 改 public:拖刀姿态(SlashPoseMixin)复用同一套武器判定。 */
+    public static boolean isWeapon(ItemStack stack) {
         if (stack.isEmpty()) return false;
         var item = stack.getItem();
         return item instanceof SwordItem || item instanceof AxeItem || item instanceof TridentItem

@@ -39,6 +39,8 @@ public final class PlayerUpkeepHandler {
 
     /** 重生满血窗口:uuid -> 剩余 tick。 */
     private static final Map<UUID, Integer> RESPAWN_HEAL = new HashMap<>();
+    /** m326:上帧最大生命(比例保持用)。 */
+    private static final Map<UUID, Float> LAST_MAX = new HashMap<>();
     /** 携带加成已镜像的修饰记录:uuid -> (属性, 派生修饰id),用于下次刷新前撤销。 */
     private static final Map<UUID, List<ModRef>> CARRY_APPLIED = new HashMap<>();
 
@@ -61,6 +63,21 @@ public final class PlayerUpkeepHandler {
                     p.setHealth(p.getMaxHealth());  // 随 max 一起补满
                     int left = en.getValue() - 1;
                     if (left <= 0) it.remove(); else en.setValue(left);
+                }
+            }
+
+            // —— m326:血量按比例保持——最大生命变化(切武器/学书/惩罚)时当前血按百分比缩放,
+            //    不再出现"切个武器血条瞬间掉一截/涨上限却显得残血"的跳变(healthKeepRatio 可关)——
+            if (YongyeConfig.get().healthKeepRatio) {
+                for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                    if (!p.isAlive() || RESPAWN_HEAL.containsKey(p.getUuid())) { LAST_MAX.put(p.getUuid(), p.getMaxHealth()); continue; }
+                    float max = p.getMaxHealth();
+                    Float last = LAST_MAX.get(p.getUuid());
+                    if (last != null && last > 0.01f && Math.abs(max - last) > 0.01f) {
+                        float ratio = p.getHealth() / last;
+                        p.setHealth(Math.max(1.0f, Math.min(max, max * ratio)));
+                    }
+                    LAST_MAX.put(p.getUuid(), max);
                 }
             }
 

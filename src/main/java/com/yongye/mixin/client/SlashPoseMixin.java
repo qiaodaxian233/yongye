@@ -153,11 +153,26 @@ public abstract class SlashPoseMixin {
         m.head.pitch += -bPitch;
 
         if (!slashActive) {
-            // ④ 屈肘泵臂:前置 −27° 肘弯错觉 + 同频加幅(原版 1.0 rad → ~1.55)+ 微外张 ±5°
-            m.rightArm.pitch += (-0.48f + MathHelper.cos(L + PI) * 0.55f) * A;
-            m.leftArm.pitch  += (-0.48f + MathHelper.cos(L) * 0.55f) * A;
-            m.rightArm.roll  +=  0.09f * A;
-            m.leftArm.roll   += -0.09f * A;
+            boolean trail = cfg.sprintWeaponStyle == 2 && entity instanceof PlayerEntity pl
+                    && com.yongye.client.WeaponBackFeatureRenderer.isWeapon(pl.getMainHandStack());
+            if (trail) {
+                // m327 拖刀疾跑:持械臂后下伸展、刀面外翻拖在身侧后方(动漫冲刺经典),副手加倍泵臂补节奏
+                boolean right = entity.getMainArm() == Arm.RIGHT;
+                ModelPart mainA = right ? m.rightArm : m.leftArm;
+                ModelPart offA  = right ? m.leftArm  : m.rightArm;
+                float d = right ? 1f : -1f;
+                mainA.pitch += 0.55f * A;                 // 向后下拖
+                mainA.yaw   += -0.12f * d * A;            // 微外展离胯
+                mainA.roll  += 0.30f * d * A;             // 刀面外翻更飒
+                offA.pitch  += (-0.48f + MathHelper.cos(right ? L : L + PI) * 0.75f) * A; // 相位=原版该臂
+                offA.roll   += (right ? -0.09f : 0.09f) * A;
+            } else {
+                // ④ 屈肘泵臂:前置 −27° 肘弯错觉 + 同频加幅(原版 1.0 rad → ~1.55)+ 微外张 ±5°
+                m.rightArm.pitch += (-0.48f + MathHelper.cos(L + PI) * 0.55f) * A;
+                m.leftArm.pitch  += (-0.48f + MathHelper.cos(L) * 0.55f) * A;
+                m.rightArm.roll  +=  0.09f * A;
+                m.leftArm.roll   += -0.09f * A;
+            }
         }
         // 腿:步幅加大一脚(原版 1.4 → ~1.7 rad)+ 前倾配重 −5° + 微分腿 ±2°(MoBends legs −5°+rotZ±2°)
         m.rightLeg.pitch += (-0.09f + MathHelper.cos(L) * 0.30f) * A;

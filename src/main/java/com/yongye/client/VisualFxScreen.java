@@ -97,6 +97,9 @@ public class VisualFxScreen extends Screen {
                             new Btn("跑姿·收敛0.7", "yongye config set sprintPoseScale 0.7"),
                             new Btn("跑姿·默认1.0", "yongye config set sprintPoseScale 1.0"),
                             new Btn("跑姿·夸张1.4", "yongye config set sprintPoseScale 1.4"),
+                            new Btn("跑时武器·拖刀", "yongye config set sprintWeaponStyle 2"),
+                            new Btn("跑时武器·背后", "yongye config set sprintWeaponStyle 1"),
+                            new Btn("跑时武器·原版", "yongye config set sprintWeaponStyle 0"),
                     }),
                     new Section("怪物观感(红眼 / 紫气)", new Btn[]{
                             new Btn("怪物红眼·开", "yongye config set zombieRedEyes true"),

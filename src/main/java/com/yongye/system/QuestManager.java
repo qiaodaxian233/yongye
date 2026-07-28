@@ -244,10 +244,21 @@ public final class QuestManager {
         boolean combatOk = NightfallManager.getLevel() >= YongyeConfig.get().questHuntEliteMinNightfall
                 && day >= YongyeConfig.get().eliteStartDay; // 第3天前不派需要精英/据点的任务
         if (combatOk) {
-            return Type.values()[rnd.nextInt(Type.values().length)];
+            return roll(rnd, Type.values());
         }
         Type[] early = { Type.FLEE, Type.SURVIVE, Type.GATHER };
-        return early[rnd.nextInt(early.length)];
+        return roll(rnd, early);
+    }
+
+    /** m325:加权抽取——FLEE(逃离/走格)按 questFleeWeight(默认 0.35)降频,其余各 1.0(作者:走格任务太多)。 */
+    private static Type roll(net.minecraft.util.math.random.Random rnd, Type[] pool) {
+        double fw = Math.max(0.0, YongyeConfig.get().questFleeWeight);
+        double total = 0;
+        for (Type t : pool) total += (t == Type.FLEE ? fw : 1.0);
+        if (total <= 0) return pool[rnd.nextInt(pool.length)];
+        double r = rnd.nextDouble() * total;
+        for (Type t : pool) { r -= (t == Type.FLEE ? fw : 1.0); if (r < 0) return t; }
+        return pool[pool.length - 1];
     }
 
     public static void assign(ServerPlayerEntity player, Type type) {
