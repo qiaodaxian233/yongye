@@ -14,11 +14,11 @@ import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.Identifier;
 
 /**
- * m310(作者点名):所有僵尸——僵尸/尸壳/溺尸/僵尸村民——眼睛变红 + 周身冒紫色魔粒。
+ * m310(作者点名):所有僵尸——僵尸/尸壳/溺尸/僵尸村民——眼睛变红。
+ * m311(作者点名)分档:普通僵尸浅红微光,精英僵尸深红强光;紫气移交 {@link MobAuraFeatureRenderer}(全怪分档)。
  *
  * <p>红眼 = 一张除眼睛全透明的叠层贴图,按 m280 精英叠皮同款方式在原模型上重渲一层;
  * 用发光眼层(蜘蛛眼同款)+ 满亮 lightmap,黑夜里也是两点红光——夜蚀世界的僵尸该有的样子。
@@ -29,16 +29,22 @@ import net.minecraft.util.Identifier;
 @Environment(EnvType.CLIENT)
 public class ZombieRedEyesFeatureRenderer<T extends Entity, M extends EntityModel<T>> extends FeatureRenderer<T, M> {
 
-    private static final Identifier ZOMBIE_EYES =
+    /** 深红·强光(精英) / 浅红·微光(普通),m311 按怪分档 */
+    private static final Identifier ZOMBIE_EYES_DEEP =
             Identifier.of(Yongye.MOD_ID, "textures/entity/zombie_red_eyes.png");
-    private static final Identifier VILLAGER_EYES =
+    private static final Identifier ZOMBIE_EYES_LIGHT =
+            Identifier.of(Yongye.MOD_ID, "textures/entity/zombie_red_eyes_light.png");
+    private static final Identifier VILLAGER_EYES_DEEP =
             Identifier.of(Yongye.MOD_ID, "textures/entity/zombie_villager_red_eyes.png");
+    private static final Identifier VILLAGER_EYES_LIGHT =
+            Identifier.of(Yongye.MOD_ID, "textures/entity/zombie_villager_red_eyes_light.png");
 
-    private final Identifier tex;
+    private final Identifier texLight, texDeep;
 
     public ZombieRedEyesFeatureRenderer(FeatureRendererContext<T, M> context, boolean villagerLayout) {
         super(context);
-        this.tex = villagerLayout ? VILLAGER_EYES : ZOMBIE_EYES;
+        this.texLight = villagerLayout ? VILLAGER_EYES_LIGHT : ZOMBIE_EYES_LIGHT;
+        this.texDeep = villagerLayout ? VILLAGER_EYES_DEEP : ZOMBIE_EYES_DEEP;
     }
 
     @Override
@@ -49,19 +55,15 @@ public class ZombieRedEyesFeatureRenderer<T extends Entity, M extends EntityMode
         YongyeConfig cfg = YongyeConfig.get();
 
         if (cfg.zombieRedEyes) {
-            // 【待编译验证】RenderLayer.getEyes(蜘蛛眼同款发光层,标准API首用;
-            //   报错把下一行换成 RenderLayer.getEntityCutoutNoCull(tex)——不叠加发光但满亮照样红)
-            VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEyes(tex));
+            // m311:精英(名字含「精英」,与 EliteSkinFeatureRenderer 同判)深红强光,普通浅红微光
+            boolean elite = living.hasCustomName() && living.getCustomName() != null
+                    && living.getCustomName().getString().contains("精英");
+            // RenderLayer.getEyes 已全绿(m310 编译通过)
+            VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEyes(elite ? texDeep : texLight));
             // 0xF000F0 = 满亮 lightmap:再黑的夜,眼睛也是红的
             getContextModel().render(matrices, vc, 0xF000F0, OverlayTexture.DEFAULT_UV, 0xFFFFFFFF);
         }
 
-        // 紫色魔粒:每帧小概率一粒(约每秒数粒),只有被渲染(=看得见)的僵尸才冒,自动就近削减
-        if (cfg.zombiePurpleAura && living.getRandom().nextFloat() < 0.16f) {
-            double px = living.getX() + (living.getRandom().nextDouble() - 0.5) * living.getWidth() * 1.1;
-            double py = living.getY() + living.getRandom().nextDouble() * living.getHeight();
-            double pz = living.getZ() + (living.getRandom().nextDouble() - 0.5) * living.getWidth() * 1.1;
-            living.getWorld().addParticle(ParticleTypes.WITCH, px, py, pz, 0, 0.03, 0);
-        }
+        // m311:紫气不再在此发射——移交 MobAuraFeatureRenderer 全怪分档(普通轻微/精英中等/BOSS高等)
     }
 }

@@ -2626,3 +2626,26 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 配置 +2(zombieRedEyes/zombiePurpleAura 均默开),configVersion **87→88**(与 m309 合并一次落盘)。
 - 待编译验证 2 处低险:`RenderLayer.getEyes`(蜘蛛眼同款标准 API 首用;报错换 getEntityCutoutNoCull(tex) 一行=不叠加发光但满亮照样红)、`World.addParticle`+`ParticleTypes.WITCH`(客户端标准粒子入口/原版常量;报错删紫光段)。
 - 已知取舍:僵尸村民眼位按村民 UV 推算,若实机偏 1px 改贴图像素即正(纯资源);溺尸外层贴图若恰在眼前有不透明像素可能局部遮红眼,实机看。
+## m311+m312:全怪紫气分档+分档红眼 · 看板默认位改版(作者点名,2026-07-28)
+
+**作者原话**:普通怪物眼睛浅红色、精英深红色;普通怪物带轻微紫气、精英中等、BOSS 高等,要注意优化;hudInfoAnchor=1 / hudInfoOffsetX=-2 / hudInfoOffsetY=14 设成默认。
+
+### m311 全怪紫气分档 + 僵尸红眼分档
+- **红眼分档**(仅僵尸系,m310 的四类):普通=浅红微光(255,120,105,α70)新贴图 `*_light.png`;精英=深红强光(185,0,12,α165)原两张就地重上色。判定与 EliteSkinFeatureRenderer 同口径(名字含「精英」)。RenderLayer.getEyes 已全绿。
+- **紫气全怪化**:m310 僵尸专属紫气段删除,移交新建 `MobAuraFeatureRenderer`(挂所有活体、内部分档):
+  - 档位:BOSS=五只皮肤 BOSS 实体类或名含佩恩/长门/HIM/「 BOSS」;精英=名含「精英」或毒液蜘蛛/巨蟹;普通=其余 Monster;非敌对零开销返回。
+  - 密度:普通≈2粒/秒、精英≈6粒/秒(带补粒)、BOSS≈18粒/秒+贴体双螺旋盘升(age 驱动,出场演出同款母题)。
+  - **优化三板斧**(作者点名):渲染驱动(看不见=不冒)+ 距离裁剪(16/32/64 格)+ 概率限流;纯客户端 WITCH 粒,零网络零服务端。
+- 配置:zombiePurpleAura 语义扩为全怪总开关;新增 `mobAuraScale`(0~4 密度倍率,默认 1)。
+
+### m312 看板出厂默认改版
+- hudInfoAnchor 0→**1(左上)**、hudInfoOffsetX 0→**-2**、hudInfoOffsetY 0→**14**;照 m214/m222 老口径迁移——仅当三项均仍为旧默认(0,0,0)时改成新默认,自定义不动。
+- configVersion **88→89**(m311 +1 字段与 m312 合并一次落盘)。
+
+### 待编译验证
+零新 API:getEyes/addParticle/WITCH(m310 全绿)、squaredDistanceTo/Entity.age/Monster/HostileEntity 均有在树先例;实体类 instanceof 为项目自有类。理论直接绿。
+
+### 已知取舍
+- 红眼分档仍限僵尸系——其他怪没有眼位叠层贴图(各模型 UV 不同,要做需逐模型画眼,另立里程碑)。
+- 隐身怪不冒紫气(渲染驱动天然如此);紫气密度按 60fps 估算,低帧机器上会等比例变淡(不是变卡),属可接受方向。
+

@@ -74,6 +74,12 @@ public class YongyeClient implements ClientModInitializer {
                     }
                 });
 
+        // m311 全怪紫气分档:普通轻微/精英中等/BOSS高等——挂在所有活体上,渲染器内部自判档位,
+        // 非敌对直接零开销返回;渲染驱动=只有看得见的怪才冒,加距离裁剪+概率限流(注释详见类头)
+        LivingEntityFeatureRendererRegistrationCallback.EVENT.register(
+                (entityType, entityRenderer, registrationHelper, context) ->
+                        registrationHelper.register(new MobAuraFeatureRenderer(entityRenderer)));
+
         // 自定义末影龙 BOSS 的 GeckoLib 渲染器
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
                 com.yongye.registry.ModEntities.TORO_ENDER_DRAGON,
