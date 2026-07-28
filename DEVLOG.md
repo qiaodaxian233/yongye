@@ -2772,3 +2772,12 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 
 ## m340 强化转移按钮(作者点名,2026-07-28)
 - 背包外列第 6 钮「转移」= /yongye transfer 同款(主手来源→副手目标);外列 6+内列 6 对称收官。
+
+## m341 验证报告 P0~P3 全修 + 皮肤BOSS阶梯解锁(作者实测报告,2026-07-29)
+- **P0 客户端硬崩**:BossBarStyleMixin 内部类 Group/Style 被运行时类加载(Mixin 禁止 mixin 包内类被直接加载,crash-2026-07-29_01.53.05 实锤)→ 移出为 `client/BossBarStyles`(public 嵌套 Style record + Group),mixin 改嵌套类 import,包内引用名不变改动最小。
+- **P1 反卡系统双倍**:Yongye.init 两处 AntiCheeseHandler.register() → 删无注释那条,悬空/泡水反制不再双份 tick/伤害/召怪。
+- **P2 选职包伪造**:ChooseClassPayload 改**先验书后选职**(创造豁免;无书红字拒绝),伪造裸包不再能白嫖选职+开局武器;成功后按 slot 精确扣书。
+- **P3 强化继承 shift-click 断路**:装备槽已占时,已强化装备 shift 自动落**材料槽**走继承(与 canInsert 同一判定),不再直接吞点击。
+- **P3 召唤师补丁收尾**:补 `class_weapon_summoner.json` 配方(魂晶×4+碎片×4+铁块=傀儡核意象,镜像术士版式);ModCommands 错误提示补 summoner。
+- **皮肤 BOSS 阶梯解锁(作者:「第六天开始一天解锁一个」)**:红蛛 D6 → 死亡法师 D7 → 凤凰 D8 → 托罗龙 D9 → 阿努比斯 D10(弱→强压轴);替换 m339 的统一 5 天口径,迁移含 m339 短暂值(5)与更早旧默认(12/14/16/10)全部归位,自定义不动。**configVersion 106→107**。
+- 作者侧 gradle clean build 已通过;本轮改动待编译验证:无(纯移动/删重/逻辑序调整)。实机盯:客户端能进主界面(P0)、泡水掉血速率回单倍(P1)、无书发包被拒(P2)、强化屏 shift 已强化装备入材料槽(P3)、第 6~10 天每天多一位新面孔。

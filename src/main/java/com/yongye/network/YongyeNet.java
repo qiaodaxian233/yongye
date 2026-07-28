@@ -92,13 +92,19 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> {
                 com.yongye.item.PlayerClass c = com.yongye.item.PlayerClass.byId(payload.classId());
-                if (c != null && com.yongye.system.ClassManager.chooseStartingClass(p, c)) {
-                    // 选职成功:消耗背包里一本「职业选择书」(若有)
-                    net.minecraft.entity.player.PlayerInventory inv = p.getInventory();
-                    for (int i = 0; i < inv.size(); i++) {
-                        net.minecraft.item.ItemStack s = inv.getStack(i);
-                        if (s.getItem() == com.yongye.registry.ModItems.CLASS_SELECT_BOOK) { s.decrement(1); break; }
-                    }
+                if (c == null) return;
+                // m341(P2):先验书后选职——伪造裸包不再能白嫖选职+开局武器(创造模式豁免)
+                net.minecraft.entity.player.PlayerInventory inv = p.getInventory();
+                int bookSlot = -1;
+                for (int i = 0; i < inv.size(); i++) {
+                    if (inv.getStack(i).getItem() == com.yongye.registry.ModItems.CLASS_SELECT_BOOK) { bookSlot = i; break; }
+                }
+                if (!p.isCreative() && bookSlot < 0) {
+                    p.sendMessage(net.minecraft.text.Text.literal("选职需要「职业选择书」").formatted(net.minecraft.util.Formatting.RED), true);
+                    return;
+                }
+                if (com.yongye.system.ClassManager.chooseStartingClass(p, c)) {
+                    if (!p.isCreative() && bookSlot >= 0) inv.getStack(bookSlot).decrement(1);
                 }
             });
         });

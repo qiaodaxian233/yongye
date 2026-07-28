@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 106; // m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 107; // m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -785,7 +785,7 @@ public class YongyeConfig {
 
     // 野生末影龙 BOSS:第 N 天起有几率在玩家头顶高空刷出(会飞、追杀,跟末地那条差不多)
     public boolean enableWildDragonSpawn = true;
-    public int wildDragonMinDay = 5;  // m339                 // 第几天起才可能刷(游戏天数)
+    public int wildDragonMinDay = 9;  // m341 阶梯解锁                 // 第几天起才可能刷(游戏天数)
     public double wildDragonSpawnChance = 0.05;       // 每次检定的刷出概率
     public int wildDragonCheckIntervalTicks = 6000;   // 每隔多少 tick 检定一次(6000=5分钟)
     public int wildDragonMaxAlive = 1;                // 全服同时存活上限(稀有 BOSS 事件)
@@ -812,7 +812,7 @@ public class YongyeConfig {
     /** 阿努比斯自然降临总开关。 */
     public boolean enableAnubisSpawn = true;
     /** 第几天起才可能降临(游戏天数)。 */
-    public int anubisMinDay = 5;      // m339
+    public int anubisMinDay = 10;     // m341 最强压轴
     /** 每次检定的降临概率。 */
     public double anubisSpawnChance = 0.03;
     /** 每隔多少 tick 检定一次(6000=5分钟)。 */
@@ -826,15 +826,15 @@ public class YongyeConfig {
     /** 每隔多少 tick 检定一次(1200=1分钟;BOSS/精英共用该节拍,各自概率独立)。 */
     public int customMobCheckIntervalTicks = 1200;
     /** BOSS·红蜘蛛:第几天起 / 每次检定概率 / 全服存活上限。 */
-    public int redSpiderMinDay = 12;
+    public int redSpiderMinDay = 6;   // m341:第6天起一天解锁一只(弱→强)
     public double redSpiderSpawnChance = 0.012;
     public int redSpiderMaxAlive = 1;
     /** BOSS·死亡法师:第几天起 / 每次检定概率 / 全服存活上限。 */
-    public int deathMageMinDay = 14;
+    public int deathMageMinDay = 7;
     public double deathMageSpawnChance = 0.010;
     public int deathMageMaxAlive = 1;
     /** BOSS·浴火凤凰:第几天起 / 每次检定概率 / 全服存活上限(高空刷出)。 */
-    public int phoenixMinDay = 16;
+    public int phoenixMinDay = 8;
     public double phoenixSpawnChance = 0.008;
     public int phoenixMaxAlive = 1;
     /** 精英·毒液蜘蛛:第几天起 / 逐玩家每次检定概率 / 玩家附近48格同类上限。 */
@@ -1393,8 +1393,12 @@ public class YongyeConfig {
                 // m338/m339:蚀域第1天+皮肤BOSS第5天+BOSS全线加强;仅当仍为旧默认时迁移,自定义不动
                 if (INSTANCE.blightStartDay == 12 || INSTANCE.blightStartDay == 11) INSTANCE.blightStartDay = 1;
                 if (INSTANCE.mobBossStartDay == 10) INSTANCE.mobBossStartDay = 5;
-                if (INSTANCE.anubisMinDay == 10) INSTANCE.anubisMinDay = 5;
-                if (INSTANCE.wildDragonMinDay == 10) INSTANCE.wildDragonMinDay = 5;
+                // m341:皮肤BOSS阶梯解锁(第6天起一天一只,弱→强);旧默认(含 m339 短暂的 5)均迁移
+                if (INSTANCE.redSpiderMinDay == 12) INSTANCE.redSpiderMinDay = 6;
+                if (INSTANCE.deathMageMinDay == 14) INSTANCE.deathMageMinDay = 7;
+                if (INSTANCE.phoenixMinDay == 16) INSTANCE.phoenixMinDay = 8;
+                if (INSTANCE.wildDragonMinDay == 10 || INSTANCE.wildDragonMinDay == 5) INSTANCE.wildDragonMinDay = 9;
+                if (INSTANCE.anubisMinDay == 5) INSTANCE.anubisMinDay = 10;
                 if (INSTANCE.anubisBaseHealth == 1.0E6) INSTANCE.anubisBaseHealth = 1.5E6;
                 if (INSTANCE.phoenixBaseHealth == 4.0E5) INSTANCE.phoenixBaseHealth = 6.0E5;
                 if (INSTANCE.deathMageBaseHealth == 3.0E5) INSTANCE.deathMageBaseHealth = 4.5E5;

@@ -461,7 +461,7 @@ public final class ModCommands {
                                     String tid = StringArgumentType.getString(ctx, "type");
                                     com.yongye.item.PlayerClass cls = com.yongye.item.PlayerClass.byId(tid);
                                     if (cls == null) {
-                                        ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin)"));
+                                        ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin/summoner)"));
                                         return 0;
                                     }
                                     p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getClassBook(cls)));
@@ -492,7 +492,7 @@ public final class ModCommands {
                                     String tid = StringArgumentType.getString(ctx, "type");
                                     com.yongye.item.PlayerClass cls = com.yongye.item.PlayerClass.byId(tid);
                                     if (cls == null) {
-                                        ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin)"));
+                                        ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin/summoner)"));
                                         return 0;
                                     }
                                     net.minecraft.item.Item w = com.yongye.registry.ModItems.getClassWeapon(cls);

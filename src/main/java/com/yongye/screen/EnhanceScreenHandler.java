@@ -157,7 +157,13 @@ public class EnhanceScreenHandler extends ScreenHandler {
             } else {
                 // 背包 → 对应输入槽
                 if (EquipmentEnhancer.isEnhanceable(original.getItem())) {
-                    if (!this.insertItem(original, EQUIP_SLOT, EQUIP_SLOT + 1, false)) return ItemStack.EMPTY;
+                    // m341(P3):装备槽满时,已强化装备可 shift 进材料槽走强化继承(与 canInsert 同判)
+                    boolean moved = this.insertItem(original, EQUIP_SLOT, EQUIP_SLOT + 1, false);
+                    if (!moved && com.yongye.YongyeConfig.get().enableEnhanceInherit
+                            && EquipmentEnhancer.getLevel(original) > 0) {
+                        moved = this.insertItem(original, MAT_SLOT, MAT_SLOT + 1, false);
+                    }
+                    if (!moved) return ItemStack.EMPTY;
                 } else if (EquipmentEnhancer.isMaterial(original.getItem())) {
                     if (!this.insertItem(original, MAT_SLOT, MAT_SLOT + 1, false)) return ItemStack.EMPTY;
                 } else {

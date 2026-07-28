@@ -1,5 +1,8 @@
 package com.yongye.mixin.client;
 
+import com.yongye.client.BossBarStyles.Group;
+import com.yongye.client.BossBarStyles.Style;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -42,19 +45,7 @@ public abstract class BossBarStyleMixin {
     /** 画框行间距(屏幕像素)。 */
     private static final int ROW_GAP = 11;
 
-    /**
-     * 画框几何,全部是<b>贴图像素</b>:
-     * 框宽高 / 槽偏移 xy / 槽宽高 / 牌匾中心 y(-1 = 无牌匾,名字悬浮框顶上方)。
-     */
-    private record Style(Identifier frame, Identifier back, Identifier fill,
-                         int fw, int fh, int sx, int sy, int sw, int sh, int pcy) {}
-
-    /** 同类合并组。 */
-    private static final class Group {
-        final Style st;
-        final List<ClientBossBar> members = new ArrayList<>();
-        Group(Style st) { this.st = st; }
-    }
+    // m341(P0):Style/Group 移出到 com.yongye.client.BossBarStyles(Mixin 禁止 mixin 包内类被运行时类加载)
 
     private static Style yongye$style(String key, int fw, int fh, int sx, int sy, int sw, int sh, int pcy) {
         String base = "textures/gui/bossbar/" + key;
