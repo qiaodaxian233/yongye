@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 100; // m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 101; // m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -254,6 +254,16 @@ public class YongyeConfig {
     public boolean enableNgPlus = true;              // m330 永夜+总开关(状态仍持久,关=倍率不生效)
     public double ngPlusMobMult = 2.0;               // m330 二周目怪物血/攻倍率(封顶后乘)
     public double ngPlusLootMult = 2.0;              // m330 二周目掉落倍率(概率与保底数量)
+    // ============ m334 反卡BUG(悬空卡怪/泡水躲怪) ============
+    public boolean pillarCheesePunish = true;        // 悬空卡怪反制总开关
+    public int pillarCheeseGraceTicks = 100;         // 宽限(5s):支撑块下两格悬空+附近有怪才计时
+    public double pillarCheeseDamagePercent = 0.05;  // 每秒按最大生命扣血比例(5%)
+    public double pillarCheeseMobRadius = 16.0;      // 附近多少格内有敌对怪才算"卡怪"
+    public boolean waterCheesePunish = true;         // 泡水躲怪反制总开关
+    public int waterCheeseGraceTicks = 1200;         // 宽限(60s):连续泡水超过即反制,离水清零
+    public double waterCheeseDamagePercent = 0.03;   // 每秒按最大生命扣血比例(3%)
+    public int waterCheeseSummonIntervalTicks = 100; // 每 5s 召一波溺尸
+    public int waterCheeseSummonCount = 1;           // 每波召几只
     public boolean enableClassTrials = true;         // m332 职业试炼支线(三关,奖励本命武器专属强化)
     public boolean enableMainQuest = true;           // m328 主线任务书(16 阶段,终点=讨伐末影龙)
     public boolean giveQuestBook = true;             // m328 首次进服发任务书(每人一次)

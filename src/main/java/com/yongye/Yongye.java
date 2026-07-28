@@ -101,6 +101,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.SummonAssistHandler.register();       // m320 召唤物协同集火(主人打谁它打谁+护主)
         com.yongye.system.MainQuestLine.register();             // m328 主线任务书(击杀计数/龙讨伐广播)
         com.yongye.system.NewGamePlusManager.register();        // m330 永夜+(二周目,杀龙开启)
+        com.yongye.system.AntiCheeseHandler.register();         // m334 反卡BUG(悬空卡怪/泡水躲怪)
         com.yongye.system.BossGuardHandler.register();          // m304 皮肤BOSS格挡条+攻击平衡
         com.yongye.system.CandleDimension.register();           // m305 烛之维度:烛块门/传送
         com.yongye.system.CandleSpawnHandler.register();        // m305 烛之维度:百倍刷怪+实体闸

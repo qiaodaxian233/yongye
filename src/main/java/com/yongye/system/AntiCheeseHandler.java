@@ -1,217 +1,109 @@
 package com.yongye.system;
 
-import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.mob.EndermanEntity;
-import net.minecraft.entity.mob.GuardianEntity;
-import net.minecraft.entity.mob.PhantomEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.entity.mob.DrownedEntity;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Box;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * 反苟机制(m114)——破解三种龟缩流:
- *  ① 泡水苟:玩家在水里累计超 antiCheeseWaterSeconds → 召唤守护者(Guardian)追杀 + 持续扣血。
- *  ② 虚空/搭方块苟:玩家长时间悬空(脚下方圆无地面,靠自搭方块龟缩)超 antiCheeseAirborneSeconds → 召幻翼(Phantom)空袭。
- *  ③ 远程龟缩通用:进入上述苟态超宽限期 → 持续扣血(固定点 + 按最大生命比例,应对高血量苟),逼玩家离开苟点正面作战。
- *
- * 全部用已确认 API:isTouchingWater / isOnGround + 脚下方块扫描 / spawnEntity / damage / setHealth。
- * 每 20 tick(1秒)检测一次,低频不卡。
+ * m334:反卡 BUG 双机制(作者点名)。
+ * ① 悬空卡怪:玩家站的支撑方块**正下方两格全是空气**(浮空平台/断桥搭台,怪够不着)——
+ *    且 pillarCheeseMobRadius 内有敌对怪(有怪才算卡怪;和平建筑/搭桥不误伤)——宽限
+ *    pillarCheeseGraceTicks 后每秒按最大生命百分比扣血,先给一次 actionbar 警告。
+ *    注意:普通土柱(下面连着地)不会触发——判定的是支撑块下方悬空,不是"站得高"。
+ * ② 泡水躲怪:连续在水中超过 waterCheeseGraceTicks(默认 1 分钟)——每秒百分比扣血,
+ *    且每隔 waterCheeseSummonInterval 在身边水里召一只溺尸索敌玩家(吃全套怪物成长缩放),
+ *    半程先警告。离水计时即清零。
+ * 两机制均跳过创造/旁观/骑乘,均可整体关闭,数值全配置(伤害走 magic 源,不吃护甲,卡就得痛)。
  */
 public final class AntiCheeseHandler {
     private AntiCheeseHandler() {}
 
-    /** 各玩家泡水持续秒数 */
-    private static final Map<UUID, Integer> waterSec = new HashMap<>();
-    /** 各玩家悬空持续秒数 */
-    private static final Map<UUID, Integer> airSec = new HashMap<>();
-    /** 已对该玩家召过守护者(避免每秒刷) */
-    private static final Map<UUID, Long> lastGuardian = new HashMap<>();
-    private static final Map<UUID, Long> lastPhantom = new HashMap<>();
-    private static final Map<UUID, Long> lastEnderman = new HashMap<>();
+    private static final Map<UUID, Integer> PILLAR_TICKS = new HashMap<>();
+    private static final Map<UUID, Integer> WATER_TICKS = new HashMap<>();
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             YongyeConfig cfg = YongyeConfig.get();
-            if (!cfg.enableAntiCheese) return;
-            if (server.getTicks() % 20 != 0) return; // 每秒一次
-
-            long now = server.getTicks();
+            if ((server.getTicks() % 20) != 0) return;   // 每秒一检,开销可忽略
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                if (p.isCreative() || p.isSpectator()) continue;
-                if (!(p.getWorld() instanceof ServerWorld sw)) continue;
-                UUID id = p.getUuid();
-
-                // 死亡(尸体未重生)期间绝不处理:否则会对尸体 setHealth(1) 把死亡/重生状态机搅乱→无法重生,
-                // 也不该对尸体召怪。顺手清空该玩家全部反苟状态,使其重生后(哪怕落在水里)重新走完整宽限期。
-                if (!p.isAlive()) {
-                    waterSec.remove(id); airSec.remove(id);
-                    lastGuardian.remove(id); lastPhantom.remove(id); lastEnderman.remove(id);
+                if (p.isCreative() || p.isSpectator() || !p.isAlive() || p.hasVehicle()) {
+                    PILLAR_TICKS.remove(p.getUuid()); WATER_TICKS.remove(p.getUuid());
                     continue;
                 }
-
-                boolean inWater = p.isTouchingWater() || p.isSubmergedInWater();
-                boolean airborne = yongye$isAirborneCheese(p, sw);
-
-                // ① 泡水苟
-                if (inWater) {
-                    int sec = waterSec.merge(id, 1, Integer::sum);
-                    if (sec >= cfg.antiCheeseWaterSeconds) {
-                        if (now - lastGuardian.getOrDefault(id, -99999L) > 200) { // 10s 一只
-                            yongye$summonGuardian(sw, p);
-                            lastGuardian.put(id, now);
-                            p.sendMessage(Text.literal("深渊不容苟且——守护者已盯上你!")
-                                    .formatted(Formatting.AQUA), true);
-                        }
-                        yongye$drain(p, cfg, sec - cfg.antiCheeseWaterSeconds, cfg.antiCheeseGraceSeconds);
-                    }
-                } else {
-                    waterSec.remove(id);
-                }
-
-                // ② 虚空/搭方块苟
-                if (airborne) {
-                    int sec = airSec.merge(id, 1, Integer::sum);
-                    if (sec >= cfg.antiCheeseAirborneSeconds) {
-                        if (now - lastPhantom.getOrDefault(id, -99999L) > 200) {
-                            yongye$summonPhantoms(sw, p);
-                            lastPhantom.put(id, now);
-                            p.sendMessage(Text.literal("高处亦无藏身之地——空袭降临!")
-                                    .formatted(Formatting.DARK_PURPLE), true);
-                        }
-                        yongye$drain(p, cfg, sec - cfg.antiCheeseAirborneSeconds, cfg.antiCheeseGraceSeconds);
-                    }
-                } else {
-                    airSec.remove(id);
-                }
-
-                // ③ 封顶龟缩:玩家头顶有方块挡住(泡水或悬空已持续一段时间) → 破顶 + 召末影人搬墙
-                boolean cheesing = (inWater && waterSec.getOrDefault(id, 0) >= cfg.antiCheeseWaterSeconds)
-                        || (airborne && airSec.getOrDefault(id, 0) >= cfg.antiCheeseAirborneSeconds);
-                if (cheesing && yongye$hasRoof(p, sw)) {
-                    if (cfg.antiCheeseBreakRoof) yongye$breakRoof(p, sw, cfg.antiCheeseRoofBreakHeight);
-                    if (cfg.antiCheeseSummonEnderman
-                            && now - lastEnderman.getOrDefault(id, -99999L) > 200) {
-                        yongye$summonEnderman(sw, p);
-                        lastEnderman.put(id, now);
-                        p.sendMessage(Text.literal("躲在壳里也没用——它来拆你的墙了!")
-                                .formatted(Formatting.DARK_GRAY), true);
-                    }
-                }
+                if (!(p.getWorld() instanceof ServerWorld sw)) continue;
+                if (cfg.pillarCheesePunish) tickPillar(p, sw, cfg);
+                if (cfg.waterCheesePunish) tickWater(p, sw, cfg);
             }
         });
-        Yongye.LOGGER.info("[夜蚀] 反苟机制已挂载(泡水/悬空/龟缩)");
     }
 
-    /** 判定"搭方块/虚空龟缩":站在方块上(非地面连续地形),且脚下一圈大多悬空。 */
-    private static boolean yongye$isAirborneCheese(ServerPlayerEntity p, ServerWorld sw) {
-        if (!p.isOnGround()) return false;            // 自由下落不算(正在移动)
-        if (p.isTouchingWater()) return false;
-        BlockPos foot = p.getBlockPos().down();
-        // 脚下必须有支撑方块(站着),但周围 3x3 下方多数悬空 = 孤立柱/平台龟缩
-        if (sw.getBlockState(foot).isAir()) return false;
-        int airAround = 0;
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                if (dx == 0 && dz == 0) continue;
-                // 检测该列下方 4 格是否都空(悬空柱特征)
-                boolean allAir = true;
-                for (int dy = 0; dy < 4; dy++) {
-                    if (!sw.getBlockState(foot.add(dx, -dy, dz)).isAir()) { allAir = false; break; }
-                }
-                if (allAir) airAround++;
+    // ---------- ① 悬空卡怪 ----------
+    private static void tickPillar(ServerPlayerEntity p, ServerWorld sw, YongyeConfig cfg) {
+        UUID id = p.getUuid();
+        boolean cheesing = false;
+        if (p.isOnGround() && !p.isTouchingWater()) {
+            BlockPos support = p.getBlockPos().down();
+            if (!sw.getBlockState(support).isAir()
+                    && sw.getBlockState(support.down()).isAir()
+                    && sw.getBlockState(support.down(2)).isAir()) {
+                // 支撑块下两格全空 = 浮空立足;再看附近有没有敌对怪(有怪才算卡怪)
+                double r = Math.max(4.0, cfg.pillarCheeseMobRadius);
+                cheesing = !sw.getEntitiesByClass(HostileEntity.class,
+                        Box.of(p.getPos(), r * 2, r * 2, r * 2),
+                        m -> m.isAlive()).isEmpty();
             }
         }
-        return airAround >= 6; // 周围 8 格里 ≥6 格下方悬空 = 孤立平台
-    }
-
-    /** 龟缩持续扣血:超过宽限期后,固定点+最大生命比例(应对高血量)。 */
-    private static void yongye$drain(ServerPlayerEntity p, YongyeConfig cfg, int secOver, int grace) {
-        if (secOver < grace) return;
-        float flat = (float) cfg.antiCheeseDrainPerSecond;
-        float byMax = (float) (p.getMaxHealth() * cfg.antiCheeseDrainMaxHpFraction);
-        float dmg = flat + byMax;
-        // 直接削血(绕过护甲,真伤逼出),但不致死下限留 1
-        float nh = Math.max(1.0f, p.getHealth() - dmg);
-        p.setHealth(nh);
-    }
-
-    private static void yongye$summonGuardian(ServerWorld sw, ServerPlayerEntity p) {
-        for (int i = 0; i < 2; i++) {
-            GuardianEntity g = new GuardianEntity(EntityType.GUARDIAN, sw);
-            Vec3d pos = p.getPos().add((sw.random.nextDouble() - 0.5) * 6, 1, (sw.random.nextDouble() - 0.5) * 6);
-            g.refreshPositionAndAngles(pos.x, pos.y, pos.z, 0, 0);
-            g.setTarget(p);
-            sw.spawnEntity(g);
+        if (!cheesing) { PILLAR_TICKS.remove(id); return; }
+        int t = PILLAR_TICKS.merge(id, 20, Integer::sum);
+        int grace = Math.max(20, cfg.pillarCheeseGraceTicks);
+        if (t == 20 || t == grace / 2 / 20 * 20) {
+            p.sendMessage(Text.literal("⚠ 悬空卡怪已被盯上:大地开始震怒,快下来!").formatted(Formatting.RED), true);
         }
-        sw.spawnParticles(ParticleTypes.BUBBLE_POP, p.getX(), p.getY() + 1, p.getZ(), 30, 1, 1, 1, 0.1);
-        sw.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_GUARDIAN_ATTACK, SoundCategory.HOSTILE, 1f, 0.6f);
-    }
-
-    private static void yongye$summonPhantoms(ServerWorld sw, ServerPlayerEntity p) {
-        for (int i = 0; i < 3; i++) {
-            PhantomEntity ph = new PhantomEntity(EntityType.PHANTOM, sw);
-            Vec3d pos = p.getPos().add((sw.random.nextDouble() - 0.5) * 8, 6, (sw.random.nextDouble() - 0.5) * 8);
-            ph.refreshPositionAndAngles(pos.x, pos.y, pos.z, 0, 0);
-            ph.setTarget(p);
-            sw.spawnEntity(ph);
+        if (t >= grace) {
+            float dmg = (float) (p.getMaxHealth() * Math.max(0.005, cfg.pillarCheeseDamagePercent));
+            p.damage(sw.getDamageSources().magic(), dmg);
+            p.sendMessage(Text.literal("悬空反制:-" + String.format("%.0f", dmg) + " 血/秒").formatted(Formatting.DARK_RED), true);
         }
-        sw.spawnParticles(ParticleTypes.SMOKE, p.getX(), p.getY() + 2, p.getZ(), 30, 1, 1, 1, 0.05);
-        sw.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_PHANTOM_SWOOP, SoundCategory.HOSTILE, 1f, 0.7f);
     }
 
-    /** 玩家头顶是否被方块封住(往上 roofHeight 内有非空气方块 = 有顶盖)。 */
-    private static boolean yongye$hasRoof(ServerPlayerEntity p, ServerWorld sw) {
-        BlockPos head = p.getBlockPos().up(2);
-        for (int dy = 0; dy < 4; dy++) {
-            BlockState st = sw.getBlockState(head.up(dy));
-            if (!st.isAir() && st.getFluidState().isEmpty()) return true; // 固体顶盖(水不算)
+    // ---------- ② 泡水躲怪 ----------
+    private static void tickWater(ServerPlayerEntity p, ServerWorld sw, YongyeConfig cfg) {
+        UUID id = p.getUuid();
+        if (!p.isTouchingWater()) { WATER_TICKS.remove(id); return; }
+        int t = WATER_TICKS.merge(id, 20, Integer::sum);
+        int grace = Math.max(200, cfg.waterCheeseGraceTicks);
+        if (t == grace / 2) {
+            p.sendMessage(Text.literal("⚠ 水下的东西察觉到了你…别在水里待太久").formatted(Formatting.RED), true);
         }
-        return false;
-    }
-
-    /** 破开玩家头顶的顶盖(向上 height 格,掉落物保留),让空袭能俯冲进来。 */
-    private static void yongye$breakRoof(ServerPlayerEntity p, ServerWorld sw, int height) {
-        BlockPos base = p.getBlockPos().up(2);
-        for (int dy = 0; dy < height; dy++) {
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dz = -1; dz <= 1; dz++) {
-                    BlockPos pos = base.add(dx, dy, dz);
-                    BlockState st = sw.getBlockState(pos);
-                    // 不破基岩等不可破坏方块(硬度<0);水/空气跳过
-                    if (st.isAir()) continue;
-                    if (st.getHardness(sw, pos) < 0) continue;
-                    sw.breakBlock(pos, true); // true=掉落物
-                }
+        if (t < grace) return;
+        // 百分比掉血(每秒)
+        float dmg = (float) (p.getMaxHealth() * Math.max(0.005, cfg.waterCheeseDamagePercent));
+        p.damage(sw.getDamageSources().magic(), dmg);
+        // 定期召溺尸索敌(吃全套怪物成长缩放:MobEnhancementHandler 对新生成怪统一生效)
+        int interval = Math.max(40, cfg.waterCheeseSummonIntervalTicks);
+        if (((t - grace) % interval) == 0) {
+            for (int i = 0; i < Math.max(1, cfg.waterCheeseSummonCount); i++) {
+                DrownedEntity d = EntityType.DROWNED.create(sw);
+                if (d == null) continue;
+                double ang = sw.getRandom().nextDouble() * Math.PI * 2;
+                d.refreshPositionAndAngles(p.getX() + Math.cos(ang) * 3.0, p.getY() - 0.5,
+                        p.getZ() + Math.sin(ang) * 3.0, sw.getRandom().nextFloat() * 360f, 0f);
+                d.setTarget(p);
+                sw.spawnEntity(d);
             }
+            p.sendMessage(Text.literal("深水潜伏反制:它们来了!").formatted(Formatting.DARK_RED), true);
         }
-        sw.spawnParticles(ParticleTypes.CRIT, p.getX(), p.getY() + 3, p.getZ(), 20, 1, 0.5, 1, 0.1);
-    }
-
-    /** 召唤末影人(原版自带搬方块能力,会拆玩家周围结构)。 */
-    private static void yongye$summonEnderman(ServerWorld sw, ServerPlayerEntity p) {
-        for (int i = 0; i < 2; i++) {
-            EndermanEntity e = new EndermanEntity(EntityType.ENDERMAN, sw);
-            Vec3d pos = p.getPos().add((sw.random.nextDouble() - 0.5) * 5, 0, (sw.random.nextDouble() - 0.5) * 5);
-            e.refreshPositionAndAngles(pos.x, pos.y, pos.z, 0, 0);
-            e.setTarget(p);
-            sw.spawnEntity(e);
-        }
-        sw.spawnParticles(ParticleTypes.PORTAL, p.getX(), p.getY() + 1, p.getZ(), 30, 1, 1, 1, 0.3);
-        sw.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_ENDERMAN_STARE, SoundCategory.HOSTILE, 1f, 0.7f);
     }
 }
