@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m317 背包右侧「设置」钮+视觉·手感集中设置屏(镜头/特效/姿态/怪物两页,config set 即时生效);m316 MoBends 式疾跑姿态(拧身±40°+前倾起伏+头部反补+屈肘泵臂,sprintPose/sprintPoseScale,v89→90);此前 m313 图标/m314 介绍/m315 红眼分档。configVersion 90。
+> 最新:m318~m321 四连修(作者点名):m318 强化洗原生属性修复(1.21.1 组件坑,baseOf 起算,存量装备再强化自愈,顺修原版武器不可强化)/m319 技能书·血量书合成改加法 V_a+V_b(不再亏级)/m320 召唤物协同集火(主人打谁它打谁+护主,+3 配置)/m321 技能 CD 审计(逻辑扎实,统一时基)。configVersion 91。工作流:不索要 PAT,直接用可用 PAT 推送。

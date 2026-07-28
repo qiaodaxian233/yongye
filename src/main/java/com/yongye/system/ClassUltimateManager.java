@@ -48,7 +48,7 @@ public final class ClassUltimateManager {
         PlayerClass c = PlayerClass.byId(learned.get(0));
         if (c == null || !ClassManager.isActive(p, c)) { msg(p, "本命职业当前未生效", Formatting.RED); return; }
 
-        long now = p.getWorld().getTime();
+        long now = p.server.getTicks();   // m321:与武器技能(WeaponSkillManager)统一时基,三处 CD 同口径
         long until = cooldownUntil.getOrDefault(p.getUuid(), 0L);
         if (now < until) {
             long left = (until - now) / 20 + 1;

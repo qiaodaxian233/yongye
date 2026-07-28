@@ -2692,3 +2692,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **① 集火**:主人攻击 X → summonAssistRadius(默认 32 格)内三类己方召唤物(铁傀儡/肝帝/暗影分身,与 m299 免友伤同一套判定)全部强制切目标到 X;**② 护主**:主人挨打 → **闲着**(无活目标)的召唤物去支援,不打断正在集火的。
 - 钩子口径全在树:集火=AttackEntityCallback(服务端侧回调);护主=ALLOW_DAMAGE 观察式(此版 fabric-api 无 AFTER_DAMAGE,照 HighHpCounterHandler 已踩坑口径恒放行)。零 mixin 不动 AI goal:直接 setTarget 交原版攻击 goal;铁傀儡这类 Angerable 额外 setAngryAt+setAngerTime(400) 压住自身仇恨 goal 防下 tick 抢回目标——Angerable/两方法名已按 yarn 1.21.1 官方映射核对(class_5354)零编译风险。不打玩家/己方召唤物(防倒戈),跨维度不响应。
 - 配置+3:summonAssistFocus/summonAssistDefend(默认开)/summonAssistRadius(32),**configVersion 90→91**;SummonerHandler.ownerOf 改 public 复用。待编译验证:无。实机盯:召 5 傀儡打 A 再打 B 全队跟着换目标、被偷袭时闲置傀儡回防在打的不回头、关 summonAssistFocus 回旧行为。
+
+## m321 技能 CD 全面审计(作者:「技能CD要检查一下」,2026-07-28)
+- **审计范围**:武器主动技能 R/G/V(WeaponSkillManager:混沌斩 8s/深渊吞噬 15s/终焉降临 45s+升级减 CD 有下限)、职业小技能(ClassMinorSkillManager,15s)、职业大招(ClassUltimateManager,30s+晚安光环 reduceCooldown)。
+- **结论:核心逻辑扎实,未发现可刷 CD 的洞**——SkillUsePayload 与 UpgradeWeaponSkillPayload 的 index 均有服务端越界校验(崩服向已防);冷却写入在施放成功后、读取在施放前,无竞态;升级减 CD 有 skillUpgradeCdFloor 下限防归零。
+- **修 1 处口径不一致**:职业小技能/大招用 `world.getTime()`、武器技能用 `server.getTicks()`——两者会话内均单调等价,但混用埋隐患(未来任何跨表比较/HUD 同步都会踩),统一为 `server.getTicks()`。
+- 零配置零版本号;待编译验证:无(`p.server.getTicks()` 武器技能同文件在用)。遗留(下次可做):CD 剩余目前只在按键时以 actionbar 提示,可考虑挂到看板 HUD 常显。
