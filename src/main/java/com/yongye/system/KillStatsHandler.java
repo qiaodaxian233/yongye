@@ -34,11 +34,12 @@ public final class KillStatsHandler {
             if (!YongyeConfig.get().enableHudInfoPanel) return;
             String nextName = NightfallManager.getNextLevelName();
             int nextSec = NightfallManager.getEscalateRemainingSeconds();
-            String forecast = server.getOverworld() == null ? ""
+            String[] forecast = server.getOverworld() == null ? new String[]{"", ""}
                     : buildDayForecast(ProgressionManager.gameDay(server.getOverworld()));
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
                 ServerPlayNetworking.send(p, new HudInfoPayload(
-                        p.getAttachedOrElse(ModAttachments.TOTAL_KILLS, 0L), nextName, nextSec, forecast));
+                        p.getAttachedOrElse(ModAttachments.TOTAL_KILLS, 0L), nextName, nextSec,
+                        forecast[0], forecast[1]));
             }
         });
 
@@ -49,10 +50,10 @@ public final class KillStatsHandler {
      * m289 按天事件预告(作者:「第几天会出现什么」):全库 gameDay 门槛收口成一张表,按**实时配置值**取,
      * 改配置预告自动跟着变。找出最近一个还没到的事件日,同日多件并列(最多 3 件+「等」);
      * 怪物进化是周期事件(每 evolutionEveryDays 天),取下一个整倍数日一并参与比较。
-     * 全部事件已过=只剩周期进化;连它也没有(配置≤0)=返回 "" 整行不显示。
+     * 全部事件已过=只剩周期进化;连它也没有(配置≤0)=返回 {"",""} 整行不显示。返回 [0]=长版 [1]=紧凑版(m308)。
      * 注意口径:各门槛判的是 gameDay >= minDay(0 起算),对玩家展示 = minDay+1(第 1 天起算)。
      */
-    private static String buildDayForecast(long today) {
+    private static String[] buildDayForecast(long today) {
         YongyeConfig c = YongyeConfig.get();
         String[] names = {
                 "佩恩降临", "怪物学会挖掘", "精英穿上装备", "袭击队长现身", "怪物BOSS出没",
@@ -66,21 +67,22 @@ public final class KillStatsHandler {
         long evoNext = Long.MAX_VALUE;
         if (c.evolutionEveryDays > 0) evoNext = (today / c.evolutionEveryDays + 1) * (long) c.evolutionEveryDays;
         if (evoNext < best) best = evoNext;
-        if (best == Long.MAX_VALUE) return "";
+        if (best == Long.MAX_VALUE) return new String[]{"", ""};
+        java.util.List<String> hits = new java.util.ArrayList<>();
+        for (int i = 0; i < mins.length; i++) if (mins[i] == best) hits.add(names[i]);
+        if (evoNext == best) hits.add("怪物进化");
+        // 长版(m289 原格式):同日并列最多 3 件 + 「等」
         StringBuilder sb = new StringBuilder();
-        int n = 0;
-        for (int i = 0; i < mins.length; i++) {
-            if (mins[i] != best) continue;
-            if (n == 3) { sb.append(" 等"); break; }
-            if (n > 0) sb.append(" · ");
-            sb.append(names[i]);
-            n++;
-        }
-        if (evoNext == best && n < 3) {
-            if (n > 0) sb.append(" · ");
-            sb.append("怪物进化");
+        for (int i = 0; i < hits.size(); i++) {
+            if (i == 3) { sb.append(" 等"); break; }
+            if (i > 0) sb.append(" · ");
+            sb.append(hits.get(i));
         }
         long remain = best - today;
-        return "第 " + (best + 1) + " 天:" + sb + (remain <= 1 ? "(明天!)" : "(还有 " + remain + " 天)");
+        String full = "第 " + (best + 1) + " 天:" + sb + (remain <= 1 ? "(明天!)" : "(还有 " + remain + " 天)");
+        // 短版(m308 紧凑看板):首事件 +N 记同日余件,前缀直接给剩余天数
+        String brief = (remain <= 1 ? "明天:" : remain + "天后:")
+                + hits.get(0) + (hits.size() > 1 ? "+" + (hits.size() - 1) : "");
+        return new String[]{full, brief};
     }
 }

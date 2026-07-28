@@ -33,6 +33,8 @@ public final class ClientStats {
     public static int nextStageSeconds = -1;
     /** m289 按天事件预告(服务端按实时配置拼好;""=无未到事件不显示)。 */
     public static String dayForecast = "";
+    /** m308 预告紧凑版(hudInfoCompact 开时显示,如「3天后:佩恩降临+1」)。 */
+    public static String dayForecastShort = "";
 
     public static void update(int h, int[] l, String cn) {
         health = h;

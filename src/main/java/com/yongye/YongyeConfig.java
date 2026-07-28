@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 85; // ...m304 BOSS格挡+6 · m305 烛之维度+7
+    public static final int CURRENT_CONFIG_VERSION = 86; // ...m305 烛之维度+7 · m308 看板挪位紧凑+4
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -1154,6 +1154,14 @@ public class YongyeConfig {
     public double lowHpFxThreshold = 0.20;
     /** m288 战况看板:左上角显示 天数 · 累计击杀 · 下一阶段预告(含久留升层倒计时)。 */
     public boolean enableHudInfoPanel = true;
+    /** m308 看板紧凑模式:三行全换短文案(预告行如「5天后:佩恩降临+2」),宽度约省一半。false=m289 完整长文案。 */
+    public boolean hudInfoCompact = true;
+    /** m308 看板停靠位:0=左中(默认) 1=左上 2=左下 3=右上 4=右中 5=右下。/yongye config set hudInfoAnchor N 即改。 */
+    public int hudInfoAnchor = 0;
+    /** m308 看板微调偏移X(GUI 像素,正=向右;叠加在停靠位上,越界自动钳回屏内)。 */
+    public int hudInfoOffsetX = 0;
+    /** m308 看板微调偏移Y(GUI 像素,正=向下)。 */
+    public int hudInfoOffsetY = 0;
 
     // ============ m274:BOSS 半血狂暴 ============
     /** BOSS 阶段转换开关:六只皮肤 BOSS + 佩恩血量跌破阈值 → 狂暴变招 + 全场演出。 */

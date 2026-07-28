@@ -2601,3 +2601,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 全文件无 dirt/grass 任何引用(grep 验过);水仍在(海平面 63,m305 已调紫);m306 的紫草配色留着无害(玩家自带树叶会显紫)。噪声 id `minecraft:surface`/`minecraft:gravel` 已对 mcmeta 1.21.1 注册表验证存在。
 - **旧档注意**:已生成过的旧区块(草地那批)不会重铸,新旧交界有断层——删存档里 `dimensions/yongye/candle/` 整个文件夹即可全维度重开(主世界/背包不受影响,门重点一次就行)。
 - 零 Java 零配置(仍 85)。**待验证=纯数据包**:worldgen JSON 错误会在启动/进维度时日志报 `Failed to parse yongye:candle`,报什么贴回来即修;退路=dimension 的 settings 改回 `minecraft:overworld` 一行即回 m306 状态。
+
+## m308 战况看板可挪+紧凑短文案(2026-07-28)
+- 作者实机:天数显示(战况看板)有点挡住,要能挪动,而且太长要短一些。
+- **可挪**:新 `hudInfoAnchor` 六档停靠位 0=左中(默认,m289 原位)/1=左上/2=左下/3=右上/4=右中/5=右下,再叠 `hudInfoOffsetX/Y` 像素微调;最终坐标钳回屏内,乱填偏移也不会飞出屏幕。`/yongye config set hudInfoAnchor 3` 这类命令即改即生效(HUD 每帧读配置)。上/下缘各留了净空(上=4px,下=48px 避热栏与聊天输入行)。
+- **紧凑**:新 `hudInfoCompact`(默认开)三行全换短文案——行1「第N天·击杀X」去空格;行2「下阶段:永夜I·暗潮 mm:ss」(去空格+短前缀);行3 预告换服务端短版「N天后:首事件+M」(M=同日余件数,明天则「明天:xxx」照旧转橙红)。关掉=逐字回 m289 长文案。
+- **实现口径**:预告长短两版都在服务端 `buildDayForecast` 一次拼好(改返回 `String[]{长,短}`),`HudInfoPayload` 加 `dayForecastShort` 字段同包下发——客户端按**自己的**配置挑,专用服上各客户端可各选各的;顺手让「同日 3 件封顶+等」对周期进化(怪物进化)也生效(原版逻辑 3 件已满时进化被静默吞掉)。
+- 配置 +4,configVersion **85→86**。零新 API 零待编译验证(switch 表达式 m225 先例,其余全在树)。

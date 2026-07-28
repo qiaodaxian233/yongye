@@ -153,38 +153,50 @@ public class YongyeClient implements ClientModInitializer {
                     ClientStats.nextStageName = payload.nextName();
                     ClientStats.nextStageSeconds = payload.nextSeconds();
                     ClientStats.dayForecast = payload.dayForecast();
+                    ClientStats.dayForecastShort = payload.dayForecastShort();
                 }));
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
             if (mc.player == null || mc.world == null || mc.options.hudHidden) return;
-            if (!com.yongye.YongyeConfig.get().enableHudInfoPanel) return;
+            var cfg = com.yongye.YongyeConfig.get();
+            if (!cfg.enableHudInfoPanel) return;
             var tr = mc.textRenderer;
+            boolean cp = cfg.hudInfoCompact;   // m308 紧凑模式(默认开):三行全换短文案
             // 行1:第 N 天 · 击杀 X(天数客户端按昼夜时钟直算,睡觉跳夜也算天——m252 收口同源)
             long day = com.yongye.system.ProgressionManager.gameDay(mc.world) + 1;   // 第 1 天起算
-            String l1a = "第 " + day + " 天";
-            String l1b = " · 击杀 " + NumFmt.compact(ClientStats.totalKills);
-            // 行2:下一阶段:XXX (mm:ss)——空名=已至上限,整行省略
+            String l1a = cp ? "第" + day + "天" : "第 " + day + " 天";
+            String l1b = (cp ? "·击杀" : " · 击杀 ") + NumFmt.compact(ClientStats.totalKills);
+            // 行2:下一阶段:XXX (mm:ss)——空名=已至上限,整行省略;紧凑=去空格+短前缀
             String l2 = "";
             String l2t = "";
             if (!ClientStats.nextStageName.isEmpty()) {
-                l2 = "下一阶段:" + ClientStats.nextStageName;
+                l2 = cp ? "下阶段:" + ClientStats.nextStageName.replace(" ", "")
+                        : "下一阶段:" + ClientStats.nextStageName;
                 if (ClientStats.nextStageSeconds >= 0) {
                     l2t = String.format(" %02d:%02d",
                             ClientStats.nextStageSeconds / 60, ClientStats.nextStageSeconds % 60);
                 }
             }
-            // 行3(m289):按天事件预告「第 N 天:XXX(还有 M 天)」
-            String l3 = ClientStats.dayForecast;
+            // 行3(m289):按天事件预告;紧凑用服务端短版「N天后:XXX+M」(m308)
+            String l3 = cp ? ClientStats.dayForecastShort : ClientStats.dayForecast;
             int w1 = tr.getWidth(l1a + l1b);
             int w2 = l2.isEmpty() ? 0 : tr.getWidth(l2 + l2t);
             int w3 = l3.isEmpty() ? 0 : tr.getWidth(l3);
             int bw = Math.max(w1, Math.max(w2, w3)) + 8;
             int lines = 1 + (l2.isEmpty() ? 0 : 1) + (l3.isEmpty() ? 0 : 1);
             int bh = 2 + lines * 11;
-            // m289 位置:左边缘垂直居中(实机截图:左上被第三方小地图压)。左上/右上=小地图,左下=聊天,
-            // 右中=计分板,顶中=BOSS血条,底中=面板——左中是整屏唯一没人抢的常空区。
-            int bx = 3;
-            int by = mc.getWindow().getScaledHeight() / 2 - bh - 10;   // 中线略上,离聊天更远
+            // m308 位置可挪:hudInfoAnchor 0=左中(m289 原位) 1=左上 2=左下 3=右上 4=右中 5=右下,
+            // 再叠 hudInfoOffsetX/Y 微调,最后钳回屏内(乱填偏移也不会飞出屏幕)。
+            int sw = mc.getWindow().getScaledWidth(), sh = mc.getWindow().getScaledHeight();
+            int anchor = cfg.hudInfoAnchor;
+            int bx = (anchor == 3 || anchor == 4 || anchor == 5) ? sw - bw - 3 : 3;
+            int by = switch (anchor) {
+                case 1, 3 -> 4;               // 上缘(顶中 BOSS 血条不在角上,角落可用)
+                case 2, 5 -> sh - bh - 48;    // 下缘(避开热栏/聊天输入行)
+                default   -> sh / 2 - bh - 10; // 左/右中,中线略上(m289 原位)
+            };
+            bx = Math.max(0, Math.min(sw - bw, bx + cfg.hudInfoOffsetX));
+            by = Math.max(0, Math.min(sh - bh, by + cfg.hudInfoOffsetY));
             ctx.fill(bx, by, bx + bw, by + bh, 0x66000000);                          // 半透明底,保证任何背景可读
             ctx.fill(bx, by, bx + bw, by + 1, 0x802E7AD0);                           // 顶描边(面板同蓝系)
             int ty = by + 3;
