@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 90; // m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 91; // m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -250,6 +250,9 @@ public class YongyeConfig {
     public boolean summonFriendlyFireImmune = true;  // 玩家(横扫/误点/弹射物)打不伤己方召唤物:傀儡/肝帝/暗影分身
     // ============ m300:击杀归属 ============
     public boolean summonKillsCreditOwner = true;    // 召唤物(傀儡/肝帝/暗影分身)击杀记主人:看板/掉落/保护卷/贪婪/任务/蚀域全口径
+    public boolean summonAssistFocus = true;         // m320 集火:主人攻击谁,半径内己方召唤物就打谁(强制切目标)
+    public boolean summonAssistDefend = true;        // m320 护主:主人挨打,闲着(无活目标)的召唤物去支援
+    public double summonAssistRadius = 32.0;         // m320 协同响应半径(格)
 
     // ============ m296:强化石滑动窗掉落(定稿设计) ============
     // 基准档 t:第1~5天=1;佩恩降临后=2;进永夜 I=4、每层+1;每次怪物进化(evolutionEveryDays)+1;封顶 stoneTierCap。

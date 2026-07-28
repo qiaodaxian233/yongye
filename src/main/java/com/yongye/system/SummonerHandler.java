@@ -64,8 +64,8 @@ public final class SummonerHandler {
         return sw.getPlayerByUuid(owner) instanceof ServerPlayerEntity sp ? sp : null;
     }
 
-    /** m300:反查傀儡主人(内存表,量小直扫)。 */
-    private static UUID ownerOf(IronGolemEntity g) {
+    /** m300:反查傀儡主人(内存表,量小直扫)。m320 改 public:协同集火(SummonAssistHandler)复用。 */
+    public static UUID ownerOf(IronGolemEntity g) {
         for (Map.Entry<UUID, List<Tracked>> e : byOwner.entrySet()) {
             for (Tracked t : e.getValue()) {
                 if (t.golem() == g) return e.getKey();
