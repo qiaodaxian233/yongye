@@ -2682,3 +2682,13 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **修复**:新 `baseOf(Item)`——组件非空(模组物品出厂已写)用组件,否则取 `Item.getAttributeModifiers()`(方法名已按 FabricMC/yarn 1.21.1 官方映射核对,method_7844,零编译风险);`withLevel` 与 `kindOf` 改从它起算。**存量已洗坏的装备再强化任意一次即自愈**(withLevel 本就每次从基础重算)。
 - **深扒出的同根潜伏 bug 一并修好**:旧 `kindOf` 读空组件 → 原版剑/斧/三叉戟 hasDmg=false → 判 NONE **不可强化**;改 baseOf 后原版武器正常判 WEAPON 可强化、强化保留原生攻击力;盔甲槽位组回归"穿在身上时"等正确分组。
 - 零配置零版本号;待编译验证:无(getAttributeModifiers 已核官方映射)。实机盯:钻石甲强化+1 应显示 +8.3 护甲/+2.1 韧性/+1 生命(基础+加成同槽合并)、旧的坏甲再喂一颗石头自愈、原版钻石剑现在可强化且保留 +7 攻击。
+
+## m319 技能书/血量书合成改加法(作者:「两个LV5合成的是一个lv6」,2026-07-28)
+- **旧版是亏级陷阱**:学书是加法(learn: cur+level),两本 V5 分开学=+10 级;旧合成 2×V_L→V_{L+1} 只给 V6,平白亏 4 级,越高级亏越狠。
+- **改加法合并(两个配方同步)**:2 本**同类型**书(V_a+V_b,**等级可不同**)[+阶段材料按**结果级**取档] → 1 本 V_{a+b}(skillBookMaxLevel 封顶钳制;封顶后合成不涨级直接不匹配,防误合亏书);等级累加走 long 防边界溢出。
+- 零配置零版本号(阶段材料阈值沿用现有配置);待编译验证:无(纯逻辑改写,零新 API)。实机盯:V5+V5=V10、V3+V7=V10、跨档材料要对(如结果级过 lifeCoreThreshold 要生命核心)、两本 V65535 不给合。
+
+## m320 召唤物协同集火(作者:「召唤物应该玩家攻击什么它就攻击什么」+深扒,2026-07-28)
+- **① 集火**:主人攻击 X → summonAssistRadius(默认 32 格)内三类己方召唤物(铁傀儡/肝帝/暗影分身,与 m299 免友伤同一套判定)全部强制切目标到 X;**② 护主**:主人挨打 → **闲着**(无活目标)的召唤物去支援,不打断正在集火的。
+- 钩子口径全在树:集火=AttackEntityCallback(服务端侧回调);护主=ALLOW_DAMAGE 观察式(此版 fabric-api 无 AFTER_DAMAGE,照 HighHpCounterHandler 已踩坑口径恒放行)。零 mixin 不动 AI goal:直接 setTarget 交原版攻击 goal;铁傀儡这类 Angerable 额外 setAngryAt+setAngerTime(400) 压住自身仇恨 goal 防下 tick 抢回目标——Angerable/两方法名已按 yarn 1.21.1 官方映射核对(class_5354)零编译风险。不打玩家/己方召唤物(防倒戈),跨维度不响应。
+- 配置+3:summonAssistFocus/summonAssistDefend(默认开)/summonAssistRadius(32),**configVersion 90→91**;SummonerHandler.ownerOf 改 public 复用。待编译验证:无。实机盯:召 5 傀儡打 A 再打 B 全队跟着换目标、被偷袭时闲置傀儡回防在打的不回头、关 summonAssistFocus 回旧行为。

@@ -15,8 +15,10 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.world.World;
 
 /**
- * 通用技能书同级合成:2 本同类型同等级技能书(V_L) [+ 阶段材料] → 1 本同类型 V_{L+1}。
- * 阶段材料门槛沿用血量技能书的阈值(配置可调)。
+ * 通用技能书合成(m319 改加法合并):2 本**同类型**技能书(V_a + V_b,等级可不同)[+ 阶段材料]
+ * → 1 本同类型 V_{a+b}(封顶钳制)。旧版 2×V_L→V_{L+1} 是亏级陷阱——学书是加法
+ * (SkillEffectManager.learn: cur+level),两本 V5 分开学 = +10 级,旧合成只剩 V6 平白亏 4 级。
+ * 阶段材料门槛按**结果等级**取档(配置阈值不变)。
  */
 public class SkillBookCombineRecipe extends SpecialCraftingRecipe {
 
@@ -40,7 +42,8 @@ public class SkillBookCombineRecipe extends SpecialCraftingRecipe {
     @Override
     public boolean matches(CraftingRecipeInput input, World world) {
         SkillType type = null;
-        int bookLevel = -1;
+        long lvlSum = 0;      // m319:等级相加(long 防 65535+65535 级溢出边界)
+        int lvlHigh = 0;      // 两本中较高的一本,用于"合了不涨没意义"判定
         int bookCount = 0;
         Item materialFound = null;
         int materialCount = 0;
@@ -53,10 +56,11 @@ public class SkillBookCombineRecipe extends SpecialCraftingRecipe {
                 int lvl = SkillBookItem.getLevel(s);
                 if (bookCount == 0) {
                     type = sb.getType();
-                    bookLevel = lvl;
-                } else if (sb.getType() != type || lvl != bookLevel) {
-                    return false; // 类型或等级不一致
+                } else if (sb.getType() != type) {
+                    return false; // 类型不一致(等级可不同:m319 加法合并)
                 }
+                lvlSum += Math.max(1, lvl);
+                lvlHigh = Math.max(lvlHigh, lvl);
                 bookCount++;
             } else if (isMaterial(s.getItem())) {
                 materialFound = s.getItem();
@@ -66,22 +70,28 @@ public class SkillBookCombineRecipe extends SpecialCraftingRecipe {
             }
         }
 
-        if (other > 0 || bookCount != 2 || type == null || bookLevel < 1) return false;
-        if (bookLevel >= YongyeConfig.get().skillBookMaxLevel) return false;
+        if (other > 0 || bookCount != 2 || type == null || lvlSum < 2) return false;
+        int cap = YongyeConfig.get().skillBookMaxLevel;
+        int resultLevel = (int) Math.min(cap, lvlSum);
+        if (resultLevel <= lvlHigh) return false; // 封顶后合成不涨级,禁掉防误合亏书
 
-        Item need = requiredMaterial(bookLevel + 1);
+        Item need = requiredMaterial(resultLevel);
         return need == null ? materialCount == 0 : (materialFound == need && materialCount == 1);
     }
 
     @Override
     public ItemStack craft(CraftingRecipeInput input, RegistryWrapper.WrapperLookup lookup) {
+        SkillType type = null;
+        long sum = 0;   // m319:两本等级相加,封顶钳制
         for (int i = 0; i < input.getSize(); i++) {
             ItemStack s = input.getStackInSlot(i);
             if (!s.isEmpty() && s.getItem() instanceof SkillBookItem sb) {
-                return SkillBookItem.create(sb.getType(), SkillBookItem.getLevel(s) + 1);
+                if (type == null) type = sb.getType();
+                sum += Math.max(1, SkillBookItem.getLevel(s));
             }
         }
-        return ItemStack.EMPTY;
+        if (type == null) return ItemStack.EMPTY;
+        return SkillBookItem.create(type, (int) Math.min(YongyeConfig.get().skillBookMaxLevel, sum));
     }
 
     @Override

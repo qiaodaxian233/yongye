@@ -14,7 +14,7 @@ import net.minecraft.world.World;
 
 /**
  * 血量强化技能书同级合成:
- *   2 本同级技能书(V_L) [+ 对应阶段材料] → 1 本 V_{L+1}。
+ *   2 本技能书(V_a + V_b,等级可不同)[+ 对应阶段材料(按结果级)] → 1 本 V_{a+b}(封顶钳制;m319 加法合并,不再亏级)。
  *
  * 阶段材料门槛(文档 13.2,阈值可在配置调整):
  *   结果等级 >= catastropheBloodCoreThreshold(默认1000) -> 需 灾变血核
@@ -40,7 +40,8 @@ public class HealthBookCombineRecipe extends SpecialCraftingRecipe {
     @Override
     public boolean matches(CraftingRecipeInput input, World world) {
         int bookCount = 0;
-        int bookLevel = -1;
+        long lvlSum = 0;
+        int lvlHigh = 0;
         net.minecraft.item.Item materialFound = null;
         int materialCount = 0;
         int otherCount = 0;
@@ -50,11 +51,8 @@ public class HealthBookCombineRecipe extends SpecialCraftingRecipe {
             if (s.isEmpty()) continue;
             if (s.getItem() instanceof HealthSkillBookItem) {
                 int lvl = HealthSkillBookItem.getLevel(s);
-                if (bookCount == 0) {
-                    bookLevel = lvl;
-                } else if (lvl != bookLevel) {
-                    return false; // 等级不一致
-                }
+                lvlSum += Math.max(1, lvl);        // m319:加法合并,等级可不同
+                lvlHigh = Math.max(lvlHigh, lvl);
                 bookCount++;
             } else if (isMaterial(s.getItem())) {
                 materialFound = s.getItem();
@@ -66,12 +64,11 @@ public class HealthBookCombineRecipe extends SpecialCraftingRecipe {
 
         if (otherCount > 0) return false;
         if (bookCount != 2) return false;
-        if (bookLevel < 1) return false;
+        if (lvlSum < 2) return false;
 
         int max = YongyeConfig.get().skillBookMaxLevel;
-        if (bookLevel >= max) return false; // 已封顶
-
-        int resultLevel = bookLevel + 1;
+        int resultLevel = (int) Math.min(max, lvlSum);
+        if (resultLevel <= lvlHigh) return false; // 封顶后合成不涨级,禁掉防误合亏书
         net.minecraft.item.Item need = requiredMaterial(resultLevel);
         if (need == null) {
             return materialCount == 0;
@@ -88,15 +85,15 @@ public class HealthBookCombineRecipe extends SpecialCraftingRecipe {
 
     @Override
     public ItemStack craft(CraftingRecipeInput input, RegistryWrapper.WrapperLookup lookup) {
-        int bookLevel = 1;
+        long sum = 0;   // m319:两本等级相加,封顶钳制
         for (int i = 0; i < input.getSize(); i++) {
             ItemStack s = input.getStackInSlot(i);
             if (!s.isEmpty() && s.getItem() instanceof HealthSkillBookItem) {
-                bookLevel = HealthSkillBookItem.getLevel(s);
-                break;
+                sum += Math.max(1, HealthSkillBookItem.getLevel(s));
             }
         }
-        return HealthSkillBookItem.create(bookLevel + 1);
+        if (sum < 2) return ItemStack.EMPTY;
+        return HealthSkillBookItem.create((int) Math.min(YongyeConfig.get().skillBookMaxLevel, sum));
     }
 
     @Override
