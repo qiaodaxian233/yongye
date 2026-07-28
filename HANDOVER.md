@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m341 P0客户端崩溃(mixin内部类外移BossBarStyles)/P1反卡双注册/P2选职验书/P3继承shift+召唤师配方 全修;皮肤BOSS阶梯解锁D6红蛛→D10阿努比斯。configVersion 107。作者侧build已通过。
+> 最新:m342 编译修复(Style record→public字段类,mixin零改动);m341 P0~P3+BOSS阶梯解锁。configVersion 107。

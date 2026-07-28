@@ -2781,3 +2781,6 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **P3 召唤师补丁收尾**:补 `class_weapon_summoner.json` 配方(魂晶×4+碎片×4+铁块=傀儡核意象,镜像术士版式);ModCommands 错误提示补 summoner。
 - **皮肤 BOSS 阶梯解锁(作者:「第六天开始一天解锁一个」)**:红蛛 D6 → 死亡法师 D7 → 凤凰 D8 → 托罗龙 D9 → 阿努比斯 D10(弱→强压轴);替换 m339 的统一 5 天口径,迁移含 m339 短暂值(5)与更早旧默认(12/14/16/10)全部归位,自定义不动。**configVersion 106→107**。
 - 作者侧 gradle clean build 已通过;本轮改动待编译验证:无(纯移动/删重/逻辑序调整)。实机盯:客户端能进主界面(P0)、泡水掉血速率回单倍(P1)、无书发包被拒(P2)、强化屏 shift 已强化装备入材料槽(P3)、第 6~10 天每天多一位新面孔。
+
+## m342 编译修复:Style record→public字段类(作者build报告,2026-07-29)
+- m341 把 Style 移出 mixin 后忘了 record 组件跨类是 private(同类内部才可字段直访),mixin 23 处 `st.xx` 全线编译失败。修:BossBarStyles.Style 改 **public final 字段普通类**(构造签名不变),mixin 零改动;Group 本就 public 字段无恙。

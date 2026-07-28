@@ -14,9 +14,20 @@ import java.util.List;
 public final class BossBarStyles {
     private BossBarStyles() {}
 
-    /** 画框几何,全部是<b>贴图像素</b>:框宽高/槽偏移 xy/槽宽高/牌匾中心 y(-1=无牌匾,名字悬浮框顶上方)。 */
-    public record Style(Identifier frame, Identifier back, Identifier fill,
-                        int fw, int fh, int sx, int sy, int sw, int sh, int pcy) {}
+    /** 画框几何,全部是<b>贴图像素</b>:框宽高/槽偏移 xy/槽宽高/牌匾中心 y(-1=无牌匾,名字悬浮框顶上方)。
+     *  m341 修复补丁:record 组件是 private 字段,跨类只能走访问器——mixin 里 23 处 `st.xx` 字段式
+     *  访问会全线编译失败(作者 build 报告实锤);改成 public final 字段普通类,mixin 零改动。 */
+    public static final class Style {
+        public final Identifier frame, back, fill;
+        public final int fw, fh, sx, sy, sw, sh, pcy;
+
+        public Style(Identifier frame, Identifier back, Identifier fill,
+                     int fw, int fh, int sx, int sy, int sw, int sh, int pcy) {
+            this.frame = frame; this.back = back; this.fill = fill;
+            this.fw = fw; this.fh = fh; this.sx = sx; this.sy = sy;
+            this.sw = sw; this.sh = sh; this.pcy = pcy;
+        }
+    }
 
     /** 同类合并组。 */
     public static final class Group {
