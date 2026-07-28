@@ -23,3 +23,13 @@ MIT 许可证要求保留上述版权声明;完整许可证文本见来源仓库
 - 许可证:MIT License — Copyright (c) 2017 Iwo Plaza(核验日期 2026-07-28)
 
 MIT 许可证要求保留上述版权声明;完整许可证文本见来源仓库 LICENSE 文件。
+
+## minecraft-agent-skills（MIT License）
+
+- 来源:https://github.com/Jahrome907/minecraft-agent-skills
+- 用途:m344 引入——`.github/workflows/build.yml` 参考其 minecraft-ci-release 模板;
+  `tools/validate-resource-pack.sh` / `tools/validate-datapack.sh` / `tools/jq-shim.mjs` 直接收编
+  (推送前本地预检资源 JSON/贴图配对/配方引用)。其 fabric-api.md 作为 1.21.x 离线 API 速查参考。
+- 许可证:MIT License — Copyright (c) 2026 Jahrome907(核验日期 2026-07-29)
+
+MIT 许可证要求保留上述版权声明;完整许可证文本见来源仓库 LICENSE 文件。

@@ -2784,3 +2784,8 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 
 ## m342 编译修复:Style record→public字段类(作者build报告,2026-07-29)
 - m341 把 Style 移出 mixin 后忘了 record 组件跨类是 private(同类内部才可字段直访),mixin 23 处 `st.xx` 全线编译失败。修:BossBarStyles.Style 改 **public final 字段普通类**(构造签名不变),mixin 零改动;Group 本就 public 字段无恙。
+
+## m344 CI编译闭环+资源预检工具(引入 Jahrome907/minecraft-agent-skills,MIT,2026-07-29)
+- **GitHub Actions 自动构建**(`.github/workflows/build.yml`,照其 minecraft-ci-release 模板):push/PR 到 main 即云端 gradle build 并上传 jar 工件——沙盒无法编译的死穴补上,AI 推送后轮询 api.github.com 的 actions runs 即可自主拿到 success/failure 与报错日志,编译验证不再依赖作者手动 build。
+- **资源预检收编**:tools/validate-resource-pack.sh + validate-datapack.sh + jq-shim.mjs(推送前扫 JSON 合法性/贴图动画配对/配方引用;本仓库现状全 PASS,唯一 FAIL 是 pack.mcmeta——MOD 场景假阳性忽略)。其 fabric-api.md(389 行 1.21.x 注册/mixin/网络/GUI 速查)列为离线参考。THIRD_PARTY_NOTICES 已挂名;ONBOARDING 已写入新工作流。
+- **落地注意**:当前 PAT 无 `workflow` scope,`.github/workflows/build.yml` 无法由 AI 推送(GitHub 硬性拒绝)。文件已单独交付:作者在 GitHub 网页 Add file 粘贴,或下次贴一个勾选了 workflow 权限的 PAT 由 AI 补推;工具脚本与文档本笔已入库。

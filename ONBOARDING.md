@@ -32,6 +32,11 @@
      (`raw.githubusercontent.com/FabricMC/yarn/1.21.1/mappings/net/minecraft/.../Xxx.mapping`)确认方法名;
    - 核不到的列进 DEVLOG「待编译验证」;每次改完做括号平衡自检;
    - 作者本地 `gradlew build / runClient` 流程可用,会回贴编译错误和崩溃报告,按报告修。
+   - **CI 编译闭环(m344 起)**:仓库带 GitHub Actions(`.github/workflows/build.yml`),每次推送自动云端 build;
+     推送后轮询 `https://api.github.com/repos/qiaodaxian233/yongye/actions/runs?per_page=1` 查 conclusion
+     (success/failure),failure 时拉该 run 的 jobs 日志定位报错——**AI 会话可自主完成编译验证,不必等作者**。
+   - 推送前预检:`bash tools/validate-resource-pack.sh --root src/main/resources` 与
+     `bash tools/validate-datapack.sh --root src/main/resources`(missing pack.mcmeta 一条是 MOD 场景假阳性,忽略)。
 6. **交付文件**:文档输出 Word(.docx),图片输出 PNG(项目内的 md/json/贴图除外)。
 
 ## 四、踩过的坑(新会话必读,别再踩)
