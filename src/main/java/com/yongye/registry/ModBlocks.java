@@ -26,7 +26,7 @@ public final class ModBlocks {
      *  微光=矿脉里的紫纹在发光;requiresTool=徒手/低级镐挖了不掉。 */
     public static final Block BLIGHT_ORE = register("blight_ore",
             new Block(AbstractBlock.Settings.create()
-                    .strength(5.0f, 6.0f)
+                    .strength(45.0f, 1200.0f)   // m338:比远古残骸(30)还硬,钻石镐(tag 已挂)慢慢啃;抗爆同残骸
                     .requiresTool()
                     .luminance(s -> 5)));
 

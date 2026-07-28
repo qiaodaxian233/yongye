@@ -1,8 +1,12 @@
 {
   "type": "minecraft:blasting",
   "category": "misc",
-  "ingredient": { "item": "yongye:blight_ore" },
-  "result": { "id": "yongye:blight_ingot" },
+  "ingredient": {
+    "item": "yongye:blight_ore"
+  },
+  "result": {
+    "id": "yongye:blight_ingot"
+  },
   "experience": 2.0,
-  "cookingtime": 100
+  "cookingtime": 1200
 }

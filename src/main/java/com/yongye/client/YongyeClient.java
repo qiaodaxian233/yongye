@@ -616,6 +616,11 @@ public class YongyeClient implements ClientModInitializer {
                         Text.literal("任务"), b -> client.setScreen(new QuestBookScreen(screen))));
                 Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("设置"), b -> client.setScreen(new VisualFxScreen(screen))));
+                // 转移:强化转移(主手来源→副手目标;m340,与 /yongye transfer 同款)
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("转移"), b -> {
+                            if (client.player != null) client.player.networkHandler.sendCommand("yongye transfer");
+                        }));
                 com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
                 Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,

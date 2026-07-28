@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 104; // m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 106; // m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -176,7 +176,7 @@ public class YongyeConfig {
 
     // ============ 普通怪 BOSS 版(m60:第 N 天起,普通怪低概率"BOSS化")============
     public boolean enableMobBoss = true;
-    public int mobBossStartDay = 10;             // 第几天起开始刷怪物BOSS(早于此天不刷)
+    public int mobBossStartDay = 5;   // m339:第 5 天开刷皮肤 BOSS(作者点名)             // 第几天起开始刷怪物BOSS(早于此天不刷)
     public double mobBossChance = 0.008;         // 每只普通怪生成时BOSS化的概率(低,作偶发精英BOSS)
     // m145:僵尸BOSS化时,做成"玩家皮肤BOSS"——名牌「<在线玩家名> BOSS」、用该玩家皮肤渲染、每个在线玩家同时最多一只
     public boolean enablePlayerSkinZombieBoss = true;
@@ -785,7 +785,7 @@ public class YongyeConfig {
 
     // 野生末影龙 BOSS:第 N 天起有几率在玩家头顶高空刷出(会飞、追杀,跟末地那条差不多)
     public boolean enableWildDragonSpawn = true;
-    public int wildDragonMinDay = 10;                 // 第几天起才可能刷(游戏天数)
+    public int wildDragonMinDay = 5;  // m339                 // 第几天起才可能刷(游戏天数)
     public double wildDragonSpawnChance = 0.05;       // 每次检定的刷出概率
     public int wildDragonCheckIntervalTicks = 6000;   // 每隔多少 tick 检定一次(6000=5分钟)
     public int wildDragonMaxAlive = 1;                // 全服同时存活上限(稀有 BOSS 事件)
@@ -800,7 +800,7 @@ public class YongyeConfig {
     /** 法术 AoE 半径(格)。 */
     public double anubisSpellRadius = 6.0;
     /** 法术 AoE 魔法伤害量。 */
-    public double anubisSpellDamage = 45.0;
+    public double anubisSpellDamage = 68.0;
     /** 恶灵召唤冷却(tick)。 */
     public int anubisSummonCooldownTicks = 600;
     /** 同场恶灵数量上限(超过不再召唤)。 */
@@ -812,7 +812,7 @@ public class YongyeConfig {
     /** 阿努比斯自然降临总开关。 */
     public boolean enableAnubisSpawn = true;
     /** 第几天起才可能降临(游戏天数)。 */
-    public int anubisMinDay = 10;
+    public int anubisMinDay = 5;      // m339
     /** 每次检定的降临概率。 */
     public double anubisSpawnChance = 0.03;
     /** 每隔多少 tick 检定一次(6000=5分钟)。 */
@@ -903,7 +903,7 @@ public class YongyeConfig {
     /** 夜蚀群系总开关(侵蚀转化 + 全生物敌化 + 侵蚀掉落 + 自然侵蚀)。 */
     public boolean enableBlight = true;
     /** 自然侵蚀起始天数:第 N 天起才可能自然出现侵蚀区(命令 /yongye blight 不受限)。 */
-    public int blightStartDay = 12;
+    public int blightStartDay = 1;   // m338:第 1 天即可自然侵蚀(作者:11 天太慢)
     /** 每次检定自然出现新侵蚀区的概率。 */
     public double blightSeedChance = 0.03;
     /** 自然侵蚀检定间隔(tick,1200=1 分钟)。 */
@@ -938,11 +938,11 @@ public class YongyeConfig {
     public double bossEntranceShake = 1.4;
     /** 五只皮肤 BOSS 的出场基础血量(生成后还会再吃天数成长 + 玩家攻击对位,只增不减;
      *  改这些值需重启生效——属性在实体注册时烘焙)。 */
-    public double anubisBaseHealth = 1.0E6;
-    public double phoenixBaseHealth = 4.0E5;
-    public double deathMageBaseHealth = 3.0E5;
-    public double redSpiderBaseHealth = 2.5E5;
-    public double toroDragonBaseHealth = 6.0E5;
+    public double anubisBaseHealth = 1.5E6;   // m339 加强
+    public double phoenixBaseHealth = 6.0E5;
+    public double deathMageBaseHealth = 4.5E5;
+    public double redSpiderBaseHealth = 3.75E5;
+    public double toroDragonBaseHealth = 9.0E5;
 
     // ============ m264:蚀矿(只在被侵蚀的土地上出现) ============
     /** 侵蚀区生成时每个区块播种的矿脉数(0=关)。 */
@@ -957,43 +957,46 @@ public class YongyeConfig {
     // ============ m265:夜蚀套装(灵魂绑定) ============
     /** 夜蚀盔甲灵魂绑定总开关:认主(第一个拿到的人)、别人捡不起、死亡不掉落重生归还。 */
     public boolean blightArmorSoulbound = true;
+    /** m338 锻造爆震:夜蚀套装合成成功瞬间爆炸(演出+自伤,夜蚀之力不稳定)。 */
+    public boolean blightForgeBlast = true;
+    public double blightForgeBlastDamage = 6.0;      // 爆震自伤(3 颗心,magic 源)
 
     // ============ m268:皮肤 BOSS 技能包(伤害均为施放时点的基础值,不吃成长缩放) ============
     // —— 浴火凤凰 ——
     /** 烈焰吐息:冷却 / 单段伤害(直线火舌,命中点燃)。 */
-    public int phoenixBeamCooldownTicks = 160;
-    public double phoenixBeamDamage = 30.0;
+    public int phoenixBeamCooldownTicks = 120;
+    public double phoenixBeamDamage = 45.0;
     /** 火焰龙卷:冷却 / 伤害(目标脚下起火旋风,命中击飞+点燃)。 */
-    public int phoenixTornadoCooldownTicks = 300;
-    public double phoenixTornadoDamage = 25.0;
+    public int phoenixTornadoCooldownTicks = 220;
+    public double phoenixTornadoDamage = 38.0;
     /** 浴火重生(一次性):血量跌破该比例时蜷入烈焰之卵 5 秒无敌,随后回复最大血量×healRatio 并爆炎。 */
     public double phoenixRebirthThreshold = 0.30;
     public double phoenixRebirthHealRatio = 0.40;
     // —— 死亡法师 ——
     /** 魂火锁定:冷却 / 伤害(目标脚下魂火标记 1.25 秒后爆燃,附凋零)。 */
-    public int mageStrikeCooldownTicks = 140;
-    public double mageStrikeDamage = 35.0;
+    public int mageStrikeCooldownTicks = 110;
+    public double mageStrikeDamage = 52.0;
     /** 亡者音爆:冷却 / 伤害(近身范围击退+缓速)。 */
-    public int mageNovaCooldownTicks = 240;
-    public double mageNovaDamage = 25.0;
+    public int mageNovaCooldownTicks = 180;
+    public double mageNovaDamage = 38.0;
     /** 虚影闪现:被贴脸挨打后闪现到目标侧后方的冷却。 */
-    public int mageBlinkCooldownTicks = 200;
+    public int mageBlinkCooldownTicks = 150;
     // —— 红蜘蛛 ——
     /** 蛛网陷阱:冷却(目标脚下铺蛛网+中毒)。 */
-    public int spiderWebCooldownTicks = 200;
+    public int spiderWebCooldownTicks = 150;
     /** 猛扑:冷却 / 落地范围伤害。 */
-    public int spiderPounceCooldownTicks = 160;
-    public double spiderPounceDamage = 25.0;
+    public int spiderPounceCooldownTicks = 120;
+    public double spiderPounceDamage = 38.0;
     /** 蛛群咆哮(一次性):血量跌破该比例时怒吼召唤 spiderBroodCount 只毒液蜘蛛围攻。 */
     public double spiderBroodHealthThreshold = 0.5;
     public int spiderBroodCount = 4;
     // —— 自建末影龙 ——
     /** 龙息射线:冷却 / 伤害(直线龙息,命中缓速)。 */
-    public int toroBreathCooldownTicks = 140;
-    public double toroBreathDamage = 30.0;
+    public int toroBreathCooldownTicks = 110;
+    public double toroBreathDamage = 45.0;
     /** 俯冲冲撞:冷却 / 撞击伤害(锁定目标高速俯冲,撞点范围伤害+大击退)。 */
-    public int toroDiveCooldownTicks = 220;
-    public double toroDiveDamage = 45.0;
+    public int toroDiveCooldownTicks = 170;
+    public double toroDiveDamage = 68.0;
     /** 重力撕裂(一次性):血量跌破该比例时 24 格内玩家被龙威掀上天(漂浮+伤害)。 */
     public double toroGravityHealthThreshold = 0.4;
 
@@ -1387,6 +1390,33 @@ public class YongyeConfig {
                 // m253:战斗爽全物品黑名单默认值改版 ""→内置「前期拿不到」清单;仅当仍为空(m250 旧默认)时迁移,自定义不动
                 if (INSTANCE.questBattleAnyItemExtraBans == null || INSTANCE.questBattleAnyItemExtraBans.isBlank())
                     INSTANCE.questBattleAnyItemExtraBans = QUEST_BANS_DEFAULT;
+                // m338/m339:蚀域第1天+皮肤BOSS第5天+BOSS全线加强;仅当仍为旧默认时迁移,自定义不动
+                if (INSTANCE.blightStartDay == 12 || INSTANCE.blightStartDay == 11) INSTANCE.blightStartDay = 1;
+                if (INSTANCE.mobBossStartDay == 10) INSTANCE.mobBossStartDay = 5;
+                if (INSTANCE.anubisMinDay == 10) INSTANCE.anubisMinDay = 5;
+                if (INSTANCE.wildDragonMinDay == 10) INSTANCE.wildDragonMinDay = 5;
+                if (INSTANCE.anubisBaseHealth == 1.0E6) INSTANCE.anubisBaseHealth = 1.5E6;
+                if (INSTANCE.phoenixBaseHealth == 4.0E5) INSTANCE.phoenixBaseHealth = 6.0E5;
+                if (INSTANCE.deathMageBaseHealth == 3.0E5) INSTANCE.deathMageBaseHealth = 4.5E5;
+                if (INSTANCE.redSpiderBaseHealth == 2.5E5) INSTANCE.redSpiderBaseHealth = 3.75E5;
+                if (INSTANCE.toroDragonBaseHealth == 6.0E5) INSTANCE.toroDragonBaseHealth = 9.0E5;
+                if (INSTANCE.phoenixBeamCooldownTicks == 160) INSTANCE.phoenixBeamCooldownTicks = 120;
+                if (INSTANCE.phoenixBeamDamage == 30.0) INSTANCE.phoenixBeamDamage = 45.0;
+                if (INSTANCE.phoenixTornadoCooldownTicks == 300) INSTANCE.phoenixTornadoCooldownTicks = 220;
+                if (INSTANCE.phoenixTornadoDamage == 25.0) INSTANCE.phoenixTornadoDamage = 38.0;
+                if (INSTANCE.mageStrikeCooldownTicks == 140) INSTANCE.mageStrikeCooldownTicks = 110;
+                if (INSTANCE.mageStrikeDamage == 35.0) INSTANCE.mageStrikeDamage = 52.0;
+                if (INSTANCE.mageNovaCooldownTicks == 240) INSTANCE.mageNovaCooldownTicks = 180;
+                if (INSTANCE.mageNovaDamage == 25.0) INSTANCE.mageNovaDamage = 38.0;
+                if (INSTANCE.mageBlinkCooldownTicks == 200) INSTANCE.mageBlinkCooldownTicks = 150;
+                if (INSTANCE.spiderWebCooldownTicks == 200) INSTANCE.spiderWebCooldownTicks = 150;
+                if (INSTANCE.spiderPounceCooldownTicks == 160) INSTANCE.spiderPounceCooldownTicks = 120;
+                if (INSTANCE.spiderPounceDamage == 25.0) INSTANCE.spiderPounceDamage = 38.0;
+                if (INSTANCE.toroBreathCooldownTicks == 140) INSTANCE.toroBreathCooldownTicks = 110;
+                if (INSTANCE.toroBreathDamage == 30.0) INSTANCE.toroBreathDamage = 45.0;
+                if (INSTANCE.toroDiveCooldownTicks == 220) INSTANCE.toroDiveCooldownTicks = 170;
+                if (INSTANCE.toroDiveDamage == 45.0) INSTANCE.toroDiveDamage = 68.0;
+                if (INSTANCE.anubisSpellDamage == 45.0) INSTANCE.anubisSpellDamage = 68.0;
                 // —— 陈旧检查:对比文件键 vs 当前字段,警告死键/缺失键/版本不符 ——
                 try {
                     JsonObject obj = JsonParser.parseString(json).getAsJsonObject();

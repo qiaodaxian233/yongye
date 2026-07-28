@@ -1,8 +1,12 @@
 {
   "type": "minecraft:smelting",
   "category": "misc",
-  "ingredient": { "item": "yongye:blight_ore" },
-  "result": { "id": "yongye:blight_ingot" },
+  "ingredient": {
+    "item": "yongye:blight_ore"
+  },
+  "result": {
+    "id": "yongye:blight_ingot"
+  },
   "experience": 2.0,
-  "cookingtime": 200
+  "cookingtime": 2400
 }

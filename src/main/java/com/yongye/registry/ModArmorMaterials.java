@@ -29,18 +29,18 @@ public final class ModArmorMaterials {
             Identifier.of(Yongye.MOD_ID, "blight"),
             new ArmorMaterial(
                     Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
-                        map.put(ArmorItem.Type.BOOTS, 9);
-                        map.put(ArmorItem.Type.LEGGINGS, 13);
-                        map.put(ArmorItem.Type.CHESTPLATE, 17);
-                        map.put(ArmorItem.Type.HELMET, 9);
-                        map.put(ArmorItem.Type.BODY, 17);
+                        map.put(ArmorItem.Type.BOOTS, 12);      // m338 再上调(锻造有爆震代价,数值配得上)
+                        map.put(ArmorItem.Type.LEGGINGS, 18);
+                        map.put(ArmorItem.Type.CHESTPLATE, 24);
+                        map.put(ArmorItem.Type.HELMET, 12);
+                        map.put(ArmorItem.Type.BODY, 24);
                     }),
                     25,                                                    // 附魔亲和(m272 上调)
                     SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE,
                     () -> Ingredient.ofItems(ModItems.BLIGHT_INGOT),
                     List.of(new ArmorMaterial.Layer(Identifier.of(Yongye.MOD_ID, "blight"))),
-                    12.0f,                                                 // 韧性(m272:6→12)
-                    0.2f                                                   // 每件击退抗性(m272:0.1→0.2)
+                    16.0f,                                                 // 韧性(m338:12→16)
+                    0.25f                                                  // 每件击退抗性(m338:0.2→0.25)
             ));
 
     public static void init() {

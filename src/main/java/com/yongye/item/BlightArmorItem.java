@@ -25,6 +25,26 @@ import java.util.List;
  */
 public class BlightArmorItem extends ArmorItem {
 
+    /** m338:锻造爆震——夜蚀之力不稳定,合成成功(从合成结果格拿取)瞬间爆炸:
+     *  爆炸粒子+爆炸音+对锻造者一记 magic 自伤(可关可调,零方块破坏;onCraftByPlayer 已核 yarn method_54465)。 */
+    @Override
+    public void onCraftByPlayer(net.minecraft.item.ItemStack stack, net.minecraft.world.World world,
+                                net.minecraft.entity.player.PlayerEntity player) {
+        super.onCraftByPlayer(stack, world, player);
+        com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();
+        if (!cfg.blightForgeBlast) return;
+        if (world instanceof net.minecraft.server.world.ServerWorld sw) {
+            sw.spawnParticles(net.minecraft.particle.ParticleTypes.EXPLOSION_EMITTER,
+                    player.getX(), player.getBodyY(0.5), player.getZ(), 1, 0, 0, 0, 0);
+            sw.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    net.minecraft.sound.SoundEvents.ENTITY_GENERIC_EXPLODE,
+                    net.minecraft.sound.SoundCategory.BLOCKS, 1.2f, 0.8f);
+            player.damage(sw.getDamageSources().magic(), (float) Math.max(0, cfg.blightForgeBlastDamage));
+            player.sendMessage(net.minecraft.text.Text.literal("☠ 夜蚀之力暴走!锻造成功,但代价是血肉")
+                    .formatted(net.minecraft.util.Formatting.DARK_PURPLE), true);
+        }
+    }
+
     public BlightArmorItem(RegistryEntry<ArmorMaterial> material, Type type, Settings settings) {
         super(material, type, settings);
     }
