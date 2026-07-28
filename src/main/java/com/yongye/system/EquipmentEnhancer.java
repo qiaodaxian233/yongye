@@ -189,6 +189,9 @@ public final class EquipmentEnhancer {
         // 强化过的装备无法因耐久损坏(保护玩家投入;被夺/夺回也不会被打坏)
         if (level > 0) {
             out.set(DataComponentTypes.UNBREAKABLE, new net.minecraft.component.type.UnbreakableComponent(false));
+        } else {
+            // m324:降回 0 级(被夺降级/指令归零)清掉强化痕迹,否则 copy 残留 UNBREAKABLE 白嫖不坏
+            out.remove(DataComponentTypes.UNBREAKABLE);
         }
 
         Item item = out.getItem();
@@ -267,6 +270,10 @@ public final class EquipmentEnhancer {
             int curDamage = out.getDamage(); // 保留已损耗,不免费修复
             out.set(DataComponentTypes.MAX_DAMAGE, newMax);
             out.set(DataComponentTypes.DAMAGE, Math.min(curDamage, newMax - 1));
+        } else if (level == 0 && pristine.isDamageable()) {
+            // m324:归零同时把耐久上限组件还原为物品默认(remove=回默认),损耗钳到默认上限内
+            out.remove(DataComponentTypes.MAX_DAMAGE);
+            out.set(DataComponentTypes.DAMAGE, Math.min(out.getDamage(), Math.max(1, pristine.getMaxDamage()) - 1));
         }
         return out;
     }

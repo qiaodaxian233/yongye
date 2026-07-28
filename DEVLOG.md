@@ -2698,3 +2698,13 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **结论:核心逻辑扎实,未发现可刷 CD 的洞**——SkillUsePayload 与 UpgradeWeaponSkillPayload 的 index 均有服务端越界校验(崩服向已防);冷却写入在施放成功后、读取在施放前,无竞态;升级减 CD 有 skillUpgradeCdFloor 下限防归零。
 - **修 1 处口径不一致**:职业小技能/大招用 `world.getTime()`、武器技能用 `server.getTicks()`——两者会话内均单调等价,但混用埋隐患(未来任何跨表比较/HUD 同步都会踩),统一为 `server.getTicks()`。
 - 零配置零版本号;待编译验证:无(`p.server.getTicks()` 武器技能同文件在用)。遗留(下次可做):CD 剩余目前只在按键时以 actionbar 提示,可考虑挂到看板 HUD 常显。
+
+## m322 无配方物品「获取:」提示(作者点名,2026-07-28)
+- 集中式 `SourceHints`(client)一张表+两个 instanceof(强化石十档/技能书多类型),新 ItemTooltipCallback 挂灰字「获取:…」;覆盖碎片/结晶/核心/血核/终焉精华/保护卷/自动双卷/永夜尘/裂隙残片/深渊魂晶/选职书,文案逐条对过 config 注释与 handler 实际口径;**有配方的物品不加**(配方书可查,防噪音)。配置+1 `itemSourceTooltips`,v91→92。
+
+## m323 一键合书=升级机制(作者:「不应每个等级都重新合成」,2026-07-28)
+- 背包右列「设置」下新增「合书」钮 → MergeBooksPayload → BookMerger(服务端权威):全部技能书/血量书**按类型各合成一本**,等级相加(long 防溢出+封顶钳制),按**结果档**自动扣 1 个阶段材料(与 m319 工作台同阈值),缺料该类跳过并提示、封顶不涨跳过防误亏;工作台 2 本合成保留当零头用。配置+1 `enableBookMerge`,v92→93。
+
+## m324 深挖修复:强化归零组件残留(2026-07-28)
+- `withLevel(x,0)`(被夺降级/指令归零路径)复制自旧强化件,残留 UNBREAKABLE(白嫖永不坏)与 MAX_DAMAGE(耐久上限回不去)。修:归零时 remove 两组件回物品默认,损耗钳默认上限内(`ItemStack.remove` 已核 yarn 官方映射 method_57381)。
+- 顺手复核未见新问题:MobEnhancementHandler 不碰装备组件(不受 m318 波及);两书合成配方 remainder 走 SpecialCraftingRecipe 默认口径正确;enhanceFromInventory/两技能 payload 边界均已有校验。
