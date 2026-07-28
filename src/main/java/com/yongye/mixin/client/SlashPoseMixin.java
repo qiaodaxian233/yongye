@@ -45,8 +45,13 @@ public abstract class SlashPoseMixin {
         if (!(entity instanceof PlayerEntity)) return;    // 只对玩家摆姿态(语义与旧版一致)
         BipedEntityModel<?> m = (BipedEntityModel<?>) (Object) this;
         float p = m.handSwingProgress;                    // 渲染器每帧写入的插值挥手进度
-        if (p <= 0f || p >= 1f) return;
-        if (!SlashFxManager.poseEligible(entity)) return; // 开关 + 主手武器判定,与轨迹同一套
+        YongyeConfig cfg = YongyeConfig.get();
+
+        // m316:疾跑姿态与挥砍无关——只要在疾跑就摆;出刀瞬间(slashActive)拧身让位只留前倾
+        boolean slashActive = p > 0f && p < 1f && SlashFxManager.poseEligible(entity);
+        yongye$sprintPose(m, entity, limbAngle, limbDistance, cfg, slashActive);
+
+        if (!slashActive) return;                         // 开关 + 主手武器判定,与轨迹同一套
 
         boolean rightHanded = entity.getMainArm() == Arm.RIGHT;
         ModelPart arm = rightHanded ? m.rightArm : m.leftArm;
@@ -55,7 +60,6 @@ public abstract class SlashPoseMixin {
         ModelPart offLeg  = rightHanded ? m.leftLeg  : m.rightLeg;  // 副手侧腿(前弓)
         float dir = rightHanded ? 1f : -1f;
 
-        YongyeConfig cfg = YongyeConfig.get();
         boolean bends = cfg.slashFxBends;
         float s = MathHelper.clamp((float) cfg.slashFxPoseScale, 0.3f, 2.5f); // m248 幅度倍率
         float e = MathHelper.sin(p * (float) Math.PI) * s;  // 拧身/弓步包络:起收归零(单向)
@@ -111,6 +115,55 @@ public abstract class SlashPoseMixin {
             m.head.yaw += 0.10f * e * dir;                 // 旧版:头部微随动
         }
         off.pitch += 0.22f * e;                            // 副手反向摆一点,身体不僵
+    }
+
+    /**
+     * m316:MoBends 式疾跑姿态(作者:「跑步姿势别扭不够帅,去 GitHub 找个帅的」;
+     * 已扒 Iwoplaza/MoBends 的 SprintAnimationBit 逐帧关键值,MIT 协议,见 THIRD_PARTY_NOTICES)。
+     * MoBends 疾跑「帅」的四板斧,全部换算成 TAIL 叠加旋转量:
+     *  ① 躯干随步幅左右大拧 cos(L)·−40°——发力感的大头(他们 bodyRotationY=cos(limbSwing)*-40);
+     *  ② 前倾起伏 cos(2L)·10°+10°——步步向前扑(他们 bodyRotationX=cos(limbSwing*2)*10+10);
+     *  ③ 头部全量反补(灵魂):head −= 躯干增量,身体甩出去、视线死锁前方(他们 head.orient(headYaw−bodyRotation));
+     *  ④ 屈肘泵臂:他们前臂 −10°/−45° 交替弯肘,我们无肘关节 → 均值前置偏置 −27° 造肘弯错觉 + 同频加幅摆臂。
+     * 频率注意:MoBends 用 0.8× 慢频是因为它整体**替换**角度;我们是**叠加**,必须与原版步频
+     * (limbAngle·0.6662)同频,否则两套频率打拍(拍频)手脚越跑越飘。相位与原版一致:右臂 +π/右腿 0。
+     * 安全边界同 m243:只碰旋转不碰 pivot;body/head/臂/腿旋转原版每帧全量重赋,TAIL 叠加不跨帧累积。
+     * 出刀瞬间(slashActive)拧身归零、前倾×0.6,把上身让给挥砍姿态(学 MoBends AttackStanceSprintBit 的分工)。
+     */
+    private static void yongye$sprintPose(BipedEntityModel<?> m, LivingEntity entity,
+                                          float limbAngle, float limbDistance,
+                                          YongyeConfig cfg, boolean slashActive) {
+        if (!cfg.sprintPose) return;
+        if (!entity.isSprinting() || entity.hasVehicle()) return;
+        if (entity.isSwimming() || entity.isFallFlying()) return;   // 游泳冲刺/鞘翅滑翔有专属姿态,不叠
+        float s = MathHelper.clamp((float) cfg.sprintPoseScale, 0.3f, 2.0f);
+        float A = Math.min(limbDistance, 1f) * s;                   // 随步幅淡入淡出(起步/停步平滑)
+        if (A <= 0.02f) return;
+        float L = limbAngle * 0.6662f;                              // 与原版步频同频(见类注释)
+        float PI = (float) Math.PI;
+
+        // ① 躯干拧身 ±40° + ② 前倾 10°±10° 起伏
+        float bYaw   = MathHelper.cos(L) * -0.70f * A;
+        float bPitch = (MathHelper.cos(L * 2f) * 0.175f + 0.175f) * A;
+        if (slashActive) { bYaw = 0f; bPitch *= 0.6f; }             // 出刀:上身让位,只留前倾冲劲
+        m.body.yaw   += bYaw;
+        m.body.pitch += bPitch;
+        // ③ 头部全量反补:视线死锁
+        m.head.yaw   += -bYaw;
+        m.head.pitch += -bPitch;
+
+        if (!slashActive) {
+            // ④ 屈肘泵臂:前置 −27° 肘弯错觉 + 同频加幅(原版 1.0 rad → ~1.55)+ 微外张 ±5°
+            m.rightArm.pitch += (-0.48f + MathHelper.cos(L + PI) * 0.55f) * A;
+            m.leftArm.pitch  += (-0.48f + MathHelper.cos(L) * 0.55f) * A;
+            m.rightArm.roll  +=  0.09f * A;
+            m.leftArm.roll   += -0.09f * A;
+        }
+        // 腿:步幅加大一脚(原版 1.4 → ~1.7 rad)+ 前倾配重 −5° + 微分腿 ±2°(MoBends legs −5°+rotZ±2°)
+        m.rightLeg.pitch += (-0.09f + MathHelper.cos(L) * 0.30f) * A;
+        m.leftLeg.pitch  += (-0.09f + MathHelper.cos(L + PI) * 0.30f) * A;
+        m.rightLeg.roll  +=  0.035f * A;
+        m.leftLeg.roll   += -0.035f * A;
     }
 
     /** 三段挥击包络(m243):蓄力反向(0~0.22,峰 −0.4)→ smoothstep 爆发到 1(~0.52)→ 二次缓落归零。 */

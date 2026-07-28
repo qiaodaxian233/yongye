@@ -2662,3 +2662,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 四张红眼贴图(zombie / zombie_villager 各 light+deep)每只眼从 **2×3 缩为 2×2**(x9-10 & x13-14,y11-12),整体上移半格更贴眼窝,不再是大块。
 - 分档配色修正:普通=浅红 **(255,75,75,α220)** 清亮红不偏桃(原 255,120,105,α70 太肉发橙);精英=深红 **(185,0,12,α255)** 满实血红。
 - 纯资源:渲染代码 / UV / getEyes 满亮自发光 / 配置全不动,configVersion 不变(89)。要更小/更大/更红说一声改数值即可。
+
+## m316 MoBends 式疾跑姿态(作者:「跑步姿势别扭不够帅,去 GitHub 找个帅的」,2026-07-28)
+- **选型**:重扒 Iwoplaza/MoBends(MIT)的 `SprintAnimationBit` 逐帧关键值——m243 已验证过它的发力手法,疾跑位它的观感就是社区公认的"帅"(前扑+拧身+泵臂)。THIRD_PARTY_NOTICES 已挂名。
+- **四板斧移植(SlashPoseMixin 新 `yongye$sprintPose`,TAIL 叠加纯旋转)**:① 躯干随步幅左右大拧 cos(L)·−40°;② 前倾起伏 cos(2L)·10°+10°(步步向前扑);③ **头部全量反补**(灵魂:body 甩、视线死锁);④ 屈肘泵臂近似(无肘关节→前置 −27° 肘弯错觉+同频加幅至 ~1.55 rad+微外张±5°),腿步幅 1.4→~1.7 rad+前倾配重−5°+微分腿±2°。
+- **频率关键决策**:MoBends 用 0.8× 慢频是因为它整体**替换**角度;我们是**叠加**,改用与原版步频(limbAngle·0.6662)同频、相位对齐(右臂+π/右腿 0),否则拍频手脚越跑越飘。
+- **让位规则**:出刀瞬间(slashActive)拧身归零、前倾×0.6,上身交给挥砍七式(学 MoBends AttackStanceSprintBit 分工);幅度随 limbDistance 淡入淡出,起步/停步平滑。门:仅玩家、疾跑中、非骑乘/游泳/滑翔。
+- 配置+2:`sprintPose`(默认开)/`sprintPoseScale`(默认 1.0,0.3~2.0 钳制),**configVersion 89→90**;Debug 战斗手感区+2 钮(跑步姿态·开/关)。
+- **待编译验证(仅 2 项,低险)**:`entity.isSwimming()` / `entity.isFallFlying()` 首用(yarn 标准 Entity/LivingEntity 公法,与已在用的 isSprinting/hasVehicle 同族)。实机盯:第三人称疾跑看拧身泵臂节奏与视线是否稳、疾跑中出刀(突刺)上身是否顺滑让位、骑马/游泳/鞘翅不受影响、关 sprintPose 回原版。

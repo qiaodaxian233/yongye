@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 89; // m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 90; // m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -1272,6 +1272,12 @@ public class YongyeConfig {
     public double slashFxSize = 1.0;
     /** 斩击轨迹亮度(0~1,0=等效关闭)。 */
     public double slashFxAlpha = 0.75;
+
+    /** m316:MoBends 式疾跑姿态(躯干随步幅拧身±40°+前倾起伏+头部反补锁视线+屈肘泵臂+步幅加大;
+     *  扒 Iwoplaza/MoBends SprintAnimationBit 关键值,MIT 协议,见 THIRD_PARTY_NOTICES)。关=回原版直臂跑。 */
+    public boolean sprintPose = true;
+    /** m316:疾跑姿态幅度倍率(0.3~2.0 生效钳制;嫌浮夸调 0.7,想更炸调 1.4)。 */
+    public double sprintPoseScale = 1.0;
 
     /** 追杀:墙后卡住时,若能在玩家身边找到安全落点就传送过去;找不到则靠挖墙+起跳翻越(三者组合) */
     public boolean pursuitTeleportWallStuck = true;

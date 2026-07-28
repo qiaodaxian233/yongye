@@ -203,6 +203,8 @@ public class DebugScreen extends Screen {
                             new Btn("轨迹·大1.3", "yongye config set slashFxSize 1.3"),
                             new Btn("轨迹·默认1", "yongye config set slashFxSize 1.0"),
                             new Btn("仅本模组武器", "yongye config set slashFxVanillaWeapons false"),
+                            new Btn("跑步姿态·开", "yongye config set sprintPose true"),
+                            new Btn("跑步姿态·关", "yongye config set sprintPose false"),
                     }),
                     new Section("常用数值(config set 预设)", new Btn[]{
                             new Btn("技书精英0.001", "yongye config set skillBookDropChanceElite 0.001"),

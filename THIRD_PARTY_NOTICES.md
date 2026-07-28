@@ -13,3 +13,13 @@
 未使用其着色器蒙版及任何代码)。
 
 MIT 许可证要求保留上述版权声明;完整许可证文本见来源仓库 LICENSE 文件。
+
+## MoBends（MIT License）
+
+- 来源:https://github.com/Iwoplaza/MoBends
+- 用途:m243 全身发力姿态手法(躯干参与/头部反补/攻击弓步/不对称包络)与 m316 疾跑姿态
+  (SprintAnimationBit 的拧身±40°/前倾起伏/头部全量反补/屈肘泵臂关键值)之移植参考,
+  未直接复制其代码(其 IModelPart 自建骨架体系不可移植),关键帧数值换算为本模组 TAIL 叠加旋转量。
+- 许可证:MIT License — Copyright (c) 2017 Iwo Plaza(核验日期 2026-07-28)
+
+MIT 许可证要求保留上述版权声明;完整许可证文本见来源仓库 LICENSE 文件。
