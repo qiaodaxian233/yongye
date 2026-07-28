@@ -62,6 +62,18 @@ public class YongyeClient implements ClientModInitializer {
                 (entityType, entityRenderer, registrationHelper, context) ->
                         registrationHelper.register(new EliteSkinFeatureRenderer(entityRenderer)));
 
+        // m310 所有僵尸红眼+紫光:僵尸/尸壳/溺尸共用僵尸脸位贴图,僵尸村民单独一张(村民头 8x10 眼位不同)
+        LivingEntityFeatureRendererRegistrationCallback.EVENT.register(
+                (entityType, entityRenderer, registrationHelper, context) -> {
+                    if (entityType == net.minecraft.entity.EntityType.ZOMBIE
+                            || entityType == net.minecraft.entity.EntityType.HUSK
+                            || entityType == net.minecraft.entity.EntityType.DROWNED) {
+                        registrationHelper.register(new ZombieRedEyesFeatureRenderer(entityRenderer, false));
+                    } else if (entityType == net.minecraft.entity.EntityType.ZOMBIE_VILLAGER) {
+                        registrationHelper.register(new ZombieRedEyesFeatureRenderer(entityRenderer, true));
+                    }
+                });
+
         // 自定义末影龙 BOSS 的 GeckoLib 渲染器
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
                 com.yongye.registry.ModEntities.TORO_ENDER_DRAGON,

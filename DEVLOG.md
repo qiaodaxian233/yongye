@@ -2608,3 +2608,21 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **紧凑**:新 `hudInfoCompact`(默认开)三行全换短文案——行1「第N天·击杀X」去空格;行2「下阶段:永夜I·暗潮 mm:ss」(去空格+短前缀);行3 预告换服务端短版「N天后:首事件+M」(M=同日余件数,明天则「明天:xxx」照旧转橙红)。关掉=逐字回 m289 长文案。
 - **实现口径**:预告长短两版都在服务端 `buildDayForecast` 一次拼好(改返回 `String[]{长,短}`),`HudInfoPayload` 加 `dayForecastShort` 字段同包下发——客户端按**自己的**配置挑,专用服上各客户端可各选各的;顺手让「同日 3 件封顶+等」对周期进化(怪物进化)也生效(原版逻辑 3 件已满时进化被静默吞掉)。
 - 配置 +4,configVersion **85→86**。零新 API 零待编译验证(switch 表达式 m225 先例,其余全在树)。
+
+## m309 精英战斗AI(2026-07-28)
+- 作者点名五件套,全部叠在原版 AI 之上(速度脉冲/寻路改道),零新 Goal、零 mixin,新 `EliteCombatAI` 由 EliteHandler tick 循环驱动(逃跑接管时跳过感知/远程技能/瞬移):
+- **跳劈**:持武器精英(第 N 天配刀或抢来的,EquipmentEnhancer.isWeapon 判定)目标 3~10 格且冷却毕(默 5s)→ 起跳扑向目标(照 m268 红蜘蛛猛扑三件套 addVelocity+grace+isOnGround),落地对 2.6 格内玩家/目标结算 `攻击力×eliteLeapDamageMult(1.6)` + 击退 + 烟尘重响——伤害确实比平砍高。
+- **精英骷髅走位**:目标 14 格内每 5t 一次侧移脉冲(每 2 秒换向、按实体 id 错相=一群小白不同步跳舞),贴脸(<5 格)后撤拉开、过远微逼近、12% 概率小跳。纯 addVelocity 不与原版 BowAttackGoal 抢移动控制。
+- **精英苦力怕自爆翻倍**:m304 单击钳制同款「取消+重放」——攻击者为精英苦力怕即 `伤害×eliteCreeperDamageMult(2.0)`,CREEPER_REAPPLY 守卫防递归。苦力怕只靠自爆输出,不必再判伤害类型。
+- **血量低逃走、回复了又来**:血量 < 20% → 撒腿跑(每 tick 清目标压掉原版重锁 + 背向 24 格内最近玩家寻路逃离 12 格、找不到路 MoveControl 直线跑 + 速度Ⅱ + 逃跑烟尘),边逃边回血(每秒最大生命×5%);回到 90%(或逃超 15s)→ **咆哮杀回**(RAVAGER_ROAR+怒焰,重锁最近玩家),回归后 5s 内不再逃防临界血量打摆子。苦力怕不逃——它的活法是自爆。
+- **跳搭(快速垫块爬高)**:近战精英(骷髅/女巫远程、蜘蛛会爬墙,三者排除)目标在头顶(高差≥2.5 水平≤5.5)→ 原地直上起跳、越过起跳格 1.05 即在脚下垫圆石,两跳间隔默 8t≈每秒 2.5 格(作者点名「速度很快」);受 mobGriefing 游戏规则约束,头顶两格有方块不起跳防撞头死循环,起跳被顶 grace 后放弃本次。
+- 配置 +14,configVersion **86→87**(与 m310 合并跳 88)。
+- 待编译验证 2 处均低险有退路:`GameRules.DO_MOB_GRIEFING`(常量首用,KEEP_INVENTORY 同族取法在树已编过;报错删那一行=不受规则约束)、`SoundEvents.BLOCK_STONE_PLACE`(标准常量首用;报错删那一句=无声垫块)。其余 API(addVelocity/velocityModified/takeKnockback+速度包/mobAttack/startMovingTo/isIdle/moveTo/setBlockState/isAir/getAttributeValue)全部在树先例逐字核对。
+
+## m310 所有僵尸红眼+紫光(2026-07-28)
+- 作者点名:所有僵尸眼睛变红、身上冒紫色光。纯客户端观感,零服务端零网络。
+- **红眼**:新 `ZombieRedEyesFeatureRenderer`(照 m280 EliteSkinFeatureRenderer 叠皮同款重渲一层),贴图=除眼睛全透明的 64×64 叠层——僵尸/尸壳/溺尸共用僵尸脸位(前脸 (8,8)-(16,16),眼睛 v=12 行 u=9,10/13,14 亮红+上下行淡红辉光),僵尸村民单独一张(村民头 8×10,眼位 v=12~13);发光眼层(蜘蛛眼同款 RenderLayer.getEyes)+ 满亮 lightmap 0xF000F0 = **黑夜里也是两点红光**。注册按 EntityType 精确挂四类(ZOMBIE/HUSK/DROWNED/ZOMBIE_VILLAGER),僵尸猪灵是猪灵模型未纳入(要加另说)。隐身僵尸不画。
+- **紫光**:渲染帧内 16% 概率客户端本地撒一粒 WITCH 魔粒(紫色)——只有被渲染(=看得见)的僵尸才冒,自动就近削减,零成本。
+- 配置 +2(zombieRedEyes/zombiePurpleAura 均默开),configVersion **87→88**(与 m309 合并一次落盘)。
+- 待编译验证 2 处低险:`RenderLayer.getEyes`(蜘蛛眼同款标准 API 首用;报错换 getEntityCutoutNoCull(tex) 一行=不叠加发光但满亮照样红)、`World.addParticle`+`ParticleTypes.WITCH`(客户端标准粒子入口/原版常量;报错删紫光段)。
+- 已知取舍:僵尸村民眼位按村民 UV 推算,若实机偏 1px 改贴图像素即正(纯资源);溺尸外层贴图若恰在眼前有不透明像素可能局部遮红眼,实机看。

@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 86; // ...m305 烛之维度+7 · m308 看板挪位紧凑+4
+    public static final int CURRENT_CONFIG_VERSION = 88; // ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -141,6 +141,27 @@ public class YongyeConfig {
     public double eliteSenseRadius = 48.0;
     /** 精英女巫支援:每隔多少 tick 治疗/增益一次附近怪物 */
     public int eliteWitchSupportIntervalTicks = 60;
+
+    // ============ m309 精英战斗AI(作者点名) ============
+    /** 跳劈:持武器精英起跳扑向目标,落地重击=其攻击力×倍率;开关/冷却/倍率/最远触发距离(格) */
+    public boolean eliteLeapAttack = true;
+    public int eliteLeapCooldownTicks = 100;
+    public double eliteLeapDamageMult = 1.6;
+    public double eliteLeapMaxRange = 10.0;
+    /** 走位:精英骷髅左右横移+贴脸后撤+偶尔小跳(速度脉冲叠在原版AI上);强度=每次侧移冲量 */
+    public boolean eliteSkeletonStrafe = true;
+    public double eliteStrafeImpulse = 0.22;
+    /** 精英苦力怕自爆对生物伤害倍率(作者点名翻倍;≤1=关) */
+    public double eliteCreeperDamageMult = 2.0;
+    /** 逃跑:血量<占比→撒腿跑并回血(每秒最大生命×Regen),回到Return占比或超时→咆哮杀回;苦力怕不逃 */
+    public boolean eliteFleeEnable = true;
+    public double eliteFleeHealthFraction = 0.20;
+    public double eliteFleeReturnFraction = 0.90;
+    public double eliteFleeRegenPerSecond = 0.05;
+    public int eliteFleeMaxTicks = 300;
+    /** 跳搭:近战精英目标在头顶时跳+脚下垫圆石;间隔越小搭越快(默8t≈2.5格/秒);受mobGriefing约束 */
+    public boolean eliteBuildBlocks = true;
+    public int eliteBuildIntervalTicks = 8;
 
     // ============ Boss 翻倍(文档第 7 章)============
     public boolean enableBoss = true;
@@ -1158,6 +1179,12 @@ public class YongyeConfig {
     public boolean hudInfoCompact = true;
     /** m308 看板停靠位:0=左中(默认) 1=左上 2=左下 3=右上 4=右中 5=右下。/yongye config set hudInfoAnchor N 即改。 */
     public int hudInfoAnchor = 0;
+
+    // ============ m310 僵尸红眼+紫光(作者点名,纯客户端观感) ============
+    /** 所有僵尸(僵尸/尸壳/溺尸/僵尸村民)眼睛发红光,暗处也亮 */
+    public boolean zombieRedEyes = true;
+    /** 僵尸周身冒紫色魔粒 */
+    public boolean zombiePurpleAura = true;
     /** m308 看板微调偏移X(GUI 像素,正=向右;叠加在停靠位上,越界自动钳回屏内)。 */
     public int hudInfoOffsetX = 0;
     /** m308 看板微调偏移Y(GUI 像素,正=向下)。 */

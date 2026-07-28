@@ -11,6 +11,7 @@ import com.yongye.system.ArmorHealthHandler;
 import com.yongye.system.ArtifactManager;
 import com.yongye.system.BonusXpHandler;
 import com.yongye.system.BossHandler;
+import com.yongye.system.EliteCombatAI;
 import com.yongye.system.BossAbilityHandler;
 import com.yongye.system.CatastropheCoreManager;
 import com.yongye.system.EliteHandler;
@@ -104,6 +105,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.NightfallWeatherHandler.register();
         com.yongye.system.NightfallVisionHandler.register();
         EliteHandler.register();
+        EliteCombatAI.register(); // m309 精英战斗AI:跳劈/走位/自爆翻倍/逃跑回归/跳搭
         ArmorHealthHandler.register();
         LootHandler.register();
         com.yongye.system.ProtectScrollHandler.register();    // m159 强化保护卷:掉落 + 杀怪兑换

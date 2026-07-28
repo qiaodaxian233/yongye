@@ -359,6 +359,10 @@ public final class EliteHandler {
             }
         }
 
+        // m309 精英战斗AI(跳劈/走位/跳搭/逃跑)。逃跑接管本 tick 时直接返回——
+        // 逃命的精英不感知、不放远程技能、不瞬移,一心跑路回血,回来再算账。
+        if (EliteCombatAI.tick(sw, e, cfg)) return;
+
         LivingEntity target = e.getTarget();
 
         // 精英主动感知:没有目标(或目标已死)时,锁定感知半径内最近的玩家
