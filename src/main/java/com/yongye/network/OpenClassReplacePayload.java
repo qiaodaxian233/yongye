@@ -16,9 +16,10 @@ public record OpenClassReplacePayload(String newClassId, String slot0Id, String 
 
     public static final PacketCodec<PacketByteBuf, OpenClassReplacePayload> CODEC = PacketCodec.of(
             (value, buf) -> {
-                buf.writeString(value.newClassId);
-                buf.writeString(value.slot0Id);
-                buf.writeString(value.slot1Id);
+                // m336:null 免疫——职业列表附件曾出现 null 元素,writeString(null) 会 EncoderException 踢掉连接(作者崩溃截图)
+                buf.writeString(value.newClassId == null ? "" : value.newClassId);
+                buf.writeString(value.slot0Id == null ? "" : value.slot0Id);
+                buf.writeString(value.slot1Id == null ? "" : value.slot1Id);
             },
             buf -> new OpenClassReplacePayload(buf.readString(), buf.readString(), buf.readString())
     );

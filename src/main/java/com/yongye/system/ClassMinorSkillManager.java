@@ -51,7 +51,7 @@ public final class ClassMinorSkillManager {
 
         List<String> learned = ClassManager.learnedList(p);
         if (learned.isEmpty()) { msg(p, "你还没有职业", Formatting.RED); return; }
-        PlayerClass c = PlayerClass.byId(learned.get(0));
+        PlayerClass c = ClassManager.effectiveMain(p);   // m336:跟手——拿着啥职业武器就放啥职业的招
         if (c == null || !ClassManager.isActive(p, c)) { msg(p, "本命职业当前未生效", Formatting.RED); return; }
 
         long now = p.server.getTicks();   // m321:与武器技能(WeaponSkillManager)统一时基,三处 CD 同口径

@@ -65,7 +65,21 @@ public final class ClassManager {
     private static final Identifier MONK_HP_ID = Identifier.of(Yongye.MOD_ID, "class_monk_hp");
 
     public static List<String> learnedList(ServerPlayerEntity p) {
-        return new ArrayList<>(p.getAttachedOrElse(ModAttachments.LEARNED_CLASSES, List.of()));
+        ArrayList<String> l = new ArrayList<>(p.getAttachedOrElse(ModAttachments.LEARNED_CLASSES, List.of()));
+        l.removeIf(java.util.Objects::isNull);   // m336:去 null 自愈(污染的存档曾致 open_class_replace 编码崩)
+        return l;
+    }
+
+    /** m336:当前"实际本命"(作者:「拿着啥武器就是啥职业」)——手持已学职业的武器,该职业即为当前主职业
+     *  (大招/小技能/生效判定全跟手);空手或持其它武器回退 learned[0]。 */
+    public static PlayerClass effectiveMain(ServerPlayerEntity p) {
+        List<String> learned = learnedList(p);
+        if (YongyeConfig.get().classFollowWeapon
+                && p.getMainHandStack().getItem() instanceof com.yongye.item.ClassWeaponItem w
+                && learned.contains(w.playerClass.id)) {
+            return w.playerClass;
+        }
+        return learned.isEmpty() ? null : PlayerClass.byId(learned.get(0));
     }
 
     /** 纯查询:该职业是否已习得且当前生效(无副作用,供技能系统判定)。
@@ -74,6 +88,12 @@ public final class ClassManager {
         List<String> learned = learnedList(p);
         int idx = learned.indexOf(c.id);
         if (idx < 0) return false;
+        // m336:手持该职业武器=即时生效(免第二职业等级门;拿着啥武器就是啥职业)
+        if (YongyeConfig.get().classFollowWeapon
+                && p.getMainHandStack().getItem() instanceof com.yongye.item.ClassWeaponItem w
+                && w.playerClass == c) {
+            return true;
+        }
         if (idx == 0) return true;
         return p.experienceLevel >= YongyeConfig.get().classLevel2;
     }
