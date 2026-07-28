@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [ "ISI", "IBI", "IEI" ],
+  "key": {
+    "I": { "item": "yongye:blight_ingot" },
+    "S": { "item": "yongye:dragon_soul" },
+    "B": { "item": "yongye:chaos_blade" },
+    "E": { "item": "yongye:ending_essence" }
+  },
+  "result": { "id": "yongye:dragon_blade", "count": 1 }
+}

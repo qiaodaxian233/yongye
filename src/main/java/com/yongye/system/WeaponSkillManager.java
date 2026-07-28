@@ -46,7 +46,8 @@ public final class WeaponSkillManager {
         }
         int level = EquipmentEnhancer.getLevel(weapon);
         WeaponSkill skill = WeaponSkill.values()[index];
-        boolean chaosBlade = weapon.getItem() == com.yongye.registry.ModItems.CHAOS_BLADE;
+        boolean chaosBlade = weapon.getItem() == com.yongye.registry.ModItems.CHAOS_BLADE
+                || weapon.getItem() == com.yongye.registry.ModItems.DRAGON_BLADE; // m331 龙魂之刃同享免解锁
         if (!chaosBlade && !skill.isUnlocked(level)) {
             actionbar(player, "【" + skill.cn + "】未解锁(需品质「" + skill.unlockTier.cn + "」)", Formatting.GRAY);
             return;

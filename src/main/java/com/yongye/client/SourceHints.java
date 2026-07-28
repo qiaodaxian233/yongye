@@ -39,6 +39,7 @@ public final class SourceHints {
             m.put(ModItems.RIFT_FRAGMENT,          "灾变核心事件·苦修·材料兑换");
             m.put(ModItems.ABYSS_SOUL_CRYSTAL,     "永夜生存收益·苦修·材料兑换");
             m.put(ModItems.CLASS_SELECT_BOOK,      "首次进入世界自动发放;更换职业时消耗");
+            m.put(ModItems.DRAGON_SOUL,            "讨伐末影龙掉落(每次讨伐一枚);锻龙魂之刃");
             MAP = m;
         }
         return MAP.get(item);

@@ -106,6 +106,8 @@ public final class MainQuestLine {
             if (entity instanceof EnderDragonEntity) {
                 killer.setAttached(ModAttachments.MAIN_DRAGON_SLAIN, true);
                 NewGamePlusManager.activate(killer.getServer());   // m330:开启永夜+(幂等,全服广播)
+                killer.getInventory().offerOrDrop(new ItemStack(ModItems.DRAGON_SOUL,
+                        Math.max(1, YongyeConfig.get().dragonSoulPerKill)));   // m331:龙魂(每杀一龙一发)
                 killer.getServer().getPlayerManager().broadcast(
                         Text.literal("☀ " + killer.getName().getString() + " 讨伐了末影龙!永夜的终焉到来了!")
                                 .formatted(Formatting.GOLD, Formatting.BOLD), false);

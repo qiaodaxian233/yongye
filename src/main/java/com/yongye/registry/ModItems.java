@@ -43,6 +43,13 @@ public final class ModItems {
     /** m328 任务书:右键打开主线任务界面(进度存玩家附件,书丢不丢进度)。 */
     public static final Item QUEST_BOOK = register("quest_book",
             new com.yongye.item.QuestBookItem(new Item.Settings().maxCount(1).rarity(net.minecraft.util.Rarity.UNCOMMON)));
+    /** m331 龙魂:讨伐末影龙掉落,锻龙魂之刃的核心材料。 */
+    public static final Item DRAGON_SOUL = register("dragon_soul",
+            new Item(new Item.Settings().rarity(net.minecraft.util.Rarity.EPIC)));
+    /** m331 龙魂之刃:龙魂+夜蚀锭+混沌之刃锻成的终极武器(基础攻击约混沌两倍,自带+40生命)。 */
+    public static final Item DRAGON_BLADE = register("dragon_blade",
+            new com.yongye.item.DragonBladeItem(new Item.Settings().maxCount(1).rarity(net.minecraft.util.Rarity.EPIC)
+                    .attributeModifiers(com.yongye.item.DragonBladeItem.dragonAttributes())));
 
     // —— 强化保护卷(m159):右键使用,挡下一次强化失败导致的碎裂。无法合成,仅掉落/杀怪兑换 ——
     public static final Item ENHANCE_PROTECT_SCROLL = register("enhance_protect_scroll",
