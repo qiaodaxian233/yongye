@@ -1,6 +1,7 @@
 package com.yongye.client;
 
 import com.yongye.network.ClaimMainQuestPayload;
+import com.yongye.network.ClaimTrialPayload;
 import com.yongye.network.MainQuestSyncPayload;
 import com.yongye.network.RequestMainQuestPayload;
 import com.yongye.system.MainQuestLine;
@@ -15,15 +16,16 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * m328:任务书界面(FTB Quests 风格内建版)。左侧双列 16 阶段按钮(✔已完成/▶当前/🔒未解锁),
- * 右侧当前选中阶段的目标/进度/奖励详情,底部「领取奖励」(只对当前阶段生效,服务端复核)。
- * 数据流照爆率编辑器口径:打开发 RequestMainQuestPayload,服务端回 MainQuestSyncPayload → onSync 刷新。
+ * m328/m332/m333:任务书界面,三页签——「主线」(16 阶段,终点讨伐末影龙)/「试炼」(职业专属三关,
+ * 标题按本命职业着味)/「图鉴」(总击杀/精英/BOSS/最高强化/技能总级/永夜层/天数/佩恩/龙/永夜+,
+ * 主播开播现成炫耀面板)。数据流照爆率编辑器口径:Request → Sync → onSync 刷新。
  */
 @Environment(EnvType.CLIENT)
 public class QuestBookScreen extends Screen {
 
-    private static MainQuestSyncPayload DATA;   // 最近一次服务端快照
+    private static MainQuestSyncPayload DATA;
     private final Screen parent;
+    private int page = 0;       // 0 主线 / 1 试炼 / 2 图鉴
     private int selected = 0;
 
     public QuestBookScreen(Screen parent) {
@@ -32,64 +34,113 @@ public class QuestBookScreen extends Screen {
         ClientPlayNetworking.send(new RequestMainQuestPayload());
     }
 
-    /** 服务端快照到达:刷新界面(若开着)。 */
     public static void onSync(MainQuestSyncPayload payload) {
         DATA = payload;
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.currentScreen instanceof QuestBookScreen s) {
-            s.selected = Math.min(payload.stage(), MainQuestLine.STAGES.length - 1);
+            if (s.page == 0) s.selected = Math.min(payload.stage(), MainQuestLine.STAGES.length - 1);
             s.clearAndInit();
         }
     }
 
     @Override
     protected void init() {
-        int stageCount = MainQuestLine.STAGES.length;
-        int cur = DATA == null ? 0 : DATA.stage();
         int colW = 104, rowH = 16, gap = 2;
-        int x0 = this.width / 2 - (colW * 2 + gap + 130) / 2;  // 左双列 + 右详情 130 宽,整体居中
-        int y0 = 40;
-        for (int i = 0; i < stageCount; i++) {
+        int totalW = colW * 2 + gap + 130;
+        int x0 = this.width / 2 - totalW / 2;
+        // —— 页签 ——
+        String[] tabs = {"主线", "试炼", "图鉴"};
+        int tabW = (totalW - 2 * 2) / 3;
+        for (int i = 0; i < 3; i++) {
             final int idx = i;
-            int col = i / 8, row = i % 8;
-            String icon = i < cur ? "✔ " : (i == cur ? "▶ " : "□ ");
-            ButtonWidget b = new YongyeButton(x0 + col * (colW + gap), y0 + row * (rowH + gap), colW, rowH,
-                    Text.literal(icon + (i + 1) + "." + MainQuestLine.STAGES[i].title()),
-                    bt -> { this.selected = idx; this.clearAndInit(); });
-            b.active = (i != selected);
-            addDrawableChild(b);
+            ButtonWidget tab = ButtonWidget.builder(Text.literal(tabs[i]), b -> {
+                this.page = idx;
+                this.selected = idx == 1 ? Math.min(DATA == null ? 0 : DATA.trialStage(), MainQuestLine.TRIALS.length - 1)
+                        : Math.min(DATA == null ? 0 : DATA.stage(), MainQuestLine.STAGES.length - 1);
+                this.clearAndInit();
+            }).dimensions(x0 + i * (tabW + 2), 24, tabW, 14).build();
+            tab.active = (i != page);
+            addDrawableChild(tab);
         }
-        // 领取(当前阶段)+ 刷新 + 关闭
-        int by = y0 + 8 * (rowH + gap) + 8;
-        addDrawableChild(new YongyeButton(x0, by, colW, 18, Text.literal("领取当前奖励"),
-                b -> ClientPlayNetworking.send(new ClaimMainQuestPayload())));
+        int y0 = 44;
+
+        if (page == 0) {
+            int cur = DATA == null ? 0 : DATA.stage();
+            for (int i = 0; i < MainQuestLine.STAGES.length; i++) {
+                final int idx = i;
+                int col = i / 8, row = i % 8;
+                String icon = i < cur ? "✔ " : (i == cur ? "▶ " : "□ ");
+                ButtonWidget b = new YongyeButton(x0 + col * (colW + gap), y0 + row * (rowH + gap), colW, rowH,
+                        Text.literal(icon + (i + 1) + "." + MainQuestLine.STAGES[i].title()),
+                        bt -> { this.selected = idx; this.clearAndInit(); });
+                b.active = (i != selected);
+                addDrawableChild(b);
+            }
+            int by = y0 + 8 * (rowH + gap) + 8;
+            addDrawableChild(new YongyeButton(x0, by, colW, 18, Text.literal("领取当前奖励"),
+                    b -> ClientPlayNetworking.send(new ClaimMainQuestPayload())));
+            bottomBtns(x0 + colW + gap, by);
+        } else if (page == 1) {
+            int cur = DATA == null ? 0 : DATA.trialStage();
+            String cls = ClientStats.className;
+            for (int i = 0; i < MainQuestLine.TRIALS.length; i++) {
+                final int idx = i;
+                String icon = i < cur ? "✔ " : (i == cur ? "▶ " : "□ ");
+                ButtonWidget b = new YongyeButton(x0, y0 + i * (rowH + gap) * 2, colW + 40, rowH + 6,
+                        Text.literal(icon + "第" + (i + 1) + "关·" + MainQuestLine.trialTitle(cls, i)),
+                        bt -> { this.selected = idx; this.clearAndInit(); });
+                b.active = (i != selected);
+                addDrawableChild(b);
+            }
+            int by = y0 + 3 * (rowH + gap) * 2 + 8;
+            addDrawableChild(new YongyeButton(x0, by, colW, 18, Text.literal("领取试炼奖励"),
+                    b -> ClientPlayNetworking.send(new ClaimTrialPayload())));
+            bottomBtns(x0 + colW + gap, by);
+        } else {
+            bottomBtns(x0, y0 + 150);
+        }
+    }
+
+    private void bottomBtns(int x, int y) {
         addDrawableChild(ButtonWidget.builder(Text.literal("刷新"), b -> ClientPlayNetworking.send(new RequestMainQuestPayload()))
-                .dimensions(x0 + colW + gap, by, 50, 18).build());
+                .dimensions(x, y, 50, 18).build());
         addDrawableChild(ButtonWidget.builder(Text.literal("关闭"), b -> close())
-                .dimensions(x0 + colW + gap + 54, by, 50, 18).build());
+                .dimensions(x + 54, y, 50, 18).build());
     }
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         this.renderBackground(ctx, mouseX, mouseY, delta);
         super.render(ctx, mouseX, mouseY, delta);
-        int cur = DATA == null ? 0 : DATA.stage();
-        ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("◆ 永夜主线 · " + Math.min(cur + 1, MainQuestLine.STAGES.length) + "/" + MainQuestLine.STAGES.length + " ◆").formatted(Formatting.GOLD),
-                this.width / 2, 14, 0xFFFFD700);
-
-        // 右侧详情
         int colW = 104, gap = 2;
-        int x0 = this.width / 2 - (colW * 2 + gap + 130) / 2;
-        int dx = x0 + colW * 2 + gap + 10, dy = 42;
-        var s = MainQuestLine.STAGES[selected];
-        String state = selected < cur ? "已完成" : (selected == cur ? (DATA != null && DATA.complete() ? "已达成·可领取!" : "进行中") : "未解锁");
+        int totalW = colW * 2 + gap + 130;
+        int x0 = this.width / 2 - totalW / 2;
+        ctx.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("◆ 永夜任务书 ◆").formatted(Formatting.GOLD), this.width / 2, 10, 0xFFFFD700);
+
+        if (page == 0) {
+            detail(ctx, x0 + colW * 2 + gap + 10, 46, MainQuestLine.STAGES, selected,
+                    DATA == null ? 0 : DATA.stage(), DATA != null && DATA.complete(), mainProgress(selected));
+        } else if (page == 1) {
+            detail(ctx, x0 + colW + 50, 46, MainQuestLine.TRIALS, selected,
+                    DATA == null ? 0 : DATA.trialStage(), DATA != null && DATA.trialComplete(), trialProgress(selected));
+        } else {
+            int dy = 46;
+            for (String line : atlasLines()) {
+                ctx.drawTextWithShadow(this.textRenderer, Text.literal(line).formatted(Formatting.WHITE), x0, dy, 0xFFFFFFFF);
+                dy += 13;
+            }
+        }
+    }
+
+    private void detail(DrawContext ctx, int dx, int dy, MainQuestLine.Stage[] arr, int sel, int cur, boolean curComplete, String prog) {
+        var s = arr[Math.max(0, Math.min(arr.length - 1, sel))];
+        String state = sel < cur ? "已完成" : (sel == cur ? (curComplete ? "已达成·可领取!" : "进行中") : "未解锁");
         ctx.drawTextWithShadow(this.textRenderer, Text.literal("【" + s.title() + "】" + state).formatted(Formatting.AQUA), dx, dy, 0xFF55FFFF);
         dy += 14;
         for (String line : wrap("目标:" + s.goal(), 20)) {
             ctx.drawTextWithShadow(this.textRenderer, Text.literal(line).formatted(Formatting.WHITE), dx, dy, 0xFFFFFFFF); dy += 11;
         }
-        String prog = progress(selected);
         if (prog != null) { ctx.drawTextWithShadow(this.textRenderer, Text.literal(prog).formatted(Formatting.YELLOW), dx, dy, 0xFFFFFF55); dy += 11; }
         dy += 3;
         for (String line : wrap("奖励:" + s.rewardDesc(), 20)) {
@@ -97,8 +148,7 @@ public class QuestBookScreen extends Screen {
         }
     }
 
-    /** 击杀类阶段的进度显示(索引与 MainQuestLine.STAGES 对应)。 */
-    private String progress(int idx) {
+    private String mainProgress(int idx) {
         if (DATA == null) return null;
         return switch (idx) {
             case 3 -> "进度:" + Math.min(DATA.kills(), 20) + "/20";
@@ -112,7 +162,35 @@ public class QuestBookScreen extends Screen {
         };
     }
 
-    /** 简易按字符宽换行(中文场景按字数)。 */
+    private String trialProgress(int idx) {
+        if (DATA == null) return null;
+        return switch (idx) {
+            case 0 -> "进度:" + Math.min(DATA.kills(), 300) + "/300";
+            case 1 -> "精英 " + Math.min(DATA.eliteKills(), 15) + "/15 · 技能 V" + Math.min(DATA.totalSkill(), 300) + "/300";
+            case 2 -> "强化 +" + Math.min(DATA.maxEnhance(), 3000) + "/3000 · BOSS " + Math.min(DATA.bossKills(), 3) + "/3";
+            default -> null;
+        };
+    }
+
+    /** m333 图鉴页:统计一览(主播开播现成炫耀面板)。 */
+    private java.util.List<String> atlasLines() {
+        java.util.List<String> l = new java.util.ArrayList<>();
+        if (DATA == null) { l.add("加载中…点「刷新」"); return l; }
+        l.add("—— 讨伐图鉴 ——");
+        l.add("总击杀:" + DATA.kills() + "    精英:" + DATA.eliteKills() + "    BOSS:" + DATA.bossKills());
+        l.add("佩恩:" + (DATA.painSlain() ? "✔ 已讨伐" : "未讨伐") + "    末影龙:" + (DATA.dragonSlain() ? "✔ 已讨伐" : "未讨伐"));
+        l.add("");
+        l.add("—— 成长统计 ——");
+        l.add("最高强化:+" + DATA.maxEnhance() + "    技能总级:V" + DATA.totalSkill());
+        l.add("永夜层数:" + DATA.nightfall() + "    生存天数:" + DATA.day());
+        l.add("");
+        l.add("—— 征程 ——");
+        l.add("主线:" + Math.min(DATA.stage(), MainQuestLine.STAGES.length) + "/" + MainQuestLine.STAGES.length
+                + "    试炼:" + Math.min(DATA.trialStage(), MainQuestLine.TRIALS.length) + "/" + MainQuestLine.TRIALS.length);
+        l.add("永夜+(二周目):" + (DATA.ngPlus() ? "☽ 已开启" : "未开启(讨伐末影龙解锁)"));
+        return l;
+    }
+
     private static java.util.List<String> wrap(String s, int n) {
         java.util.List<String> out = new java.util.ArrayList<>();
         for (int i = 0; i < s.length(); i += n) out.add(s.substring(i, Math.min(s.length(), i + n)));

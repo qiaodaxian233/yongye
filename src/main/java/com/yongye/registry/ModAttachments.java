@@ -55,6 +55,10 @@ public final class ModAttachments {
             AttachmentRegistry.<Boolean>builder()
                     .persistent(Codec.BOOL).initializer(() -> false).copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "main_dragon_slain"));
+    public static final AttachmentType<Integer> CLASS_TRIAL_STAGE =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "class_trial_stage"));
     public static final AttachmentType<Boolean> GOT_QUEST_BOOK =
             AttachmentRegistry.<Boolean>builder()
                     .persistent(Codec.BOOL).initializer(() -> false).copyOnDeath()

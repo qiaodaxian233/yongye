@@ -135,16 +135,84 @@ public final class MainQuestLine {
         sync(p);
     }
 
-    /** 回发进度快照(界面打开/领奖后)。 */
+    /** 回发进度快照(界面打开/领奖后;m332 扩展试炼与图鉴统计)。 */
     public static void sync(ServerPlayerEntity p) {
         int st = stage(p);
         boolean complete = st < STAGES.length && STAGES[st].check().apply(p);
+        int ts = trialStage(p);
+        boolean tc = ts < TRIALS.length && TRIALS[ts].check().apply(p);
         net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
                 new com.yongye.network.MainQuestSyncPayload(st, complete, kills(p),
                         p.getAttachedOrElse(ModAttachments.MAIN_ELITE_KILLS, 0),
                         p.getAttachedOrElse(ModAttachments.MAIN_BOSS_KILLS, 0),
                         p.getAttachedOrElse(ModAttachments.MAIN_PAIN_SLAIN, false),
-                        p.getAttachedOrElse(ModAttachments.MAIN_DRAGON_SLAIN, false)));
+                        p.getAttachedOrElse(ModAttachments.MAIN_DRAGON_SLAIN, false),
+                        ts, tc,
+                        maxEnhance(p), totalSkill(p), NightfallManager.getLevel(),
+                        ProgressionManager.gameDay(p.getWorld()),
+                        NewGamePlusManager.isActive()));
+    }
+
+    // ============ m332:职业试炼支线(三关,标题按职业着色,奖励=本命职业武器专属强化) ============
+    /** 试炼三关(判定全职业共用,难度递进;标题在客户端按职业取 {@link #trialTitle})。 */
+    public static final Stage[] TRIALS = new Stage[]{
+            new Stage("试炼·壹", "累计击杀 300 只怪物",
+                    p -> kills(p) >= 300,
+                    "本命职业武器 强化 +300", p -> enhanceClassWeapon(p, 300)),
+            new Stage("试炼·贰", "精英 ×15 且 技能总等级 V300",
+                    p -> p.getAttachedOrElse(ModAttachments.MAIN_ELITE_KILLS, 0) >= 15 && totalSkill(p) >= 300,
+                    "本命职业武器 强化 +800", p -> enhanceClassWeapon(p, 800)),
+            new Stage("试炼·叁", "任意装备强化 +3000 且 BOSS ×3",
+                    p -> maxEnhance(p) >= 3000 && p.getAttachedOrElse(ModAttachments.MAIN_BOSS_KILLS, 0) >= 3,
+                    "本命职业武器 强化 +2000", p -> enhanceClassWeapon(p, 2000)),
+    };
+
+    /** 各职业试炼关卡的风味标题(客户端展示;未知职业回退通用名)。 */
+    public static String trialTitle(String classId, int tier) {
+        String[] names = switch (classId == null ? "" : classId) {
+            case "warrior"  -> new String[]{"百战", "破军", "武神"};
+            case "tank"     -> new String[]{"坚壁", "不动", "山岳"};
+            case "assassin" -> new String[]{"潜影", "追猎", "绝影"};
+            case "swordsman"-> new String[]{"砺刃", "剑心", "剑圣"};
+            case "warlock"  -> new String[]{"引灵", "噬渊", "冥主"};
+            case "summoner" -> new String[]{"唤物", "统御", "万军"};
+            default -> new String[]{"试炼·壹", "试炼·贰", "试炼·叁"};
+        };
+        return names[Math.max(0, Math.min(2, tier))];
+    }
+
+    /** 领取试炼奖励(服务端权威):复核 → 强化本命武器 → 阶段+1 → 回发。 */
+    public static void claimTrial(ServerPlayerEntity p) {
+        if (!YongyeConfig.get().enableClassTrials) return;
+        int ts = trialStage(p);
+        if (ts >= TRIALS.length) { msg(p, "职业试炼已全部完成!", Formatting.GOLD); sync(p); return; }
+        Stage s = TRIALS[ts];
+        if (!s.check().apply(p)) { msg(p, "试炼尚未达成:" + s.goal(), Formatting.RED); sync(p); return; }
+        s.reward().accept(p);
+        p.setAttached(ModAttachments.CLASS_TRIAL_STAGE, ts + 1);
+        msg(p, "◆ 职业试炼第 " + (ts + 1) + " 关完成!奖励:" + s.rewardDesc(), Formatting.GOLD);
+        sync(p);
+    }
+
+    public static int trialStage(ServerPlayerEntity p) { return p.getAttachedOrElse(ModAttachments.CLASS_TRIAL_STAGE, 0); }
+
+    /** 试炼奖励:给背包里的本命职业武器直接 withLevel(+levels);没带武器则折算强化石·伍。 */
+    private static void enhanceClassWeapon(ServerPlayerEntity p, int levels) {
+        var learned = ClassManager.learnedList(p);
+        com.yongye.item.PlayerClass pc = learned.isEmpty() ? null : com.yongye.item.PlayerClass.byId(learned.get(0));
+        var inv = p.getInventory();
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack st = inv.getStack(i);
+            if (!st.isEmpty() && st.getItem() instanceof com.yongye.item.ClassWeaponItem w
+                    && (pc == null || w.playerClass == pc)) {
+                int cur = EquipmentEnhancer.getLevel(st);
+                inv.setStack(i, EquipmentEnhancer.withLevel(st, cur + levels));
+                msg(p, "本命武器强化 +" + levels + "(现 +" + (cur + levels) + ")", Formatting.LIGHT_PURPLE);
+                return;
+            }
+        }
+        give(p, ModItems.enhanceStone(5), Math.max(1, levels / 100));   // 折算:1 颗伍档=1 万级面值近似,给保底手感
+        msg(p, "未携带本命职业武器,奖励已折算为强化石·伍", Formatting.GRAY);
     }
 
     // ---------- 小工具 ----------

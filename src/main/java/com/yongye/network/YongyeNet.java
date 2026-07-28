@@ -138,6 +138,11 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.system.MainQuestLine.claim(p));
         });
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.ClaimTrialPayload.ID, com.yongye.network.ClaimTrialPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ClaimTrialPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.MainQuestLine.claimTrial(p));
+        });
         PayloadTypeRegistry.playC2S().register(com.yongye.network.WardApplyPayload.ID, com.yongye.network.WardApplyPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.WardApplyPayload.ID, (payload, context) -> {
             ServerPlayerEntity p = context.player();
