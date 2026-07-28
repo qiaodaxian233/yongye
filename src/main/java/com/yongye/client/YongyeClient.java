@@ -612,6 +612,11 @@ public class YongyeClient implements ClientModInitializer {
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
                 Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
                         Text.literal(classLabel), b -> client.setScreen(new StatsScreen(screen))));
+
+                // 设置:视觉·手感集中设置屏(震动/FOV/顿帧/闪光/刀光/姿态/红眼紫气),
+                // 放面板**右侧**镜像位(作者点名"背包旁边加一个设置";左列已满 8 钮,右侧干净)(m317)
+                Screens.getButtons(screen).add(new YongyeButton(guiLeft + 176 + 4, guiTop + 5, bw, bh,
+                        Text.literal("设置"), b -> client.setScreen(new VisualFxScreen(screen))));
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(

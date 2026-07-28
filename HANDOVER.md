@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m315 红眼贴图缩小(2×2/眼)+分档配色(普通浅红255,75,75/精英深红185,0,12);m314 mod介绍改写(删封顶);m313 图标更换;configVersion 89。
+> 最新:m317 背包右侧「设置」钮+视觉·手感集中设置屏(镜头/特效/姿态/怪物两页,config set 即时生效);m316 MoBends 式疾跑姿态(拧身±40°+前倾起伏+头部反补+屈肘泵臂,sprintPose/sprintPoseScale,v89→90);此前 m313 图标/m314 介绍/m315 红眼分档。configVersion 90。
