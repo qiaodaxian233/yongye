@@ -1431,10 +1431,12 @@ public class YongyeConfig {
                     if (!missing.isEmpty())
                         Yongye.LOGGER.info("[夜蚀] 配置缺 {} 个新字段(已采用默认值,下次保存自动补全): {}", missing.size(), missing);
                     if (INSTANCE.configVersion != CURRENT_CONFIG_VERSION)
-                        Yongye.LOGGER.warn("[夜蚀] 配置版本 {} ≠ 当前 {}:部分默认值可能已调整。若要采用新默认值,用 /yongye config reset(会清自定义)或参照 /yongye config check 手动核对。",
+                        Yongye.LOGGER.info("[夜蚀] 配置版本 {} → {}:默认值改版已按「仅旧默认迁移」自动完成(自定义值不动),版本号已写盘对齐,无需处理。",
                                 INSTANCE.configVersion, CURRENT_CONFIG_VERSION);
                 } catch (RuntimeException ignore) { /* 诊断失败不影响正常加载 */ }
-                INSTANCE.configVersion = CURRENT_CONFIG_VERSION; // 对齐版本号,下次保存写入新版
+                boolean verChanged = INSTANCE.configVersion != CURRENT_CONFIG_VERSION;   // m345
+                INSTANCE.configVersion = CURRENT_CONFIG_VERSION; // 对齐版本号
+                if (verChanged) save();   // m345:立即写盘——否则"下次保存"可能永不发生,提示每次启动重复(作者 106≠107 报告)
             } else {
                 INSTANCE = new YongyeConfig();
                 save();

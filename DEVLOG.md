@@ -2789,3 +2789,8 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **GitHub Actions 自动构建**(`.github/workflows/build.yml`,照其 minecraft-ci-release 模板):push/PR 到 main 即云端 gradle build 并上传 jar 工件——沙盒无法编译的死穴补上,AI 推送后轮询 api.github.com 的 actions runs 即可自主拿到 success/failure 与报错日志,编译验证不再依赖作者手动 build。
 - **资源预检收编**:tools/validate-resource-pack.sh + validate-datapack.sh + jq-shim.mjs(推送前扫 JSON 合法性/贴图动画配对/配方引用;本仓库现状全 PASS,唯一 FAIL 是 pack.mcmeta——MOD 场景假阳性忽略)。其 fabric-api.md(389 行 1.21.x 注册/mixin/网络/GUI 速查)列为离线参考。THIRD_PARTY_NOTICES 已挂名;ONBOARDING 已写入新工作流。
 - **落地注意**:当前 PAT 无 `workflow` scope,`.github/workflows/build.yml` 无法由 AI 推送(GitHub 硬性拒绝)。文件已单独交付:作者在 GitHub 网页 Add file 粘贴,或下次贴一个勾选了 workflow 权限的 PAT 由 AI 补推;工具脚本与文档本笔已入库。
+
+## m345 复查报告三建议处理(作者复查:build通过/评分B,2026-07-29)
+- **配置版本提示**:根因=版本号只在内存对齐、"下次保存"可能永不发生 → 提示每次启动重复(106≠107 现象)。修:版本不一致时**立即 save() 写盘**+提示措辞改自愈口径(默认值改版已按仅旧默认迁移自动完成,无需处理),warn 降 info,一次性出现。
+- **data fixer 日志噪音**:文档化于 ModEntities 类头——build(String) 为 yarn 1.21.1 唯一重载,字符串仅用于开发环境 DataFixer 选型查询,模组不做跨版本存档升级无需注册 fixer,生产侧无此噪音;压制需 mixin 进 Util 日志路径,风险大于收益,判定为接受现状。
+- **复杂度热点(部分)**:YongyeClient 背包 11 钮装配整体抽 `addInventoryButtons`(纯搬移零逻辑变更,onInitializeClient 减重 ~65 行)。**遗留**:ClassSkillHandler:111 与 YongyeConfig.load 迁移堆(1373 起)两处热点待下轮拆(前者建议按事件拆私有方法,后者建议迁移块抽 migrateDefaults());CI workflow(build.yml)仍待作者网页添加或带 workflow 权限 PAT 补推。

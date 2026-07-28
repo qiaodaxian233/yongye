@@ -575,56 +575,10 @@ public class YongyeClient implements ClientModInitializer {
         });
 
         // 背包界面:把功能按钮竖排放在背包面板**左侧的空白竖条**(用户指定位置)
+        // m345:复杂度热点拆分——按钮装配整体抽到 addInventoryButtons(纯搬移零逻辑变更)
         ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
             if (screen instanceof InventoryScreen) {
-                // 原版背包面板:宽 176、高 166,居中。左缘 = 屏宽/2 - 88,上缘 = 屏高/2 - 83。
-                int guiLeft = scaledWidth / 2 - 88;
-                int guiTop = scaledHeight / 2 - 83;
-                int bw = 54, bh = 16, pitch = 19;        // 按钮宽/高/行距
-                // m329:作者点名右侧与他模组 UI 打架且难看——11 钮全部收拢到面板**左侧双列**
-                int bxIn  = guiLeft - bw - 4;             // 内列(贴面板)
-                int bxOut = guiLeft - bw * 2 - 8;         // 外列
-                int by = guiTop + 5;
-                int rIn = 0, rOut = 0;
-
-                // —— 内列(6):成长/装备/饰品/天赋/强化/兑换 ——
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
-                        Text.literal("成长"), b -> client.setScreen(new StatsScreen(screen))));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
-                        Text.literal("装备"), b -> {
-                            if (client.player == null) return;
-                            ItemStack held = client.player.getMainHandStack();
-                            if (!held.isEmpty() && EquipmentEnhancer.isEnhanceable(held.getItem())) {
-                                client.setScreen(new WeaponInfoScreen(screen, held));
-                            }
-                        }));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
-                        Text.literal("饰品"), b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload())));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
-                        Text.literal("天赋"), b -> client.setScreen(new TalentScreen(screen))));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
-                        Text.literal("强化"), b -> client.setScreen(new EnhanceSelectScreen(screen))));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
-                        Text.literal("兑换"), b -> client.setScreen(new ExchangeScreen(screen))));
-
-                // —— 外列(5):学书/合书/任务/设置/本命 ——
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
-                        Text.literal("学书"), b -> ClientPlayNetworking.send(new com.yongye.network.UseAllBooksPayload())));
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
-                        Text.literal("合书"), b -> ClientPlayNetworking.send(new com.yongye.network.MergeBooksPayload())));
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
-                        Text.literal("任务"), b -> client.setScreen(new QuestBookScreen(screen))));
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
-                        Text.literal("设置"), b -> client.setScreen(new VisualFxScreen(screen))));
-                // 转移:强化转移(主手来源→副手目标;m340,与 /yongye transfer 同款)
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
-                        Text.literal("转移"), b -> {
-                            if (client.player != null) client.player.networkHandler.sendCommand("yongye transfer");
-                        }));
-                com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
-                String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
-                        Text.literal(classLabel), b -> client.setScreen(new StatsScreen(screen))));
+                addInventoryButtons(client, screen, scaledWidth, scaledHeight);
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(
@@ -788,5 +742,59 @@ public class YongyeClient implements ClientModInitializer {
         ctx.fill(-r, r - 1, r, r, color);            // 下边
         ctx.fill(-r, -r + 1, -r + 1, r - 1, color);  // 左边
         ctx.fill(r - 1, -r + 1, r, r - 1, color);    // 右边
+    }
+
+    /** m345:背包左侧双列 11 钮装配(从 onInitializeClient 抽出,降复杂度热点;内容与抽出前逐行一致)。 */
+    private static void addInventoryButtons(net.minecraft.client.MinecraftClient client,
+                                            net.minecraft.client.gui.screen.Screen screen,
+                                            int scaledWidth, int scaledHeight) {
+                // 原版背包面板:宽 176、高 166,居中。左缘 = 屏宽/2 - 88,上缘 = 屏高/2 - 83。
+                int guiLeft = scaledWidth / 2 - 88;
+                int guiTop = scaledHeight / 2 - 83;
+                int bw = 54, bh = 16, pitch = 19;        // 按钮宽/高/行距
+                // m329:作者点名右侧与他模组 UI 打架且难看——11 钮全部收拢到面板**左侧双列**
+                int bxIn  = guiLeft - bw - 4;             // 内列(贴面板)
+                int bxOut = guiLeft - bw * 2 - 8;         // 外列
+                int by = guiTop + 5;
+                int rIn = 0, rOut = 0;
+
+                // —— 内列(6):成长/装备/饰品/天赋/强化/兑换 ——
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                        Text.literal("成长"), b -> client.setScreen(new StatsScreen(screen))));
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                        Text.literal("装备"), b -> {
+                            if (client.player == null) return;
+                            ItemStack held = client.player.getMainHandStack();
+                            if (!held.isEmpty() && EquipmentEnhancer.isEnhanceable(held.getItem())) {
+                                client.setScreen(new WeaponInfoScreen(screen, held));
+                            }
+                        }));
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                        Text.literal("饰品"), b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload())));
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                        Text.literal("天赋"), b -> client.setScreen(new TalentScreen(screen))));
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                        Text.literal("强化"), b -> client.setScreen(new EnhanceSelectScreen(screen))));
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                        Text.literal("兑换"), b -> client.setScreen(new ExchangeScreen(screen))));
+
+                // —— 外列(5):学书/合书/任务/设置/本命 ——
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("学书"), b -> ClientPlayNetworking.send(new com.yongye.network.UseAllBooksPayload())));
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("合书"), b -> ClientPlayNetworking.send(new com.yongye.network.MergeBooksPayload())));
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("任务"), b -> client.setScreen(new QuestBookScreen(screen))));
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("设置"), b -> client.setScreen(new VisualFxScreen(screen))));
+                // 转移:强化转移(主手来源→副手目标;m340,与 /yongye transfer 同款)
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("转移"), b -> {
+                            if (client.player != null) client.player.networkHandler.sendCommand("yongye transfer");
+                        }));
+                com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
+                String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal(classLabel), b -> client.setScreen(new StatsScreen(screen))));
     }
 }

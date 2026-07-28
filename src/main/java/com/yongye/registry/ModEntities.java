@@ -23,6 +23,11 @@ import net.minecraft.util.Identifier;
  * 这是第一个。需要 GeckoLib 前置渲染基岩模型。
  */
 public final class ModEntities {
+
+    // m345 说明:启动时每个自定义实体各有一条 "No data fixer registered for yongye:xxx" 日志——
+    // 这是 EntityType.Builder.build(String) 在**开发环境**做 DataFixer 选型查询的固有提示
+    // (yarn 1.21.1 该方法唯一重载,字符串仅用于此查询),模组不做跨版本存档升级本就无需注册 fixer;
+    // 生产环境日志级别不同、玩家侧无此噪音。压制它需 mixin 进 Util 的日志路径,风险远大于收益,故仅文档化。
     private ModEntities() {}
 
     public static final RegistryKey<EntityType<?>> TORO_ENDER_DRAGON_KEY =
