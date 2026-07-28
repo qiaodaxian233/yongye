@@ -129,7 +129,8 @@ public final class MobEnhancementHandler {
             double extra = (nearest.getMaxHealth() - 20.0) / 20.0; // 超出基础 20 的比例
             if (extra > 0) prog += extra * cfg.mobScalingPlayerHealthFactor;
         }
-        return Math.min(prog * ProgressionManager.evolutionMultiplier(mob.getWorld()), cfg.mobScalingMaxMultiplier);
+        double capped = Math.min(prog * ProgressionManager.evolutionMultiplier(mob.getWorld()), cfg.mobScalingMaxMultiplier);
+        return capped * NewGamePlusManager.mobMult(cfg);   // m330 永夜+:封顶之后再乘——二周目就该破上限
     }
 
     private static void addMultiplier(LivingEntity e,

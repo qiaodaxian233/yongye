@@ -137,13 +137,14 @@ public final class LootHandler {
             double dm = cfg.enableDifficultyLootBonus
                     ? Math.max(cfg.difficultyLootFloor, DifficultyManager.mobMult()) : 1.0;
             // 下文所有概率掉落用的综合倍率 = 动态爆率 × 难度奖励(因此每处 *lm 都自动含难度加成,无需逐处改)
-            double lm = baseLm * dm;
+            double ng = NewGamePlusManager.lootMult(cfg);  // m330 永夜+掉落翻倍
+            double lm = baseLm * dm * ng;
 
             if (elite) {
                 // —— 精英必爆套餐(m90):在下面的概率掉落之上额外保底,提高精英击杀收益 ——
                 if (cfg.eliteGuaranteedDrops) {
                     // 动态缩减必爆数量(防滚雪球;可用 dynamicLootScaleGuaranteed 关闭)× 难度奖励(难度加成不受该开关约束)
-                    double gm = (cfg.dynamicLootScaleGuaranteed ? baseLm : 1.0) * dm;
+                    double gm = (cfg.dynamicLootScaleGuaranteed ? baseLm : 1.0) * dm * ng;
                     int gShards   = (int) Math.round(cfg.eliteGuaranteedShards   * gm);
                     int gCrystals = (int) Math.round(cfg.eliteGuaranteedCrystals * gm);
                     int gBooks    = (int) Math.round(cfg.eliteGuaranteedSkillBooks * gm);
