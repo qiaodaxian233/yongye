@@ -617,6 +617,9 @@ public class YongyeClient implements ClientModInitializer {
                 // 放面板**右侧**镜像位(作者点名"背包旁边加一个设置";左列已满 8 钮,右侧干净)(m317)
                 Screens.getButtons(screen).add(new YongyeButton(guiLeft + 176 + 4, guiTop + 5, bw, bh,
                         Text.literal("设置"), b -> client.setScreen(new VisualFxScreen(screen))));
+                // 合书:背包所有技能书/血量书按类型一键合并成一本(升级机制,免每级手搓;m323)
+                Screens.getButtons(screen).add(new YongyeButton(guiLeft + 176 + 4, guiTop + 5 + pitch, bw, bh,
+                        Text.literal("合书"), b -> ClientPlayNetworking.send(new com.yongye.network.MergeBooksPayload())));
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(

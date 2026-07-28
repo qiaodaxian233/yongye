@@ -136,6 +136,12 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.system.SkillEffectManager.useAllBooks(p));
         });
+        // m323 合书:背包所有技能书/血量书按类型一键合并(等级相加,自动扣阶段材料)
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.MergeBooksPayload.ID, com.yongye.network.MergeBooksPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.MergeBooksPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.BookMerger.mergeAll(p));
+        });
         // Ward 式强化:点选装备 → 用背包全部材料一键强化
         PayloadTypeRegistry.playC2S().register(com.yongye.network.EnhanceSelectPayload.ID, com.yongye.network.EnhanceSelectPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.EnhanceSelectPayload.ID, (payload, context) -> {
