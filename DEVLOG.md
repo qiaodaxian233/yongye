@@ -2750,3 +2750,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **清理卡顿修复**:旧 doCleanup 单 tick 全实体遍历+批量 discard=瞬时尖峰(「提示一出来卡一下」实为清理落地那一下)。改**分帧排水**:收集改 `getEntitiesByType(EntityType.ITEM,…)` typed 查询(快一个量级)只入队,tick 侧每帧删 itemCleanupBatchPerTick(默认 150)个,删完才播「已清除 N 个」;顺手消掉旧的 iterateEntities 待编译验证项。
 - **卡顿护栏 LagGuard**:以 `server.getAverageTickTime()`(yarn method_54832 已核)为准——MSPT≤soft(35ms)全量、soft~hard(48ms)线性降量、≥hard 本波跳过先喘气。接入三处波次刷怪:夜袭尸潮(want 缩放)/烛光域爆发(burst 缩放)/自定义 BOSS·精英投放(硬闸);**任务刷怪不节流**(据点守卫等任务必须能完成)。
 - 配置+4,**configVersion 101→102**;待编译验证:无(getEntitiesByType typed 全域查询为原版标准面,getServer/getAverageTickTime 均核过)。实机盯:清理到点看还卡不卡(应只见灰字无顿挫)、/forge tps 类工具压到 45ms+ 看尸潮明显变稀、松了自动回满。
+
+## m336 学第二职业崩溃修复 + 职业跟手(作者崩溃截图+点名,2026-07-28)
+- **崩溃根因**:`open_class_replace` 包编码 `writeString(null)` → EncoderException 直接踢连接(截图实锤)。职业列表附件中混入 null 元素所致。三层修复:payload 三字段 **null 免疫**(空串兜底)+ `learnedList` 源头 `removeIf(null)` **自愈已污染存档** + 客户端替换屏收到空串照常展示。
+- **职业跟手**(`classFollowWeapon` 默认开):手持已学职业的武器 = 该职业**即时生效**(第二职业免等级门);新 `ClassManager.effectiveMain` —— **大招(X)与小技能同步改为按手中武器的职业施放**,拿战士剑放旋风斩、换术士杖放术士招,空手/持其它武器回退本命。配置+1,v102→103。
+
+## m337 强化转移(作者点名,2026-07-28)
+- **主手(来源)→ 副手(目标)**:副手等级 += 主手等级 × `enhanceTransferKeepFraction`(默认 1.0 **全额无损**,想要损耗调 0.8 等),主手按 m324 归零口径彻底还原(UNBREAKABLE/耐久上限一并回默认);long 钳 int 防溢出;两件都需可强化,提示齐全。
+- 入口:命令 `/yongye transfer` + Debug 菜单手感区「强化转移(主→副)」钮。换新武器/毕业装不再心疼,强化投入全程跟人走。配置+1,**v103→104**;两笔待编译验证:无(setStackInHand/getOffHandStack 原版标准面)。实机盯:主手+500 旧剑/副手新剑 → 转移看副手 +500 主手归零耐久还原、学第二职业不再崩、拿第二职业武器直接放它的大招。

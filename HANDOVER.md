@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m335 性能护栏(掉落物清理分帧摊平+LagGuard按MSPT节流尸潮/烛光/投放刷怪);m334 反卡BUG双机制。configVersion 102。
+> 最新:m336 学第二职业崩溃修复(payload null免疫+存档自愈)+职业跟手(classFollowWeapon,大招小技能按手中武器职业);m337 强化转移(主手→副手,enhanceTransferKeepFraction默认全额)。configVersion 104。

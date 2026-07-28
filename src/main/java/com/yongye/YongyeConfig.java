@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 103; // m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 104; // m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -269,6 +269,7 @@ public class YongyeConfig {
     public double waterCheeseDamagePercent = 0.03;   // 每秒按最大生命扣血比例(3%)
     public int waterCheeseSummonIntervalTicks = 100; // 每 5s 召一波溺尸
     public int waterCheeseSummonCount = 1;           // 每波召几只
+    public double enhanceTransferKeepFraction = 1.0; // m337 强化转移保留比例(1=全额无损,0.8=损耗两成)
     public boolean classFollowWeapon = true;         // m336 拿着啥职业武器就是啥职业(生效判定/大招/小技能全跟手)
     public boolean enableClassTrials = true;         // m332 职业试炼支线(三关,奖励本命武器专属强化)
     public boolean enableMainQuest = true;           // m328 主线任务书(16 阶段,终点=讨伐末影龙)

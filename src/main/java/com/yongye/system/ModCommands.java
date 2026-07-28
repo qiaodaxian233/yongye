@@ -172,6 +172,13 @@ public final class ModCommands {
                         }))
 
                         // m201:碎武器(碎裂)总开关(切换)
+                        // m337:强化转移(主手来源→副手目标)
+                        .then(CommandManager.literal("transfer").executes(ctx -> {
+                                    if (ctx.getSource().getEntity() instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
+                                        EquipmentEnhancer.transfer(sp);
+                                    }
+                                    return 1;
+                        }))
                         .then(CommandManager.literal("enhancebreak").executes(ctx -> {
                                     boolean v = !com.yongye.YongyeConfig.get().enableEnhanceBreak;
                                     com.yongye.YongyeConfig.get().enableEnhanceBreak = v;

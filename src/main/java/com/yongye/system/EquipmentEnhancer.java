@@ -416,6 +416,44 @@ public final class EquipmentEnhancer {
         return armorSlotOf(base);
     }
 
+    /**
+     * m337:强化转移(作者点名)——把**主手**装备的强化等级转移到**副手**装备上:
+     * 副手等级 += 主手等级 × enhanceTransferKeepFraction(默认 1.0 全额,可调损耗),主手归零(m324 归零口径:
+     * UNBREAKABLE/耐久上限一并还原)。两件都必须可强化;等级累加走 long 钳 int 防溢出。
+     * 用途:换新武器/毕业装不心疼,前期强化投入全程跟人走。
+     */
+    public static void transfer(net.minecraft.server.network.ServerPlayerEntity p) {
+        YongyeConfig c = YongyeConfig.get();
+        ItemStack src = p.getMainHandStack();
+        ItemStack dst = p.getOffHandStack();
+        if (src.isEmpty() || dst.isEmpty() || !isEnhanceable(src.getItem()) || !isEnhanceable(dst.getItem())) {
+            p.sendMessage(net.minecraft.text.Text.literal("强化转移:主手放来源、副手放目标,两件都需可强化装备")
+                    .formatted(net.minecraft.util.Formatting.RED), true);
+            return;
+        }
+        int from = getLevel(src);
+        if (from <= 0) {
+            p.sendMessage(net.minecraft.text.Text.literal("主手装备没有强化等级可转移")
+                    .formatted(net.minecraft.util.Formatting.RED), true);
+            return;
+        }
+        double keep = Math.max(0.0, Math.min(1.0, c.enhanceTransferKeepFraction));
+        long moved = (long) Math.floor(from * keep);
+        if (moved <= 0) {
+            p.sendMessage(net.minecraft.text.Text.literal("转移比例过低,本次无可转移等级")
+                    .formatted(net.minecraft.util.Formatting.RED), true);
+            return;
+        }
+        int to = getLevel(dst);
+        int newTo = (int) Math.min(Integer.MAX_VALUE, (long) to + moved);
+        p.setStackInHand(net.minecraft.util.Hand.OFF_HAND, withLevel(dst, newTo));
+        p.setStackInHand(net.minecraft.util.Hand.MAIN_HAND, withLevel(src, 0));
+        p.sendMessage(net.minecraft.text.Text.literal(
+                        "◆ 强化转移完成:+" + moved + " 级 → 副手(现 +" + newTo + ");主手已归零"
+                                + (keep < 1.0 ? "(损耗 " + Math.round((1 - keep) * 100) + "%)" : ""))
+                .formatted(net.minecraft.util.Formatting.GOLD), false);
+    }
+
     /** 背包里所有强化材料合计能提供的强化级数(数量×单值)。m294:long 求和后钳 int,防 10 亿石溢出。 */
     public static int totalMaterialLevels(net.minecraft.entity.player.PlayerInventory inv) {
         long sum = 0;
