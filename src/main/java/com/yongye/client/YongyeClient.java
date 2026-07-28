@@ -580,16 +580,17 @@ public class YongyeClient implements ClientModInitializer {
                 // 原版背包面板:宽 176、高 166,居中。左缘 = 屏宽/2 - 88,上缘 = 屏高/2 - 83。
                 int guiLeft = scaledWidth / 2 - 88;
                 int guiTop = scaledHeight / 2 - 83;
-                int bw = 54, bh = 16, pitch = 19;       // 按钮宽/高/行距
-                int bx = guiLeft - bw - 4;               // 放在面板左侧,留 4px 缝
-                int by = guiTop + 5;                     // 从面板顶部略下开始竖排
-                int row = 0;
+                int bw = 54, bh = 16, pitch = 19;        // 按钮宽/高/行距
+                // m329:作者点名右侧与他模组 UI 打架且难看——11 钮全部收拢到面板**左侧双列**
+                int bxIn  = guiLeft - bw - 4;             // 内列(贴面板)
+                int bxOut = guiLeft - bw * 2 - 8;         // 外列
+                int by = guiTop + 5;
+                int rIn = 0, rOut = 0;
 
-                // 成长
-                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                // —— 内列(6):成长/装备/饰品/天赋/强化/兑换 ——
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("成长"), b -> client.setScreen(new StatsScreen(screen))));
-                // 装备:查看手持武器/盔甲的品质介绍
-                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("装备"), b -> {
                             if (client.player == null) return;
                             ItemStack held = client.player.getMainHandStack();
@@ -597,37 +598,28 @@ public class YongyeClient implements ClientModInitializer {
                                 client.setScreen(new WeaponInfoScreen(screen, held));
                             }
                         }));
-                // 饰品:打开饰品栏(放神器)
-                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("饰品"), b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload())));
-                // 天赋:打开天赋界面
-                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("天赋"), b -> client.setScreen(new TalentScreen(screen))));
-                // 强化:打开 Ward 式强化窗口(点装备=用背包全部材料一键强化)
-                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("强化"), b -> client.setScreen(new EnhanceSelectScreen(screen))));
-                // 兑换:打开材料兑换界面(10 碎片→结晶→核心→血核)
-                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("兑换"), b -> client.setScreen(new ExchangeScreen(screen))));
-                // 学书:一键把背包所有技能书/血量书学掉
-                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+
+                // —— 外列(5):学书/合书/任务/设置/本命 ——
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("学书"), b -> ClientPlayNetworking.send(new com.yongye.network.UseAllBooksPayload())));
-                // 当前本命职业(点开成长面板)
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("合书"), b -> ClientPlayNetworking.send(new com.yongye.network.MergeBooksPayload())));
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("任务"), b -> client.setScreen(new QuestBookScreen(screen))));
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("设置"), b -> client.setScreen(new VisualFxScreen(screen))));
                 com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
-                Screens.getButtons(screen).add(new YongyeButton(bx, by + pitch * row++, bw, bh,
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal(classLabel), b -> client.setScreen(new StatsScreen(screen))));
-
-                // 设置:视觉·手感集中设置屏(震动/FOV/顿帧/闪光/刀光/姿态/红眼紫气),
-                // 放面板**右侧**镜像位(作者点名"背包旁边加一个设置";左列已满 8 钮,右侧干净)(m317)
-                Screens.getButtons(screen).add(new YongyeButton(guiLeft + 176 + 4, guiTop + 5, bw, bh,
-                        Text.literal("设置"), b -> client.setScreen(new VisualFxScreen(screen))));
-                // 合书:背包所有技能书/血量书按类型一键合并成一本(升级机制,免每级手搓;m323)
-                Screens.getButtons(screen).add(new YongyeButton(guiLeft + 176 + 4, guiTop + 5 + pitch, bw, bh,
-                        Text.literal("合书"), b -> ClientPlayNetworking.send(new com.yongye.network.MergeBooksPayload())));
-                // 任务:主线任务书界面(m328,与右键任务书同款)
-                Screens.getButtons(screen).add(new YongyeButton(guiLeft + 176 + 4, guiTop + 5 + pitch * 2, bw, bh,
-                        Text.literal("任务"), b -> client.setScreen(new QuestBookScreen(screen))));
             }
         });
         net.minecraft.client.gui.screen.ingame.HandledScreens.register(
