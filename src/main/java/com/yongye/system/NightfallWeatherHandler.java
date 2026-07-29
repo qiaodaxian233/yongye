@@ -75,6 +75,9 @@ public final class NightfallWeatherHandler {
 
             if (active != Event.NONE) applyEvent(server, now, cfg);
         });
+        // m352:登录补发当前天象状态(中途加入也看得到红月/绿雨;无事件=发 0 归位)
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register(
+                (handler, sender, server) -> syncTo(handler.player));
         Yongye.LOGGER.info("[夜蚀] 永夜天象系统已挂载");
     }
 
@@ -87,6 +90,7 @@ public final class NightfallWeatherHandler {
 
         active = pool.get(server.getOverworld().getRandom().nextInt(pool.size()));
         endTick = now + cfg.weatherEventDurationTicks;
+        broadcastSky(server);   // m352:事件开始→全服同步天象视觉状态(客户端换红月/绿雨贴图)
 
         String msg;
         switch (active) {
@@ -107,6 +111,22 @@ public final class NightfallWeatherHandler {
         }
         server.getPlayerManager().broadcast(
                 Text.literal("【永夜天象】天象平息……暂时。").formatted(Formatting.GRAY), false);
+        active = Event.NONE;    // m352:先归零再广播,客户端贴图立即换回原版
+        broadcastSky(server);
+    }
+
+    /** m352:把当前天象状态(Event 序数:0无/1血月/2酸雨/3流星)发给全服,客户端据此换天空贴图。 */
+    private static void broadcastSky(MinecraftServer server) {
+        com.yongye.network.SkyEventPayload pkt = new com.yongye.network.SkyEventPayload(active.ordinal());
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p, pkt);
+        }
+    }
+
+    /** m352:登录补发当前天象状态(事件进行中加入的玩家也能看到红月/绿雨)。 */
+    public static void syncTo(ServerPlayerEntity p) {
+        net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                new com.yongye.network.SkyEventPayload(active.ordinal()));
     }
 
     private static void applyEvent(MinecraftServer server, long now, YongyeConfig cfg) {

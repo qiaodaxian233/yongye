@@ -2829,3 +2829,8 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **网络零新请求**:新 `BossAtlasPayload`(7 击杀+7 解锁天,14 varint,槽位契约写死在类注释),**随 MainQuestLine.sync 一并下发**(开书/领奖/达成都会刷)——解锁天=**实时配置** minDay(红蛛/死法/凤凰/野龙/阿努/佩恩;末影龙 -1=末地),改配置图鉴自动跟。
 - **界面**:任务书第 4 页签「BOSS」(enableBossAtlasPage 关=页签不显示且服务端不发包);左列 7 行「✔名字 ×N / □名字」,右侧详情=已讨伐次数/「解锁:第 minDay+1 天」(展示口径同 m289)/弱点打法(按 m268 技能包写实:红蛛半血产卵、法师魂火延迟+贴脸闪现、凤凰浴火一次、托罗俯冲前摇、阿努半血狂暴、龙三命+脱战回血先炸水晶)/掉落预览(按 LootCrateHandler 实况:皮肤四只=史诗箱、托罗龙/佩恩=传说+史诗箱+佩恩技能书×3、末影龙=龙魂+IS_BOSS 散装掉落+终焉大奖+开永夜+)。
 - 配置+1 enableBossAtlasPage,**configVersion 110→111**;括号自检 7 文件全平;待编译验证:无(附件/payload/页签全在树模板)。实机盯:任务书第 4 签出现、杀只红蛛看行变「✔红蜘蛛 ×1」、详情解锁天随配置变、主线「屠魔」杀红蛛现在能推进、关开关页签消失。
+
+## m352 事件限定天象视觉(作者点名「血月才红月、酸雨才绿雨,贴图常驻导致天天血月」,2026-07-29)
+- **病根**:红月(moon_phases.png)/绿雨(rain.png)放在 assets/minecraft **常驻覆盖原版贴图**(m78),与服务端天象事件(NightfallWeatherHandler)完全脱钩——无论有没有血月事件,月亮永远是红的。
+- **修**:两张贴图 git mv 进 yongye 命名空间(blood_moon_phases.png / acid_rain.png,原版月亮/雨自动回归);新 `SkyEventPayload`(1 varint,序数契约=Event 枚举 0无/1血月/2酸雨/3流星)事件开始/endEvent 归零各广播一次+JOIN 登录补发;新 `SkyTextureMixin` @Redirect 拦 renderSky 里 MOON_PHASES 与 renderWeather 里 RAIN 的静态字段读取(**yarn 1.21.1 已核:field_4098/field_20797/method_3257/method_22714**),事件中返回 yongye 贴图、平时返回自建原版路径 Identifier(原字段 private 不直引);require=0 映射不符=静默不挂退回原版月亮,永不崩。
+- 配置+1 enableEventSkyVisuals(关=事件也用原版天空,玩法效果不受影响),**configVersion 111→112**;mixins.json client 数组+1;括号自检 6 文件全平。待编译验证:@Redirect FIELD 目标两处(官方映射已核,require=0 有退路)。实机盯:平时白月亮正常雨、血月广播瞬间月亮变红平息变回、酸雨期绿雨、中途上线也对、关开关全原版。

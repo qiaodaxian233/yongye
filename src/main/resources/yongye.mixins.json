@@ -24,7 +24,8 @@
     "client.FovKickMixin",
     "client.PlayerSlashSwingMixin",
     "client.SlashPoseMixin",
-    "client.WeaponSheathMixin"
+    "client.WeaponSheathMixin",
+    "client.SkyTextureMixin"
   ],
   "injectors": {
     "defaultRequire": 1

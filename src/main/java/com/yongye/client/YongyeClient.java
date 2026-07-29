@@ -58,6 +58,8 @@ public class YongyeClient implements ClientModInitializer {
     private static final int[] skillCdLeft = new int[5];
     /** m346 冷却峰值(=本轮总冷却,进度线分母;收包时「变大=新施放」置峰、归零清峰,免下发总CD) */
     private static final int[] skillCdPeak = new int[5];
+    /** m352 天象事件状态(SkyEventPayload 更新):0 无 / 1 血月 / 2 酸雨 / 3 流星;SkyTextureMixin 据此换天空贴图 */
+    public static int skyEvent = 0;
     /** m346 按键静态引用(注册处赋值):HUD 键位标签走 getBoundKeyLocalizedText,玩家改键跟着变 */
     private static KeyBinding[] skillKeysRef = null;
     private static KeyBinding ultimateKeyRef = null, minorSkillKeyRef = null;
@@ -157,6 +159,9 @@ public class YongyeClient implements ClientModInitializer {
         // m351 Boss 图鉴数据(随主线同步一并到达)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.BossAtlasPayload.ID, (payload, context) ->
                 context.client().execute(() -> QuestBookScreen.onBossSync(payload)));
+        // m352 天象事件状态:更新 skyEvent,SkyTextureMixin 渲染帧读取换红月/绿雨贴图
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.SkyEventPayload.ID, (payload, context) ->
+                context.client().execute(() -> skyEvent = payload.event()));
 
         // 永夜同步:更新 HUD 状态
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.NightfallSyncPayload.ID, (payload, context) ->
