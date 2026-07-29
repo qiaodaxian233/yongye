@@ -56,8 +56,10 @@ public class YongyeClient implements ClientModInitializer {
     public static double coreTX = 0, coreTY = 0, coreTZ = 0;
     /** m346 技能CD常显HUD:剩余冷却 tick(0..2=R/G/V 3=大招 4=小技能;SkillCdPayload 每10t刷新,本地每t递减保平滑) */
     private static final int[] skillCdLeft = new int[5];
-    /** m346 冷却峰值(=本轮总冷却,进度线分母;收包时「变大=新施放」置峰、归零清峰,免下发总CD) */
+    /** m346 冷却峰值(=本轮总冷却,进度分母;收包时「变大=新施放」置峰、归零清峰,免下发总CD) */
     private static final int[] skillCdPeak = new int[5];
+    /** m353 转好闪光计时:冷却归零瞬间置 12,芯片金框高亮闪一下随即衰减 */
+    private static final int[] skillCdReadyFlash = new int[5];
     /** m352 天象事件状态(SkyEventPayload 更新):0 无 / 1 血月 / 2 酸雨 / 3 流星;SkyTextureMixin 据此换天空贴图 */
     public static int skyEvent = 0;
     /** m346 按键静态引用(注册处赋值):HUD 键位标签走 getBoundKeyLocalizedText,玩家改键跟着变 */
@@ -660,26 +662,34 @@ public class YongyeClient implements ClientModInitializer {
             }
         });
 
-        // m346 技能CD常显HUD:收包 → 5 槽剩余冷却入缓存;「变大=新施放」置峰值(进度线分母),归零清峰
+        // m346 技能CD常显HUD:收包 → 5 槽剩余冷却入缓存;「变大=新施放」置峰值(进度分母),归零清峰
+        // m353:「在转→转好」边沿点亮 readyFlash(芯片金框闪光 12t)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.SkillCdPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
                     int[] vals = {payload.slash(), payload.devour(), payload.finality(), payload.ultimate(), payload.minor()};
                     for (int i = 0; i < 5; i++) {
                         if (vals[i] > skillCdLeft[i]) skillCdPeak[i] = vals[i];
-                        else if (vals[i] == 0) skillCdPeak[i] = 0;
+                        else if (vals[i] == 0) {
+                            if (skillCdLeft[i] > 0) skillCdReadyFlash[i] = 12;
+                            skillCdPeak[i] = 0;
+                        }
                         skillCdLeft[i] = vals[i];
                     }
                 }));
         // m347 装备详情技能等级同步:收包写进 WeaponInfoScreen 静态字段(面板下一帧刷新)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.WeaponSkillLvPayload.ID, (payload, context) ->
                 context.client().execute(() -> WeaponInfoScreen.onSync(payload)));
-        // 本地每 tick 递减:两包(10t)之间秒数平滑走,不跳格
+        // 本地每 tick 递减:两包(10t)之间秒数平滑走,不跳格;命零瞬间点亮转好闪光(m353)
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            for (int i = 0; i < 5; i++) if (skillCdLeft[i] > 0) skillCdLeft[i]--;
+            for (int i = 0; i < 5; i++) {
+                if (skillCdLeft[i] > 0 && --skillCdLeft[i] == 0) skillCdReadyFlash[i] = 12;
+                if (skillCdReadyFlash[i] > 0) skillCdReadyFlash[i]--;
+            }
         });
-        // 渲染:血条面板左沿外右对齐一列(右缘 w/2-100,底行 h-50 向上堆,与连击块/看板/阶段名/核心箭头全不压)。
-        // 持武器出 R/G/V 三行(未解锁深灰;混沌/龙魂免解锁同 m331),有职业出大招/小技能两行;
-        // 就绪=金键绿字,冷却=灰名橙秒+底部 1px 蓝色恢复进度线;键位标签 getBoundKeyLocalizedText(改键跟变)。
+        // 渲染(m353 玻璃芯片版):右缘 w/2-180——作者实机截图 w/2-100 会压到面板左侧「+N/s 回血率」与「格挡」标签,
+        // 左移 80px 彻底让开;底行 h-50 逐行向上堆。持武器出 R/G/V(未解锁深灰;混沌/龙魂免解锁同 m331),
+        // 有职业出大招/小技能;每行=玻璃芯片(暗底+描边+顶高光),冷却=芯片内部蓝色充能填充左→右涨满+橙秒,
+        // 就绪=金框绿字,转好瞬间金框闪光 12t;键位标签 getBoundKeyLocalizedText(改键跟变)。
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
             if (mc.player == null || mc.options.hudHidden) return;
@@ -693,7 +703,7 @@ public class YongyeClient implements ClientModInitializer {
             if (!weapon && !hasClass) return;
 
             int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
-            int right = w / 2 - 100 + cfg.skillCdHudOffsetX;   // 右缘:血条面板左沿外
+            int right = w / 2 - 180 + cfg.skillCdHudOffsetX;   // 右缘:面板左侧标签区再往左(m353 防压字)
             int y = h - 50 + cfg.skillCdHudOffsetY;            // 底行,逐行向上堆
 
             // 职业招在下(离热栏近),武器技能在上——自下而上:小技能 C → 大招 X → V → G → R
@@ -807,35 +817,46 @@ public class YongyeClient implements ClientModInitializer {
         };
     }
 
-    /** m346:技能CD HUD 单行绘制(右对齐;返回上一行 y)。就绪=金键绿字,冷却=灰键灰名橙秒+蓝色恢复进度线,
-     *  未解锁=整行深灰。键位标签走 getBoundKeyLocalizedText(yarn method_16007 已核),玩家改键即时跟变。 */
+    /** m353:技能CD 玻璃芯片单行(右对齐;返回上一行 y)。芯片=暗玻璃底+状态色描边+顶高光(照 m142 HUD 手法);
+     *  冷却=芯片内部蓝色充能填充从左涨满(峰值当分母)+灰名橙秒;就绪=金框绿字;转好瞬间金框闪光(readyFlash);
+     *  未解锁=整片压暗。键位标签走 getBoundKeyLocalizedText(yarn method_16007 已核),玩家改键即时跟变。 */
     private static int drawSkillCdRow(net.minecraft.client.gui.DrawContext ctx, net.minecraft.client.font.TextRenderer tr,
                                       int right, int y, KeyBinding key, String name, int slot, boolean unlocked) {
         int left = skillCdLeft[slot];
+        boolean ready = unlocked && left <= 0;
         String keyLabel = "[" + key.getBoundKeyLocalizedText().getString() + "]";
-        String status;
-        int keyColor, nameColor, statusColor;
-        if (!unlocked) {
-            keyColor = 0xFF555555; nameColor = 0xFF555555; status = " 未解锁"; statusColor = 0xFF555555;
-        } else if (left <= 0) {
-            keyColor = 0xFFFFD700; nameColor = 0xFF55FF55; status = " 就绪"; statusColor = 0xFF55FF55;
-        } else {
-            keyColor = 0xFF888888; nameColor = 0xFF9AA6B2; status = " " + ((left + 19) / 20) + "s"; statusColor = 0xFFFFA040;
-        }
+        String status = !unlocked ? " 未解锁" : ready ? " 就绪" : " " + ((left + 19) / 20) + "s";
+        int keyColor = !unlocked ? 0xFF555566 : ready ? 0xFFFFD700 : 0xFFAAB6C2;
+        int nameColor = !unlocked ? 0xFF555566 : ready ? 0xFF66FF77 : 0xFFC8D2DC;
+        int statusColor = !unlocked ? 0xFF555566 : ready ? 0xFF66FF77 : 0xFFFFA040;
         int wKey = tr.getWidth(keyLabel), wName = tr.getWidth(name);
-        int total = wKey + 2 + wName + tr.getWidth(status);
-        int x = right - total;
-        ctx.drawTextWithShadow(tr, Text.literal(keyLabel), x, y, keyColor);
-        ctx.drawTextWithShadow(tr, Text.literal(name), x + wKey + 2, y, nameColor);
-        ctx.drawTextWithShadow(tr, Text.literal(status), x + wKey + 2 + wName, y, statusColor);
-        // 冷却恢复进度线:行底 1px,底槽暗蓝、已恢复比例亮蓝从左涨满(峰值=本轮总CD,收包时记录)
+        int tw = wKey + 3 + wName + tr.getWidth(status);
+        int cw = tw + 10, ch = 13;                     // 芯片宽/高(文字四周留边)
+        int x = right - cw, ty = y - 2;                // ty=芯片顶;文字画在 ty+3
+        // ① 描边(状态色;转好闪光期亮金白盖过)
+        int border = !unlocked ? 0xFF262636 : ready ? 0xFFCC9F2E : 0xFF2E5A8A;
+        if (skillCdReadyFlash[slot] > 0) {
+            int a = 120 + skillCdReadyFlash[slot] * 11;                    // 12t 内从亮到淡
+            border = (Math.min(255, a) << 24) | 0xFFF0A0;
+        }
+        ctx.fill(x - 1, ty - 1, x + cw + 1, ty + ch + 1, border);
+        // ② 暗玻璃底
+        ctx.fill(x, ty, x + cw, ty + ch, !unlocked ? 0xB00A0A14 : 0xB80C1626);
+        // ③ 冷却充能填充:恢复比例从左涨满(峰值=本轮总CD,收包时记录);就绪铺一层极淡绿
         if (unlocked && left > 0 && skillCdPeak[slot] > 0) {
             float frac = 1f - (float) left / skillCdPeak[slot];
-            int lw = (int) (total * Math.max(0f, Math.min(1f, frac)));
-            ctx.fill(x, y + 9, x + total, y + 10, 0x40203040);
-            if (lw > 0) ctx.fill(x, y + 9, x + lw, y + 10, 0xFF3AA0FF);
+            int fw = (int) (cw * Math.max(0f, Math.min(1f, frac)));
+            if (fw > 0) ctx.fill(x, ty, x + fw, ty + ch, 0x582E7AD0);
+        } else if (ready) {
+            ctx.fill(x, ty, x + cw, ty + ch, 0x2020C060);
         }
-        return y - 11;
+        // ④ 顶部玻璃高光 + 文字
+        ctx.fill(x, ty, x + cw, ty + 1, 0x30FFFFFF);
+        int tx = x + 5;
+        ctx.drawTextWithShadow(tr, Text.literal(keyLabel), tx, ty + 3, keyColor);
+        ctx.drawTextWithShadow(tr, Text.literal(name), tx + wKey + 3, ty + 3, nameColor);
+        ctx.drawTextWithShadow(tr, Text.literal(status), tx + wKey + 3 + wName, ty + 3, statusColor);
+        return y - 16;
     }
 
     /** m279:以当前矩阵原点为中心画 1px 方环(冲击环用;fill 为在树画法,无新 API)。 */
