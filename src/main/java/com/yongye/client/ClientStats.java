@@ -37,6 +37,8 @@ public final class ClientStats {
     public static String dayForecastShort = "";
     /** m361 主线目标常显行(""=不显示;含「已达成」时看板转绿提醒领奖)。 */
     public static String mainGoal = "";
+    /** m363 当前主线阶段号(渐进解锁门控;-1=尚未收到,全部按钮先显示防误锁)。 */
+    public static int mainStage = -1;
 
     public static void update(int h, int[] l, String cn) {
         health = h;

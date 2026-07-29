@@ -133,6 +133,8 @@ public final class VaultManager {
             YongyeConfig cfg = YongyeConfig.get();
             if (!cfg.enableVault || !cfg.vaultAutoDeposit) return;
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                // m363 渐进解锁:仓库按钮阶段1才点亮,自动入库同步门控——早于解锁就静默收走会让玩家找不到东西
+                if (cfg.enableProgressiveUnlock && MainQuestLine.stage(p) < 1) continue;
                 Map<String, Long> vault = null;
                 PlayerInventory inv = p.getInventory();
                 long moved = 0;

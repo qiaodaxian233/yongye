@@ -198,6 +198,20 @@ public class YongyeClient implements ClientModInitializer {
                     ClientStats.dayForecast = payload.dayForecast();
                     ClientStats.dayForecastShort = payload.dayForecastShort();
                     ClientStats.mainGoal = payload.mainGoal();   // m361 主线目标常显
+                    // m363 渐进解锁:阶段升档瞬间播报本档解锁的新功能(金字进聊天可回翻)
+                    int ns = payload.mainStage();
+                    if (com.yongye.YongyeConfig.get().enableProgressiveUnlock
+                            && ClientStats.mainStage >= 0 && ns > ClientStats.mainStage) {
+                        for (int st = ClientStats.mainStage + 1; st <= ns; st++) {
+                            String u = unlockMsgFor(st);
+                            if (u != null && context.client().player != null) {
+                                context.client().player.sendMessage(net.minecraft.text.Text.literal(
+                                        "◆ 新功能解锁:" + u + "(打开背包查看)")
+                                        .formatted(net.minecraft.util.Formatting.GOLD), false);
+                            }
+                        }
+                    }
+                    ClientStats.mainStage = ns;
                 }));
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
@@ -807,6 +821,31 @@ public class YongyeClient implements ClientModInitializer {
         return ((int) (r * 255.0f) << 16) | ((int) (g * 255.0f) << 8) | (int) (b * 255.0f);
     }
 
+    /** m363 渐进解锁:某阶段升档时新点亮的按钮清单(播报用;与 featureUnlocked 门控表同源)。 */
+    private static String unlockMsgFor(int stage) {
+        return switch (stage) {
+            case 1 -> "学书 / 合书 / 仓库";
+            case 2 -> "强化 / 装备 / 兑换 / 转移";
+            case 5 -> "饰品栏";
+            default -> null;
+        };
+    }
+
+    /** m363 渐进解锁门控:开关关/阶段未同步(-1)=全开防误锁;职业类按钮看 className 不看阶段
+     *  (玩家可能提前选职,锁天赋会气人)。key:book=学书合书仓库 forge=强化装备兑换转移 acc=饰品 cls=天赋本命。 */
+    private static boolean featureUnlocked(String key) {
+        if (!com.yongye.YongyeConfig.get().enableProgressiveUnlock) return true;
+        if ("cls".equals(key)) return !ClientStats.className.isEmpty();
+        int st = ClientStats.mainStage;
+        if (st < 0) return true;
+        return switch (key) {
+            case "book" -> st >= 1;
+            case "forge" -> st >= 2;
+            case "acc" -> st >= 5;
+            default -> true;
+        };
+    }
+
     /** m279/m284:升档称号,5 连一档共十阶——凌厉/迅猛/狂怒/无双/修罗/鬼神/灭世/弑神/超凡入圣/万象俱灭。 */
     private static String comboTitleFor(int tier) {
         return switch (Math.min(tier, 10)) {
@@ -895,9 +934,11 @@ public class YongyeClient implements ClientModInitializer {
                 int rIn = 0, rOut = 0;
 
                 // —— 内列(6):成长/装备/饰品/天赋/强化/兑换 ——
+                // m363 渐进解锁:未解锁的按钮整个不建(前期界面干净;列内自动上移补位),
+                // featureUnlocked 开关关/未同步=全开防误锁;成长/任务/设置三常驻
                 Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("成长"), b -> client.setScreen(new StatsScreen(screen))));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                if (featureUnlocked("forge")) Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("装备"), b -> {
                             if (client.player == null) return;
                             ItemStack held = client.player.getMainHandStack();
@@ -905,35 +946,35 @@ public class YongyeClient implements ClientModInitializer {
                                 client.setScreen(new WeaponInfoScreen(screen, held));
                             }
                         }));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                if (featureUnlocked("acc")) Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("饰品"), b -> ClientPlayNetworking.send(new com.yongye.network.OpenAccessoryPayload())));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                if (featureUnlocked("cls")) Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("天赋"), b -> client.setScreen(new TalentScreen(screen))));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                if (featureUnlocked("forge")) Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("强化"), b -> client.setScreen(new EnhanceSelectScreen(screen))));
-                Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
+                if (featureUnlocked("forge")) Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("兑换"), b -> client.setScreen(new ExchangeScreen(screen))));
 
                 // —— 外列(7):学书/合书/任务/设置/转移/仓库/本命 ——
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                if (featureUnlocked("book")) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("学书"), b -> ClientPlayNetworking.send(new com.yongye.network.UseAllBooksPayload())));
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                if (featureUnlocked("book")) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("合书"), b -> ClientPlayNetworking.send(new com.yongye.network.MergeBooksPayload())));
                 Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("任务"), b -> client.setScreen(new QuestBookScreen(screen))));
                 Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("设置"), b -> client.setScreen(new VisualFxScreen(screen))));
                 // 转移:强化转移(主手来源→副手目标;m340,与 /yongye transfer 同款)
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                if (featureUnlocked("forge")) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("转移"), b -> {
                             if (client.player != null) client.player.networkHandler.sendCommand("yongye transfer");
                         }));
                 // 仓库:材料仓库界面(m356,无限堆叠成长物资,死亡不丢)
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                if (featureUnlocked("book")) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("仓库"), b -> client.setScreen(new VaultScreen(screen))));
                 com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
-                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                if (featureUnlocked("cls")) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal(classLabel), b -> client.setScreen(new StatsScreen(screen))));
     }
 }

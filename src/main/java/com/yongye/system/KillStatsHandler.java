@@ -39,7 +39,7 @@ public final class KillStatsHandler {
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
                 ServerPlayNetworking.send(p, new HudInfoPayload(
                         p.getAttachedOrElse(ModAttachments.TOTAL_KILLS, 0L), nextName, nextSec,
-                        forecast[0], forecast[1], MainQuestLine.hudGoal(p)));   // m361 主线目标常显行
+                        forecast[0], forecast[1], MainQuestLine.hudGoal(p), MainQuestLine.stage(p)));   // m361 目标行 + m363 阶段号(解锁门控)
             }
         });
 
