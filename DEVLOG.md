@@ -2794,3 +2794,8 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **配置版本提示**:根因=版本号只在内存对齐、"下次保存"可能永不发生 → 提示每次启动重复(106≠107 现象)。修:版本不一致时**立即 save() 写盘**+提示措辞改自愈口径(默认值改版已按仅旧默认迁移自动完成,无需处理),warn 降 info,一次性出现。
 - **data fixer 日志噪音**:文档化于 ModEntities 类头——build(String) 为 yarn 1.21.1 唯一重载,字符串仅用于开发环境 DataFixer 选型查询,模组不做跨版本存档升级无需注册 fixer,生产侧无此噪音;压制需 mixin 进 Util 日志路径,风险大于收益,判定为接受现状。
 - **复杂度热点(部分)**:YongyeClient 背包 11 钮装配整体抽 `addInventoryButtons`(纯搬移零逻辑变更,onInitializeClient 减重 ~65 行)。**遗留**:ClassSkillHandler:111 与 YongyeConfig.load 迁移堆(1373 起)两处热点待下轮拆(前者建议按事件拆私有方法,后者建议迁移块抽 migrateDefaults());CI workflow(build.yml)仍待作者网页添加或带 workflow 权限 PAT 补推。
+
+## m346 技能CD常显HUD(作者点名「R/G/V、X、C 剩余冷却常显,不要只在按键失败时提示」,2026-07-29)
+- **服务端**:新 `SkillCdSyncHandler` 每 10t 把三套冷却表(武器技能 R/G/V=WeaponSkillManager、大招 X=ClassUltimateManager、小技能 C=ClassMinorSkillManager,m321 已统一 server.getTicks() 时基)读成剩余 tick,经新 `SkillCdPayload`(5 varint)发给本人;全就绪期间静默省流量,「在转→转完」边沿补发一包全 0 归位;三管理器各加 `remaining` 纯 getter(只读不写冷却表),WAS_ACTIVE 缓存挂 DISCONNECT 清理。
+- **客户端**:收包入 5 槽缓存,本地每 tick 递减保平滑(两包之间秒数不跳格);渲染在血条面板左沿外**右对齐一列**(右缘 w/2-100,底行 h-50 逐行向上堆,与连击块/看板/永夜阶段名/核心箭头全不压)。持武器出 R/G/V 三行(未解锁整行深灰;混沌/龙魂免解锁同 m331 口径,ENHANCE_LEVEL 数据组件客户端本地可读),有职业(ClientStats.className)出大招/小技能两行;就绪=金键绿字「就绪」,冷却=灰键灰名+橙色剩余秒+行底 1px 蓝色恢复进度线(分母=收包时记录的峰值,免下发总 CD);键位标签走 `KeyBinding#getBoundKeyLocalizedText`(**yarn 1.21.1 官方映射已核=method_16007**,仓库首用),按键静态引用在注册处赋值,玩家改键 HUD 即时跟变。
+- 配置+3(enableSkillCdHud 默认开/skillCdHudOffsetX/skillCdHudOffsetY),**configVersion 107→108**;顺手修作者点名的 YongyeClient 注释「外列(5)→外列(6)」(补上 m340 的「转移」)。括号自检 9 文件全平;待编译验证:无(getBoundKeyLocalizedText 已核映射,其余 fill/drawTextWithShadow/registerGlobalReceiver 全在树)。实机盯:持武器+有职业看左下五行常显、施放后秒数平滑倒数+蓝线涨满、改键位标签跟变、锁定技能深灰、专用服关 enableSkillCdHud 后 HUD 消失。

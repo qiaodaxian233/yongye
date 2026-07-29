@@ -156,6 +156,13 @@ public final class WeaponSkillManager {
                 SoundEvents.ENTITY_ENDER_DRAGON_GROWL, SoundCategory.PLAYERS, 1.0f, 0.7f);
     }
 
+    /** m346:某技能剩余冷却 tick(0=就绪;纯读不写,供 SkillCdSyncHandler 每 10t 下发 HUD)。 */
+    public static int remaining(UUID id, int index, long now) {
+        long[] cds = COOLDOWNS.get(id);
+        if (cds == null || index < 0 || index >= cds.length) return 0;
+        return (int) Math.max(0L, cds[index] - now);
+    }
+
     /** 读取玩家某技能的升级等级(0=未升级)。 */
     public static int skillLevel(ServerPlayerEntity player, WeaponSkill skill) {
         return player.getAttachedOrElse(ModAttachments.WEAPON_SKILL_LV, Map.of()).getOrDefault(skill.name(), 0);

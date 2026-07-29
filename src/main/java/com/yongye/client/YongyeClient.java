@@ -54,6 +54,13 @@ public class YongyeClient implements ClientModInitializer {
     /** 灾厄核心定位器状态(由 CoreLocatorPayload 更新):是否有目标 + 世界坐标 */
     public static boolean coreHasTarget = false;
     public static double coreTX = 0, coreTY = 0, coreTZ = 0;
+    /** m346 技能CD常显HUD:剩余冷却 tick(0..2=R/G/V 3=大招 4=小技能;SkillCdPayload 每10t刷新,本地每t递减保平滑) */
+    private static final int[] skillCdLeft = new int[5];
+    /** m346 冷却峰值(=本轮总冷却,进度线分母;收包时「变大=新施放」置峰、归零清峰,免下发总CD) */
+    private static final int[] skillCdPeak = new int[5];
+    /** m346 按键静态引用(注册处赋值):HUD 键位标签走 getBoundKeyLocalizedText,玩家改键跟着变 */
+    private static KeyBinding[] skillKeysRef = null;
+    private static KeyBinding ultimateKeyRef = null, minorSkillKeyRef = null;
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -616,6 +623,7 @@ public class YongyeClient implements ClientModInitializer {
                 KeyBindingHelper.registerKeyBinding(new KeyBinding(
                         "key.yongye.skill3", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.yongye"))
         };
+        skillKeysRef = skillKeys;   // m346:CD HUD 取键位标签用(改键跟变)
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             for (int i = 0; i < skillKeys.length; i++) {
                 while (skillKeys[i].wasPressed()) {
@@ -627,6 +635,7 @@ public class YongyeClient implements ClientModInitializer {
         // 职业大招按键(默认 X)→ 发包施放本命职业主动技能
         KeyBinding ultimateKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.yongye.ultimate", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_X, "key.categories.yongye"));
+        ultimateKeyRef = ultimateKey;   // m346:CD HUD 取键位标签用
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (ultimateKey.wasPressed()) {
                 if (client.player != null) ClientPlayNetworking.send(new com.yongye.network.ClassUltimatePayload());
@@ -636,9 +645,60 @@ public class YongyeClient implements ClientModInitializer {
         // 职业小技能按键(m232,默认 C)→ 发包施放本命职业小技能(独立冷却,不占大招CD)
         KeyBinding minorSkillKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.yongye.minorskill", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.yongye"));
+        minorSkillKeyRef = minorSkillKey;   // m346:CD HUD 取键位标签用
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (minorSkillKey.wasPressed()) {
                 if (client.player != null) ClientPlayNetworking.send(new com.yongye.network.ClassMinorSkillPayload());
+            }
+        });
+
+        // m346 技能CD常显HUD:收包 → 5 槽剩余冷却入缓存;「变大=新施放」置峰值(进度线分母),归零清峰
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.SkillCdPayload.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    int[] vals = {payload.slash(), payload.devour(), payload.finality(), payload.ultimate(), payload.minor()};
+                    for (int i = 0; i < 5; i++) {
+                        if (vals[i] > skillCdLeft[i]) skillCdPeak[i] = vals[i];
+                        else if (vals[i] == 0) skillCdPeak[i] = 0;
+                        skillCdLeft[i] = vals[i];
+                    }
+                }));
+        // 本地每 tick 递减:两包(10t)之间秒数平滑走,不跳格
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            for (int i = 0; i < 5; i++) if (skillCdLeft[i] > 0) skillCdLeft[i]--;
+        });
+        // 渲染:血条面板左沿外右对齐一列(右缘 w/2-100,底行 h-50 向上堆,与连击块/看板/阶段名/核心箭头全不压)。
+        // 持武器出 R/G/V 三行(未解锁深灰;混沌/龙魂免解锁同 m331),有职业出大招/小技能两行;
+        // 就绪=金键绿字,冷却=灰名橙秒+底部 1px 蓝色恢复进度线;键位标签 getBoundKeyLocalizedText(改键跟变)。
+        net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.player == null || mc.options.hudHidden) return;
+            var cfg = com.yongye.YongyeConfig.get();
+            if (!cfg.enableSkillCdHud) return;
+            if (skillKeysRef == null || ultimateKeyRef == null || minorSkillKeyRef == null) return;
+            var tr = mc.textRenderer;
+            ItemStack held = mc.player.getMainHandStack();
+            boolean weapon = EquipmentEnhancer.isWeapon(held);
+            boolean hasClass = !ClientStats.className.isEmpty();
+            if (!weapon && !hasClass) return;
+
+            int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
+            int right = w / 2 - 100 + cfg.skillCdHudOffsetX;   // 右缘:血条面板左沿外
+            int y = h - 50 + cfg.skillCdHudOffsetY;            // 底行,逐行向上堆
+
+            // 职业招在下(离热栏近),武器技能在上——自下而上:小技能 C → 大招 X → V → G → R
+            if (hasClass) {
+                y = drawSkillCdRow(ctx, tr, right, y, minorSkillKeyRef, "小技能", 4, true);
+                y = drawSkillCdRow(ctx, tr, right, y, ultimateKeyRef, "大招", 3, true);
+            }
+            if (weapon) {
+                int lvl = held.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);
+                boolean freeUnlock = held.getItem() == com.yongye.registry.ModItems.CHAOS_BLADE
+                        || held.getItem() == com.yongye.registry.ModItems.DRAGON_BLADE;   // m331 免解锁口径
+                com.yongye.item.WeaponSkill[] sk = com.yongye.item.WeaponSkill.values();
+                for (int i = sk.length - 1; i >= 0; i--) {
+                    boolean unlocked = freeUnlock || sk[i].isUnlocked(lvl);
+                    y = drawSkillCdRow(ctx, tr, right, y, skillKeysRef[i], sk[i].cn, i, unlocked);
+                }
             }
         });
 
@@ -736,6 +796,37 @@ public class YongyeClient implements ClientModInitializer {
         };
     }
 
+    /** m346:技能CD HUD 单行绘制(右对齐;返回上一行 y)。就绪=金键绿字,冷却=灰键灰名橙秒+蓝色恢复进度线,
+     *  未解锁=整行深灰。键位标签走 getBoundKeyLocalizedText(yarn method_16007 已核),玩家改键即时跟变。 */
+    private static int drawSkillCdRow(net.minecraft.client.gui.DrawContext ctx, net.minecraft.client.font.TextRenderer tr,
+                                      int right, int y, KeyBinding key, String name, int slot, boolean unlocked) {
+        int left = skillCdLeft[slot];
+        String keyLabel = "[" + key.getBoundKeyLocalizedText().getString() + "]";
+        String status;
+        int keyColor, nameColor, statusColor;
+        if (!unlocked) {
+            keyColor = 0xFF555555; nameColor = 0xFF555555; status = " 未解锁"; statusColor = 0xFF555555;
+        } else if (left <= 0) {
+            keyColor = 0xFFFFD700; nameColor = 0xFF55FF55; status = " 就绪"; statusColor = 0xFF55FF55;
+        } else {
+            keyColor = 0xFF888888; nameColor = 0xFF9AA6B2; status = " " + ((left + 19) / 20) + "s"; statusColor = 0xFFFFA040;
+        }
+        int wKey = tr.getWidth(keyLabel), wName = tr.getWidth(name);
+        int total = wKey + 2 + wName + tr.getWidth(status);
+        int x = right - total;
+        ctx.drawTextWithShadow(tr, Text.literal(keyLabel), x, y, keyColor);
+        ctx.drawTextWithShadow(tr, Text.literal(name), x + wKey + 2, y, nameColor);
+        ctx.drawTextWithShadow(tr, Text.literal(status), x + wKey + 2 + wName, y, statusColor);
+        // 冷却恢复进度线:行底 1px,底槽暗蓝、已恢复比例亮蓝从左涨满(峰值=本轮总CD,收包时记录)
+        if (unlocked && left > 0 && skillCdPeak[slot] > 0) {
+            float frac = 1f - (float) left / skillCdPeak[slot];
+            int lw = (int) (total * Math.max(0f, Math.min(1f, frac)));
+            ctx.fill(x, y + 9, x + total, y + 10, 0x40203040);
+            if (lw > 0) ctx.fill(x, y + 9, x + lw, y + 10, 0xFF3AA0FF);
+        }
+        return y - 11;
+    }
+
     /** m279:以当前矩阵原点为中心画 1px 方环(冲击环用;fill 为在树画法,无新 API)。 */
     private static void comboRing(net.minecraft.client.gui.DrawContext ctx, int r, int color) {
         ctx.fill(-r, -r, r, -r + 1, color);          // 上边
@@ -778,7 +869,7 @@ public class YongyeClient implements ClientModInitializer {
                 Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("兑换"), b -> client.setScreen(new ExchangeScreen(screen))));
 
-                // —— 外列(5):学书/合书/任务/设置/本命 ——
+                // —— 外列(6):学书/合书/任务/设置/转移/本命 ——
                 Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("学书"), b -> ClientPlayNetworking.send(new com.yongye.network.UseAllBooksPayload())));
                 Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,

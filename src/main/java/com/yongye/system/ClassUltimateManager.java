@@ -38,6 +38,11 @@ public final class ClassUltimateManager {
         cooldownUntil.computeIfPresent(id, (k, v) -> v - ticks);
     }
 
+    /** m346:大招剩余冷却 tick(0=就绪;纯读不写,供 SkillCdSyncHandler 每 10t 下发 HUD)。 */
+    public static int remaining(UUID id, long now) {
+        return (int) Math.max(0L, cooldownUntil.getOrDefault(id, 0L) - now);
+    }
+
     public static void use(ServerPlayerEntity p) {
         YongyeConfig cfg = YongyeConfig.get();
         if (!cfg.enableClassUltimate) { msg(p, "职业大招未启用", Formatting.RED); return; }
