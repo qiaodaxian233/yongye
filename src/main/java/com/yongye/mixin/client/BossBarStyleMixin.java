@@ -83,9 +83,12 @@ public abstract class BossBarStyleMixin {
         if (groups.isEmpty()) return;
         ci.cancel();
 
-        // ② 尺寸档按合并后的行数定
+        // ② 尺寸档按合并后的行数定;m365 整体再乘全局缩放(作者点名血条太大),字号有下限保可读
         int tier = groups.size() <= 2 ? 0 : (groups.size() <= 4 ? 1 : 2);
-        float ts = TEXT_SCALE[tier];
+        float k = (float) Math.max(0.3, Math.min(1.5, com.yongye.YongyeConfig.get().bossBarScale));
+        int slotWScaled = Math.max(40, Math.round(SLOT_W[tier] * k));
+        int rowGap = Math.max(4, Math.round(ROW_GAP * k));
+        float ts = Math.max(0.5f, TEXT_SCALE[tier] * k);
 
         TextRenderer tr = MinecraftClient.getInstance().textRenderer;
         int cx = ctx.getScaledWindowWidth() / 2;
@@ -97,10 +100,10 @@ public abstract class BossBarStyleMixin {
         for (Group g : groups.values()) {
             Style st = g.st;
             int n = g.members.size();
-            float s = SLOT_W[tier] / (float) st.sw;
+            float s = slotWScaled / (float) st.sw;
             int fw = Math.round(st.fw * s), fh = Math.round(st.fh * s);
             int ox = Math.round(st.sx * s), oy = Math.round(st.sy * s);
-            int slotW = SLOT_W[tier], slotH = Math.max(1, Math.round(st.sh * s));
+            int slotW = slotWScaled, slotH = Math.max(1, Math.round(st.sh * s));
 
             int fy0;
             float nameCy;
@@ -183,7 +186,7 @@ public abstract class BossBarStyleMixin {
                 yongye$drawScaled(ctx, tr, at, ax, fy0 + oy + slotH / 2f - 4.5f * as, as, 0xFFCC66);
             }
 
-            j = fy0 + fh + ROW_GAP;
+            j = fy0 + fh + rowGap;
             if (j >= halfH) return;
         }
 

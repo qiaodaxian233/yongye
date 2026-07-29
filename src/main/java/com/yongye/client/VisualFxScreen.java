@@ -138,6 +138,13 @@ public class VisualFxScreen extends Screen {
                             new Btn("停·右中", "yongye config set hudInfoAnchor 4"),
                             new Btn("停·右下", "yongye config set hudInfoAnchor 5"),
                     }),
+                    new Section("BOSS血条大小(m365 整体缩放,即点即改)", new Btn[]{
+                            new Btn("血条·特小0.5", "yongye config set bossBarScale 0.5"),
+                            new Btn("血条·小0.6", "yongye config set bossBarScale 0.6"),
+                            new Btn("血条·默认0.7", "yongye config set bossBarScale 0.7"),
+                            new Btn("血条·较大0.85", "yongye config set bossBarScale 0.85"),
+                            new Btn("血条·原大1.0", "yongye config set bossBarScale 1.0"),
+                    }),
                     new Section("天象视觉(m352 事件限定红月/绿雨)", new Btn[]{
                             new Btn("事件天象·开", "yongye config set enableEventSkyVisuals true"),
                             new Btn("事件天象·关", "yongye config set enableEventSkyVisuals false"),
