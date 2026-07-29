@@ -384,12 +384,22 @@ public final class ClassSkillHandler {
             if (!cfg.enableClassSkills) return;
             boolean slow = server.getTicks() % Math.max(1, cfg.tankTauntIntervalTicks) == 0;
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                // 坦克护盾(吸收)每秒续命;手持镇魂 +1 级,副手磐盾再 +1 级
+                // 坦克护盾(吸收):m367 改「脱战回盾」(作者实机:一直被攻击血量不掉)。
+                // 病根=旧版每秒无条件续盾——1.21 里 addStatusEffect 走升级路径(时长 60t>剩余)会重触发
+                // onApplied 把吸收值当场回满,等于每秒免费回满金心;换手让镇魂进出主手还会令效果等级
+                // 升降再触发一次回满 → 前中期怪物 DPS 打不穿一层每秒刷新的盾,红血纹丝不动。
+                // 修=照刺客脱战先例挂 lastCombat 门:战斗中(受击/出手都会刷新 lastCombat)不续不回,
+                // 盾被打掉就是掉了;脱战 tankShieldCombatDelayTicks 后恢复每秒续盾(0=回旧恒刷行为)。
                 if (server.getTicks() % 20 == 0 && ClassManager.isActive(p, PlayerClass.TANK)) {
-                    int amp = Math.max(0, cfg.tankShieldAmplifier)
-                            + (ClassWeaponItem.held(p, PlayerClass.TANK) ? 1 : 0);
-                    p.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 60,
-                            amp, true, false, false));
+                    long lastFight = lastCombat.getOrDefault(p.getUuid(), 0L);
+                    boolean outOfCombat = cfg.tankShieldCombatDelayTicks <= 0
+                            || p.getWorld().getTime() - lastFight >= cfg.tankShieldCombatDelayTicks;
+                    if (outOfCombat) {
+                        int amp = Math.max(0, cfg.tankShieldAmplifier)
+                                + (ClassWeaponItem.held(p, PlayerClass.TANK) ? 1 : 0);
+                        p.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 60,
+                                amp, true, false, false));
+                    }
                 }
                 // 坦克嘲讽:周期性把附近怪物的目标拉到自己身上;手持镇魂半径×1.5
                 if (slow && ClassManager.isActive(p, PlayerClass.TANK) && p.getWorld() instanceof ServerWorld sw) {

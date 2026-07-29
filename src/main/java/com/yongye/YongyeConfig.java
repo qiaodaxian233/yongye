@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 120; // m366 猎杀勋章+9 · m365 血条缩放+1 · m364 每日悬赏+9 · m363 渐进解锁+1 · m361 主线目标常显+1 · m359 强化直供+1 · m357 自动存/学书直供+2 · m356 材料仓库+1 · m352 事件天象+1 · m351 BOSS图鉴页+1 · m350 任务书节点地图+1 · m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 121; // m367 肉盾脱战回盾+1 · m366 猎杀勋章+9 · m365 血条缩放+1 · m364 每日悬赏+9 · m363 渐进解锁+1 · m361 主线目标常显+1 · m359 强化直供+1 · m357 自动存/学书直供+2 · m356 材料仓库+1 · m352 事件天象+1 · m351 BOSS图鉴页+1 · m350 任务书节点地图+1 · m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -561,6 +561,8 @@ public class YongyeConfig {
     public double tankTauntRadius = 12.0;
     public int tankTauntIntervalTicks = 40;
     public int tankShieldAmplifier = 1;               // 吸收等级(0=吸收I=4心)
+    /** m367 脱战回盾:受击/出手后须离开战斗这么多 tick 才恢复每秒续盾(战斗中盾被打掉不回;0=旧恒刷行为)。 */
+    public int tankShieldCombatDelayTicks = 100;
     public double tankShieldReflect = 4.0;            // 持磐盾格挡时的反震伤害
     public double tankTrueDamageReduction = 0.15;     // 坦克真·百分比减伤(0~0.9;0=关。经 LivingEntity mixin 削减最终伤害)
     // —— 反苟机制(破解泡水/虚空搭方块/远程龟缩) ——
