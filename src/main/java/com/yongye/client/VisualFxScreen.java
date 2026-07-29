@@ -111,6 +111,36 @@ public class VisualFxScreen extends Screen {
                             new Btn("紫气·浓2", "yongye config set mobAuraScale 2.0"),
                     }),
             }),
+            // m358 界面·HUD 页(作者:「技能CD能不能在设置里调整」)——即点即改,HUD 每帧读配置立即生效
+            new Page("界面·HUD", new Section[]{
+                    new Section("技能CD常显(R/G/V·大招·小技能,m353 玻璃芯片)", new Btn[]{
+                            new Btn("CD显示·开", "yongye config set enableSkillCdHud true"),
+                            new Btn("CD显示·关", "yongye config set enableSkillCdHud false"),
+                            new Btn("水平·左移40", "yongye config set skillCdHudOffsetX -40"),
+                            new Btn("水平·左移20", "yongye config set skillCdHudOffsetX -20"),
+                            new Btn("水平·默认", "yongye config set skillCdHudOffsetX 0"),
+                            new Btn("水平·右移20", "yongye config set skillCdHudOffsetX 20"),
+                            new Btn("水平·右移40", "yongye config set skillCdHudOffsetX 40"),
+                            new Btn("垂直·上移40", "yongye config set skillCdHudOffsetY -40"),
+                            new Btn("垂直·上移20", "yongye config set skillCdHudOffsetY -20"),
+                            new Btn("垂直·默认", "yongye config set skillCdHudOffsetY 0"),
+                            new Btn("垂直·下移20", "yongye config set skillCdHudOffsetY 20"),
+                    }),
+                    new Section("战况看板(第N天·击杀·预告)停靠位", new Btn[]{
+                            new Btn("看板·开", "yongye config set enableHudInfoPanel true"),
+                            new Btn("看板·关", "yongye config set enableHudInfoPanel false"),
+                            new Btn("停·左上", "yongye config set hudInfoAnchor 1"),
+                            new Btn("停·左中", "yongye config set hudInfoAnchor 0"),
+                            new Btn("停·左下", "yongye config set hudInfoAnchor 2"),
+                            new Btn("停·右上", "yongye config set hudInfoAnchor 3"),
+                            new Btn("停·右中", "yongye config set hudInfoAnchor 4"),
+                            new Btn("停·右下", "yongye config set hudInfoAnchor 5"),
+                    }),
+                    new Section("天象视觉(m352 事件限定红月/绿雨)", new Btn[]{
+                            new Btn("事件天象·开", "yongye config set enableEventSkyVisuals true"),
+                            new Btn("事件天象·关", "yongye config set enableEventSkyVisuals false"),
+                    }),
+            }),
     };
 
     public VisualFxScreen(Screen parent) {
