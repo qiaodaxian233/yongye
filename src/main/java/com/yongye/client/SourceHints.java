@@ -40,6 +40,15 @@ public final class SourceHints {
             m.put(ModItems.ABYSS_SOUL_CRYSTAL,     "永夜生存收益·苦修·材料兑换");
             m.put(ModItems.CLASS_SELECT_BOOK,      "首次进入世界自动发放;更换职业时消耗");
             m.put(ModItems.DRAGON_SOUL,            "讨伐末影龙掉落(每次讨伐一枚);锻龙魂之刃");
+            // m362 全量补齐(玩家反馈「很多东西不知道怎么获得」):宝箱四档/职业书/任务书
+            m.put(ModItems.lootCrate(0),           "二次BOSS化怪物击杀掉落;右键开箱摇奖");
+            m.put(ModItems.lootCrate(1),           "巨蟹/毒蛛等精英级击杀掉落;右键开箱摇奖");
+            m.put(ModItems.lootCrate(2),           "红蛛/死法/凤凰/阿努比斯击杀掉落;右键开箱摇奖");
+            m.put(ModItems.lootCrate(3),           "托罗龙/佩恩击杀掉落;右键开箱,可出职业武器");
+            for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
+                m.put(ModItems.getClassBook(c), "精英怪概率掉落(随机职业);右键学第二职业(满2个可替换)");
+            }
+            m.put(ModItems.QUEST_BOOK,             "首次进入自动发放;丢失不影响进度,背包「任务」按钮同样可开");
             MAP = m;
         }
         return MAP.get(item);
