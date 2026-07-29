@@ -24,14 +24,42 @@ import net.minecraft.util.Formatting;
 public class QuestBookScreen extends Screen {
 
     private static MainQuestSyncPayload DATA;
+    /** m351 Boss 图鉴数据(BossAtlasPayload,随主线同步一并到达;null=尚未收到)。 */
+    private static com.yongye.network.BossAtlasPayload BOSS_DATA;
     private final Screen parent;
-    private int page = 0;       // 0 主线 / 1 试炼 / 2 图鉴
+    private int page = 0;       // 0 主线 / 1 试炼 / 2 图鉴 / 3 BOSS(m351,enableBossAtlasPage 开才显示)
     private int selected = 0;
+
+    // ===== m351 Boss 图鉴展示数据(槽位序与 BossAtlasPayload 契约一致) =====
+    private static final String[] BOSS_NAMES = {"红蜘蛛", "死亡法师", "浴火凤凰", "托罗龙", "阿努比斯", "佩恩·天道", "末影龙"};
+    private static final String[] BOSS_DROPS = {
+            "史诗战利品宝箱(开箱出强化石/技能书/材料)",
+            "史诗战利品宝箱(开箱出强化石/技能书/材料)",
+            "史诗战利品宝箱(开箱出强化石/技能书/材料)",
+            "传说战利品宝箱+附赠史诗箱(传说箱可出职业武器)",
+            "史诗战利品宝箱(开箱出强化石/技能书/材料)",
+            "传说战利品宝箱+附赠史诗箱+死亡奖励技能书×3",
+            "龙魂×1(锻龙魂之刃)+技能书/强化石/合金/图腾等散装掉落+主线终焉大奖,并开启永夜+"};
+    private static final String[] BOSS_WEAK = {
+            "蛛网与猛扑全是近身招,拉开距离打;半血会分裂产卵,速攻过半血线",
+            "魂火锁定有延迟,标记出现立刻走位;贴脸它会闪现,中距离压制最稳",
+            "浴火重生只有一次:蜷蛋无敌期攒好爆发,重生后血量减半;备防火药水",
+            "俯冲冲撞有前摇,横向走位躲;飞行 BOSS 备远程手段",
+            "半血狂暴攻速暴涨,先清召唤的恶灵再输出;压轴最强,满强化再来",
+            "多技能连轴压制,保持机动别站桩;掉落全场最肥之一",
+            "三条命+脱战回血——持续压制别给喘息;先炸水晶断回复,强化+1000/技能V500 起步"};
 
     public QuestBookScreen(Screen parent) {
         super(Text.literal("永夜 · 任务书"));
         this.parent = parent;
         ClientPlayNetworking.send(new RequestMainQuestPayload());
+    }
+
+    /** m351:收 Boss 图鉴包(与主线同步同触发点到达)。 */
+    public static void onBossSync(com.yongye.network.BossAtlasPayload payload) {
+        BOSS_DATA = payload;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.currentScreen instanceof QuestBookScreen s && s.page == 3) s.clearAndInit();
     }
 
     public static void onSync(MainQuestSyncPayload payload) {
@@ -48,15 +76,17 @@ public class QuestBookScreen extends Screen {
         int colW = 104, rowH = 16, gap = 2;
         int totalW = colW * 2 + gap + 130;
         int x0 = this.width / 2 - totalW / 2;
-        // —— 页签 ——
-        String[] tabs = {"主线", "试炼", "图鉴"};
-        int tabW = (totalW - 2 * 2) / 3;
-        for (int i = 0; i < 3; i++) {
+        // —— 页签(m351:enableBossAtlasPage 开=4 签,关=3 签) ——
+        boolean bossPage = com.yongye.YongyeConfig.get().enableBossAtlasPage;
+        String[] tabs = bossPage ? new String[]{"主线", "试炼", "图鉴", "BOSS"} : new String[]{"主线", "试炼", "图鉴"};
+        int tabW = (totalW - 2 * (tabs.length - 1)) / tabs.length;
+        for (int i = 0; i < tabs.length; i++) {
             final int idx = i;
             ButtonWidget tab = ButtonWidget.builder(Text.literal(tabs[i]), b -> {
                 this.page = idx;
-                this.selected = idx == 1 ? Math.min(DATA == null ? 0 : DATA.trialStage(), MainQuestLine.TRIALS.length - 1)
-                        : Math.min(DATA == null ? 0 : DATA.stage(), MainQuestLine.STAGES.length - 1);
+                this.selected = idx == 0 ? Math.min(DATA == null ? 0 : DATA.stage(), MainQuestLine.STAGES.length - 1)
+                        : idx == 1 ? Math.min(DATA == null ? 0 : DATA.trialStage(), MainQuestLine.TRIALS.length - 1)
+                        : 0;
                 this.clearAndInit();
             }).dimensions(x0 + i * (tabW + 2), 24, tabW, 14).build();
             tab.active = (i != page);
@@ -113,6 +143,19 @@ public class QuestBookScreen extends Screen {
                         b -> ClientPlayNetworking.send(new ClaimTrialPayload())));
                 bottomBtns(x0 + colW + gap, by);
             }
+        } else if (page == 3) {
+            // m351 BOSS 页:左列 7 行(名字+击杀次数),点选右侧看解锁天/掉落/弱点
+            for (int i = 0; i < BOSS_NAMES.length; i++) {
+                final int idx = i;
+                int k = BOSS_DATA == null ? 0 : BOSS_DATA.kills()[i];
+                String icon = k > 0 ? "✔ " : "□ ";
+                ButtonWidget b = new YongyeButton(x0, y0 + i * (rowH + gap), colW + 40, rowH,
+                        Text.literal(icon + BOSS_NAMES[i] + (k > 0 ? " ×" + k : "")),
+                        bt -> { this.selected = idx; this.clearAndInit(); });
+                b.active = (i != selected);
+                addDrawableChild(b);
+            }
+            bottomBtns(x0, y0 + BOSS_NAMES.length * (rowH + gap) + 8);
         } else {
             bottomBtns(x0, y0 + 150);
         }
@@ -147,6 +190,26 @@ public class QuestBookScreen extends Screen {
             }
             detail(ctx, x0 + colW + 50, 46, MainQuestLine.TRIALS, selected,
                     DATA == null ? 0 : DATA.trialStage(), DATA != null && DATA.trialComplete(), trialProgress(selected));
+        } else if (page == 3) {
+            // m351 BOSS 详情:解锁天(minDay+1 展示口径同 m289;-1=末地)/ 击杀 / 弱点 / 掉落
+            int i = Math.max(0, Math.min(BOSS_NAMES.length - 1, selected));
+            int dx = x0 + colW + 50, dy = 46;
+            int k = BOSS_DATA == null ? 0 : BOSS_DATA.kills()[i];
+            int d = BOSS_DATA == null ? -1 : BOSS_DATA.days()[i];
+            ctx.drawTextWithShadow(this.textRenderer, Text.literal("【" + BOSS_NAMES[i] + "】"
+                    + (k > 0 ? "已讨伐 ×" + k : "未讨伐")).formatted(Formatting.AQUA), dx, dy, 0xFF55FFFF);
+            dy += 14;
+            ctx.drawTextWithShadow(this.textRenderer, Text.literal(
+                    d < 0 ? "出没:末地(击败即通关主线)" : "解锁:第 " + (d + 1) + " 天起现身")
+                    .formatted(Formatting.YELLOW), dx, dy, 0xFFFFFF55);
+            dy += 14;
+            for (String line : wrap("弱点:" + BOSS_WEAK[i], 20)) {
+                ctx.drawTextWithShadow(this.textRenderer, Text.literal(line).formatted(Formatting.WHITE), dx, dy, 0xFFFFFFFF); dy += 11;
+            }
+            dy += 3;
+            for (String line : wrap("掉落:" + BOSS_DROPS[i], 20)) {
+                ctx.drawTextWithShadow(this.textRenderer, Text.literal(line).formatted(Formatting.GREEN), dx, dy, 0xFF55FF55); dy += 11;
+            }
         } else {
             int dy = 46;
             for (String line : atlasLines()) {

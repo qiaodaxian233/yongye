@@ -100,6 +100,14 @@ public final class MainQuestLine {
                 killer.setAttached(ModAttachments.MAIN_BOSS_KILLS,
                         killer.getAttachedOrElse(ModAttachments.MAIN_BOSS_KILLS, 0) + 1);
             }
+            // m351 Boss 图鉴:逐 BOSS 击杀计数(佩恩/末影龙也入册;槽位 id 见 BossAtlasPayload)
+            String bid = bossAtlasId(entity);
+            if (bid != null) {
+                java.util.Map<String, Integer> bm =
+                        new java.util.HashMap<>(killer.getAttachedOrElse(ModAttachments.BOSS_KILL_MAP, java.util.Map.of()));
+                bm.merge(bid, 1, Integer::sum);
+                killer.setAttached(ModAttachments.BOSS_KILL_MAP, bm);
+            }
             if (PainBossHandler.isPain(entity)) {
                 killer.setAttached(ModAttachments.MAIN_PAIN_SLAIN, true);
             }
@@ -151,6 +159,18 @@ public final class MainQuestLine {
                         maxEnhance(p), totalSkill(p), NightfallManager.getLevel(),
                         ProgressionManager.gameDay(p.getWorld()),
                         NewGamePlusManager.isActive()));
+        // m351 Boss 图鉴随行下发(开关关=不发,客户端页签也不显示):击杀表按槽位序取,解锁天=实时配置 minDay
+        YongyeConfig bc = YongyeConfig.get();
+        if (bc.enableBossAtlasPage) {
+            java.util.Map<String, Integer> bm = p.getAttachedOrElse(ModAttachments.BOSS_KILL_MAP, java.util.Map.of());
+            String[] ids = {"red_spider", "death_mage", "fire_phoenix", "toro_dragon", "anubis", "pain", "ender_dragon"};
+            int[] bk = new int[com.yongye.network.BossAtlasPayload.SLOTS];
+            for (int i = 0; i < ids.length; i++) bk[i] = bm.getOrDefault(ids[i], 0);
+            int[] bd = {bc.redSpiderMinDay, bc.deathMageMinDay, bc.phoenixMinDay,
+                    bc.wildDragonMinDay, bc.anubisMinDay, bc.painSpawnMinDay, -1};
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                    new com.yongye.network.BossAtlasPayload(bk, bd));
+        }
     }
 
     // ============ m332:职业试炼支线(三关,标题按职业着色,奖励=本命职业武器专属强化) ============
@@ -219,12 +239,26 @@ public final class MainQuestLine {
     public static int stage(ServerPlayerEntity p) { return p.getAttachedOrElse(ModAttachments.MAIN_QUEST_STAGE, 0); }
     private static long kills(ServerPlayerEntity p) { return p.getAttachedOrElse(ModAttachments.MAIN_KILLS, 0L); }
 
+    /** m351 修正:BOSS 口径对齐五皮肤 BOSS(m339 清单)——红蛛此前漏计、巨蟹(m170 定位=精英)误入,
+     *  影响主线「屠魔/弑神」计数,本笔归位。 */
     private static boolean isBoss(net.minecraft.entity.LivingEntity e) {
         return e instanceof com.yongye.entity.AnubisEntity
                 || e instanceof com.yongye.entity.FirePhoenixEntity
-                || e instanceof com.yongye.entity.GiantCrabEntity
+                || e instanceof com.yongye.entity.RedSpiderEntity
                 || e instanceof com.yongye.entity.DeathMageEntity
                 || e instanceof com.yongye.entity.ToroEnderDragonEntity;
+    }
+
+    /** m351 Boss 图鉴槽位 id(顺序契约见 BossAtlasPayload;null=不入册)。 */
+    private static String bossAtlasId(net.minecraft.entity.LivingEntity e) {
+        if (e instanceof com.yongye.entity.RedSpiderEntity) return "red_spider";
+        if (e instanceof com.yongye.entity.DeathMageEntity) return "death_mage";
+        if (e instanceof com.yongye.entity.FirePhoenixEntity) return "fire_phoenix";
+        if (e instanceof com.yongye.entity.ToroEnderDragonEntity) return "toro_dragon";
+        if (e instanceof com.yongye.entity.AnubisEntity) return "anubis";
+        if (PainBossHandler.isPain(e)) return "pain";
+        if (e instanceof EnderDragonEntity) return "ender_dragon";
+        return null;
     }
 
     private static int totalSkill(ServerPlayerEntity p) {

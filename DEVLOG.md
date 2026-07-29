@@ -2822,3 +2822,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **试炼页**:同款 3 节点横链(标题按本命职业着味,悬停显示);图鉴页不动。
 - **命中**:节点为自绘非控件,mouseClicked 覆写按同一套坐标公式命中,未命中回落 super(领奖/刷新/关闭按钮照常);选中只改字段零 clearAndInit。
 - 配置+1 enableQuestNodeMap(默认开;**关=整套回旧双列按钮列表**,init/render 双分流旧代码原样保留),**configVersion 109→110**;括号自检 2 文件全平;待编译验证:无(mouseClicked(double,double,int) 覆写在树有 Screen 子类先例面,绘制全 proven)。实机盯:主线页看蛇形金线爬行观感、当前节点呼吸、点节点详情联动、悬停浮条不超屏、试炼三节点、config set enableQuestNodeMap false 回旧列表。
+
+## m351 任务书 BOSS 图鉴页 + 主线 BOSS 口径修复(作者点名「Boss页:解锁天数/掉落/弱点/已击杀次数」,2026-07-29)
+- **顺手修真 bug**:MainQuestLine.isBoss 此前把巨蟹(m170 定位=精英)计入 BOSS、却漏了红蛛——主线「屠魔(首BOSS)/弑神」与图鉴 BOSS 计数一直失真,本笔对齐 m339 五皮肤 BOSS 口径(红蛛入册、巨蟹归位精英)。
+- **逐 BOSS 计数**:新附件 BOSS_KILL_MAP(Map<String,Integer>,persistent+copyOnDeath,codec 照 WEAPON_SKILL_LV),AFTER_DEATH 里按槽位 id 记(红蛛/死法/凤凰/托罗龙/阿努比斯/佩恩·isPain/末影龙·instanceof)。
+- **网络零新请求**:新 `BossAtlasPayload`(7 击杀+7 解锁天,14 varint,槽位契约写死在类注释),**随 MainQuestLine.sync 一并下发**(开书/领奖/达成都会刷)——解锁天=**实时配置** minDay(红蛛/死法/凤凰/野龙/阿努/佩恩;末影龙 -1=末地),改配置图鉴自动跟。
+- **界面**:任务书第 4 页签「BOSS」(enableBossAtlasPage 关=页签不显示且服务端不发包);左列 7 行「✔名字 ×N / □名字」,右侧详情=已讨伐次数/「解锁:第 minDay+1 天」(展示口径同 m289)/弱点打法(按 m268 技能包写实:红蛛半血产卵、法师魂火延迟+贴脸闪现、凤凰浴火一次、托罗俯冲前摇、阿努半血狂暴、龙三命+脱战回血先炸水晶)/掉落预览(按 LootCrateHandler 实况:皮肤四只=史诗箱、托罗龙/佩恩=传说+史诗箱+佩恩技能书×3、末影龙=龙魂+IS_BOSS 散装掉落+终焉大奖+开永夜+)。
+- 配置+1 enableBossAtlasPage,**configVersion 110→111**;括号自检 7 文件全平;待编译验证:无(附件/payload/页签全在树模板)。实机盯:任务书第 4 签出现、杀只红蛛看行变「✔红蜘蛛 ×1」、详情解锁天随配置变、主线「屠魔」杀红蛛现在能推进、关开关页签消失。

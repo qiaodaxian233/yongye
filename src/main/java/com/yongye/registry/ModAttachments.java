@@ -307,6 +307,15 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "weapon_skill_lv"));
 
+    /** BOSS_KILL_MAP(m351): Boss 图鉴逐 BOSS 击杀计数,键=BossAtlasPayload 槽位 id
+     *  (red_spider/death_mage/fire_phoenix/toro_dragon/anubis/pain/ender_dragon)。死亡保留。 */
+    public static final AttachmentType<java.util.Map<String, Integer>> BOSS_KILL_MAP =
+            AttachmentRegistry.<java.util.Map<String, Integer>>builder()
+                    .persistent(Codec.unboundedMap(Codec.STRING, Codec.INT))
+                    .initializer(java.util.HashMap::new)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "boss_kill_map"));
+
     /** ENHANCE_PROTECTED(m158): 玩家已使用强化保护卷、待生效中——下一次「会碎裂的强化失败」将被抵挡并清除本标志。 */
     public static final AttachmentType<Boolean> ENHANCE_PROTECTED =
             AttachmentRegistry.<Boolean>builder()

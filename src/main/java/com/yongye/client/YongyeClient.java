@@ -154,6 +154,9 @@ public class YongyeClient implements ClientModInitializer {
                 context.client().execute(() -> context.client().setScreen(new QuestBookScreen(null))));
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.MainQuestSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> QuestBookScreen.onSync(payload)));
+        // m351 Boss 图鉴数据(随主线同步一并到达)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.BossAtlasPayload.ID, (payload, context) ->
+                context.client().execute(() -> QuestBookScreen.onBossSync(payload)));
 
         // 永夜同步:更新 HUD 状态
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.NightfallSyncPayload.ID, (payload, context) ->

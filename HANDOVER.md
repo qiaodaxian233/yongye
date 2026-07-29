@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m350 任务书节点地图(主线16阶段蛇形节点链+连线状态色+悬停浮条+点选详情,试炼3节点横链,enableQuestNodeMap 关=回旧列表,v110);此前 m348 新手前3天引导(45s一条actionbar按「选职→学书→强化→找核心」取第一件没做的事+登录聊天总纲,配置+3);连同 m346 技能CD常显HUD、m347 装备详情技能等级同步一并入库。m349 CI闭环落地(build.yml已入库,推送即云端编译)。遗留=ClassSkillHandler与config迁移堆两热点。configVersion 109。
+> 最新:m351 任务书BOSS图鉴页(七BOSS解锁天/个人击杀/弱点/掉落,BOSS_KILL_MAP附件+BossAtlasPayload随sync下发,顺手修isBoss红蛛漏计巨蟹误入,v111);m350 任务书节点地图(主线16阶段蛇形节点链+连线状态色+悬停浮条+点选详情,试炼3节点横链,enableQuestNodeMap 关=回旧列表,v110);此前 m348 新手前3天引导(45s一条actionbar按「选职→学书→强化→找核心」取第一件没做的事+登录聊天总纲,配置+3);连同 m346 技能CD常显HUD、m347 装备详情技能等级同步一并入库。m349 CI闭环落地(build.yml已入库,推送即云端编译)。遗留=ClassSkillHandler与config迁移堆两热点。configVersion 109。
