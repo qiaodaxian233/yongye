@@ -79,12 +79,22 @@ public final class PlayerUpkeepHandler {
                     float max = p.getMaxHealth();
                     Float last = LAST_MAX.get(id);
                     if (last != null && last > 0.01f && Math.abs(max - last) > 0.01f) {
-                        // m354 修「切下武器血量掉没了」:上限下调时,本 handler 跑之前原版 LivingEntity.tick
-                        // 已把当前血钳到新上限——旧写法拿「钳过的血 ÷ 旧上限」当占比(807/8337 会算成 9.7% 再乘回去
-                        // =血量二次蒸发,作者实机截图病根)。改用「上帧血量」还原真实占比;取 max(当前,上帧) 兜底:
-                        // 上限上调没被钳时当前血就是真值,同 tick 吃过治疗也不会被旧值拉低。
+                        // m354 修「切下武器血量蒸发」+ m360 修「m354 把玩家修成无敌」(作者两轮实机报告):
+                        // 占比基数必须**非对称**——
+                        //  · 上限上调:当前血从没被钳,就是真值(含本 tick 伤害),直接用。m354 曾写成
+                        //    max(当前,上帧),上调 tick 会把同 tick 伤害整个回滚;携带镜像(5t 撤挂重挂)/
+                        //    自动吃书等系统一扰动上限,伤害就被反复回滚=实机「怪打不掉血」,本笔修正;
+                        //  · 上限下调:原版 LivingEntity.tick 可能已把当前血钳到新上限——**只有确实被钳**
+                        //    (当前≈新上限 且 上帧血确实装不进新上限)才用上帧血还原真实占比(m354 本意,
+                        //    治 807/8337 切下手被算成 9.7% 的 9.7%);没被钳=当前血本就低于新上限=真值。
                         float lastHp = LAST_HP.getOrDefault(id, p.getHealth());
-                        float basis = Math.max(p.getHealth(), Math.min(lastHp, last));
+                        float basis;
+                        if (max < last) {
+                            boolean clamped = p.getHealth() >= max - 0.01f && lastHp > max;
+                            basis = clamped ? Math.min(lastHp, last) : p.getHealth();
+                        } else {
+                            basis = p.getHealth();
+                        }
                         float ratio = basis / last;
                         p.setHealth(Math.max(1.0f, Math.min(max, max * ratio)));
                     }
