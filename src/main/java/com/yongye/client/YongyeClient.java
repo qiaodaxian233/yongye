@@ -197,6 +197,7 @@ public class YongyeClient implements ClientModInitializer {
                     ClientStats.nextStageSeconds = payload.nextSeconds();
                     ClientStats.dayForecast = payload.dayForecast();
                     ClientStats.dayForecastShort = payload.dayForecastShort();
+                    ClientStats.mainGoal = payload.mainGoal();   // m361 主线目标常显
                 }));
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
@@ -222,11 +223,14 @@ public class YongyeClient implements ClientModInitializer {
             }
             // 行3(m289):按天事件预告;紧凑用服务端短版「N天后:XXX+M」(m308)
             String l3 = cp ? ClientStats.dayForecastShort : ClientStats.dayForecast;
+            // 行4(m361):主线目标常显——「主线【见血】杀怪 13/20」,达成转绿提醒领奖(前进牵引)
+            String l4 = ClientStats.mainGoal;
             int w1 = tr.getWidth(l1a + l1b);
             int w2 = l2.isEmpty() ? 0 : tr.getWidth(l2 + l2t);
             int w3 = l3.isEmpty() ? 0 : tr.getWidth(l3);
-            int bw = Math.max(w1, Math.max(w2, w3)) + 8;
-            int lines = 1 + (l2.isEmpty() ? 0 : 1) + (l3.isEmpty() ? 0 : 1);
+            int w4 = l4.isEmpty() ? 0 : tr.getWidth(l4);
+            int bw = Math.max(Math.max(w1, w4), Math.max(w2, w3)) + 8;
+            int lines = 1 + (l2.isEmpty() ? 0 : 1) + (l3.isEmpty() ? 0 : 1) + (l4.isEmpty() ? 0 : 1);
             int bh = 2 + lines * 11;
             // m308 位置可挪:hudInfoAnchor 0=左中(m289 原位) 1=左上 2=左下 3=右上 4=右中 5=右下,
             // 再叠 hudInfoOffsetX/Y 微调,最后钳回屏内(乱填偏移也不会飞出屏幕)。
@@ -259,6 +263,12 @@ public class YongyeClient implements ClientModInitializer {
                 // 明天就来=橙红提醒,平时暖橙
                 int fc = l3.contains("明天") ? 0xFFFF6040 : 0xFFFFB050;
                 ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l3), bx + 4, ty, fc);
+            }
+            if (!l4.isEmpty()) {
+                ty += 11;
+                // m361:平时金字牵引,已达成转亮绿提醒开书领奖
+                int qc = l4.contains("已达成") ? 0xFF66FF77 : 0xFFFFD060;
+                ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l4), bx + 4, ty, qc);
             }
         });
 

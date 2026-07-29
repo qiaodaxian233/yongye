@@ -35,6 +35,8 @@ public final class ClientStats {
     public static String dayForecast = "";
     /** m308 预告紧凑版(hudInfoCompact 开时显示,如「3天后:佩恩降临+1」)。 */
     public static String dayForecastShort = "";
+    /** m361 主线目标常显行(""=不显示;含「已达成」时看板转绿提醒领奖)。 */
+    public static String mainGoal = "";
 
     public static void update(int h, int[] l, String cn) {
         health = h;

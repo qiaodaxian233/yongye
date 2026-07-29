@@ -129,6 +129,36 @@ public final class MainQuestLine {
         });
     }
 
+    /** m361 主线目标常显:当前阶段的紧凑目标行(战况看板第 4 行,KillStatsHandler 每 20t 带发)。
+     *  ""=系统关/HUD 行关/已通关不显示;已达成 → 提示去任务书领奖(前进牵引:目标永远钉在屏幕上)。 */
+    public static String hudGoal(ServerPlayerEntity p) {
+        YongyeConfig cfg = YongyeConfig.get();
+        if (!cfg.enableMainQuest || !cfg.enableMainQuestHud) return "";
+        int st = stage(p);
+        if (st >= STAGES.length) return "";
+        Stage s = STAGES[st];
+        if (s.check().apply(p)) return "主线【" + s.title() + "】已达成!任务书领奖";
+        String prog = switch (st) {
+            case 0 -> "活过第一夜";
+            case 1 -> "学技能书 V" + Math.min(totalSkill(p), 5) + "/5";
+            case 2 -> "强化 +" + Math.min(maxEnhance(p), 10) + "/10";
+            case 3 -> "杀怪 " + Math.min(kills(p), 20) + "/20";
+            case 4 -> "用职业选择书选职";
+            case 5 -> "精英 " + Math.min(p.getAttachedOrElse(ModAttachments.MAIN_ELITE_KILLS, 0), 3) + "/3";
+            case 6 -> "强化 +" + Math.min(maxEnhance(p), 100) + "/100";
+            case 7 -> "杀怪 " + Math.min(kills(p), 100) + "/100";
+            case 8 -> "永夜 " + Math.min(NightfallManager.getLevel(), 3) + "/3 层";
+            case 9 -> "击杀 1 只 BOSS";
+            case 10 -> "强化 +" + Math.min(maxEnhance(p), 1000) + "/1000";
+            case 11 -> "技能 V" + Math.min(totalSkill(p), 500) + "/500";
+            case 12 -> "杀怪 " + Math.min(kills(p), 1000) + "/1000";
+            case 13 -> "击败佩恩";
+            case 14 -> "末影珍珠 " + Math.min(countItem(p, Items.ENDER_PEARL), 8) + "/8";
+            default -> "讨伐末影龙";
+        };
+        return "主线【" + s.title() + "】" + prog;
+    }
+
     /** 领奖(服务端权威):复核当前阶段达成 → 发奖 → 阶段+1 → 回发最新快照。 */
     public static void claim(ServerPlayerEntity p) {
         if (!YongyeConfig.get().enableMainQuest) return;

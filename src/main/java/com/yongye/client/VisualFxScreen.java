@@ -129,6 +129,8 @@ public class VisualFxScreen extends Screen {
                     new Section("战况看板(第N天·击杀·预告)停靠位", new Btn[]{
                             new Btn("看板·开", "yongye config set enableHudInfoPanel true"),
                             new Btn("看板·关", "yongye config set enableHudInfoPanel false"),
+                            new Btn("主线行·开", "yongye config set enableMainQuestHud true"),
+                            new Btn("主线行·关", "yongye config set enableMainQuestHud false"),
                             new Btn("停·左上", "yongye config set hudInfoAnchor 1"),
                             new Btn("停·左中", "yongye config set hudInfoAnchor 0"),
                             new Btn("停·左下", "yongye config set hudInfoAnchor 2"),
