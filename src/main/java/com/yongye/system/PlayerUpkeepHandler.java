@@ -41,6 +41,8 @@ public final class PlayerUpkeepHandler {
     private static final Map<UUID, Integer> RESPAWN_HEAL = new HashMap<>();
     /** m326:上帧最大生命(比例保持用)。 */
     private static final Map<UUID, Float> LAST_MAX = new HashMap<>();
+    /** m354:上帧当前血量——上限下调瞬间原版已先把当前血钳到新上限,占比必须用上帧血还原。 */
+    private static final Map<UUID, Float> LAST_HP = new HashMap<>();
     /** 携带加成已镜像的修饰记录:uuid -> (属性, 派生修饰id),用于下次刷新前撤销。 */
     private static final Map<UUID, List<ModRef>> CARRY_APPLIED = new HashMap<>();
 
@@ -70,14 +72,24 @@ public final class PlayerUpkeepHandler {
             //    不再出现"切个武器血条瞬间掉一截/涨上限却显得残血"的跳变(healthKeepRatio 可关)——
             if (YongyeConfig.get().healthKeepRatio) {
                 for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                    if (!p.isAlive() || RESPAWN_HEAL.containsKey(p.getUuid())) { LAST_MAX.put(p.getUuid(), p.getMaxHealth()); continue; }
+                    UUID id = p.getUuid();
+                    if (!p.isAlive() || RESPAWN_HEAL.containsKey(id)) {
+                        LAST_MAX.put(id, p.getMaxHealth()); LAST_HP.put(id, p.getHealth()); continue;
+                    }
                     float max = p.getMaxHealth();
-                    Float last = LAST_MAX.get(p.getUuid());
+                    Float last = LAST_MAX.get(id);
                     if (last != null && last > 0.01f && Math.abs(max - last) > 0.01f) {
-                        float ratio = p.getHealth() / last;
+                        // m354 修「切下武器血量掉没了」:上限下调时,本 handler 跑之前原版 LivingEntity.tick
+                        // 已把当前血钳到新上限——旧写法拿「钳过的血 ÷ 旧上限」当占比(807/8337 会算成 9.7% 再乘回去
+                        // =血量二次蒸发,作者实机截图病根)。改用「上帧血量」还原真实占比;取 max(当前,上帧) 兜底:
+                        // 上限上调没被钳时当前血就是真值,同 tick 吃过治疗也不会被旧值拉低。
+                        float lastHp = LAST_HP.getOrDefault(id, p.getHealth());
+                        float basis = Math.max(p.getHealth(), Math.min(lastHp, last));
+                        float ratio = basis / last;
                         p.setHealth(Math.max(1.0f, Math.min(max, max * ratio)));
                     }
-                    LAST_MAX.put(p.getUuid(), max);
+                    LAST_MAX.put(id, max);
+                    LAST_HP.put(id, p.getHealth());
                 }
             }
 
@@ -87,6 +99,13 @@ public final class PlayerUpkeepHandler {
                     updateCarry(p);
                 }
             }
+        });
+        // m354:下线清缓存(LAST_MAX/LAST_HP/重生窗口;镜像记录留待重进撤旧,修饰符本就随实体走)
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            UUID id = handler.player.getUuid();
+            LAST_MAX.remove(id);
+            LAST_HP.remove(id);
+            RESPAWN_HEAL.remove(id);
         });
         Yongye.LOGGER.info("[夜蚀] 玩家上层维护(重生满血 + 携带加成)已挂载");
     }
