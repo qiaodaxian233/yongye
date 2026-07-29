@@ -2805,3 +2805,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **WeaponSkillManager**:抽 `effectiveCd(baseCd, skLv)` 统一冷却公式(基础CD − 等级×每级缩减钳下限;升级系统关=原样),use() 施放与面板显示同走此式——面板显示的就是实际生效值,不再是裸基础CD。
 - **WeaponInfoScreen**:静态同步字段(-1=未收到)+ onSync 写入;技能行升级为「✦ 混沌斩 Lv.3  CD9s  升级:精华×4」,满级显示金色「已满级」并**禁用对应升级按钮**(按钮引用存字段,render 每帧核对);未收到同步的一瞬回落旧的配置基础CD显示(离线容错);顺手把面板的免解锁显示口径补上龙魂之刃(m331 施放口径 CHAOS_BLADE+DRAGON_BLADE,此前面板只认混沌显示不一致)。
 - 零新配置(挂在既有 enableWeaponSkillUpgrade 下),configVersion 不变(仍 108);括号自检 6 文件全平;待编译验证:无(PacketCodec.of/unit、registerGlobalReceiver、ButtonWidget.active 全在树先例)。实机盯:开装备介绍看三行带 Lv/CD/花费、点升级看等级花费即时跳、升满看金字「已满级」+按钮变灰、龙魂之刃面板三技能不再显示未解锁。
+
+## m348 新手前3天引导(作者点名「小目标提示『先选职→做书→强化→找核心』,降低进服懵住概率」,2026-07-29)
+- 新 `NewbieGuideHandler`:引导期(游戏天数 < newbieGuideDays,天数走 ProgressionManager.gameDay m252 收口)内每 newbieGuideIntervalSeconds(默认 45s,下限 10 防手滑刷屏)actionbar 金字提示**第一件没做的事**——①没职业→「右键职业选择书选职」②没学过任何书(血量书累计+LEARNED_SKILLS 全零)→「背包『学书』一键学习」③全背包无强化件→「背包『强化』提升武器」;三件都做了轮播通用提示(核心箭头/任务书/第 5 天 BOSS 预警)。
+- 每次登录(仍在引导期)另发一条**聊天版路线总纲**(①选职→②学书→③强化→④找核心+BOSS 预警),进聊天记录可回翻;过引导期整套静默零开销,旁观者跳过。
+- 判定全用在树只读接口(learnedList/getLearnedHealth/LEARNED_SKILLS 附件/EquipmentEnhancer.getLevel),不写任何玩家状态;计时与轮播游标内存 Map 挂 DISCONNECT 清理。
+- 配置+3(enableNewbieGuide 默认开/newbieGuideDays=3/newbieGuideIntervalSeconds=45),**configVersion 108→109**;括号自检 3 文件全平;推送前 validate-resource-pack/validate-datapack 已跑,除已知 pack.mcmeta 假阳性外全 PASS。待编译验证:无(JOIN/END_SERVER_TICK/DISCONNECT/sendMessage(Text,boolean) 全在树)。实机盯:新档进服看聊天总纲、45 秒一条金字引导且按进度换目标、三件做完看轮播三条、第 4 天起彻底安静、关 enableNewbieGuide 全无。
