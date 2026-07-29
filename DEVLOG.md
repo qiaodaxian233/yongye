@@ -2811,3 +2811,7 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 每次登录(仍在引导期)另发一条**聊天版路线总纲**(①选职→②学书→③强化→④找核心+BOSS 预警),进聊天记录可回翻;过引导期整套静默零开销,旁观者跳过。
 - 判定全用在树只读接口(learnedList/getLearnedHealth/LEARNED_SKILLS 附件/EquipmentEnhancer.getLevel),不写任何玩家状态;计时与轮播游标内存 Map 挂 DISCONNECT 清理。
 - 配置+3(enableNewbieGuide 默认开/newbieGuideDays=3/newbieGuideIntervalSeconds=45),**configVersion 108→109**;括号自检 3 文件全平;推送前 validate-resource-pack/validate-datapack 已跑,除已知 pack.mcmeta 假阳性外全 PASS。待编译验证:无(JOIN/END_SERVER_TICK/DISCONNECT/sendMessage(Text,boolean) 全在树)。实机盯:新档进服看聊天总纲、45 秒一条金字引导且按进度换目标、三件做完看轮播三条、第 4 天起彻底安静、关 enableNewbieGuide 全无。
+
+## m349 CI编译闭环落地(作者补贴 workflow 权限 PAT,2026-07-29)
+- 补推 `.github/workflows/build.yml`(m344 方案原样):push/PR 到 main 即云端 gradle build(JDK 21 temurin,`./gradlew build --no-daemon`)并上传 jar 工件;此前两轮均被 GitHub 以 PAT 无 workflow scope 硬拒,本轮新 PAT 带该权限一次落地。
+- 自此 AI 会话推送后轮询 `api.github.com/repos/qiaodaxian233/yongye/actions/runs` 查 conclusion(success/failure),failure 拉该 run 的 jobs 日志定位报错——**编译验证不再依赖作者手动 build**,m344 的死穴正式补上。本次推送同时会把 m346~m348 三笔一起过一遍云端编译。

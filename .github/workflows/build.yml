@@ -1,0 +1,35 @@
+# 夜蚀 CI 自动构建(m344 引入方案,m349 落地):push/PR 到 main 即云端 gradle build 并上传 jar 工件。
+# AI 会话推送后轮询 api.github.com/repos/qiaodaxian233/yongye/actions/runs 查 conclusion,
+# failure 时拉该 run 的 jobs 日志定位报错——沙盒无法编译的死穴由此补上,编译验证不再依赖作者手动 build。
+name: build
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: 赋予 gradlew 执行权限
+        run: chmod +x gradlew
+
+      - name: 构建(gradle build)
+        run: ./gradlew build --no-daemon
+
+      - name: 上传构建产物 jar
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yongye-jar
+          path: build/libs/*.jar
