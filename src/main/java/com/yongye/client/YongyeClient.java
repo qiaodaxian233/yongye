@@ -198,6 +198,7 @@ public class YongyeClient implements ClientModInitializer {
                     ClientStats.dayForecast = payload.dayForecast();
                     ClientStats.dayForecastShort = payload.dayForecastShort();
                     ClientStats.mainGoal = payload.mainGoal();   // m361 主线目标常显
+                    ClientStats.bountyData = payload.bounty();   // m364 每日悬赏(任务书悬赏页展示)
                     // m363 渐进解锁:阶段升档瞬间播报本档解锁的新功能(金字进聊天可回翻)
                     int ns = payload.mainStage();
                     if (com.yongye.YongyeConfig.get().enableProgressiveUnlock

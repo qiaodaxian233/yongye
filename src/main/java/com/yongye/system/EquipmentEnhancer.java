@@ -171,6 +171,7 @@ public final class EquipmentEnhancer {
         }
         ItemStack cur = addLevels(r.stack, sum.directClamped());
         int directGain = getLevel(cur) - r.endLevel; // 摸到 int 顶时被钳掉的部分不计入
+        if (p != null && directGain > 0) DailyBountyHandler.onEnhance(p, directGain);   // m364 强化石直加也计入锻造悬赏
         return new EnhanceResult(cur, start, getLevel(cur),
                 (int) Math.min(Integer.MAX_VALUE, (long) r.succeeded + directGain),
                 r.failed, false, r.usedProtect);
@@ -383,6 +384,7 @@ public final class EquipmentEnhancer {
             }
         }
         ItemStack out = broke ? ItemStack.EMPTY : withLevel(equipment, level);
+        if (p != null && ok > 0) DailyBountyHandler.onEnhance(p, ok);   // m364 锻造悬赏计数(RNG 成功级数)
         return new EnhanceResult(out, startLevel, level, ok, fail, broke, usedProtect);
     }
 

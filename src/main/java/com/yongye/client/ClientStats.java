@@ -39,6 +39,8 @@ public final class ClientStats {
     public static String mainGoal = "";
     /** m363 当前主线阶段号(渐进解锁门控;-1=尚未收到,全部按钮先显示防误锁)。 */
     public static int mainStage = -1;
+    /** m364 每日悬赏同步串「streak;type,target,prog,done;×3」(""=未生成/关闭,任务书悬赏页展示)。 */
+    public static String bountyData = "";
 
     public static void update(int h, int[] l, String cn) {
         health = h;

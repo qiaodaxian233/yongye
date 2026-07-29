@@ -324,6 +324,14 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "boss_kill_map"));
 
+    /** BOUNTY_STATE(m364): 每日悬赏状态串「day;streak;type,target,prog,done;×3」。死亡保留(坚守进度另行清零)。 */
+    public static final AttachmentType<String> BOUNTY_STATE =
+            AttachmentRegistry.<String>builder()
+                    .persistent(Codec.STRING)
+                    .initializer(() -> "")
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "bounty_state"));
+
     /** ENHANCE_PROTECTED(m158): 玩家已使用强化保护卷、待生效中——下一次「会碎裂的强化失败」将被抵挡并清除本标志。 */
     public static final AttachmentType<Boolean> ENHANCE_PROTECTED =
             AttachmentRegistry.<Boolean>builder()

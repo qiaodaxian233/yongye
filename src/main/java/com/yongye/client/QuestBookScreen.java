@@ -76,20 +76,22 @@ public class QuestBookScreen extends Screen {
         int colW = 104, rowH = 16, gap = 2;
         int totalW = colW * 2 + gap + 130;
         int x0 = this.width / 2 - totalW / 2;
-        // —— 页签(m351:enableBossAtlasPage 开=4 签,关=3 签) ——
-        boolean bossPage = com.yongye.YongyeConfig.get().enableBossAtlasPage;
-        String[] tabs = bossPage ? new String[]{"主线", "试炼", "图鉴", "BOSS"} : new String[]{"主线", "试炼", "图鉴"};
-        int tabW = (totalW - 2 * (tabs.length - 1)) / tabs.length;
-        for (int i = 0; i < tabs.length; i++) {
-            final int idx = i;
-            ButtonWidget tab = ButtonWidget.builder(Text.literal(tabs[i]), b -> {
-                this.page = idx;
-                this.selected = idx == 0 ? Math.min(DATA == null ? 0 : DATA.stage(), MainQuestLine.STAGES.length - 1)
-                        : idx == 1 ? Math.min(DATA == null ? 0 : DATA.trialStage(), MainQuestLine.TRIALS.length - 1)
+        // —— 页签(m351 BOSS 第4签/m364 悬赏第5签,均按配置显隐;名字↔页号双表防错位) ——
+        java.util.List<String> tabNames = new java.util.ArrayList<>(java.util.List.of("主线", "试炼", "图鉴"));
+        java.util.List<Integer> tabPages = new java.util.ArrayList<>(java.util.List.of(0, 1, 2));
+        if (com.yongye.YongyeConfig.get().enableBossAtlasPage) { tabNames.add("BOSS"); tabPages.add(3); }
+        if (com.yongye.YongyeConfig.get().enableDailyBounty) { tabNames.add("悬赏"); tabPages.add(4); }
+        int tabW = (totalW - 2 * (tabNames.size() - 1)) / tabNames.size();
+        for (int i = 0; i < tabNames.size(); i++) {
+            final int pg = tabPages.get(i);
+            ButtonWidget tab = ButtonWidget.builder(Text.literal(tabNames.get(i)), b -> {
+                this.page = pg;
+                this.selected = pg == 0 ? Math.min(DATA == null ? 0 : DATA.stage(), MainQuestLine.STAGES.length - 1)
+                        : pg == 1 ? Math.min(DATA == null ? 0 : DATA.trialStage(), MainQuestLine.TRIALS.length - 1)
                         : 0;
                 this.clearAndInit();
             }).dimensions(x0 + i * (tabW + 2), 24, tabW, 14).build();
-            tab.active = (i != page);
+            tab.active = (pg != page);
             addDrawableChild(tab);
         }
         int y0 = 44;
@@ -156,6 +158,8 @@ public class QuestBookScreen extends Screen {
                 addDrawableChild(b);
             }
             bottomBtns(x0, y0 + BOSS_NAMES.length * (rowH + gap) + 8);
+        } else if (page == 4) {
+            bottomBtns(x0, y0 + 130);   // m364 悬赏页:内容由 render 绘制,进度实时跟 HudInfoPayload
         } else {
             bottomBtns(x0, y0 + 150);
         }
@@ -210,12 +214,61 @@ public class QuestBookScreen extends Screen {
             for (String line : wrap("掉落:" + BOSS_DROPS[i], 20)) {
                 ctx.drawTextWithShadow(this.textRenderer, Text.literal(line).formatted(Formatting.GREEN), dx, dy, 0xFF55FF55); dy += 11;
             }
+        } else if (page == 4) {
+            drawBountyPage(ctx, x0, 46, totalW);   // m364 每日悬赏
         } else {
             int dy = 46;
             for (String line : atlasLines()) {
                 ctx.drawTextWithShadow(this.textRenderer, Text.literal(line).formatted(Formatting.WHITE), x0, dy, 0xFFFFFFFF);
                 dy += 13;
             }
+        }
+    }
+
+    // ===== m364 每日悬赏页:解析 ClientStats.bountyData「streak;type,target,prog,done;×3」 =====
+    private static final String[] BOUNTY_TITLES = {"讨伐 · 击杀怪物", "猎首 · 击杀精英", "锻造 · 强化提升等级", "坚守 · 累计存活(死亡清零)"};
+
+    private void drawBountyPage(DrawContext ctx, int x0, int y0, int totalW) {
+        String raw = ClientStats.bountyData;
+        if (raw == null || raw.isEmpty()) {
+            ctx.drawTextWithShadow(this.textRenderer, Text.literal("今日暂无悬赏(第 2 天起每日刷新 3 张)")
+                    .formatted(Formatting.GRAY), x0, y0, 0xFFAAAAAA);
+            return;
+        }
+        String[] seg = raw.split(";");
+        int dy = y0;
+        try {
+            int streak = Integer.parseInt(seg[0]);
+            ctx.drawTextWithShadow(this.textRenderer, Text.literal("◆ 每日悬赏 · 三张全清攒连击"
+                    + (streak > 0 ? "(当前连击 ×" + streak + ",奖励加成中)" : "(连击 ×0)"))
+                    .formatted(Formatting.GOLD), x0, dy, 0xFFFFD700);
+            dy += 16;
+            int barW = totalW - 20;
+            for (int i = 1; i < seg.length && i <= 3; i++) {
+                String[] f = seg[i].split(",");
+                int type = Integer.parseInt(f[0]);
+                long target = Long.parseLong(f[1]), prog = Long.parseLong(f[2]);
+                boolean done = "1".equals(f[3]);
+                String title = BOUNTY_TITLES[Math.max(0, Math.min(BOUNTY_TITLES.length - 1, type))];
+                // 坚守显示分钟,锻造大数紧凑,其余原样
+                String pTxt = type == 3 ? (prog / 60) + "/" + (target / 60) + " 分钟"
+                        : type == 2 ? NumFmt.compact(prog) + "/" + NumFmt.compact(target)
+                        : prog + "/" + target;
+                ctx.drawTextWithShadow(this.textRenderer, Text.literal((done ? "✔ " : "▶ ") + title)
+                        .formatted(done ? Formatting.GREEN : Formatting.WHITE), x0, dy, done ? 0xFF55FF55 : 0xFFFFFFFF);
+                dy += 11;
+                // 进度条:暗底槽+按比例填充(完成绿/进行中金)
+                float ratio = target <= 0 ? 1f : Math.min(1f, (float) ((double) prog / (double) target));
+                ctx.fill(x0, dy, x0 + barW, dy + 5, 0xCC1B1B2E);
+                ctx.fill(x0 + 1, dy + 1, x0 + 1 + (int) ((barW - 2) * ratio), dy + 4, done ? 0xFF3FBF3F : 0xFFD8A400);
+                ctx.drawTextWithShadow(this.textRenderer, Text.literal(pTxt + (done ? " · 奖励已发放" : ""))
+                        .formatted(done ? Formatting.GREEN : Formatting.YELLOW), x0 + 4, dy + 8, done ? 0xFF55FF55 : 0xFFFFFF55);
+                dy += 20;
+            }
+            ctx.drawTextWithShadow(this.textRenderer, Text.literal("奖励:强化石(精英档)+ 终焉精华,完成即自动入包")
+                    .formatted(Formatting.GRAY), x0, dy + 2, 0xFFAAAAAA);
+        } catch (Exception e) {
+            ctx.drawTextWithShadow(this.textRenderer, Text.literal("悬赏数据同步中…").formatted(Formatting.GRAY), x0, dy, 0xFFAAAAAA);
         }
     }
 

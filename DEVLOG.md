@@ -2893,3 +2893,21 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **门控信号**:HudInfoPayload 尾加 mainStage(varint,m361 的 mainGoal 之后),KillStatsHandler 每 20t 带发;ClientStats.mainStage 缓存(-1=未同步→**全开防误锁**,开关关同全开=老玩家口径);升档瞬间客户端金字播报「◆ 新功能解锁:xxx(打开背包查看)」进聊天可回翻(1/2/5 三档播报表与门控表同源)。
 - **联动**:仓库自动入库(m357)同步门控——阶段<1 不自动收,防「我东西去哪了」;仓库按钮点亮那一刻自动入库同帧生效。
 - 配置+1 enableProgressiveUnlock(默认开;关=全按钮常驻),**configVersion 116→117**;括号自检 6 文件全平;待编译验证:无。实机盯:新档背包只有 3+2 钮、活过第一夜领奖看金字播报+学书仓库亮、选职看天赋本命亮、+10 领奖看强化四件亮、关开关全回来。
+
+## m364 每日悬赏(玩家反馈「不多吧又没啥内容」方案B,作者拍板「开始做」,2026-07-29)
+- **每天有事干的循环**:每个游戏日(第 2 天起,day 0 让位新手引导)每玩家从 4 池随机抽 3 张不重复悬赏——
+  讨伐=杀怪 N(基数12+天数×2 封顶200)/猎首=杀精英 N(基数2+天数/4 封顶12,IS_ELITE 口径)/
+  锻造=强化提升 N 级(基数30×当天石基准档面值 10^(档-1),跟随石头经济)/坚守=当日累计存活 N 分钟(默8,死亡当日进度清零)。
+- **完成自动发奖**:强化石(基准档+1 精英档)×2 + 终焉精华 ×1,offerOrDrop 进包(配合 m357 自动入库落仓库),
+  金字播报+升级音;**三张全清攒连击**——换日检定昨日全清 streak+1(封顶4)否则归零,奖励 ×(100+streak×25)%。
+- **状态与同步**:新附件 BOUNTY_STATE(String「day;streak;type,target,prog,done;×3」持久死亡保留,坏档自愈重生成);
+  同步零新包=HudInfoPayload 尾加 bounty 字段(m361/m363 追加口径,空值兜底),KillStatsHandler 每 20t 带发。
+- **计数挂点**:击杀=自家 AFTER_DEATH(creditedKiller m300 口径,召唤物击杀记主人);
+  锻造=EquipmentEnhancer.attempt 尾(RNG 成功级数,背包一键/强化界面/自动卷轴全走此漏斗)+ enhanceWith 强化石直加段,
+  两行钩子四入口全覆盖;**工作台配方直加无玩家管线不计入(有意取舍)**;坚守=tick 每秒+1、玩家 AFTER_DEATH 清零。
+- **任务书第 5 页签「悬赏」**:连击行+三张卡(标题/进度条暗槽金填充完成转绿/进度文字,坚守显示分钟、锻造大数走 NumFmt.compact),
+  进度实时跟 HudInfoPayload;**顺手修隐患**:页签原来「数组下标=页号」,BOSS 页关闭+悬赏开启会错位——改「名字↔页号」双表。
+- 配置+9(enableDailyBounty/bountyKillBase/EliteBase/EnhanceBase/SurviveMinutes/RewardStones/RewardEssence/StreakBonusPercent/StreakCap),
+  **configVersion 117→118**;括号自检 10 文件全平;待编译验证:无(playSound/offerOrDrop/getServerWorld/附件读写全在树先例)。
+- 实机盯:第 2 天起登录看金字「今日悬赏已刷新」、任务书悬赏页三张卡进度条、杀怪/强化/存活数字爬、
+  完成看金字+石头精华进包、全清次日看连击 ×1 加成、死亡看坚守清零灰字、关 enableDailyBounty 页签消失。

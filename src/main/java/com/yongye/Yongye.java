@@ -138,6 +138,7 @@ public class Yongye implements ModInitializer {
         com.yongye.system.KillStatsHandler.register(); // m288 战况看板(击杀统计/阶段预告下发)
         com.yongye.system.SkillCdSyncHandler.register(); // m346 技能CD常显HUD(冷却剩余每10t下发)
         com.yongye.system.NewbieGuideHandler.register(); // m348 新手前3天引导(选职→学书→强化→找核心)
+        com.yongye.system.DailyBountyHandler.register(); // m364 每日悬赏(每日3张/连击加成/完成自动发奖)
         com.yongye.system.VaultManager.register(); // m357 材料仓库自动入库(每5s扫背包区,热栏豁免)
         com.yongye.system.BossRageHandler.register(); // m274 BOSS 半血狂暴(阶段转换演出+变招)
         com.yongye.system.AutoScrollHandler.register(); // m276 自动卷轴执行器(自动强化/自动吃书)
