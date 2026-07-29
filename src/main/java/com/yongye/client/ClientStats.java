@@ -41,6 +41,8 @@ public final class ClientStats {
     public static int mainStage = -1;
     /** m364 每日悬赏同步串「streak;type,target,prog,done;×3」(""=未生成/关闭,任务书悬赏页展示)。 */
     public static String bountyData = "";
+    /** m366 猎杀勋章:距下次里程碑剩余击杀(-1=关闭整行不画 / -2=有待选卡金字提醒 / ≥0=再杀N只)。 */
+    public static int huntRemain = -1;
 
     public static void update(int h, int[] l, String cn) {
         health = h;

@@ -2918,3 +2918,34 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 设置入口:设置屏「界面·HUD」新增「BOSS血条大小」五档预设(0.5/0.6/0.7/0.85/1.0),即点即改(mixin 每帧读配置);`/yongye config set bossBarScale N` 可逐级微调。
 - 配置+1,v118→119。零新API零待编译验证(YongyeConfig.get() 在树,其余纯算术)。
 - 实机盯:默认 0.7 观感是否合适(作者若有目标大小直接调档);多 BOSS 合并/降档场景下名字与血量数字不糊不叠;设置页点档血条立即变。
+
+## m366 猎杀勋章:击杀里程碑三选一(作者定稿甲案「永久小加成/独立记账」,2026-07-29)
+- 需求口径(承上轮对话拍板):升级三选一保留,但触发是**击杀数里程碑不是经验**(不升太快);不是独立模式、
+  是加在现有永久存档长线上的新东西;绝不污染已有的动态对位/永久技能书/无限强化/每日悬赏。
+- 玩法:累计击杀达到里程碑 → 弹三选一卡 → 选一枚**永久勋章**层数+1。阈值线性递增:第 k 次 = base + k×growth
+  (默 10/6 → 10,16,22,28…),后期越杀越久才弹一次,不像经验刷屏。选卡期间击杀照常累计,选完若已够下一档
+  **连锁再弹**(逐张选不会漏)。击杀口径 = Monster + creditedKiller(m300 归属统一,召唤物击杀记主人)。
+- 六种勋章(全 ADD_MULTIPLIED_TOTAL,每层百分比可配):猛攻+2%攻 / 体魄+2%血 / 迅捷+1%移速 / 坚壁+2%护甲 /
+  疾手+1.5%攻速 / 不屈+2%韧性。层数无上限,单层温和靠长线积累。
+- **隔离三落地(作者最在意的不污染)**:
+  ① 独立记账——层数存新附件 HUNT_MEDALS,绝不写 WEAPON_SKILL_LV / ENHANCE_LEVEL / LEARNED_* 旧成长数据;
+  ② 独立修饰符——medal_* 前缀 temporary 修饰符每秒重挂(BlightSetHandler 逐字同款,值不变不重挂防血条闪,
+     重生/登录由周期 tick 自动补零额外钩子);
+  ③ 动态对位剔除——DynamicScaling 算玩家攻击/血量基准时**除掉勋章乘区**(MULTIPLIED_TOTAL 是独立因子,
+     除法精确还原)=怪不因勋章跟涨,勋章是实打实净收益;反向也保证勋章不喂养怪物曲线。
+- 交互:三选一屏屏蔽 ESC(三张全是纯增益无错项,一次点击就走,照选职/难度屏先例);收到包时正开着别的屏
+  → 挂 pendingMedal 关屏补弹(照 pendingClassSelect);掉线/重启不丢 = HUNT_PENDING 持久附件 + JOIN 补推;
+  /yongye medal = 有待选重开弹屏、无待选显示层数汇总与进度(命令树 OP 门,普通玩家靠自动弹屏+看板提醒)。
+- HUD:HudInfoPayload 尾加 huntRemain 字段(m364 bounty 同款零新包;-1 关闭 / -2 有待选 / ≥0 剩余击杀),
+  看板第 5 行「猎杀勋章:再杀 N 只」淡青牵引,待选转金字「◆ 勋章待选!」;紧凑模式短文案。
+- 网络:OpenMedalChoicePayload(S2C,串"id:当前层数:每层pct|×3"——pct 用**服务端配置**拼好,专用服上客户端
+  本地 config 是默认值不能当展示依据)+ ChooseMedalPayload(C2S,服务端权威复核必须在 HUNT_PENDING 候选内,
+  否则视为造假静默忽略)。
+- 附件+4:HUNT_MEDALS(Map)/HUNT_KILLS/HUNT_MILESTONE/HUNT_PENDING,全 persistent+copyOnDeath。
+  刻意**不复用 TOTAL_KILLS**——老存档玩家已有几千击杀,复用会开局连弹几十次三选一;新线从 0 起最干净。
+- 配置+9(enableHuntMedal/huntMilestoneBase=10/huntMilestoneGrowth=6/六种每层百分比),v119→120。
+- 零新API零待编译验证:附件 unboundedMap=LEARNED_SKILLS 先例、属性重挂=BlightSetHandler 逐字、
+  JOIN 取玩家=handler.getPlayer() 在树、ANVIL_USE/LEVELUP 音在树、Fisher-Yates 纯算术、屏结构照 ClassReplaceScreen。
+- 实机盯:杀满 10 只弹卡、选卡后属性立即生效(F3/成长面板)、看板第 5 行牵引与待选金字、ESC 确认屏蔽、
+  正开背包时达标→关背包自动补弹、掉线重连补弹、连杀攒两档逐张弹、关 enableHuntMedal 行消失加成卸下、
+  拿勋章后新刷怪血量**不**因勋章上涨(对位剔除的验证点)。

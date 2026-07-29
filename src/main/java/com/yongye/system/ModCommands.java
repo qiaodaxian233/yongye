@@ -397,6 +397,35 @@ public final class ModCommands {
                             ctx.getSource().sendFeedback(() -> Text.literal("已获得【守护附魔书】").formatted(Formatting.LIGHT_PURPLE), false);
                             return 1;
                         }))
+                        // m366:猎杀勋章——有待选卡重推三选一弹屏(意外关屏找回);无待选显示层数汇总与进度
+                        .then(CommandManager.literal("medal").executes(ctx -> {
+                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                            String pending = p.getAttachedOrElse(com.yongye.registry.ModAttachments.HUNT_PENDING, "");
+                            if (!pending.isEmpty()) {
+                                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                                        new com.yongye.network.OpenMedalChoicePayload(HuntMedalHandler.buildData(p)));
+                                ctx.getSource().sendFeedback(() -> Text.literal("已重新打开勋章三选一").formatted(Formatting.GOLD), false);
+                                return 1;
+                            }
+                            StringBuilder sb = new StringBuilder("猎杀勋章:");
+                            boolean any = false;
+                            java.util.Map<String, Integer> mm =
+                                    p.getAttachedOrElse(com.yongye.registry.ModAttachments.HUNT_MEDALS, java.util.Map.of());
+                            for (int i = 0; i < HuntMedalHandler.IDS.length; i++) {
+                                int lv = mm.getOrDefault(HuntMedalHandler.IDS[i], 0);
+                                if (lv > 0) {
+                                    if (any) sb.append(" · ");
+                                    sb.append(HuntMedalHandler.NAMES[i]).append(" Lv.").append(lv);
+                                    any = true;
+                                }
+                            }
+                            if (!any) sb.append("暂无");
+                            int remain = HuntMedalHandler.hudRemain(p);
+                            if (remain >= 0) sb.append("(再杀 ").append(remain).append(" 只触发三选一)");
+                            final String out = sb.toString();
+                            ctx.getSource().sendFeedback(() -> Text.literal(out).formatted(Formatting.GOLD), false);
+                            return 1;
+                        }))
                         // m200:发强化保护卷(便于测试/管理;正常玩法靠杀怪低概率掉落 + 杀怪累计到阈值自动兑换)
                         .then(CommandManager.literal("protectscroll").executes(ctx -> {
                             ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();

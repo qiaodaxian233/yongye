@@ -40,7 +40,8 @@ public final class KillStatsHandler {
                 ServerPlayNetworking.send(p, new HudInfoPayload(
                         p.getAttachedOrElse(ModAttachments.TOTAL_KILLS, 0L), nextName, nextSec,
                         forecast[0], forecast[1], MainQuestLine.hudGoal(p), MainQuestLine.stage(p),
-                        DailyBountyHandler.syncString(p)));   // m361 目标行 + m363 阶段号 + m364 悬赏串
+                        DailyBountyHandler.syncString(p),
+                        HuntMedalHandler.hudRemain(p)));   // m361 目标行 + m363 阶段号 + m364 悬赏串 + m366 勋章剩余
             }
         });
 

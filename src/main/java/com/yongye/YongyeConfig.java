@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 119; // m365 血条缩放+1 · m364 每日悬赏+9 · m363 渐进解锁+1 · m361 主线目标常显+1 · m359 强化直供+1 · m357 自动存/学书直供+2 · m356 材料仓库+1 · m352 事件天象+1 · m351 BOSS图鉴页+1 · m350 任务书节点地图+1 · m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 120; // m366 猎杀勋章+9 · m365 血条缩放+1 · m364 每日悬赏+9 · m363 渐进解锁+1 · m361 主线目标常显+1 · m359 强化直供+1 · m357 自动存/学书直供+2 · m356 材料仓库+1 · m352 事件天象+1 · m351 BOSS图鉴页+1 · m350 任务书节点地图+1 · m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -1280,6 +1280,27 @@ public class YongyeConfig {
     public int bountyStreakBonusPercent = 25;
     /** 连击封顶层数(默 4 = 奖励最高 ×2.0)。 */
     public int bountyStreakCap = 4;
+
+    // ============ m366 猎杀勋章(击杀里程碑三选一,作者定稿甲案:永久小加成/独立记账) ============
+    /** 猎杀勋章总开关:累计击杀达到里程碑 → 弹三选一卡,选一枚永久小加成勋章(独立成长线,
+     *  不碰技能书/强化/职业数据;动态对位剔除勋章乘区=真收益)。关=不计数不弹卡、已获得加成随之卸下。 */
+    public boolean enableHuntMedal = true;
+    /** 首个里程碑所需击杀数。 */
+    public int huntMilestoneBase = 10;
+    /** 每完成一次里程碑,下一次所需击杀数递增量(线性曲线:第 k 次 = base + k×growth,后期越杀越久才弹)。 */
+    public int huntMilestoneGrowth = 6;
+    /** 猛攻勋章:每层攻击伤害 +N%(ADD_MULTIPLIED_TOTAL 乘在一切之后)。 */
+    public double huntMedalAttackPct = 2.0;
+    /** 体魄勋章:每层最大生命 +N%。 */
+    public double huntMedalHealthPct = 2.0;
+    /** 迅捷勋章:每层移动速度 +N%。 */
+    public double huntMedalSpeedPct = 1.0;
+    /** 坚壁勋章:每层护甲值 +N%(乘装备提供的总护甲)。 */
+    public double huntMedalArmorPct = 2.0;
+    /** 疾手勋章:每层攻击速度 +N%。 */
+    public double huntMedalAtkSpeedPct = 1.5;
+    /** 不屈勋章:每层护甲韧性 +N%(乘装备提供的总韧性)。 */
+    public double huntMedalToughnessPct = 2.0;
 
     // ============ m310 僵尸红眼+紫光(作者点名,纯客户端观感) ============
     /** 所有僵尸(僵尸/尸壳/溺尸/僵尸村民)眼睛发红光,暗处也亮 */

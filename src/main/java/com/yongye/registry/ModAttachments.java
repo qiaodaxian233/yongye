@@ -368,6 +368,35 @@ public final class ModAttachments {
                     .persistent(Codec.BOOL).initializer(() -> false)
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "end_dragon_buffed"));
 
+    /** HUNT_MEDALS(m366): 猎杀勋章层数表(键=勋章id attack/health/speed/armor/atkspeed/tough,值=层数)。
+     *  独立于技能书/强化/职业的第四条永久成长线——不写 WEAPON_SKILL_LV / ENHANCE_LEVEL / LEARNED_*,
+     *  属性走独立 medal_* 修饰符,且动态对位(DynamicScaling)把勋章乘区从基准中剔除=真收益不喂怪。 */
+    public static final AttachmentType<java.util.Map<String, Integer>> HUNT_MEDALS =
+            AttachmentRegistry.<java.util.Map<String, Integer>>builder()
+                    .persistent(Codec.unboundedMap(Codec.STRING, Codec.INT))
+                    .initializer(java.util.HashMap::new)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "hunt_medals"));
+
+    /** HUNT_KILLS(m366): 当前里程碑周期内已累计的击杀数(达标触发三选一后扣除本档阈值,余数滚入下一周期)。
+     *  刻意不复用 TOTAL_KILLS——老存档玩家已有几千击杀,直接复用会开局连弹几十次三选一;新线从 0 起最干净。 */
+    public static final AttachmentType<Integer> HUNT_KILLS =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "hunt_kills"));
+
+    /** HUNT_MILESTONE(m366): 已完成(选完卡)的里程碑次数;第 k 次所需击杀 = base + k×growth(线性递增,后期不刷屏)。 */
+    public static final AttachmentType<Integer> HUNT_MILESTONE =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT).initializer(() -> 0).copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "hunt_milestone"));
+
+    /** HUNT_PENDING(m366): 当前待选的三张勋章 id(逗号拼;""=无待选)。persistent=掉线/重启不丢,JOIN 时补推弹屏。 */
+    public static final AttachmentType<String> HUNT_PENDING =
+            AttachmentRegistry.<String>builder()
+                    .persistent(Codec.STRING).initializer(() -> "").copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "hunt_pending"));
+
     public static void init() {
         Yongye.LOGGER.info("[夜蚀] 数据附着已注册");
     }

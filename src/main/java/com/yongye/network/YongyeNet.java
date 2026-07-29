@@ -50,6 +50,13 @@ public final class YongyeNet {
                 com.yongye.system.DifficultyManager.setLevel(p.server, payload.index());
             });
         });
+        // m366 猎杀勋章:S2C 弹三选一 + C2S 选定(服务端权威复核候选,不在 HUNT_PENDING 里=造假忽略)
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.OpenMedalChoicePayload.ID, com.yongye.network.OpenMedalChoicePayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.ChooseMedalPayload.ID, com.yongye.network.ChooseMedalPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ChooseMedalPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.HuntMedalHandler.choose(p, payload.medalId()));
+        });
         // 职业大招
         PayloadTypeRegistry.playC2S().register(com.yongye.network.ClassUltimatePayload.ID, com.yongye.network.ClassUltimatePayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.ClassUltimatePayload.ID, (payload, context) -> {

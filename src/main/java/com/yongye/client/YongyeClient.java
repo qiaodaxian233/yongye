@@ -35,6 +35,8 @@ public class YongyeClient implements ClientModInitializer {
 
     private static boolean pendingClassSelect = false;
     private static boolean pendingDifficulty = false;
+    /** m366 猎杀勋章:待弹的三选一数据串(null=无;收到包时若正开着别的屏,关屏后由 tick 补弹)。 */
+    private static String pendingMedal = null;
     /** m273 连击 HUD 状态:当前连击数 + 跳动帧(计数增加瞬间放大回落) */
     private static int comboCount = 0;
     private static int comboPopTicks = 0;
@@ -199,6 +201,7 @@ public class YongyeClient implements ClientModInitializer {
                     ClientStats.dayForecastShort = payload.dayForecastShort();
                     ClientStats.mainGoal = payload.mainGoal();   // m361 主线目标常显
                     ClientStats.bountyData = payload.bounty();   // m364 每日悬赏(任务书悬赏页展示)
+                    ClientStats.huntRemain = payload.huntRemain();   // m366 猎杀勋章剩余
                     // m363 渐进解锁:阶段升档瞬间播报本档解锁的新功能(金字进聊天可回翻)
                     int ns = payload.mainStage();
                     if (com.yongye.YongyeConfig.get().enableProgressiveUnlock
@@ -213,6 +216,17 @@ public class YongyeClient implements ClientModInitializer {
                         }
                     }
                     ClientStats.mainStage = ns;
+                }));
+
+        // m366 猎杀勋章:收三选一数据 → 无屏直接弹;正开着别的屏就挂 pending,tick 里关屏后补弹
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenMedalChoicePayload.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    if (payload.data() == null || payload.data().isEmpty()) return;
+                    if (context.client().currentScreen == null && context.client().player != null) {
+                        context.client().setScreen(new MedalChoiceScreen(payload.data()));
+                    } else {
+                        pendingMedal = payload.data();
+                    }
                 }));
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
@@ -240,12 +254,19 @@ public class YongyeClient implements ClientModInitializer {
             String l3 = cp ? ClientStats.dayForecastShort : ClientStats.dayForecast;
             // 行4(m361):主线目标常显——「主线【见血】杀怪 13/20」,达成转绿提醒领奖(前进牵引)
             String l4 = ClientStats.mainGoal;
+            // 行5(m366):猎杀勋章牵引——「再杀 N 只」;有待选卡=金字提醒(掉线重连/意外关屏的找回入口)
+            String l5 = "";
+            if (ClientStats.huntRemain == -2) l5 = cp ? "◆勋章待选!" : "◆ 勋章待选!";
+            else if (ClientStats.huntRemain >= 0) l5 = cp ? "勋章·差" + ClientStats.huntRemain + "杀"
+                    : "猎杀勋章:再杀 " + ClientStats.huntRemain + " 只";
             int w1 = tr.getWidth(l1a + l1b);
             int w2 = l2.isEmpty() ? 0 : tr.getWidth(l2 + l2t);
             int w3 = l3.isEmpty() ? 0 : tr.getWidth(l3);
             int w4 = l4.isEmpty() ? 0 : tr.getWidth(l4);
-            int bw = Math.max(Math.max(w1, w4), Math.max(w2, w3)) + 8;
-            int lines = 1 + (l2.isEmpty() ? 0 : 1) + (l3.isEmpty() ? 0 : 1) + (l4.isEmpty() ? 0 : 1);
+            int w5 = l5.isEmpty() ? 0 : tr.getWidth(l5);
+            int bw = Math.max(Math.max(Math.max(w1, w4), Math.max(w2, w3)), w5) + 8;
+            int lines = 1 + (l2.isEmpty() ? 0 : 1) + (l3.isEmpty() ? 0 : 1) + (l4.isEmpty() ? 0 : 1)
+                    + (l5.isEmpty() ? 0 : 1);
             int bh = 2 + lines * 11;
             // m308 位置可挪:hudInfoAnchor 0=左中(m289 原位) 1=左上 2=左下 3=右上 4=右中 5=右下,
             // 再叠 hudInfoOffsetX/Y 微调,最后钳回屏内(乱填偏移也不会飞出屏幕)。
@@ -284,6 +305,12 @@ public class YongyeClient implements ClientModInitializer {
                 // m361:平时金字牵引,已达成转亮绿提醒开书领奖
                 int qc = l4.contains("已达成") ? 0xFF66FF77 : 0xFFFFD060;
                 ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l4), bx + 4, ty, qc);
+            }
+            if (!l5.isEmpty()) {
+                ty += 11;
+                // m366:有待选卡=亮金提醒,平时淡青牵引
+                int hc = ClientStats.huntRemain == -2 ? 0xFFFFD700 : 0xFF7FD8C8;
+                ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l5), bx + 4, ty, hc);
             }
         });
 
@@ -616,6 +643,11 @@ public class YongyeClient implements ClientModInitializer {
             if (pendingClassSelect && client.player != null && client.currentScreen == null) {
                 pendingClassSelect = false;
                 client.setScreen(new ClassSelectScreen());
+            }
+            if (pendingMedal != null && client.player != null && client.currentScreen == null) {
+                String d = pendingMedal;
+                pendingMedal = null;
+                if (!d.isEmpty()) client.setScreen(new MedalChoiceScreen(d));   // m366 三选一
             }
         });
 

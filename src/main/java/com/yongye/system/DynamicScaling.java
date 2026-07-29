@@ -38,8 +38,10 @@ public final class DynamicScaling {
         PlayerEntity p = mob.getWorld().getClosestPlayer(mob, scanRadius);
         if (p == null) return;
 
-        double pAtk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-        double pHp  = p.getMaxHealth();
+        // m366:玩家攻击/血量基准里剔除「猎杀勋章」乘区(勋章走独立 MULTIPLIED_TOTAL 因子,除法精确还原)——
+        // 怪不因勋章跟涨,勋章是实打实的净收益;这也是「勋章成长线不污染动态对位」的落地点。
+        double pAtk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) / HuntMedalHandler.attackMultOf(p);
+        double pHp  = p.getMaxHealth() / HuntMedalHandler.healthMultOf(p);
         // 难度倍率:整局统一的世界难度(由房主/OP 设定),放大「对位目标」(只增不减,故低难度≈接近原版)
         double diffMult = com.yongye.system.DifficultyManager.mobMult();
 
