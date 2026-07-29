@@ -662,6 +662,9 @@ public class YongyeClient implements ClientModInitializer {
                         skillCdLeft[i] = vals[i];
                     }
                 }));
+        // m347 装备详情技能等级同步:收包写进 WeaponInfoScreen 静态字段(面板下一帧刷新)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.WeaponSkillLvPayload.ID, (payload, context) ->
+                context.client().execute(() -> WeaponInfoScreen.onSync(payload)));
         // 本地每 tick 递减:两包(10t)之间秒数平滑走,不跳格
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             for (int i = 0; i < 5; i++) if (skillCdLeft[i] > 0) skillCdLeft[i]--;

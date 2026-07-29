@@ -173,11 +173,21 @@ public final class YongyeNet {
             ServerPlayerEntity p = context.player();
             p.server.execute(() -> com.yongye.system.EquipmentEnhancer.enhanceFromInventory(p, payload.slot()));
         });
-        // 武器技能升级:装备介绍界面点「升级」→ 用背包终焉精华升一级
+        // 武器技能升级:装备介绍界面点「升级」→ 用背包终焉精华升一级;处理后补发等级同步刷新面板(m347)
         PayloadTypeRegistry.playC2S().register(com.yongye.network.UpgradeWeaponSkillPayload.ID, com.yongye.network.UpgradeWeaponSkillPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.UpgradeWeaponSkillPayload.ID, (payload, context) -> {
             ServerPlayerEntity p = context.player();
-            p.server.execute(() -> com.yongye.system.WeaponSkillManager.upgradeSkill(p, payload.index()));
+            p.server.execute(() -> {
+                com.yongye.system.WeaponSkillManager.upgradeSkill(p, payload.index());
+                com.yongye.system.WeaponSkillManager.syncLevels(p);
+            });
+        });
+        // m347 装备详情同步技能等级:开面板请求 → 回传 3等级+3花费+3生效CD+上限(服务端配置口径)
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.RequestWeaponSkillPayload.ID, com.yongye.network.RequestWeaponSkillPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.WeaponSkillLvPayload.ID, com.yongye.network.WeaponSkillLvPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.RequestWeaponSkillPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.WeaponSkillManager.syncLevels(p));
         });
         // m258 空中回旋斩:客户端空中挥砍触发即上报,服务端结算身周一圈伤害(校验/冷却在 handler 内)
         PayloadTypeRegistry.playC2S().register(com.yongye.network.SpinSlashPayload.ID, com.yongye.network.SpinSlashPayload.CODEC);

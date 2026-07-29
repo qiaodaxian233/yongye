@@ -69,10 +69,8 @@ public final class WeaponSkillManager {
             case DEVOUR -> { cd = cfg.skillDevourCooldown; abyssDevour(world, player, level, cfg, dmgMult); }
             default -> { cd = cfg.skillFinalityCooldown; finality(world, player, level, cfg, dmgMult); }
         }
-        // 技能升级:每级降低冷却(有下限,避免无限缩短)
-        if (cfg.enableWeaponSkillUpgrade && skLv > 0) {
-            cd = Math.max(cfg.skillUpgradeCdFloor, cd - skLv * cfg.skillUpgradeCdReductionPerLevel);
-        }
+        // m347:冷却统一走 effectiveCd(施放与装备详情面板同式,面板显示的就是实际生效值)
+        cd = effectiveCd(cd, skLv);
         cds[index] = now + cd;
         actionbar(player, "施放【" + skill.cn + "】" + (skLv > 0 ? " Lv." + skLv : "") + "!", Formatting.LIGHT_PURPLE);
     }
@@ -154,6 +152,33 @@ public final class WeaponSkillManager {
                 120, radius / 2, 1.0, radius / 2, 0.2);
         world.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ENTITY_ENDER_DRAGON_GROWL, SoundCategory.PLAYERS, 1.0f, 0.7f);
+    }
+
+    /** m347:技能生效冷却统一公式(基础CD − 技能等级×每级缩减,钳下限;升级系统关=原样)。
+     *  use() 施放与装备详情面板显示同走此式,面板永远显示实际生效值。 */
+    public static int effectiveCd(int baseCd, int skLv) {
+        YongyeConfig cfg = YongyeConfig.get();
+        if (!cfg.enableWeaponSkillUpgrade || skLv <= 0) return baseCd;
+        return Math.max(cfg.skillUpgradeCdFloor, baseCd - skLv * cfg.skillUpgradeCdReductionPerLevel);
+    }
+
+    /** m347:把三技能当前等级/升级花费/生效冷却/等级上限打包发给玩家(装备介绍面板显示)。
+     *  花费与冷却按**服务端配置**算好再发,专用服上客户端配置不同也不显错值;
+     *  打开面板(RequestWeaponSkillPayload)与升级成功后(UpgradeWeaponSkillPayload 处理尾)各发一次。 */
+    public static void syncLevels(ServerPlayerEntity player) {
+        YongyeConfig cfg = YongyeConfig.get();
+        Map<String, Integer> map = player.getAttachedOrElse(ModAttachments.WEAPON_SKILL_LV, Map.of());
+        int[] base = {cfg.skillSlashCooldown, cfg.skillDevourCooldown, cfg.skillFinalityCooldown};
+        WeaponSkill[] sk = WeaponSkill.values();
+        int[] lv = new int[3], cost = new int[3], cd = new int[3];
+        for (int i = 0; i < 3; i++) {
+            lv[i] = map.getOrDefault(sk[i].name(), 0);
+            cost[i] = upgradeCost(lv[i]);
+            cd[i] = effectiveCd(base[i], lv[i]);
+        }
+        net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player,
+                new com.yongye.network.WeaponSkillLvPayload(lv[0], lv[1], lv[2],
+                        cost[0], cost[1], cost[2], cd[0], cd[1], cd[2], cfg.skillUpgradeMaxLevel));
     }
 
     /** m346:某技能剩余冷却 tick(0=就绪;纯读不写,供 SkillCdSyncHandler 每 10t 下发 HUD)。 */

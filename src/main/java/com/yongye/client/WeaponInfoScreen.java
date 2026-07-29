@@ -24,8 +24,28 @@ public class WeaponInfoScreen extends Screen {
 
     private static final int PANEL_W = 320, PANEL_H = 270;
 
+    // ===== m347 服务端同步的技能数据(WeaponSkillLvPayload → YongyeClient 接收器写入;-1=尚未收到) =====
+    /** 三技能当前升级等级(WeaponSkill 枚举序)。 */
+    private static final int[] syncLv = {-1, -1, -1};
+    /** 升到下一级所需终焉精华(服务端按服务端配置算好)。 */
+    private static final int[] syncCost = new int[3];
+    /** 生效冷却 tick(已按技能等级缩减,与 use() 施放同式)。 */
+    private static final int[] syncCd = new int[3];
+    /** 技能等级上限(服务端配置)。 */
+    private static int syncMax = -1;
+
+    /** m347:收到服务端技能等级同步(YongyeClient 接收器调用,主线程)。 */
+    public static void onSync(com.yongye.network.WeaponSkillLvPayload p) {
+        syncLv[0] = p.lv0(); syncLv[1] = p.lv1(); syncLv[2] = p.lv2();
+        syncCost[0] = p.cost0(); syncCost[1] = p.cost1(); syncCost[2] = p.cost2();
+        syncCd[0] = p.cd0(); syncCd[1] = p.cd1(); syncCd[2] = p.cd2();
+        syncMax = p.maxLevel();
+    }
+
     private final Screen parent;
     private final ItemStack stack;
+    /** m347 升级按钮引用:同步到满级后禁用。 */
+    private ButtonWidget[] skillButtons = null;
 
     public WeaponInfoScreen(Screen parent, ItemStack stack) {
         super(Text.literal("装备介绍"));
@@ -47,12 +67,15 @@ public class WeaponInfoScreen extends Screen {
             int bw = 96, gap = 8, by = y0 + 224;
             int total = bw * sk.length + gap * (sk.length - 1);
             int bx = x0 + (PANEL_W - total) / 2;
+            skillButtons = new ButtonWidget[sk.length];
             for (int i = 0; i < sk.length; i++) {
                 final int idx = i;
-                addDrawableChild(ButtonWidget.builder(Text.literal("升·" + sk[i].cn),
+                skillButtons[i] = addDrawableChild(ButtonWidget.builder(Text.literal("升·" + sk[i].cn),
                                 b -> ClientPlayNetworking.send(new UpgradeWeaponSkillPayload(idx)))
                         .dimensions(bx + i * (bw + gap), by, bw, 20).build());
             }
+            // m347:开屏即请求当前技能等级(回包经 YongyeClient 写入静态字段,面板下一帧刷新)
+            ClientPlayNetworking.send(new com.yongye.network.RequestWeaponSkillPayload());
         }
     }
 
@@ -150,12 +173,26 @@ public class WeaponInfoScreen extends Screen {
             int[] cds = {c.skillSlashCooldown, c.skillDevourCooldown, c.skillFinalityCooldown};
             WeaponSkill[] skills = WeaponSkill.values();
             for (int i = 0; i < skills.length; i++) {
-                boolean unlocked = skills[i].isUnlocked(level) || stack.getItem() == ModItems.CHAOS_BLADE;
+                boolean unlocked = skills[i].isUnlocked(level) || stack.getItem() == ModItems.CHAOS_BLADE
+                        || stack.getItem() == ModItems.DRAGON_BLADE;   // m347:龙魂免解锁与施放口径(m331)对齐
                 Formatting col = unlocked ? Formatting.WHITE : Formatting.DARK_GRAY;
-                String head = (unlocked ? "✦ " : "✖ ") + skills[i].cn + "  CD" + (cds[i] / 20) + "s"
-                        + (unlocked ? "" : "  (需「" + skills[i].unlockTier.cn + "」)");
+                String head;
+                boolean synced = syncLv[i] >= 0;   // m347:服务端已同步=显示真实等级/生效CD/升级花费
+                boolean maxed = synced && syncMax >= 0 && syncLv[i] >= syncMax;
+                if (synced) {
+                    head = (unlocked ? "✦ " : "✖ ") + skills[i].cn + " Lv." + syncLv[i]
+                            + "  CD" + (syncCd[i] / 20) + "s";
+                    if (!unlocked) head += "  (需「" + skills[i].unlockTier.cn + "」)";
+                    else if (maxed) head += "  已满级";
+                    else head += "  升级:精华×" + syncCost[i];
+                    if (maxed && unlocked) col = Formatting.GOLD;
+                } else {   // 未收到同步(刚开屏一瞬/离线容错):回落配置基础CD老显示
+                    head = (unlocked ? "✦ " : "✖ ") + skills[i].cn + "  CD" + (cds[i] / 20) + "s"
+                            + (unlocked ? "" : "  (需「" + skills[i].unlockTier.cn + "」)");
+                }
                 ctx.drawTextWithShadow(this.textRenderer, Text.literal(head).formatted(col), x0 + 18, sy, 0xFFFFFFFF);
                 sy += 12;
+                if (skillButtons != null && skillButtons[i] != null) skillButtons[i].active = !maxed;   // 满级禁按钮
             }
         }
 
