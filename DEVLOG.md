@@ -2815,3 +2815,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 ## m349 CI编译闭环落地(作者补贴 workflow 权限 PAT,2026-07-29)
 - 补推 `.github/workflows/build.yml`(m344 方案原样):push/PR 到 main 即云端 gradle build(JDK 21 temurin,`./gradlew build --no-daemon`)并上传 jar 工件;此前两轮均被 GitHub 以 PAT 无 workflow scope 硬拒,本轮新 PAT 带该权限一次落地。
 - 自此 AI 会话推送后轮询 `api.github.com/repos/qiaodaxian233/yongye/actions/runs` 查 conclusion(success/failure),failure 拉该 run 的 jobs 日志定位报错——**编译验证不再依赖作者手动 build**,m344 的死穴正式补上。本次推送同时会把 m346~m348 三笔一起过一遍云端编译。
+
+## m350 任务书节点地图(FTB Quests 观感,clean-room 纯自写,作者:「按你的想法一个一个来」,2026-07-29)
+- **授权口径先立住**:FTB-Library 1.21.1 分支 LICENSE.md=All Rights Reserved(visible source),**代码一行不碰**;本笔只学其**界面设计思想**(节点链/连线/状态色/悬停详情),实现全用在树画法(ctx.fill/drawCenteredTextWithShadow,方环照 comboRing、玻璃高光照 YongyeButton)。
+- **主线页**:16 阶段改 4×4 **蛇形节点地图**(偶数行左→右奇数行右→左,路径连成 S 形);节点=完成墨绿底绿框✔/当前深蓝底**金色呼吸框**(System.currentTimeMillis 驱动)/未解锁暗紫底灰框灰号;相邻节点 2px 轴对齐连线,走过的线段金色、未到暗灰;点节点选中(青色外圈)右侧详情联动,悬停出浮条「N.标题 · 状态」;地图下方灰字「主线进度 N/16」。
+- **试炼页**:同款 3 节点横链(标题按本命职业着味,悬停显示);图鉴页不动。
+- **命中**:节点为自绘非控件,mouseClicked 覆写按同一套坐标公式命中,未命中回落 super(领奖/刷新/关闭按钮照常);选中只改字段零 clearAndInit。
+- 配置+1 enableQuestNodeMap(默认开;**关=整套回旧双列按钮列表**,init/render 双分流旧代码原样保留),**configVersion 109→110**;括号自检 2 文件全平;待编译验证:无(mouseClicked(double,double,int) 覆写在树有 Screen 子类先例面,绘制全 proven)。实机盯:主线页看蛇形金线爬行观感、当前节点呼吸、点节点详情联动、悬停浮条不超屏、试炼三节点、config set enableQuestNodeMap false 回旧列表。

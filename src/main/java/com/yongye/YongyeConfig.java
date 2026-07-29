@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 109; // m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 110; // m350 任务书节点地图+1 · m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -1228,6 +1228,9 @@ public class YongyeConfig {
     public int newbieGuideDays = 3;
     /** m348 引导提示间隔(秒,下限 10 防刷屏)。 */
     public int newbieGuideIntervalSeconds = 45;
+    /** m350 任务书节点地图:主线 16 阶段画成蛇形节点链(完成✔墨绿/当前金色呼吸/未解锁暗灰,连线走过变金,
+     *  点节点选中看详情,悬停浮条),试炼页同款 3 节点横链;关=回旧双列按钮列表。 */
+    public boolean enableQuestNodeMap = true;
 
     // ============ m310 僵尸红眼+紫光(作者点名,纯客户端观感) ============
     /** 所有僵尸(僵尸/尸壳/溺尸/僵尸村民)眼睛发红光,暗处也亮 */

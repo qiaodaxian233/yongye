@@ -63,39 +63,56 @@ public class QuestBookScreen extends Screen {
             addDrawableChild(tab);
         }
         int y0 = 44;
+        boolean nodeMap = com.yongye.YongyeConfig.get().enableQuestNodeMap;   // m350 节点地图(关=旧双列列表)
 
         if (page == 0) {
             int cur = DATA == null ? 0 : DATA.stage();
-            for (int i = 0; i < MainQuestLine.STAGES.length; i++) {
-                final int idx = i;
-                int col = i / 8, row = i % 8;
-                String icon = i < cur ? "✔ " : (i == cur ? "▶ " : "□ ");
-                ButtonWidget b = new YongyeButton(x0 + col * (colW + gap), y0 + row * (rowH + gap), colW, rowH,
-                        Text.literal(icon + (i + 1) + "." + MainQuestLine.STAGES[i].title()),
-                        bt -> { this.selected = idx; this.clearAndInit(); });
-                b.active = (i != selected);
-                addDrawableChild(b);
+            if (nodeMap) {
+                // m350:16 阶段由 render 里的蛇形节点地图绘制+mouseClicked 命中,这里只放操作钮
+                int by = y0 + 146;
+                addDrawableChild(new YongyeButton(x0, by, colW, 18, Text.literal("领取当前奖励"),
+                        b -> ClientPlayNetworking.send(new ClaimMainQuestPayload())));
+                bottomBtns(x0 + colW + gap, by);
+            } else {
+                for (int i = 0; i < MainQuestLine.STAGES.length; i++) {
+                    final int idx = i;
+                    int col = i / 8, row = i % 8;
+                    String icon = i < cur ? "✔ " : (i == cur ? "▶ " : "□ ");
+                    ButtonWidget b = new YongyeButton(x0 + col * (colW + gap), y0 + row * (rowH + gap), colW, rowH,
+                            Text.literal(icon + (i + 1) + "." + MainQuestLine.STAGES[i].title()),
+                            bt -> { this.selected = idx; this.clearAndInit(); });
+                    b.active = (i != selected);
+                    addDrawableChild(b);
+                }
+                int by = y0 + 8 * (rowH + gap) + 8;
+                addDrawableChild(new YongyeButton(x0, by, colW, 18, Text.literal("领取当前奖励"),
+                        b -> ClientPlayNetworking.send(new ClaimMainQuestPayload())));
+                bottomBtns(x0 + colW + gap, by);
             }
-            int by = y0 + 8 * (rowH + gap) + 8;
-            addDrawableChild(new YongyeButton(x0, by, colW, 18, Text.literal("领取当前奖励"),
-                    b -> ClientPlayNetworking.send(new ClaimMainQuestPayload())));
-            bottomBtns(x0 + colW + gap, by);
         } else if (page == 1) {
             int cur = DATA == null ? 0 : DATA.trialStage();
             String cls = ClientStats.className;
-            for (int i = 0; i < MainQuestLine.TRIALS.length; i++) {
-                final int idx = i;
-                String icon = i < cur ? "✔ " : (i == cur ? "▶ " : "□ ");
-                ButtonWidget b = new YongyeButton(x0, y0 + i * (rowH + gap) * 2, colW + 40, rowH + 6,
-                        Text.literal(icon + "第" + (i + 1) + "关·" + MainQuestLine.trialTitle(cls, i)),
-                        bt -> { this.selected = idx; this.clearAndInit(); });
-                b.active = (i != selected);
-                addDrawableChild(b);
+            if (nodeMap) {
+                // m350:3 关横向节点链由 render 绘制,这里只放操作钮
+                int by = y0 + 70;
+                addDrawableChild(new YongyeButton(x0, by, colW, 18, Text.literal("领取试炼奖励"),
+                        b -> ClientPlayNetworking.send(new ClaimTrialPayload())));
+                bottomBtns(x0 + colW + gap, by);
+            } else {
+                for (int i = 0; i < MainQuestLine.TRIALS.length; i++) {
+                    final int idx = i;
+                    String icon = i < cur ? "✔ " : (i == cur ? "▶ " : "□ ");
+                    ButtonWidget b = new YongyeButton(x0, y0 + i * (rowH + gap) * 2, colW + 40, rowH + 6,
+                            Text.literal(icon + "第" + (i + 1) + "关·" + MainQuestLine.trialTitle(cls, i)),
+                            bt -> { this.selected = idx; this.clearAndInit(); });
+                    b.active = (i != selected);
+                    addDrawableChild(b);
+                }
+                int by = y0 + 3 * (rowH + gap) * 2 + 8;
+                addDrawableChild(new YongyeButton(x0, by, colW, 18, Text.literal("领取试炼奖励"),
+                        b -> ClientPlayNetworking.send(new ClaimTrialPayload())));
+                bottomBtns(x0 + colW + gap, by);
             }
-            int by = y0 + 3 * (rowH + gap) * 2 + 8;
-            addDrawableChild(new YongyeButton(x0, by, colW, 18, Text.literal("领取试炼奖励"),
-                    b -> ClientPlayNetworking.send(new ClaimTrialPayload())));
-            bottomBtns(x0 + colW + gap, by);
         } else {
             bottomBtns(x0, y0 + 150);
         }
@@ -119,9 +136,15 @@ public class QuestBookScreen extends Screen {
                 Text.literal("◆ 永夜任务书 ◆").formatted(Formatting.GOLD), this.width / 2, 10, 0xFFFFD700);
 
         if (page == 0) {
+            if (com.yongye.YongyeConfig.get().enableQuestNodeMap) {
+                drawMainNodeMap(ctx, x0, 44, mouseX, mouseY);   // m350 蛇形节点地图
+            }
             detail(ctx, x0 + colW * 2 + gap + 10, 46, MainQuestLine.STAGES, selected,
                     DATA == null ? 0 : DATA.stage(), DATA != null && DATA.complete(), mainProgress(selected));
         } else if (page == 1) {
+            if (com.yongye.YongyeConfig.get().enableQuestNodeMap) {
+                drawTrialNodeMap(ctx, x0, 44, mouseX, mouseY);  // m350 三关横向节点链
+            }
             detail(ctx, x0 + colW + 50, 46, MainQuestLine.TRIALS, selected,
                     DATA == null ? 0 : DATA.trialStage(), DATA != null && DATA.trialComplete(), trialProgress(selected));
         } else {
@@ -195,6 +218,126 @@ public class QuestBookScreen extends Screen {
         java.util.List<String> out = new java.util.ArrayList<>();
         for (int i = 0; i < s.length(); i += n) out.add(s.substring(i, Math.min(s.length(), i + n)));
         return out;
+    }
+
+    // ================= m350 节点地图(FTB Quests 观感,clean-room 纯自写:节点链+连线+状态色) =================
+    /** 节点边长 / 网格间距(中心距)。 */
+    private static final int NODE = 24, PITCH = 34;
+
+    /** 主线蛇形布局:4×4,偶数行左→右、奇数行右→左(路径视觉上连成一条 S 形)。返回节点左上角。 */
+    private int[] nodeXY(int i, int x0, int y0) {
+        int row = i / 4;
+        int col = (row % 2 == 0) ? (i % 4) : (3 - i % 4);
+        return new int[]{x0 + col * PITCH, y0 + row * PITCH};
+    }
+
+    /** 试炼横向布局:3 节点一排。 */
+    private int[] trialNodeXY(int i, int x0, int y0) {
+        return new int[]{x0 + i * (PITCH + 10), y0 + 8};
+    }
+
+    /** 当前节点金色呼吸边框(System.currentTimeMillis 驱动,纯观感)。 */
+    private static int goldPulse() {
+        int a = 160 + (int) (95 * Math.abs(Math.sin(System.currentTimeMillis() / 280.0)));
+        return (a << 24) | 0xFFC830;
+    }
+
+    /** 轴对齐 2px 连线(节点中心间;蛇形网格保证相邻节点必共行或共列)。 */
+    private static void link(DrawContext ctx, int cx1, int cy1, int cx2, int cy2, int color) {
+        if (cy1 == cy2) ctx.fill(Math.min(cx1, cx2), cy1 - 1, Math.max(cx1, cx2), cy1 + 1, color);
+        else ctx.fill(cx1 - 1, Math.min(cy1, cy2), cx1 + 1, Math.max(cy1, cy2), color);
+    }
+
+    /** 单个节点:完成=墨绿底绿框✔ / 当前=深蓝底金色呼吸框 / 未解锁=暗紫底灰框灰号;选中另加青色外圈。 */
+    private void drawNode(DrawContext ctx, int x, int y, int i, int cur, boolean isSel) {
+        boolean done = i < cur, curNode = i == cur;
+        int border = done ? 0xFF55C060 : curNode ? goldPulse() : 0xFF3A3A4C;
+        int bg = done ? 0xE0182E14 : curNode ? 0xE0102A48 : 0xE0161226;
+        ctx.fill(x, y, x + NODE, y + NODE, border);
+        ctx.fill(x + 1, y + 1, x + NODE - 1, y + NODE - 1, bg);
+        ctx.fill(x + 1, y + 1, x + NODE - 1, y + 3, 0x30FFFFFF);   // 顶部玻璃高光(照 YongyeButton 手法)
+        String glyph = done ? "✔" : String.valueOf(i + 1);
+        int tc = done ? 0xFF80FF90 : curNode ? 0xFFFFD700 : 0xFF777788;
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(glyph), x + NODE / 2, y + 8, tc);
+        if (isSel) {   // 选中青圈(1px 方环,照 comboRing 画法)
+            int c = 0xFF55FFFF;
+            ctx.fill(x - 2, y - 2, x + NODE + 2, y - 1, c);
+            ctx.fill(x - 2, y + NODE + 1, x + NODE + 2, y + NODE + 2, c);
+            ctx.fill(x - 2, y - 1, x - 1, y + NODE + 1, c);
+            ctx.fill(x + NODE + 1, y - 1, x + NODE + 2, y + NODE + 1, c);
+        }
+    }
+
+    /** 悬停浮条:小黑底一行「N.标题 · 状态」。 */
+    private void hoverTip(DrawContext ctx, int mouseX, int mouseY, String text) {
+        int w = this.textRenderer.getWidth(text);
+        int tx = Math.min(mouseX + 8, this.width - w - 8), ty = Math.max(4, mouseY - 12);
+        ctx.fill(tx - 3, ty - 2, tx + w + 3, ty + 10, 0xE0000000);
+        ctx.drawTextWithShadow(this.textRenderer, Text.literal(text), tx, ty, 0xFFFFE080);
+    }
+
+    private static String stateOf(int i, int cur) { return i < cur ? "已完成" : (i == cur ? "进行中" : "未解锁"); }
+
+    /** 主线 16 阶段蛇形节点地图:连线先画(压节点底下),走过的线段金色、未到暗灰;地图下方进度小字。 */
+    private void drawMainNodeMap(DrawContext ctx, int x0, int y0, int mouseX, int mouseY) {
+        int cur = DATA == null ? 0 : DATA.stage();
+        int n = MainQuestLine.STAGES.length;
+        for (int i = 0; i < n - 1; i++) {
+            int[] a = nodeXY(i, x0, y0), b = nodeXY(i + 1, x0, y0);
+            link(ctx, a[0] + NODE / 2, a[1] + NODE / 2, b[0] + NODE / 2, b[1] + NODE / 2,
+                    (i + 1) <= cur ? 0xFFCC9933 : 0xFF34344A);
+        }
+        int hover = -1;
+        for (int i = 0; i < n; i++) {
+            int[] p = nodeXY(i, x0, y0);
+            drawNode(ctx, p[0], p[1], i, cur, i == selected);
+            if (mouseX >= p[0] && mouseX < p[0] + NODE && mouseY >= p[1] && mouseY < p[1] + NODE) hover = i;
+        }
+        ctx.drawTextWithShadow(this.textRenderer,
+                Text.literal("主线进度 " + Math.min(cur, n) + "/" + n + " · 点节点看详情").formatted(Formatting.GRAY),
+                x0, y0 + 3 * PITCH + NODE + 6, 0xFF9AA6B2);
+        if (hover >= 0) hoverTip(ctx, mouseX, mouseY,
+                (hover + 1) + "." + MainQuestLine.STAGES[hover].title() + " · " + stateOf(hover, cur));
+    }
+
+    /** 试炼 3 关横向节点链(标题按本命职业着味,悬停显示)。 */
+    private void drawTrialNodeMap(DrawContext ctx, int x0, int y0, int mouseX, int mouseY) {
+        int cur = DATA == null ? 0 : DATA.trialStage();
+        int n = MainQuestLine.TRIALS.length;
+        for (int i = 0; i < n - 1; i++) {
+            int[] a = trialNodeXY(i, x0, y0), b = trialNodeXY(i + 1, x0, y0);
+            link(ctx, a[0] + NODE / 2, a[1] + NODE / 2, b[0] + NODE / 2, b[1] + NODE / 2,
+                    (i + 1) <= cur ? 0xFFCC9933 : 0xFF34344A);
+        }
+        int hover = -1;
+        for (int i = 0; i < n; i++) {
+            int[] p = trialNodeXY(i, x0, y0);
+            drawNode(ctx, p[0], p[1], i, cur, i == selected);
+            if (mouseX >= p[0] && mouseX < p[0] + NODE && mouseY >= p[1] && mouseY < p[1] + NODE) hover = i;
+        }
+        ctx.drawTextWithShadow(this.textRenderer,
+                Text.literal("试炼进度 " + Math.min(cur, n) + "/" + n).formatted(Formatting.GRAY),
+                x0, y0 + 8 + NODE + 8, 0xFF9AA6B2);
+        if (hover >= 0) hoverTip(ctx, mouseX, mouseY, "第" + (hover + 1) + "关·"
+                + MainQuestLine.trialTitle(ClientStats.className, hover) + " · " + stateOf(hover, cur));
+    }
+
+    /** m350:节点命中(仅节点地图模式的主线/试炼页;未命中回落按钮默认处理)。 */
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (button == 0 && page <= 1 && com.yongye.YongyeConfig.get().enableQuestNodeMap) {
+            int colW = 104, gap = 2;
+            int x0 = this.width / 2 - (colW * 2 + gap + 130) / 2;
+            int n = page == 0 ? MainQuestLine.STAGES.length : MainQuestLine.TRIALS.length;
+            for (int i = 0; i < n; i++) {
+                int[] p = page == 0 ? nodeXY(i, x0, 44) : trialNodeXY(i, x0, 44);
+                if (mx >= p[0] && mx < p[0] + NODE && my >= p[1] && my < p[1] + NODE) {
+                    this.selected = i;
+                    return true;
+                }
+            }
+        }
+        return super.mouseClicked(mx, my, button);
     }
 
     @Override public void close() { MinecraftClient.getInstance().setScreen(parent); }
