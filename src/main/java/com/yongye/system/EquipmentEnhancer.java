@@ -481,8 +481,38 @@ public final class EquipmentEnhancer {
             ItemStack s = inv.getStack(i);
             if (!s.isEmpty() && isMaterial(s.getItem())) sum.add(s);
         }
+        // m359 仓库直供(vaultUseForEnhance 可关):材料仓库里的材料/强化石按**同一分账语义**并入账本——
+        // 传统材料并入 budget 且此刻即从仓库扣掉(碎裂不退,与背包老规矩一致);
+        // 强化石并入 direct、键先记下,**成功后才从仓库删**(m302 碎裂不消耗口径原样保持)。
+        com.yongye.YongyeConfig vcfg = com.yongye.YongyeConfig.get();
+        java.util.Map<String, Long> vault = null;
+        java.util.List<String> vaultStoneKeys = new java.util.ArrayList<>();
+        boolean vaultUsed = false;
+        if (vcfg.enableVault && vcfg.vaultUseForEnhance) {
+            vault = new java.util.HashMap<>(p.getAttachedOrElse(
+                    com.yongye.registry.ModAttachments.VAULT_ITEMS, java.util.Map.of()));
+            var it = vault.entrySet().iterator();
+            while (it.hasNext()) {
+                var en = it.next();
+                long n = en.getValue() == null ? 0 : en.getValue();
+                if (n <= 0) continue;
+                ItemStack probe = VaultManager.stackFor(en.getKey(), 1);
+                if (probe.isEmpty() || !isMaterial(probe.getItem())) continue;
+                long unit = materialValue(probe.getItem());
+                if (unit <= 0) continue;
+                long contrib = (n > Long.MAX_VALUE / 4 / unit) ? Long.MAX_VALUE / 4 : unit * n;   // 饱和乘防溢出(m293 口径)
+                if (probe.getItem() instanceof com.yongye.item.EnhanceStoneItem) {
+                    sum.direct = Math.min(Long.MAX_VALUE / 2, sum.direct + contrib);
+                    vaultStoneKeys.add(en.getKey());
+                } else {
+                    sum.budget = Math.min(Long.MAX_VALUE / 2, sum.budget + contrib);
+                    it.remove();   // 传统材料先扣(碎裂不退)
+                }
+                vaultUsed = true;
+            }
+        }
         if (!sum.any()) {
-            p.sendMessage(net.minecraft.text.Text.literal("背包里没有强化材料(强化石/生命碎片/结晶/核心/血核)")
+            p.sendMessage(net.minecraft.text.Text.literal("背包和仓库里都没有强化材料(强化石/生命碎片/结晶/核心/血核)")
                     .formatted(net.minecraft.util.Formatting.YELLOW), true);
             return;
         }
@@ -492,13 +522,19 @@ public final class EquipmentEnhancer {
             if (!s.isEmpty() && isMaterial(s.getItem())
                     && !(s.getItem() instanceof com.yongye.item.EnhanceStoneItem)) inv.setStack(i, ItemStack.EMPTY);
         }
+        if (vaultUsed) p.setAttached(com.yongye.registry.ModAttachments.VAULT_ITEMS, vault);   // 传统材料扣账即时落盘
         EnhanceResult res = enhanceWith(p, target, sum);
         if (!res.broke && sum.direct > 0) {
             for (int i = 0; i < inv.size(); i++) {
                 ItemStack s = inv.getStack(i);
                 if (!s.isEmpty() && s.getItem() instanceof com.yongye.item.EnhanceStoneItem) inv.setStack(i, ItemStack.EMPTY);
             }
+            if (vault != null && !vaultStoneKeys.isEmpty()) {   // m359:仓库强化石成功后才删
+                for (String k : vaultStoneKeys) vault.remove(k);
+                p.setAttached(com.yongye.registry.ModAttachments.VAULT_ITEMS, vault);
+            }
         }
+        if (vaultUsed) VaultManager.sync(p);   // 无论成败把最新仓库快照发回(界面开着立即刷新)
         if (res.broke) {
             inv.setStack(slot, ItemStack.EMPTY);
             p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(),
