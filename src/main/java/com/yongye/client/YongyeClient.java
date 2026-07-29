@@ -164,6 +164,9 @@ public class YongyeClient implements ClientModInitializer {
         // m352 天象事件状态:更新 skyEvent,SkyTextureMixin 渲染帧读取换红月/绿雨贴图
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.SkyEventPayload.ID, (payload, context) ->
                 context.client().execute(() -> skyEvent = payload.event()));
+        // m356 材料仓库快照 → 仓库界面刷新
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.VaultSyncPayload.ID, (payload, context) ->
+                context.client().execute(() -> VaultScreen.onSync(payload.data())));
 
         // 永夜同步:更新 HUD 状态
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.NightfallSyncPayload.ID, (payload, context) ->
@@ -901,7 +904,7 @@ public class YongyeClient implements ClientModInitializer {
                 Screens.getButtons(screen).add(new YongyeButton(bxIn, by + pitch * rIn++, bw, bh,
                         Text.literal("兑换"), b -> client.setScreen(new ExchangeScreen(screen))));
 
-                // —— 外列(6):学书/合书/任务/设置/转移/本命 ——
+                // —— 外列(7):学书/合书/任务/设置/转移/仓库/本命 ——
                 Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("学书"), b -> ClientPlayNetworking.send(new com.yongye.network.UseAllBooksPayload())));
                 Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
@@ -915,6 +918,9 @@ public class YongyeClient implements ClientModInitializer {
                         Text.literal("转移"), b -> {
                             if (client.player != null) client.player.networkHandler.sendCommand("yongye transfer");
                         }));
+                // 仓库:材料仓库界面(m356,无限堆叠成长物资,死亡不丢)
+                Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("仓库"), b -> client.setScreen(new VaultScreen(screen))));
                 com.yongye.item.PlayerClass pc = com.yongye.item.PlayerClass.byId(ClientStats.className);
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
                 Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,

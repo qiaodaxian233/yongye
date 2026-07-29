@@ -307,6 +307,14 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "weapon_skill_lv"));
 
+    /** VAULT_ITEMS(m356): 材料仓库——键=物品 id(技能书追加 #等级),值=数量(long 无限堆叠)。死亡保留。 */
+    public static final AttachmentType<java.util.Map<String, Long>> VAULT_ITEMS =
+            AttachmentRegistry.<java.util.Map<String, Long>>builder()
+                    .persistent(Codec.unboundedMap(Codec.STRING, Codec.LONG))
+                    .initializer(java.util.HashMap::new)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "vault_items"));
+
     /** BOSS_KILL_MAP(m351): Boss 图鉴逐 BOSS 击杀计数,键=BossAtlasPayload 槽位 id
      *  (red_spider/death_mage/fire_phoenix/toro_dragon/anubis/pain/ender_dragon)。死亡保留。 */
     public static final AttachmentType<java.util.Map<String, Integer>> BOSS_KILL_MAP =

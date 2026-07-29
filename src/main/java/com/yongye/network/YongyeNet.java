@@ -76,6 +76,23 @@ public final class YongyeNet {
         PayloadTypeRegistry.playS2C().register(com.yongye.network.SkillCdPayload.ID, com.yongye.network.SkillCdPayload.CODEC); // m346 技能CD常显HUD
         PayloadTypeRegistry.playS2C().register(com.yongye.network.BossAtlasPayload.ID, com.yongye.network.BossAtlasPayload.CODEC); // m351 Boss图鉴页
         PayloadTypeRegistry.playS2C().register(com.yongye.network.SkyEventPayload.ID, com.yongye.network.SkyEventPayload.CODEC); // m352 事件限定天象
+        // m356 材料仓库:开屏请求/存入全部/按行取出 → 服务端权威处理后回快照("键=数量\n" 多行)
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.RequestVaultPayload.ID, com.yongye.network.RequestVaultPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.VaultDepositPayload.ID, com.yongye.network.VaultDepositPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(com.yongye.network.VaultWithdrawPayload.ID, com.yongye.network.VaultWithdrawPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.VaultSyncPayload.ID, com.yongye.network.VaultSyncPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.RequestVaultPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.VaultManager.sync(p));
+        });
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.VaultDepositPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.VaultManager.depositAll(p));
+        });
+        ServerPlayNetworking.registerGlobalReceiver(com.yongye.network.VaultWithdrawPayload.ID, (payload, context) -> {
+            ServerPlayerEntity p = context.player();
+            p.server.execute(() -> com.yongye.system.VaultManager.withdraw(p, payload.key()));
+        });
         // 爆率编辑器:C2S 请求当前值 → S2C 回传(key=value 多行)
         PayloadTypeRegistry.playC2S().register(com.yongye.network.RequestConfigPayload.ID, com.yongye.network.RequestConfigPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.ConfigValuesPayload.ID, com.yongye.network.ConfigValuesPayload.CODEC);

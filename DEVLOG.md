@@ -2849,3 +2849,12 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **真相**:HudCompactMixin.yongye$classLevel 注释声称 levels 数组=各职业等级,但 sendStats 实际填的是 **SkillType 技能书各类型累计等级**(攻击/护甲/恢复…序)——「Lv.10 肉盾」显示的其实是**攻击书累计等级**,与职业无关,纯数组语义接错线(m209 引入 StatsPayload 时的历史遗留)。
 - **修**:项目本无独立职业经验系统,面板等级统一改显**技能总级**(血量书累计 ClientStats.health + 全技能书累计求和),与任务书图鉴「技能总级 VN」完全同口径——作者的 571 从此面板/图鉴对得上,学书立涨。
 - 零新配置零网络变更(纯客户端换算);待编译验证:无。实机盯:面板「Lv.571 肉盾」与图鉴 V571 一致、学一本书两处同步涨。
+
+## m356 材料仓库(作者:「任务种类太多想存东西——选择存或不存、可以取出来、能检查强化石和技能书」,2026-07-29)
+- **虚拟仓库**:新附件 VAULT_ITEMS(Map<键,数量>,persistent+copyOnDeath 死亡不丢,Codec.unboundedMap(STRING,LONG) 无限堆叠);键=物品 id,技能书追加「#等级」——**同书同级合并成一行计数**,强化石十档各一行,正是作者要的聚合检查视图。
+- **白名单**:传统强化材料+全部强化石(EquipmentEnhancer.isMaterial)、两类技能书(带 SKILL_LEVEL 组件,重建走 new ItemStack+set 组件通吃血量书/职业书)、终焉精华、强化保护卷——只收成长物资不做万物箱。
+- **服务端 VaultManager**:depositAll 一键扫主背包 36 格整叠入库;withdraw 按键取一叠(钳 maxCount,offerOrDrop 满包掉脚下);未知键(卸模组/坏档)取出时自动清理自愈;同步走「键=数量\n」多行字符串(照 ConfigValuesPayload 在树先例,零新 codec 面);Identifier.tryParse 已核 yarn(method_12829);enableVault 关=服务端全拒。
+- **网络 4 包**:RequestVault/VaultDeposit(unit)+VaultWithdraw(String key,空值兜底)+VaultSyncPayload(String data);全部服务端权威。
+- **界面 VaultScreen**:聚合列表(图标+名字+×紧凑数量+行内「取出」钮,斑马条),每页 9 行分页◀▶,顶排「存入全部材料/刷新/关闭」;背包外列第 7 钮「仓库」直开(外列注释 6→7)。
+- 配置+1 enableVault,**configVersion 112→113**;括号自检 10 文件全平;待编译验证:无(tryParse 已核,其余全在树)。实机盯:背包塞一堆石头书点「存入全部材料」秒空、仓库里同级书合并一行、取出回背包、死亡重生仓库还在、V100 书取出名字带 V100。
+- **m357 预留接线点**(下一笔):自动存(捡起钩子)+自动用(强化/学书/任务上交时仓库也算数自动扣)。
