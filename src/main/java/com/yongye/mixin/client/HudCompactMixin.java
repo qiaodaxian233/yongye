@@ -250,15 +250,14 @@ public class HudCompactMixin {
         };
     }
 
-    /** 本命职业的等级(levels 数组顺序:tank/warrior/warlock/swordsman/monk/assassin)。 */
+    /** m355 口径修复:此前按索引取 ClientStats.levels——但该数组由 sendStats 填的是**技能书各类型累计等级**
+     *  (SkillType 序:攻击/护甲/恢复…),「Lv.10 肉盾」实际显示的是攻击书等级,与职业无关(作者:「我 571 级
+     *  职业却只有 11 级」实锤)。项目没有独立职业经验系统,统一改显**技能总级**(血量书累计+全技能书累计),
+     *  与任务书图鉴「技能总级 VN」完全同口径,面板/图鉴数字从此对得上。 */
     private static int yongye$classLevel(String cls) {
-        int idx = switch (cls) {
-            case "tank" -> 0; case "warrior" -> 1; case "warlock" -> 2; case "summoner" -> 6;
-            case "swordsman" -> 3; case "monk" -> 4; case "assassin" -> 5;
-            default -> -1;
-        };
-        int[] lv = ClientStats.levels;
-        return (idx >= 0 && idx < lv.length) ? lv[idx] : 0;
+        long sum = com.yongye.client.ClientStats.health;   // 血量书累计(sendStats 的 health 字段)
+        for (int v : ClientStats.levels) sum += v;         // 各类型技能书累计
+        return (int) Math.min(Integer.MAX_VALUE, sum);
     }
 
     /** 数字紧凑显示(m219 起统一走 NumFmt:K/M/B/T,十亿以上不再堆成一长串 M)。 */
