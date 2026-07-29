@@ -125,6 +125,35 @@ public final class VaultManager {
         ServerPlayNetworking.send(p, new com.yongye.network.VaultSyncPayload(sb.toString()));
     }
 
+    /** m357 自动存:每 100t(5s)扫**背包区 9~35**(热栏 0~8 刻意不动——手上/热栏留的书石头
+     *  代表玩家想手动用,自动收走会打断操作),可入库的整叠静默搬进仓库,有搬动才 actionbar 提示。 */
+    public static void register() {
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (server.getTicks() % 100 != 0) return;
+            YongyeConfig cfg = YongyeConfig.get();
+            if (!cfg.enableVault || !cfg.vaultAutoDeposit) return;
+            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                Map<String, Long> vault = null;
+                PlayerInventory inv = p.getInventory();
+                long moved = 0;
+                for (int i = 9; i < 36; i++) {   // 背包区;热栏不动
+                    ItemStack s = inv.getStack(i);
+                    if (!vaultable(s)) continue;
+                    if (vault == null) vault = new HashMap<>(p.getAttachedOrElse(ModAttachments.VAULT_ITEMS, Map.of()));
+                    vault.merge(keyOf(s), (long) s.getCount(), Long::sum);
+                    moved += s.getCount();
+                    inv.setStack(i, ItemStack.EMPTY);
+                }
+                if (moved > 0) {
+                    p.setAttached(ModAttachments.VAULT_ITEMS, vault);
+                    msg(p, "已自动入库 " + moved + " 件材料(背包「仓库」查看)", Formatting.DARK_PURPLE);
+                    sync(p);
+                }
+            }
+        });
+        Yongye.LOGGER.info("[夜蚀] 材料仓库已挂载(自动入库每5s,热栏豁免)");
+    }
+
     private static void msg(ServerPlayerEntity p, String s, Formatting c) {
         p.sendMessage(Text.literal(s).formatted(c), true);
     }

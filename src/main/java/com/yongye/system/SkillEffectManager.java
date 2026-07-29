@@ -96,13 +96,47 @@ public final class SkillEffectManager {
                 inv.setStack(i, ItemStack.EMPTY);
             }
         }
-        if (booksUsed == 0) {
-            player.sendMessage(Text.literal("背包里没有可学的技能书").formatted(Formatting.YELLOW), true);
+        // m357 仓库直供:背包学完后,材料仓库里存的书也一并学掉(vaultAutoUseBooks 可关)——
+        // 自动存(m357)会把捡到的书收进仓库,这里不接的话「学书」按钮就会扑空,两头必须一起闭环。
+        long vaultBooks = 0;
+        YongyeConfig vc = YongyeConfig.get();
+        if (vc.enableVault && vc.vaultAutoUseBooks) {
+            Map<String, Long> vault = new HashMap<>(player.getAttachedOrElse(ModAttachments.VAULT_ITEMS, Map.of()));
+            var it = vault.entrySet().iterator();
+            while (it.hasNext()) {
+                var en = it.next();
+                long n = en.getValue() == null ? 0 : en.getValue();
+                if (n <= 0) { it.remove(); continue; }
+                ItemStack s = VaultManager.stackFor(en.getKey(), 1);
+                if (s.getItem() instanceof com.yongye.item.SkillBookItem sb) {
+                    long lv = Math.max(1, com.yongye.item.SkillBookItem.getLevel(s));
+                    long tot = (n > Integer.MAX_VALUE / lv) ? Integer.MAX_VALUE : lv * n;   // 饱和乘防溢出(m293 口径)
+                    learn(player, sb.getType(), (int) Math.min(Integer.MAX_VALUE, tot));
+                    vaultBooks += n;
+                    it.remove();
+                } else if (s.getItem() instanceof com.yongye.item.HealthSkillBookItem) {
+                    long lv = Math.max(1, com.yongye.item.HealthSkillBookItem.getLevel(s));
+                    long tot = (n > Integer.MAX_VALUE / lv) ? Integer.MAX_VALUE : lv * n;
+                    int total = (int) Math.min(Integer.MAX_VALUE, tot);
+                    PlayerSkillManager.learnHealth(player, total);
+                    healthGained = (int) Math.min(Integer.MAX_VALUE, (long) healthGained + total);
+                    vaultBooks += n;
+                    it.remove();
+                }
+            }
+            if (vaultBooks > 0) {
+                player.setAttached(ModAttachments.VAULT_ITEMS, vault);
+                VaultManager.sync(player);
+            }
+        }
+        if (booksUsed == 0 && vaultBooks == 0) {
+            player.sendMessage(Text.literal("背包和仓库里都没有可学的技能书").formatted(Formatting.YELLOW), true);
             return;
         }
         player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.8f, 1.4f);
-        player.sendMessage(Text.literal("一键学书:消耗 " + booksUsed + " 本"
+        player.sendMessage(Text.literal("一键学书:消耗 " + (booksUsed + vaultBooks) + " 本"
+                + (vaultBooks > 0 ? "(仓库 " + vaultBooks + ")" : "")
                 + (healthGained > 0 ? "(含血量 +V" + healthGained + ")" : "")).formatted(Formatting.AQUA), true);
         com.yongye.network.YongyeNet.sendStats(player);
     }
