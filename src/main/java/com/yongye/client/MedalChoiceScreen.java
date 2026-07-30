@@ -6,6 +6,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -17,7 +19,14 @@ import net.minecraft.util.Formatting;
  * 卡面元数据(名字/属性/颜色)直接引用 HuntMedalHandler 静态表(客户端引用 system 包纯静态数据,在树先例同 NightfallManager)。
  */
 public class MedalChoiceScreen extends Screen {
-    private static final int CW = 104, CH = 96, GAP = 16;
+    private static final int CW = 112, CH = 140, GAP = 16;
+
+    /** 卡面图标,与 HuntMedalHandler.IDS 同序:猛攻/体魄/迅捷/坚壁/疾手/不屈(m369 卡面美化)。 */
+    private static final ItemStack[] ICONS = {
+            new ItemStack(Items.NETHERITE_SWORD), new ItemStack(Items.GOLDEN_APPLE),
+            new ItemStack(Items.FEATHER), new ItemStack(Items.IRON_CHESTPLATE),
+            new ItemStack(Items.CLOCK), new ItemStack(Items.ANVIL)
+    };
 
     /** cards[i] = {id, 当前层数, 每层pct}(解析失败的项跳过)。 */
     private final String[][] cards;
@@ -66,13 +75,17 @@ public class MedalChoiceScreen extends Screen {
         this.renderBackground(ctx, mouseX, mouseY, delta);
         int cx = this.width / 2;
         int top = cardTop();
+        // 标题横幅:暗色渐变底 + 两侧金色饰线(m369)
+        ctx.fillGradient(cx - 130, top - 54, cx + 130, top - 20, 0x90101826, 0x00101826);
+        ctx.fill(cx - 124, top - 35, cx - 74, top - 34, 0x60FFD700);
+        ctx.fill(cx + 74, top - 35, cx + 124, top - 34, 0x60FFD700);
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("\u2694 \u730e\u6740\u91cc\u7a0b\u7891 \u00b7 \u4e09\u9009\u4e00 \u2694").formatted(Formatting.GOLD),
-                cx, top - 40, 0xFFFFD700);
+                cx, top - 46, 0xFFFFD700);
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("\u51fb\u6740\u5956\u52b1\uff1a\u70b9\u9009\u4e00\u679a\u52cb\u7ae0\uff0c\u6c38\u4e45\u751f\u6548")
                         .formatted(Formatting.GRAY),
-                cx, top - 26, 0xFFAAAAAA);
+                cx, top - 30, 0xFFAAAAAA);
         for (int i = 0; i < cards.length; i++) {
             drawCard(ctx, i, cardX(i), top, mouseX, mouseY);
         }
@@ -83,33 +96,52 @@ public class MedalChoiceScreen extends Screen {
         int idx = HuntMedalHandler.indexOf(cards[i][0]);
         int color = HuntMedalHandler.COLORS[idx];
         boolean hover = hit(mouseX, mouseY, x, y);
-        // 底 + 描边(悬停用勋章色亮框,平时暗描边)
-        ctx.fill(x, y, x + CW, y + CH, 0xE0101826);
+        int yy = hover ? y - 3 : y;                       // 悬停整卡上浮 3px
+        int ccx = x + CW / 2;
+        // 卡底 + 勋章色顶部色条 + 由上而下的勋章色渐变罩(悬停加浓)
+        ctx.fill(x, yy, x + CW, yy + CH, 0xF00E1622);
+        ctx.fill(x, yy, x + CW, yy + 3, color);
+        ctx.fillGradient(x, yy + 3, x + CW, yy + CH, tint(color, hover ? 0x55 : 0x2E), 0x00000000);
+        // 描边:悬停勋章色亮框,平时暗描边
         int b = hover ? color : 0xFF2E4A66;
-        ctx.fill(x - 1, y - 1, x + CW + 1, y, b);
-        ctx.fill(x - 1, y + CH, x + CW + 1, y + CH + 1, b);
-        ctx.fill(x - 1, y, x, y + CH, b);
-        ctx.fill(x + CW, y, x + CW + 1, y + CH, b);
-        if (hover) ctx.fill(x, y, x + CW, y + 2, color);   // 悬停顶亮条
+        ctx.fill(x - 1, yy - 1, x + CW + 1, yy, b);
+        ctx.fill(x - 1, yy + CH, x + CW + 1, yy + CH + 1, b);
+        ctx.fill(x - 1, yy, x, yy + CH, b);
+        ctx.fill(x + CW, yy, x + CW + 1, yy + CH, b);
+        // 图标区:淡色光晕底 + 2 倍物品图标
+        ctx.fill(ccx - 20, yy + 10, ccx + 20, yy + 48, tint(color, 0x22));
+        ctx.getMatrices().push();
+        ctx.getMatrices().translate(ccx - 16, yy + 13, 0);
+        ctx.getMatrices().scale(2.0f, 2.0f, 1.0f);
+        ctx.drawItem(ICONS[idx], 0, 0);
+        ctx.getMatrices().pop();
         int lv = parseInt(cards[i][1]);
         double pct = parseDouble(cards[i][2]);
-        // 名字(勋章色)
+        // 名字(勋章色)+ 饰线分隔
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("\u25c6 " + HuntMedalHandler.NAMES[idx] + " \u25c6"), x + CW / 2, y + 12, color);
-        // 层数 Lv.N → N+1
+                Text.literal(HuntMedalHandler.NAMES[idx]), ccx, yy + 54, color);
+        ctx.fill(ccx - 28, yy + 66, ccx + 28, yy + 67, tint(color, 0x80));
+        // 层数 Lv.N → N+1(新层数金色)
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("Lv." + lv + " \u2192 Lv." + (lv + 1)), x + CW / 2, y + 30, 0xFFFFFFFF);
+                Text.literal("Lv." + lv + " ").formatted(Formatting.GRAY)
+                        .append(Text.literal("\u2192 ").formatted(Formatting.WHITE))
+                        .append(Text.literal("Lv." + (lv + 1)).formatted(Formatting.GOLD)),
+                ccx, yy + 73, 0xFFFFFFFF);
         // 属性与数值(总加成 = 每层 × 新层数)
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal(HuntMedalHandler.STATS[idx]), x + CW / 2, y + 48, 0xFFB8C4D0);
+                Text.literal(HuntMedalHandler.STATS[idx]), ccx, yy + 90, 0xFFB8C4D0);
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("+" + HuntMedalHandler.trim(pct) + "% / \u5c42\uff08\u5171 +"
-                        + HuntMedalHandler.trim(pct * (lv + 1)) + "%\uff09"), x + CW / 2, y + 60, 0xFF9AA6B2);
+                        + HuntMedalHandler.trim(pct * (lv + 1)) + "%\uff09"), ccx, yy + 103, 0xFF9AA6B2);
         if (hover) {
             ctx.drawCenteredTextWithShadow(this.textRenderer,
-                    Text.literal("\u70b9\u51fb\u9009\u53d6").formatted(Formatting.GOLD), x + CW / 2, y + CH - 14, 0xFFFFD700);
+                    Text.literal("\u25b6 \u70b9\u51fb\u9009\u53d6 \u25c0").formatted(Formatting.GOLD),
+                    ccx, yy + CH - 16, 0xFFFFD700);
         }
     }
+
+    /** 勋章色 + 指定透明度(卡面渐变/光晕/饰线用)。 */
+    private static int tint(int color, int alpha) { return (alpha << 24) | (color & 0xFFFFFF); }
 
     private static int parseInt(String s) {
         try { return Integer.parseInt(s); } catch (Exception e) { return 0; }
