@@ -21460,70 +21460,70 @@
  "display": {
   "thirdperson_righthand": {
    "rotation": [
-    0,
     90,
-    -3
+    0,
+    90
    ],
    "translation": [
-    0,
-    12.5,
+    -12,
+    10,
     2
    ],
    "scale": [
-    2.8,
-    2.8,
-    2.8
+    1.5,
+    1.5,
+    1.5
    ]
   },
   "thirdperson_lefthand": {
    "rotation": [
+    90,
     0,
-    -90,
-    3
+    -90
    ],
    "translation": [
-    0,
-    12.5,
+    12,
+    10,
     2
    ],
    "scale": [
-    2.8,
-    2.8,
-    2.8
+    1.5,
+    1.5,
+    1.5
    ]
   },
   "firstperson_righthand": {
    "rotation": [
+    90,
     0,
-    89,
-    0
+    80
    ],
    "translation": [
-    0,
+    -8.5,
     9,
-    3
+    2.5
    ],
    "scale": [
-    1.5,
-    1.5,
-    1.5
+    1.1,
+    1.1,
+    1.1
    ]
   },
   "firstperson_lefthand": {
    "rotation": [
+    90,
     0,
-    -100,
-    0
+    -100
    ],
    "translation": [
-    0,
-    9,
-    3
+    6.5,
+    10.5,
+    1.5
    ],
    "scale": [
-    1.5,
-    1.5,
-    1.5
+    1.1,
+    1.1,
+    1.1
    ]
   },
   "ground": {
