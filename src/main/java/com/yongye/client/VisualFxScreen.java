@@ -6,6 +6,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.SliderWidget;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -42,6 +44,41 @@ public class VisualFxScreen extends Screen {
     private record Btn(String label, String cmd) {}
     private record Section(String title, Btn[] btns) {}
     private record Page(String tab, Section[] sections) {}
+
+    // ===== m404 数值微调页(作者:「UI 的那些调整都可以输入数值或者滑动条来调整」)=====
+    // 每项 = 滑动条(拖动即调,松手/按键生效)+ 输入框(回车=精确设置);min/max=滑条量程,dec=小数位(0=整数)。
+    private record Sld(String label, String key, double min, double max, int dec) {}
+    private record SldSection(String title, Sld[] slds) {}
+    private static final SldSection[] SLIDER_SECTIONS = new SldSection[]{
+            new SldSection("HUD 位置与透明(技能CD / 战况看板 / BOSS血条)", new Sld[]{
+                    new Sld("CD横移", "skillCdHudOffsetX", -300, 300, 0),
+                    new Sld("CD纵移", "skillCdHudOffsetY", -300, 300, 0),
+                    new Sld("CD透明", "skillCdHudAlpha", 40, 255, 0),
+                    new Sld("看板横移", "hudInfoOffsetX", -300, 300, 0),
+                    new Sld("看板纵移", "hudInfoOffsetY", -300, 300, 0),
+                    new Sld("血条缩放", "bossBarScale", 0.3, 1.5, 2),
+            }),
+            new SldSection("镜头与特效强度", new Sld[]{
+                    new Sld("打击震动", "combatFxShakeScale", 0, 2, 2),
+                    new Sld("登场震", "bossEntranceShake", 0, 3, 2),
+                    new Sld("FOV冲击", "combatFxFovKick", 0, 2, 2),
+                    new Sld("顿帧", "combatFxHitstopScale", 0, 2, 2),
+                    new Sld("转场强度", "transitionIntensity", 0, 2, 2),
+                    new Sld("飘字大小", "damageNumberScale", 0.5, 2, 2),
+                    new Sld("夜尘密度", "nightAmbientDensity", 0, 2, 2),
+                    new Sld("夜声音量", "nightAmbientSoundVolume", 0, 1, 2),
+            }),
+            new SldSection("刀光·姿态·背挂", new Sld[]{
+                    new Sld("刀光大小", "slashFxSize", 0.5, 2, 2),
+                    new Sld("姿态幅度", "slashFxPoseScale", 0.5, 2, 2),
+                    new Sld("背挂角度", "weaponBackAngleDeg", -180, 180, 0),
+                    new Sld("背挂大小", "weaponBackScale", 0.3, 1.5, 2),
+                    new Sld("背挂下移", "weaponBackDownOff", 0, 1, 2),
+                    new Sld("背挂贴背", "weaponBackBackOff", 0, 1, 2),
+            }),
+    };
+    /** 数值微调页的输入框(key↔控件,回车应用/滑条推值时回写)。 */
+    private final List<Object[]> numFields = new ArrayList<>();   // [Sld, TextFieldWidget]
 
     private static final Page[] PAGES = new Page[]{
             new Page("镜头·特效", new Section[]{
@@ -247,19 +284,22 @@ public class VisualFxScreen extends Screen {
     protected void init() {
         headerTexts.clear();
         headerYs.clear();
+        numFields.clear();
 
         int gridW = COLS * BTN_W + (COLS - 1) * GAP_X;
         int x0 = (this.width - gridW) / 2;
 
-        // —— 顶部页签行(与 DebugScreen 同机制:切页=clearAndInit 重建)——
+        // —— 顶部页签行(与 DebugScreen 同机制:切页=clearAndInit 重建;末位=m404 数值微调页)——
         int tabY = 26;
         int tabH = 16;
         int tabGap = 2;
-        int tabW = (gridW - (PAGES.length - 1) * tabGap) / PAGES.length;
-        for (int i = 0; i < PAGES.length; i++) {
+        int tabCount = PAGES.length + 1;
+        int tabW = (gridW - (tabCount - 1) * tabGap) / tabCount;
+        for (int i = 0; i < tabCount; i++) {
             final int idx = i;
             int tx = x0 + i * (tabW + tabGap);
-            ButtonWidget tab = ButtonWidget.builder(Text.literal(PAGES[i].tab()), b -> {
+            String tabName = i < PAGES.length ? PAGES[i].tab() : "数值微调";
+            ButtonWidget tab = ButtonWidget.builder(Text.literal(tabName), b -> {
                 TabSwitchFx.trigger(this, idx - this.page);  // m391 页签过渡
                 this.page = idx;
                 this.clearAndInit();
@@ -270,8 +310,12 @@ public class VisualFxScreen extends Screen {
 
         // —— 当前页内容 ——
         int y = tabY + tabH + 8;
-        for (Section s : PAGES[page].sections()) {
-            y = section(x0, y, s.title(), s.btns());
+        if (page < PAGES.length) {
+            for (Section s : PAGES[page].sections()) {
+                y = section(x0, y, s.title(), s.btns());
+            }
+        } else {
+            y = buildSliderPage(x0, y, gridW);   // m404 数值微调页
         }
 
         // 返回背包(底部居中)
@@ -305,13 +349,150 @@ public class VisualFxScreen extends Screen {
         }
     }
 
+    // ==================== m404 数值微调页 ====================
+
+    /** 摆滑条页:每行两对「滑条+输入框」;返回下一组起始 y。 */
+    private int buildSliderPage(int x0, int y, int gridW) {
+        headerTexts.add("拖动滑条即调即看;右侧框输入数值后按回车 = 精确设置(自动钳到量程)");
+        headerYs.add(y);
+        y += HEADER_H;
+        int pairW = (gridW - 8) / 2;          // 一行两对
+        int fieldW = 52;
+        int sliderW = pairW - fieldW - 2;
+        int rowH = BTN_H + GAP_Y;
+        for (SldSection sec : SLIDER_SECTIONS) {
+            headerTexts.add(sec.title());
+            headerYs.add(y);
+            int by = y + HEADER_H;
+            Sld[] slds = sec.slds();
+            for (int i = 0; i < slds.length; i++) {
+                int col = i % 2;
+                int px = x0 + col * (pairW + 8);
+                int py = by + (i / 2) * rowH;
+                Sld s = slds[i];
+                double cur = cfgGet(s.key());
+                addDrawableChild(new CfgSlider(px, py, sliderW, BTN_H, s, cur));
+                TextFieldWidget tf = new TextFieldWidget(this.textRenderer,
+                        px + sliderW + 2, py + 1, fieldW, BTN_H - 2, Text.literal(s.key()));
+                tf.setMaxLength(10);
+                tf.setText(fmtVal(cur, s.dec()));
+                addDrawableChild(tf);
+                numFields.add(new Object[]{s, tf});
+            }
+            y = by + ((slds.length + 1) / 2) * rowH;
+        }
+        return y;
+    }
+
+    /** 数值格式化:dec=0 整数,否则固定小数位(Locale.ROOT 防区域逗号)。 */
+    private static String fmtVal(double v, int dec) {
+        return dec == 0 ? String.valueOf(Math.round(v))
+                : String.format(java.util.Locale.ROOT, "%." + dec + "f", v);
+    }
+
+    /** 反射读客户端配置当前值(单机/局域网同 JVM=config set 改的就是这个对象,读回即最新)。 */
+    private static double cfgGet(String key) {
+        try {
+            return ((Number) com.yongye.YongyeConfig.class.getField(key)
+                    .get(com.yongye.YongyeConfig.get())).doubleValue();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /** 本地即时回写(int/double 分型),随后照旧发 config set 走服务端权威+写盘;双写同值幂等。 */
+    private void cfgApply(String key, String val) {
+        try {
+            var f = com.yongye.YongyeConfig.class.getField(key);
+            if (f.getType() == int.class) f.setInt(com.yongye.YongyeConfig.get(), (int) Math.round(Double.parseDouble(val)));
+            else if (f.getType() == double.class) f.setDouble(com.yongye.YongyeConfig.get(), Double.parseDouble(val));
+        } catch (Exception ignored) {}
+        run("yongye config set " + key + " " + val);
+    }
+
+    /** 回车应用聚焦的输入框:钳量程→格式化→应用→重建页面刷新滑条位置。 */
+    private boolean applyFocusedField() {
+        for (Object[] pair : numFields) {
+            TextFieldWidget tf = (TextFieldWidget) pair[1];
+            if (!tf.isFocused()) continue;
+            Sld s = (Sld) pair[0];
+            try {
+                double v = Double.parseDouble(tf.getText().trim());
+                v = Math.max(s.min(), Math.min(s.max(), v));
+                cfgApply(s.key(), fmtVal(v, s.dec()));
+                this.clearAndInit();   // 刷新:滑条跳到新位置,输入框显示钳后值
+            } catch (NumberFormatException e) {
+                tf.setText(fmtVal(cfgGet(s.key()), s.dec()));   // 乱输=回显当前值
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /** 回车(主键盘 257 / 小键盘 335)且焦点在数值框 → 应用;其余照旧。 */
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if ((keyCode == 257 || keyCode == 335) && applyFocusedField()) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /** m404 配置滑条:标签内嵌当前值;拖动实时刷标签,松手/键盘步进才发 config set(防拖动刷命令);
+     *  推值后回写右侧输入框保持同步。SliderWidget 构造器与 applyValue/updateMessage 已核 yarn 1.21.1。 */
+    private class CfgSlider extends SliderWidget {
+        private final Sld s;
+        private String lastSent;
+
+        CfgSlider(int x, int y, int w, int h, Sld s, double cur) {
+            super(x, y, w, h, Text.literal(""),
+                    (Math.max(s.min(), Math.min(s.max(), cur)) - s.min()) / (s.max() - s.min()));
+            this.s = s;
+            this.lastSent = fmtVal(cur, s.dec());
+            updateMessage();
+        }
+
+        private String fmt() {
+            return fmtVal(s.min() + this.value * (s.max() - s.min()), s.dec());
+        }
+
+        @Override
+        protected void updateMessage() {
+            setMessage(Text.literal(s.label() + " " + fmt()));
+        }
+
+        @Override
+        protected void applyValue() { /* 拖动中只刷标签(updateMessage),落值在 push() */ }
+
+        private void push() {
+            String v = fmt();
+            if (v.equals(lastSent)) return;
+            lastSent = v;
+            cfgApply(s.key(), v);
+            for (Object[] pair : numFields) {           // 回写配对输入框
+                if (pair[0] == s) ((TextFieldWidget) pair[1]).setText(v);
+            }
+        }
+
+        @Override
+        public void onRelease(double mouseX, double mouseY) {
+            super.onRelease(mouseX, mouseY);
+            push();
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            boolean r = super.keyPressed(keyCode, scanCode, modifiers);
+            if (r) push();
+            return r;
+        }
+    }
+
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         this.renderBackground(ctx, mouseX, mouseY, delta);
         super.render(ctx, mouseX, mouseY, delta);
 
         ctx.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("◆ 视觉设置 · " + PAGES[page].tab() + " ◆").formatted(Formatting.GOLD),
+                Text.literal("◆ 视觉设置 · " + (page < PAGES.length ? PAGES[page].tab() : "数值微调") + " ◆").formatted(Formatting.GOLD),
                 this.width / 2, 12, 0xFFFFD700);
 
         int gridW = COLS * BTN_W + (COLS - 1) * GAP_X;
