@@ -85,6 +85,7 @@ public class QuestBookScreen extends Screen {
         for (int i = 0; i < tabNames.size(); i++) {
             final int pg = tabPages.get(i);
             ButtonWidget tab = ButtonWidget.builder(Text.literal(tabNames.get(i)), b -> {
+                TabSwitchFx.trigger(this, pg - this.page);   // m391 页签过渡(节点点选不接,只做页签)
                 this.page = pg;
                 this.selected = pg == 0 ? Math.min(DATA == null ? 0 : DATA.stage(), MainQuestLine.STAGES.length - 1)
                         : pg == 1 ? Math.min(DATA == null ? 0 : DATA.trialStage(), MainQuestLine.TRIALS.length - 1)

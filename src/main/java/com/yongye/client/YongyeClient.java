@@ -345,6 +345,8 @@ public class YongyeClient implements ClientModInitializer {
         HurtDirectionManager.register();
         // m375 UI 动效底座:本模组全部界面开场 150ms 淡入(按钮三件套动效在 YongyeButton 自身)
         ScreenOpenFx.register();
+        // m391 页签切换过渡:各页签点击处显式 trigger,这里只挂 resize 自愈钩子(见类注释)
+        TabSwitchFx.register();
         // m376 稀有掉落光柱:纯客户端扫描附近掉落物按品质起光柱(蓝/紫/金)
         LootBeamManager.register();
         // m377 永夜氛围粒子:等级≥1 空中飘灰烬/白烬,越深越浓(纯客户端本地零流量)

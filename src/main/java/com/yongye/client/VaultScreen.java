@@ -79,9 +79,9 @@ public class VaultScreen extends Screen {
         int py = y0 + 24 + PER_PAGE * 18 + 6;
         if (maxPage > 0) {
             ButtonWidget prev = new YongyeButton(x0, py, 30, 15, Text.literal("◀"),
-                    b -> { if (page > 0) { page--; clearAndInit(); } });
+                    b -> { if (page > 0) { TabSwitchFx.trigger(this, -1); page--; clearAndInit(); } }); // m391
             ButtonWidget next = new YongyeButton(x0 + 262, py, 30, 15, Text.literal("▶"),
-                    b -> { if (page < maxPage) { page++; clearAndInit(); } });
+                    b -> { if (page < maxPage) { TabSwitchFx.trigger(this, 1); page++; clearAndInit(); } }); // m391
             prev.active = page > 0;
             next.active = page < maxPage;
             addDrawableChild(prev);

@@ -263,6 +263,7 @@ public class DebugScreen extends Screen {
             final int idx = i;
             int tx = x0 + i * (tabW + tabGap);
             ButtonWidget tab = ButtonWidget.builder(Text.literal(PAGES[i].tab()), b -> {
+                TabSwitchFx.trigger(this, idx - this.page);  // m391 页签过渡(方向=新-旧,clearAndInit 前调)
                 this.page = idx;
                 this.clearAndInit();  // 1.21.1 标准:清空子控件并重跑 init() 重建为新页
             }).dimensions(tx, tabY, tabW, tabH).build();

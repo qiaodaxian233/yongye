@@ -3122,3 +3122,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 ## m390 附:CI 双绿入册(2026-07-31)
 - m389(fa864f5)与 m390(c3c2510)两次云端构建 conclusion 均 success;m390 升级后工作流首跑全步骤 success(检出/JDK21/构建/上传产物),jar 工件正常产出。
 - m389 唯一待编译验证点 ItemStack.copyWithCount(method_46651)随 CI 编译通过,**待编译验证清零**;两里程碑余下全部为实机验证项(盯点见各自 DEVLOG 条目)。
+
+## m391 界面页签切换过渡(3A 打磨路线图第 8 项,2026-07-31)
+- **换页有过程感**:页签点击重建内容时,整屏内容 120ms 从切换方向轻移 14px 滑入(ease-out)+一层由暗到透的薄纱(峰值 ~35% 主题深蓝黑,比开屏罩 140 淡得多高频点击不闷)——「啪一下换页」变「翻过去」;方向感=新页在右从右滑入、在左从左滑入(仓库翻页 ◀▶ 同理),纯渲染层零改布局零改逻辑。
+- **接线口径(本轮的关键发现,已核 Fabric 1.21.1 真源码入册)**:clearAndInit() 走无参 init(),而 Fabric AFTER_INIT 只 @Inject 在 init(MC,II) 与 resize 两处(ScreenMixin 逐字核过)——**页签切换根本不触发 AFTER_INIT**,m375 ScreenOpenFx 注释里「clearAndInit 重进 init 会叠注册」的假设不成立(无害假设=开屏罩本就只该开屏播,顺手勘误);所以过渡必须在页签点击处显式 TabSwitchFx.trigger(this, 新页-旧页),本轮接五屏六点=DebugScreen/VisualFxScreen/QuestBookScreen 顶部页签+VaultScreen ◀▶ 翻页+ClassSelectScreen 职业页签(海报随 sel 切无 clearAndInit 同样吃到)。**刻意不接**:任务书节点点选/数据同步类 clearAndInit(选中反馈不该整屏动)。
+- **resize 自愈**:官方 resize 的 beforeInit 会清空实例级 screen 事件(源码注释核过)——register() 挂全局 AFTER_INIT(开屏与 resize 都触发)把实例从 HOOKED(WeakHashMap 弱引用关屏即收)摘除,下次 trigger 重挂。
+- **矩阵配对安全**:beforeRender push+translate、afterRender 按 pushed 旗标**无条件先 pop 再画薄纱**——配对只认旗标,过渡中途关开关/降质量档也不失衡且立即消(remain() 双门复核归零=「关开关零残留」口径);命中区按真实坐标(m369/m375 同取舍,120ms 内偏移≤14px);背景压暗层同被平移=一侧 14px 短暂浅带被薄纱盖住(取舍已知)。
+- 配置+1(enableTabSwitchFx 默认开),**configVersion 135→136**;设置屏「界面·HUD」UI 动效区加 2 钮。括号自检 8 文件全平;**待编译验证 1(低险)**=ScreenEvents.beforeRender(screen) 实例级事件仓库首用——与 m375 已编过的 afterRender 同类同签名族(官方源码五参已逐字核对),报错删 beforeRender 段=只损失滑动、薄纱淡入照常。
+- 实机盯:设置屏左右点页签看内容随方向滑入带薄纱、调试菜单同、任务书三页签同且点节点地图里的节点**不**触发过渡、仓库 ◀▶ 看方向相反、选职界面点职业看海报翻页感、连点页签看过渡重置不叠加、过渡中拉窗口大小看不残留不错位、关「页签过渡」回硬切、质量档 0 全关、GUI Scale 1~4 各看居中不裁。

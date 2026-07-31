@@ -160,6 +160,8 @@ public class VisualFxScreen extends Screen {
                     new Section("UI 动效(界面淡入 / 按钮悬停过渡·按压下沉·入场上浮)", new Btn[]{
                             new Btn("UI动效·开", "yongye config set enableUiFx true"),
                             new Btn("UI动效·关", "yongye config set enableUiFx false"),
+                            new Btn("页签过渡·开", "yongye config set enableTabSwitchFx true"),
+                            new Btn("页签过渡·关", "yongye config set enableTabSwitchFx false"),
                     }),
                     new Section("技能CD常显(R/G/V·大招·小技能,m353 玻璃芯片)", new Btn[]{
                             new Btn("CD显示·开", "yongye config set enableSkillCdHud true"),
@@ -222,6 +224,7 @@ public class VisualFxScreen extends Screen {
             final int idx = i;
             int tx = x0 + i * (tabW + tabGap);
             ButtonWidget tab = ButtonWidget.builder(Text.literal(PAGES[i].tab()), b -> {
+                TabSwitchFx.trigger(this, idx - this.page);  // m391 页签过渡
                 this.page = idx;
                 this.clearAndInit();
             }).dimensions(tx, tabY, tabW, tabH).build();

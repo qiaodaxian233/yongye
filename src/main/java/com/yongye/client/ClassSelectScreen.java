@@ -69,7 +69,10 @@ public class ClassSelectScreen extends Screen {
         for (int i = 0; i < classes.length; i++) {
             final int idx = i;
             tabs[i] = new YongyeButton(x0 + i * (tw + gap), tabY, tw, th,
-                    Text.literal(classes[i].cn), b -> this.sel = idx);
+                    Text.literal(classes[i].cn), b -> {
+                        TabSwitchFx.trigger(this, idx - this.sel);   // m391 页签过渡(海报随 sel 切,滑动+薄纱)
+                        this.sel = idx;
+                    });
             addDrawableChild(tabs[i]);
         }
         // 确认钮:页签行正下方,文案自带「不可更改」提示
