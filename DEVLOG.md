@@ -3118,3 +3118,7 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 病根=GitHub Actions 提示 checkout@v4/setup-java@v4/upload-artifact@v4 面向 Node.js 20,runner 正在强制 Node.js 24,产生维护警告(不影响构建结果但迟早断供)。
 - 修=三 Action 升官方当前主版本 **checkout@v7 / setup-java@v5 / upload-artifact@v7**;版本号不瞎猜——经 api.github.com 的 releases/latest 与 tags 双通道核实(checkout v7.0.1/setup-java v5.6.0/upload-artifact v7.0.1,浮动主标签 v7/v5/v7 均真实存在),按惯例钉浮动主标签自动吃补丁版。
 - 纯 CI 配置零 Java 零资源,configVersion 仍 135;本次推送触发的工作流即为升级后首跑=自证验证,盯 conclusion=success 且日志无 Node 版本警告。
+
+## m390 附:CI 双绿入册(2026-07-31)
+- m389(fa864f5)与 m390(c3c2510)两次云端构建 conclusion 均 success;m390 升级后工作流首跑全步骤 success(检出/JDK21/构建/上传产物),jar 工件正常产出。
+- m389 唯一待编译验证点 ItemStack.copyWithCount(method_46651)随 CI 编译通过,**待编译验证清零**;两里程碑余下全部为实机验证项(盯点见各自 DEVLOG 条目)。
