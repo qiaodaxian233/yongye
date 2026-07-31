@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 138; // m394 背挂微调+4 · m393 HUD微动效+1 · m391 页签过渡+1 · m388 永夜音景+2 · m387 讨伐演出+1 · m386 拾取通知卡+1 · m385 怪物微型血条+1 · m384 死亡转场+1 · m383 命中音分层+1 · m382 多杀弹字+1 · m381 特效质量档+1 · m380 永夜转场+3 · m377 永夜氛围粒子+2 · m376 掉落光柱+1 · m375 UI动效+1 · m374 受击方向指示+1 · m373 伤害飘字+2 · m367 肉盾脱战回盾+1 · m366 猎杀勋章+9 · m365 血条缩放+1 · m364 每日悬赏+9 · m363 渐进解锁+1 · m361 主线目标常显+1 · m359 强化直供+1 · m357 自动存/学书直供+2 · m356 材料仓库+1 · m352 事件天象+1 · m351 BOSS图鉴页+1 · m350 任务书节点地图+1 · m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 139; // m397 站姿默认关(版本门迁移) · m394 背挂微调+4 · m393 HUD微动效+1 · m391 页签过渡+1 · m388 永夜音景+2 · m387 讨伐演出+1 · m386 拾取通知卡+1 · m385 怪物微型血条+1 · m384 死亡转场+1 · m383 命中音分层+1 · m382 多杀弹字+1 · m381 特效质量档+1 · m380 永夜转场+3 · m377 永夜氛围粒子+2 · m376 掉落光柱+1 · m375 UI动效+1 · m374 受击方向指示+1 · m373 伤害飘字+2 · m367 肉盾脱战回盾+1 · m366 猎杀勋章+9 · m365 血条缩放+1 · m364 每日悬赏+9 · m363 渐进解锁+1 · m361 主线目标常显+1 · m359 强化直供+1 · m357 自动存/学书直供+2 · m356 材料仓库+1 · m352 事件天象+1 · m351 BOSS图鉴页+1 · m350 任务书节点地图+1 · m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -1435,10 +1435,11 @@ public class YongyeConfig {
      *  开=本地玩家挥砍播放七式真动作(程序化姿态自动让位);关=回 m243 程序化姿态。动作 JSON 在
      *  assets/yongye/player_animations/,游戏内 F3+T 重载资源即可热调参。 */
     public boolean slashFxAnimLib = true;
-    /** m260:持械战斗站姿(Epic Fight 感:手持武器=备战架势循环动画,只动上身不影响走跑)。 */
-    public boolean slashFxBattleStance = true;
-    /** m260:格挡姿态(按住右键格挡时武器横举护体的循环动画;法杖不参与)。 */
-    public boolean slashFxGuardPose = true;
+    /** m260:持械战斗站姿(Epic Fight 感:手持武器=备战架势循环动画,只动上身不影响走跑)。
+     *  m397:默认改关——作者点名「只保留七式,拿武器走路回原版」;想要架势设置屏「武器架势」一键开回。 */
+    public boolean slashFxBattleStance = false;
+    /** m260:格挡姿态(按住右键格挡时武器横举护体的循环动画;法杖不参与)。m397 随站姿默认改关。 */
+    public boolean slashFxGuardPose = false;
     /** 第三人称拔刀姿态幅度倍率(m248,0.3~2.5 生效钳制;1=旧版幅度,默认 1.35 更夸张跟手,嫌浮夸调回 1)。 */
     public double slashFxPoseScale = 1.35;
     /** m256:贴图化刀光(拉丝质感刀身+旧纯色带降档当辉光,学 EpicACG 路线);关=回纯色刀光。 */
@@ -1540,6 +1541,13 @@ public class YongyeConfig {
                 if (INSTANCE.wildDragonMinDay == 10 || INSTANCE.wildDragonMinDay == 5) INSTANCE.wildDragonMinDay = 9;
                 if (INSTANCE.anubisMinDay == 5) INSTANCE.anubisMinDay = 10;
                 if (INSTANCE.anubisBaseHealth == 1.0E6) INSTANCE.anubisBaseHealth = 1.5E6;
+                // m397:站姿默认改版 开→关(作者点名「只保留七式,持械走路回原版」)。布尔翻转必须
+                // 按版本门迁移——不加版本门的话每次启动都会把用户重新打开的开关又关掉(值判等区分不了
+                // 「沿用旧默认」与「用户主动开」,按作者决定统一关一次,之后设置屏开回即长期生效)。
+                if (INSTANCE.configVersion < 139) {
+                    INSTANCE.slashFxBattleStance = false;
+                    INSTANCE.slashFxGuardPose = false;
+                }
                 if (INSTANCE.phoenixBaseHealth == 4.0E5) INSTANCE.phoenixBaseHealth = 6.0E5;
                 if (INSTANCE.deathMageBaseHealth == 3.0E5) INSTANCE.deathMageBaseHealth = 4.5E5;
                 if (INSTANCE.redSpiderBaseHealth == 2.5E5) INSTANCE.redSpiderBaseHealth = 3.75E5;
