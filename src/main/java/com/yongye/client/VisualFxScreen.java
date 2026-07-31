@@ -120,6 +120,10 @@ public class VisualFxScreen extends Screen {
             }),
             // m358 界面·HUD 页(作者:「技能CD能不能在设置里调整」)——即点即改,HUD 每帧读配置立即生效
             new Page("界面·HUD", new Section[]{
+                    new Section("UI 动效(界面淡入 / 按钮悬停过渡·按压下沉·入场上浮)", new Btn[]{
+                            new Btn("UI动效·开", "yongye config set enableUiFx true"),
+                            new Btn("UI动效·关", "yongye config set enableUiFx false"),
+                    }),
                     new Section("技能CD常显(R/G/V·大招·小技能,m353 玻璃芯片)", new Btn[]{
                             new Btn("CD显示·开", "yongye config set enableSkillCdHud true"),
                             new Btn("CD显示·关", "yongye config set enableSkillCdHud false"),

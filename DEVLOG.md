@@ -3001,3 +3001,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **PVP 也给**:被玩家打同样弹指示(知道方向是防御信息,不算打击感偏袒)。来源贴脸重叠(<0.1 格)方位无意义不画。
 - 配置+1(enableHurtDirectionFx 默认开),**configVersion 122→123**;设置屏「镜头·特效」页加开/关 2 钮。括号自检 7 文件全平;零新 API 零待编译验证(HudRenderCallback 全限定名在树×3、RotationAxis/fill/getScaledWindowWidth 全在树)。
 - 实机盯:背后被僵尸摸一下看准星后方弹红弧、转身弧段跟着转到正前、被弓手远程射看弧指向弓手、格挡住的攻击不出弧、贴脸苦力怕自爆不出(无方位)、关开关绝迹。
+
+## m375 UI 动效底座(3A 打磨路线图第 3 项,2026-07-30)
+- **按钮三件套(YongyeButton 自包含,全部用它的界面自动吃到)**:①悬停过渡=进/出悬停时底/描边/文字 110ms 逐通道 ARGB 插值渐变不再硬切;②按压反馈=onPress 覆写记时刻(yarn 已核 ButtonWidget.method_25306 onPress()V),按下 90ms 内容下沉 1px+底色压暗+高光熄灭(点击音沿用 ButtonWidget 原版=天然统一);③入场动效=构造后 150ms 从下方 5px 上浮+淡入 ease-out——走 clearAndInit 重建按钮的界面(背包列/设置页签切换)自动获得开场动效。三者纯视觉,命中区按真实坐标(m369 同取舍)。alpha 全走 mulAlpha 钳 ≥8(<0x04 强制不透明坑)。
+- **界面开场淡入(新 ScreenOpenFx,一处接线零逐界面改)**:AFTER_INIT 判屏幕类包名 com.yongye. → 给该实例注册 afterRender 画 150ms 由暗到透整屏罩(峰值 55% 主题深蓝黑,ease-out),实例级回调随屏幕关闭失效不泄漏;clearAndInit 重进 init 会叠注册,旧回调超时即早退无害。原版界面不碰。
+- 配置+1(enableUiFx 默认开,关=按钮硬切+无淡入全回旧),**configVersion 123→124**;设置屏「界面·HUD」页顶加 UI 动效开/关 2 钮。括号自检 5 文件全平。
+- **待编译验证 1(低险)**:ScreenEvents.afterRender(screen) 实例级事件+回调五参签名(与在树 AFTER_INIT 同类同包,官方 screen API v1 自 1.16 稳定;报错删 ScreenOpenFx.register() 内 afterRender 段=只损失界面淡入,按钮动效独立不受影响)。
+- 实机盯:开背包看左列按钮浮现、鼠标扫过按钮渐亮离开渐灭、点按钮看下沉一闪、开任务书/设置屏看整屏淡入、设置页签切换按钮重新浮现、关 UI动效 全部回旧静态。

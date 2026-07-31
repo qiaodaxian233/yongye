@@ -334,6 +334,8 @@ public class YongyeClient implements ClientModInitializer {
                 context.client().execute(() -> HurtDirectionManager.onHurt(
                         payload.x(), payload.z(), payload.severity())));
         HurtDirectionManager.register();
+        // m375 UI 动效底座:本模组全部界面开场 150ms 淡入(按钮三件套动效在 YongyeButton 自身)
+        ScreenOpenFx.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->
