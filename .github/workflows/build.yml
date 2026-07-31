@@ -1,4 +1,6 @@
-# 夜蚀 CI 自动构建(m344 引入方案,m349 落地):push/PR 到 main 即云端 gradle build 并上传 jar 工件。
+# 夜蚀 CI 自动构建(m344 引入方案,m349 落地;m390 三 Action 升级至官方当前主版本 checkout@v7/setup-java@v5/upload-artifact@v7,
+# 消除 runner 强制 Node.js 24 而 v4 面向 Node.js 20 的维护警告,版本号经 api.github.com releases/latest 与 tags 双核实):
+# push/PR 到 main 即云端 gradle build 并上传 jar 工件。
 # AI 会话推送后轮询 api.github.com/repos/qiaodaxian233/yongye/actions/runs 查 conclusion,
 # failure 时拉该 run 的 jobs 日志定位报错——沙盒无法编译的死穴由此补上,编译验证不再依赖作者手动 build。
 name: build
@@ -13,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 安装 JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -29,7 +31,7 @@ jobs:
 
       - name: 上传构建产物 jar
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: yongye-jar
           path: build/libs/*.jar

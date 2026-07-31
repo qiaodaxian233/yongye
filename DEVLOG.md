@@ -3113,3 +3113,8 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **⑥过期说明清理(POLISH_ROADMAP)**:第 22 项「飘字同 tick 合并需协议变更暂裁」已过期——targetId 已于 m385 补进 DamageNumberPayload,改「协议缺口已清,待第 14 项或压力优化时实现合并窗口」;第 18 项措辞按实际实现改「重要全屏演出避让(m388=永夜转场+讨伐演出;BOSS 入场/持续音乐的真 ducking 留 27 号并发管理器)」。
 - 括号自检 6 文件全平;关键符号脚本替换后 grep 回验全中(m300a 教训);待编译验证 1(极低险)=ItemStack.copyWithCount(I) 仓库首用(yarn 已核 method_46651,报错换 copy()+setCount 两行退)。本轮是修补不是验收,m373~m388 各项 🧪 状态不动;实机验收冲刺照评审分组:转场组 6/11/16、战斗组 1/2/7/9/13、掉落组 4/15、环境与性能组 5/18/22、UI 组 3,通过逐项 🧪→✅。
 - 实机盯(本轮增量):捡两把同名不同强化武器看出两张独立卡且名字/图标对、强化手里武器看不弹「获得」卡、用稀有工具掉耐久看不误报、砍一群怪出血条后去下界回来看无残条、打未改名的五类 BOSS 看头顶不出小条(走画框大条)、打毒蛛/巨蟹看紫精英条、讨伐演出中途关开关看字幕立即消、超长名 BOSS 看副标不出屏、换维度刚受过伤看新维度环境音不被旧抑制吞、点质量档低看血条上限照缩。
+
+## m390 CI 三 Action 升级维护(评审附带项,2026-07-31)
+- 病根=GitHub Actions 提示 checkout@v4/setup-java@v4/upload-artifact@v4 面向 Node.js 20,runner 正在强制 Node.js 24,产生维护警告(不影响构建结果但迟早断供)。
+- 修=三 Action 升官方当前主版本 **checkout@v7 / setup-java@v5 / upload-artifact@v7**;版本号不瞎猜——经 api.github.com 的 releases/latest 与 tags 双通道核实(checkout v7.0.1/setup-java v5.6.0/upload-artifact v7.0.1,浮动主标签 v7/v5/v7 均真实存在),按惯例钉浮动主标签自动吃补丁版。
+- 纯 CI 配置零 Java 零资源,configVersion 仍 135;本次推送触发的工作流即为升级后首跑=自证验证,盯 conclusion=success 且日志无 Node 版本警告。
