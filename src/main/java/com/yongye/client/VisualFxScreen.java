@@ -94,6 +94,8 @@ public class VisualFxScreen extends Screen {
                             new Btn("转场·重1.5", "yongye config set transitionIntensity 1.5"),
                             new Btn("弱闪光·开", "yongye config set reduceScreenFlash true"),
                             new Btn("弱闪光·关", "yongye config set reduceScreenFlash false"),
+                            new Btn("多杀弹字·开", "yongye config set enableMultiKillFx true"),
+                            new Btn("多杀弹字·关", "yongye config set enableMultiKillFx false"),
                     }),
                     new Section("刀光(斩击轨迹)", new Btn[]{
                             new Btn("刀光·开", "yongye config set enableSlashFx true"),

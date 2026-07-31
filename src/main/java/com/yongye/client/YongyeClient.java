@@ -322,9 +322,13 @@ public class YongyeClient implements ClientModInitializer {
 
         // m239 沉浸式战斗手感:收命中/击杀 FX 包 → 置入镜头震动/FOV 顿挫/闪光/确认音
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.CombatFxPayload.ID, (payload, context) ->
-                context.client().execute(() -> CombatFxManager.onFx(
-                        payload.kind(), payload.shake(), payload.fov(), payload.flash(), payload.sound(),
-                        payload.hitstop())));
+                context.client().execute(() -> {
+                    CombatFxManager.onFx(
+                            payload.kind(), payload.shake(), payload.fov(), payload.flash(), payload.sound(),
+                            payload.hitstop());
+                    // m382 多杀连锁:击杀信号复用 KILL 包,客户端本地滚动窗口计链
+                    if (payload.kind() == com.yongye.network.CombatFxPayload.KILL) MultiKillFx.onKill();
+                }));
         ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
         // m373 伤害飘字:收命中数值 → 世界内怪身上弹漂浮数字(普通白/重击金大字)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.DamageNumberPayload.ID, (payload, context) ->
@@ -344,6 +348,8 @@ public class YongyeClient implements ClientModInitializer {
         NightAmbientFx.register();
         // m380 永夜升级/消退转场演出(六边界口径见 NightfallTransitionFx 类注释)
         NightfallTransitionFx.register();
+        // m382 击杀连锁演出:双杀/三杀/…中屏弹字+升调音(零新网络,复用 KILL 包)
+        MultiKillFx.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->
@@ -909,7 +915,7 @@ public class YongyeClient implements ClientModInitializer {
     }
 
     /** m284:档位色十档(白→黄→金→橙红→亮紫→青→天蓝→品红→血红→白金),50 连(10 档)以上彩虹流转。 */
-    private static int comboColor(int tier) {
+    static int comboColor(int tier) { // m382:放宽包内可见,MultiKillFx 复用十档色表
         if (tier >= 10) {   // 彩虹流转:色相随时间循环,复用在树 hsvToRgb
             float hue = (System.currentTimeMillis() % 1800L) / 1800.0f;
             return 0xFF000000 | hsvToRgb(hue, 1.0f, 1.0f);
