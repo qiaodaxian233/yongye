@@ -338,6 +338,8 @@ public class YongyeClient implements ClientModInitializer {
         ScreenOpenFx.register();
         // m376 稀有掉落光柱:纯客户端扫描附近掉落物按品质起光柱(蓝/紫/金)
         LootBeamManager.register();
+        // m377 永夜氛围粒子:等级≥1 空中飘灰烬/白烬,越深越浓(纯客户端本地零流量)
+        NightAmbientFx.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->

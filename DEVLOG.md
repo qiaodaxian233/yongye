@@ -3017,3 +3017,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **待编译验证 2(低险,yarn 已核)**:ClientWorld.getEntities()=method_18112 返 Iterable、ItemStack.getRarity()=method_7932——均仓库首用,报错只在 scan() 两行,删之=功能整体退场无连带。
 - **裁剪说明**:路线图里"入包确认音分档"这半句先不做(要挂拾取事件另一 API 面),观感主体是光柱;作者要的话下轮点名单独加。
 - 实机盯:杀精英掉紫史诗物看紫柱、BOSS 掉宝箱/职业武器看金柱更粗、扔一颗 1 万级强化石看紫柱/百万级金柱、柱子呼吸自转顶端渐隐、捡走柱灭、64 格外走近才亮、关开关全灭。
+
+## m377 永夜环境氛围粒子(3A 打磨路线图第 5 项,2026-07-30)
+- **空气里有末世**:永夜等级≥1 玩家四周空中飘灰烬(90% ASH+10% WHITE_ASH 出层次),等级越高越浓——每 tick min(14, 2+等级×2)×浓度倍率颗(等级1≈4/t、5≈12、深渊封顶 14,远低于原版雨雪量级);落点=水平 4~18 格环带(贴脸 4 格不撒防糊镜头)+垂直 -2~+10 格;粒子是原版 ambient 型自带漂移。
+- **纯客户端本地零流量**(m310 僵尸紫光同一路子):等级读 YongyeClient.nightfallLevel(NightfallSyncPayload 现成同步零新包);照常被 ParticleReducerMixin 全局闸管到,预算自觉。
+- 配置+2(enableNightAmbientParticles 默认开/nightAmbientDensity 默认 1.0 钳 0~3),**configVersion 125→126**;设置屏「镜头·特效」页粒子区加 5 钮(开/关+淡0.5/默认1/浓1.5)。括号自检 4 文件全平。
+- 零新 API 零待编译验证:ClientTickEvents/addParticle/ParticleTypes 全在树(MobAura WITCH 先例);ASH/WHITE_ASH 与在树 CRIT/CLOUD 同档 SimpleParticleType 常量。
+- 实机盯:/yongye nightfall 1 看空中开始飘灰、拉到 3/5 看变浓、贴脸无粒子不糊镜头、设置屏点浓淡即变、等级归 0 即停、关开关绝迹。

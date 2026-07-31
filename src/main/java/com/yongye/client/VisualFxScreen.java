@@ -63,6 +63,11 @@ public class VisualFxScreen extends Screen {
                     new Section("闪光 / 粒子 / 音效", new Btn[]{
                             new Btn("战斗粒子·开", "yongye config set combatFxParticles true"),
                             new Btn("战斗粒子·关", "yongye config set combatFxParticles false"),
+                            new Btn("夜尘·开", "yongye config set enableNightAmbientParticles true"),
+                            new Btn("夜尘·关", "yongye config set enableNightAmbientParticles false"),
+                            new Btn("夜尘·淡0.5", "yongye config set nightAmbientDensity 0.5"),
+                            new Btn("夜尘·默认1", "yongye config set nightAmbientDensity 1.0"),
+                            new Btn("夜尘·浓1.5", "yongye config set nightAmbientDensity 1.5"),
                             new Btn("击杀闪光·开", "yongye config set combatFxKillFlash true"),
                             new Btn("击杀闪光·关", "yongye config set combatFxKillFlash false"),
                             new Btn("击杀音效·开", "yongye config set combatFxKillSound true"),
