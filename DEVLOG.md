@@ -3008,3 +3008,12 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 配置+1(enableUiFx 默认开,关=按钮硬切+无淡入全回旧),**configVersion 123→124**;设置屏「界面·HUD」页顶加 UI 动效开/关 2 钮。括号自检 5 文件全平。
 - **待编译验证 1(低险)**:ScreenEvents.afterRender(screen) 实例级事件+回调五参签名(与在树 AFTER_INIT 同类同包,官方 screen API v1 自 1.16 稳定;报错删 ScreenOpenFx.register() 内 afterRender 段=只损失界面淡入,按钮动效独立不受影响)。
 - 实机盯:开背包看左列按钮浮现、鼠标扫过按钮渐亮离开渐灭、点按钮看下沉一闪、开任务书/设置屏看整屏淡入、设置页签切换按钮重新浮现、关 UI动效 全部回旧静态。
+
+## m376 稀有掉落光柱(3A 打磨路线图第 4 项,2026-07-30)
+- **地上好货一眼锁定**:稀有掉落物起品质色光柱(蓝=稀有/紫=史诗/金=传说),两组十字交叉竖面(内芯亮+2.6 倍宽淡外圈)顶端渐隐、呼吸脉动按实体 id 错相、20 秒一圈缓慢自转、底部菱形光晕;传说档更粗更亮。
+- **纯客户端零插桩**:不给任何掉落点(LootHandler/BossHandler/宝箱/石掉落…十几处)插桩——每 10 客户端 tick 扫附近 ItemEntity(掉落物客户端天然同步)按物品定级,64 格外不扫、同屏 24 根上限;渲染 AFTER_TRANSLUCENT+getLightning(位置+颜色附加混合,m240 起在树已编)。
+- **定级口径**:职业武器/神器/战利品宝箱=金;强化石 tier≥7(百万级)金、≥4(千级)紫;其余按原版 Rarity:EPIC 紫/RARE 蓝/更低不起柱(本模组物品注册普遍带 rarity 天然覆盖,EnhanceStoneItem.tier 字段 public 在树)。
+- 配置+1(enableLootBeam 默认开),**configVersion 124→125**;设置屏「镜头·特效」页加开/关 2 钮。括号自检 4 文件全平;import 全在树。
+- **待编译验证 2(低险,yarn 已核)**:ClientWorld.getEntities()=method_18112 返 Iterable、ItemStack.getRarity()=method_7932——均仓库首用,报错只在 scan() 两行,删之=功能整体退场无连带。
+- **裁剪说明**:路线图里"入包确认音分档"这半句先不做(要挂拾取事件另一 API 面),观感主体是光柱;作者要的话下轮点名单独加。
+- 实机盯:杀精英掉紫史诗物看紫柱、BOSS 掉宝箱/职业武器看金柱更粗、扔一颗 1 万级强化石看紫柱/百万级金柱、柱子呼吸自转顶端渐隐、捡走柱灭、64 格外走近才亮、关开关全灭。
