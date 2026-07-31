@@ -32,17 +32,15 @@ public class AccessoryScreen extends HandledScreen<AccessoryScreenHandler> {
     protected void drawBackground(DrawContext ctx, float delta, int mouseX, int mouseY) {
         int x = this.x;
         int y = this.y;
-        // 自定义背景图(176x158);缺失时不影响——槽位描边照画
+        // m392:背景图按真实槽位程序化重绘(玻璃蓝面板+神器区/鞘翅区/背包区衬板+全部槽位凹槽
+        // 已烘进 176×158 贴图,坐标与 AccessoryScreenHandler 一一对应)——撤掉旧的代码平灰槽位
+        // 覆盖(旧写法把贴图槽位区全盖死,贴图形同虚设=占位没做的病根)。
         ctx.drawTexture(BG, x, y, 0, 0, backgroundWidth, backgroundHeight, backgroundWidth, backgroundHeight);
         for (Slot s : this.handler.slots) {
-            // 第 11 槽(鞘翅格)固定在 x=152,y=28(见 ScreenHandler);用坐标识别
-            boolean isWingSlot = (s.x == 152 && s.y == 28);
-            int border = isWingSlot ? 0xFF8B0000 : 0xFF8B8B8B;  // 鞘翅格暗红边
-            ctx.fill(x + s.x - 1, y + s.y - 1, x + s.x + 17, y + s.y + 17, border);
-            ctx.fill(x + s.x, y + s.y, x + s.x + 16, y + s.y + 16, 0xFF373737);
-            if (isWingSlot && !s.hasStack()) {
+            // 第 11 槽(鞘翅格,x=152/y=28)空置时保留「翼」占位提示(凹槽本体在贴图里,亮红提对比)
+            if (s.x == 152 && s.y == 28 && !s.hasStack()) {
                 ctx.drawText(this.textRenderer, net.minecraft.text.Text.literal("翼"),
-                        x + s.x + 4, y + s.y + 4, 0xFF6B0000, false);
+                        x + s.x + 4, y + s.y + 4, 0xFFB35A5A, false);
             }
         }
     }
