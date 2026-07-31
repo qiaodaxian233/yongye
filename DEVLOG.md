@@ -3085,3 +3085,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **过程纠错入册**:初版写了 trimToString,拉 yarn 映射核出正名 **trimToWidth(String,int)=method_27523**,推送前已改——「新方法先核映射」这条铁律又接住一次。
 - 配置+1,**configVersion 132→133**;设置屏 2 钮。括号自检 5 文件全平;drawItem/getInventory/getStack/fill 全在树。
 - 实机盯:杀精英捡紫装看右缘滑入紫卡、一次捡 3 颗同款强化石看 ×3 合并、背包塞满再捡看不提示、丢地上让队友捡看不提示、连捡 6 种看只留 5 张且金档不被挤、进服那一刻不刷屏、关开关绝迹。
+
+## m387 BOSS 讨伐终结演出(3A 打磨第 16 项,按评审红线,2026-07-30)
+- **杀 BOSS 那一刀有牌面**:金色闪光 400ms(reduceScreenFlash 减半)+「◆ 讨伐成功 ◆」金色大字缩放冲击 2.4→1.8 落位+BOSS 名白色副标+凯旋升级音,共 2.2s;顿帧/震屏走 **m275 既有通道加强档**(震 2.4/FOV 3.4/顿帧 6t×倍率,服务端折算配置后发)——**评审红线落地:只作用击杀者客户端,绝不冻结服务端 tick、不影响他人输入**;加强档发 HEAVY 不发 KILL,避免被 MultiKillFx 重复计一次多杀链。
+- **BOSS 识别(isBossKill)**:五皮肤 BOSS 按类(BossRageHandler m274 同口径)+ MobBoss 化怪(IS_BOSS 附件)+ 名牌含 佩恩/BOSS 字面量(「xx BOSS」玩家皮肤 BOSS 一并覆盖);字幕名剥 ‖ 血量后缀(m187 血条协议)。新 BossKillFxPayload 空值兜底空串(writeString(null) 踢连接老坑)。
+- 配置+1(enableBossKillFx 默认开),**configVersion 133→134**;设置屏 2 钮。括号自检 7 文件全平;零新 API(实体类/附件/playSound/矩阵画字全在树)。
+- 实机盯:杀凤凰/阿努比斯看金闪+讨伐成功+名字副标+重顿帧、杀 0.8% BOSS 化僵尸也触发、旁边队友屏幕无演出且操作不卡、弱闪光开着金闪变淡、名字无 ‖数字尾巴、关开关只剩普通击杀反馈。

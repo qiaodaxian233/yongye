@@ -5,6 +5,8 @@ import com.yongye.network.CombatFxPayload;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.player.PlayerEntity;
+import com.yongye.registry.ModAttachments;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.AbstractSkeletonEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundCategory;
@@ -139,6 +141,22 @@ public final class CombatFxHandler {
                 sw.spawnParticles(ParticleTypes.CRIT,
                         entity.getX(), entity.getBodyY(0.6), entity.getZ(), 16, 0.5, 0.5, 0.5, 0.3);
             }
+
+            // —— m387 BOSS 讨伐终结演出:只作用击杀者客户端(评审红线:不冻服务端 tick 不碰他人输入)——
+            //    顿帧/震屏走 m275 既有通道加强档(HEAVY 档,避免 KILL 档被 MultiKillFx 重复计链);
+            //    金闪/字幕/凯旋音走新 BossKillFxPayload;名字剥 ‖ 血量后缀(m187 血条协议)。
+            if (c.enableBossKillFx && isBossKill(entity)) {
+                float bShake = (float) (2.4f * c.combatFxShakeScale);
+                float bFov   = (float) (3.4f * c.combatFxFovKick);
+                int bStop = c.enableCombatFxHitstop
+                        ? Math.max(1, (int) Math.round(6 * c.combatFxHitstopScale)) : 0;
+                ServerPlayNetworking.send(p, new CombatFxPayload(
+                        CombatFxPayload.HEAVY, bShake, bFov, false, false, bStop));
+                String raw = entity.getName().getString();
+                int cut = raw.indexOf('\u2016');
+                if (cut >= 0) raw = raw.substring(0, cut).trim();
+                ServerPlayNetworking.send(p, new com.yongye.network.BossKillFxPayload(raw));
+            }
         });
 
         // —— m374 受击方向指示:玩家挨打 → 把来源水平坐标发给受击者(观察者,永远放行)。 —— //
@@ -161,6 +179,22 @@ public final class CombatFxHandler {
                     src.getX(), src.getZ(), Math.min(1.0f, severity)));
             return true;
         });
+    }
+
+    /** m387 讨伐演出的 BOSS 识别:五皮肤 BOSS 按类(BossRageHandler m274 同口径)+
+     *  MobBoss 化怪(IS_BOSS 附件)+ 名牌含 佩恩/BOSS 字面量(玩家皮肤 BOSS「xx BOSS」一并覆盖)。 */
+    private static boolean isBossKill(LivingEntity e) {
+        if (e instanceof com.yongye.entity.AnubisEntity
+                || e instanceof com.yongye.entity.ToroEnderDragonEntity
+                || e instanceof com.yongye.entity.FirePhoenixEntity
+                || e instanceof com.yongye.entity.DeathMageEntity
+                || e instanceof com.yongye.entity.RedSpiderEntity) return true;
+        if (e.getAttachedOrElse(ModAttachments.IS_BOSS, false)) return true;
+        if (e.hasCustomName() && e.getCustomName() != null) {
+            String n = e.getCustomName().getString();
+            return n.contains("佩恩") || n.contains("BOSS");
+        }
+        return false;
     }
 
     /** m374 受击方向指示每玩家每 tick 限发条数(被围殴/AOE 弹幕时防包洪)。 */
