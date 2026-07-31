@@ -3024,3 +3024,7 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 配置+2(enableNightAmbientParticles 默认开/nightAmbientDensity 默认 1.0 钳 0~3),**configVersion 125→126**;设置屏「镜头·特效」页粒子区加 5 钮(开/关+淡0.5/默认1/浓1.5)。括号自检 4 文件全平。
 - 零新 API 零待编译验证:ClientTickEvents/addParticle/ParticleTypes 全在树(MobAura WITCH 先例);ASH/WHITE_ASH 与在树 CRIT/CLOUD 同档 SimpleParticleType 常量。
 - 实机盯:/yongye nightfall 1 看空中开始飘灰、拉到 3/5 看变浓、贴脸无粒子不糊镜头、设置屏点浓淡即变、等级归 0 即停、关开关绝迹。
+
+## m378 打磨路线图第二批扩充(作者:「写一个优化列表」,2026-07-30)
+- POLISH_ROADMAP.md 追加第二批 10 项(13~22):怪物微型血条/暴击处决飘字档/拾取通知卡/BOSS 讨伐演出/技能释放光晕/永夜音景/主菜单动效/强化结果演出/天赋加点脉冲/全 FX 统一预算闸;另设「大工程点单区」(疾跑残影/BOSS 慢动作/天气联动)不进常规批。逐项照第一批口径标防重复列。
+- 纯文档,零代码零配置。第一批进度:1~5 已完成(m373~m377),6~12 待做。
