@@ -59,7 +59,12 @@ public final class SlashAnimManager {
         YongyeConfig cfg = YongyeConfig.get();
         var p = mc.player;
         int want = 0;
-        if (p != null && mc.currentScreen == null && SlashFxManager.weaponEligible(p)) {
+        // m396:第一人称一律无架势——playerAnimator 循环姿态会泄漏进第一人称视角,把武器
+        // 横持在脸前(作者截图:巨阙 35 单位长模型=「整屏大刀」;龙魂/混沌刃染色紫/红对上两图)。
+        // 架势本是给第三人称看的 Epic Fight 观感,自己第一人称吃不到收益只吃遮挡;
+        // 门放在 want 计算前=切 F5 即 4t 融入恢复、切回第一人称即 4t 融出,原开关语义不变。
+        boolean firstPerson = mc.options.getPerspective().isFirstPerson();
+        if (!firstPerson && p != null && mc.currentScreen == null && SlashFxManager.weaponEligible(p)) {
             boolean staff = p.getMainHandStack().getItem() instanceof com.yongye.item.ClassWeaponItem cwi
                     && cwi.playerClass == com.yongye.item.PlayerClass.WARLOCK;
             if (cfg.slashFxGuardPose && cfg.enableWeaponGuard && !staff && mc.options.useKey.isPressed()) want = 2;
@@ -84,6 +89,9 @@ public final class SlashAnimManager {
      */
     public static boolean playFor(AbstractClientPlayerEntity player, int variant) {
         if (!YongyeConfig.get().slashFxAnimLib) return false;
+        // m396:第一人称不播真动作(骨骼动画会带动第一人称手臂/武器满屏挥)——返回 false
+        // 走程序化姿态,程序化只改第三人称模型角度,第一人称保持原版挥手,观感干净。
+        if (net.minecraft.client.MinecraftClient.getInstance().options.getPerspective().isFirstPerson()) return false;
         if (variant < 0 || variant >= VARIANT_ANIM.length) return false;
         var playable = PlayerAnimationRegistry.getAnimation(Identifier.of(Yongye.MOD_ID, VARIANT_ANIM[variant]));
         if (playable == null) return false;                       // JSON 没装上/名字对不上,退回程序化姿态

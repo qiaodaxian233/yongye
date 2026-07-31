@@ -135,6 +135,14 @@ public class VisualFxScreen extends Screen {
                             new Btn("幅度·默认1.35", "yongye config set slashFxPoseScale 1.35"),
                             new Btn("姿态幅度1.8", "yongye config set slashFxPoseScale 1.8"),
                     }),
+                    new Section("武器架势(m260 站姿;m396 起仅第三人称生效,第一人称恒原版)", new Btn[]{
+                            new Btn("战斗站姿·开", "yongye config set slashFxBattleStance true"),
+                            new Btn("战斗站姿·关", "yongye config set slashFxBattleStance false"),
+                            new Btn("格挡姿态·开", "yongye config set slashFxGuardPose true"),
+                            new Btn("格挡姿态·关", "yongye config set slashFxGuardPose false"),
+                            new Btn("真动作库·开", "yongye config set slashFxAnimLib true"),
+                            new Btn("真动作库·关", "yongye config set slashFxAnimLib false"),
+                    }),
                     new Section("疾跑姿态(m316 MoBends 式:拧身前扑+泵臂)", new Btn[]{
                             new Btn("跑步姿态·开", "yongye config set sprintPose true"),
                             new Btn("跑步姿态·关", "yongye config set sprintPose false"),
