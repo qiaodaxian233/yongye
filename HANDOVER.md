@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m405 技能CD改方块样式(作者供草图:正方形技能格居中面板上方,仅冷却中显示,格内键位+秒数+自下而上恢复填充,转好绿✔闪即消;skillCdHudStyle 三态,文字列表/玻璃芯片保留),配置 v140→141,详见 DEVLOG m405。
+> 最新:m406 路线图14暴击/处决专属飘字+同目标合并窗口(语义档CRITICAL/EXECUTION进payload协议零变,DamageFxTag同栈打标战斗数值零动,缀字渲染层拼,350ms同怪合并),配置+2 v141→142,详见 DEVLOG m406。路线图剩17/19/20/21+第三批。

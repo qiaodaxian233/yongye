@@ -361,7 +361,7 @@ public class YongyeClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.DamageNumberPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
                     DamageNumberManager.onNumber(
-                            payload.x(), payload.y(), payload.z(), payload.amount(), payload.kind());
+                            payload.x(), payload.y(), payload.z(), payload.amount(), payload.kind(), payload.targetId());
                     MobHealthBarManager.onHit(payload.targetId());   // m385 微型血条追踪同包分发
                 }));
         DamageNumberManager.register();

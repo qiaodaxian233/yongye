@@ -182,6 +182,7 @@ public final class ClassSkillHandler {
                     double atk = p.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
                     float bonus = (float) (atk * Math.max(0.0, cfg.assassinCritBonusFraction));
                     if (bonus > 0) {
+                        DamageFxTag.mark(com.yongye.network.DamageNumberPayload.CRITICAL); // m406 语义档:刺客暴击追伤
                         bonusHit(target, atkSrc, bonus, world);
                         feedback(world, target, ParticleTypes.CRIT, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 1.3f);
                     }

@@ -14,13 +14,13 @@ import net.minecraft.util.Identifier;
  *
  * @param x/y/z  数字出生点(怪物身上)
  * @param amount 这一下的伤害值(服务端真值,客户端只负责显示)
- * @param kind   0=普通命中 1=重击(单刀≥怪最大生命 25%,与 CombatFxPayload.HEAVY 同口径)
+ * @param kind   0=普通命中 1=重击(单刀≥怪最大生命25%) 2=暴击(天赋/刺客追伤,m406) 3=处决(斩杀线终结刀,m406)
  * @param targetId 被命中实体的网络 id(m385 微型血条追踪用;顺手为飘字同目标合并留口)
  */
 public record DamageNumberPayload(double x, double y, double z, float amount, int kind, int targetId)
         implements CustomPayload {
 
-    public static final int HIT = 0, HEAVY = 1;
+    public static final int HIT = 0, HEAVY = 1, CRITICAL = 2, EXECUTION = 3; // m406:语义档进数据结构(渲染层定观感)
 
     public static final CustomPayload.Id<DamageNumberPayload> ID =
             new CustomPayload.Id<>(Identifier.of(Yongye.MOD_ID, "damage_number"));

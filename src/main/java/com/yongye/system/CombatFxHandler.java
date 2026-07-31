@@ -73,11 +73,16 @@ public final class CombatFxHandler {
 
             // —— m373 伤害飘字:每一下命中都弹数字(刻意不吃下方 3t 手感节流——数字漏帧=报假账);
             //    AOE 刷屏由独立的每玩家每 tick 限额兜住,同屏总量客户端 DamageNumberManager 再兜一层。 —— //
+            int fxTag = com.yongye.system.DamageFxTag.consume();   // m406:proc 点同栈打的语义档(0=无)
             if ((c.enableDamageNumbers || c.enableMobHealthBar) && dmgNumBudgetOk(p.getUuid(), now)) {
+                int numKind = fxTag != 0 ? fxTag
+                        : frac >= 0.25f ? com.yongye.network.DamageNumberPayload.HEAVY
+                                        : com.yongye.network.DamageNumberPayload.HIT;
+                // 处决刀名义值 1e7,直显=报假账 → 封成目标当前血量(真实抹掉的量)
+                float shown = numKind == com.yongye.network.DamageNumberPayload.EXECUTION
+                        ? Math.min(amount, entity.getHealth()) : amount;
                 ServerPlayNetworking.send(p, new com.yongye.network.DamageNumberPayload(
-                        entity.getX(), entity.getBodyY(0.9), entity.getZ(), amount,
-                        frac >= 0.25f ? com.yongye.network.DamageNumberPayload.HEAVY
-                                      : com.yongye.network.DamageNumberPayload.HIT,
+                        entity.getX(), entity.getBodyY(0.9), entity.getZ(), shown, numKind,
                         entity.getId()));       // m385:目标 id 供微型血条追踪(两功能任一开即发,客户端各取所需)
             }
 

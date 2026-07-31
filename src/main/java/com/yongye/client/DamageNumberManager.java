@@ -47,9 +47,14 @@ public final class DamageNumberManager {
     /** 渲染距离平方(48 格外不画,仍老化)。 */
     private static final double MAX_DIST_SQ = 48 * 48;
 
-    /** 一条飘字:出生点 + 水平漂移向量(随机散布,防同一怪身上数字叠死)+ 文本 + 类别 + 出生时刻。 */
+    /** 一条飘字:出生点 + 水平漂移向量(随机散布,防同一怪身上数字叠死)+ 文本 + 类别 + 出生时刻
+     *  + 原始数值与目标 id(m406 合并窗口用:同目标短窗内新伤并进旧条,记录不可变=原位整条替换)。 */
     private record Num(double x, double y, double z, double dx, double dz,
-                       String text, int kind, long bornNanos) {}
+                       String text, int kind, long bornNanos, float amount, int targetId) {}
+
+    /** m406 同目标合并窗口:出生后此毫秒数内,同 targetId 的新伤并入本条(数值累加/档位取高/文本重排),
+     *  超窗才另起新条——AOE 连跳与暴击尾刀不再在同一只怪身上叠一摞小字。 */
+    private static final long MERGE_MS = 350;
 
     private static final List<Num> NUMS = new ArrayList<>();
     private static final Random RAND = new Random();
@@ -60,17 +65,34 @@ public final class DamageNumberManager {
     }
 
     /** 收包入口(主线程)。 */
-    public static void onNumber(double x, double y, double z, float amount, int kind) {
+    public static void onNumber(double x, double y, double z, float amount, int kind, int targetId) {
         if (amount <= 0 || !FxBudget.on()) return; // m381 预算闸
+        long now = System.nanoTime();
+        // m406 合并窗口:同目标 350ms 内并入旧条(数值累加/档位取高),关配置=回逐条旧观感
+        if (YongyeConfig.get().enableDamageNumberMerge && targetId != 0) {
+            for (int i = NUMS.size() - 1; i >= 0; i--) {
+                Num n = NUMS.get(i);
+                if (n.targetId != targetId) continue;
+                if ((now - n.bornNanos) / 1_000_000L > MERGE_MS) break;   // 同目标最新一条已超窗=另起
+                float sum = n.amount + amount;
+                NUMS.set(i, new Num(n.x, n.y, n.z, n.dx, n.dz,
+                        fmt(sum), Math.max(n.kind, kind), n.bornNanos, sum, targetId));
+                return;
+            }
+        }
         while (NUMS.size() >= Math.max(12, FxBudget.scaleCount(MAX))) NUMS.remove(0); // m381 缩上限(保底 12)
         // 随机散布:水平 ±0.45 格圆盘内一点,连击时数字错开不叠字
         double ang = RAND.nextDouble() * Math.PI * 2;
         double r = 0.15 + RAND.nextDouble() * 0.30;
-        String text = amount >= 10f
+        NUMS.add(new Num(x, y, z, Math.cos(ang) * r, Math.sin(ang) * r,
+                fmt(amount), kind, now, amount, targetId));
+    }
+
+    /** 数字口径与 m373 相同:≥10 取整 compact,<10 保一位小数(纯格式,不掺语义缀字——m379 评审红线)。 */
+    private static String fmt(float amount) {
+        return amount >= 10f
                 ? NumFmt.compact(Math.round(amount))
                 : NumFmt.compact(Math.round(amount * 10f) / 10.0);
-        NUMS.add(new Num(x, y, z, Math.cos(ang) * r, Math.sin(ang) * r,
-                text, kind, System.nanoTime()));
     }
 
     private static void render(WorldRenderContext ctx) {
@@ -106,29 +128,47 @@ public final class DamageNumberManager {
             else if (ageMs < POP_MS + POP_BACK_MS) pop = 1.35f - ((ageMs - POP_MS) / (float) POP_BACK_MS) * 0.35f;
             else pop = 1.0f;
 
-            // 基准字号:普通 0.022(略小于原版名牌 0.025 不喧宾),重击 ×1.45 金色大字
-            float s = (n.kind == DamageKind.HEAVY ? 0.032f : 0.022f) * cfgScale * pop;
+            // 基准字号:普通 0.022(略小于原版名牌 0.025 不喧宾);重击 ×1.45 金;
+            // m406 暴击 ×critScale(默认1.6,数值微调页可拖)橙红;处决 ×1.9 暗红——语义档只在渲染层定观感
+            float tierMul = switch (n.kind) {
+                case DamageKind.HEAVY -> 1.45f;
+                case DamageKind.CRITICAL -> (float) Math.max(1.0, Math.min(3.0, c.damageNumberCritScale));
+                case DamageKind.EXECUTION -> 1.9f;
+                default -> 1.0f;
+            };
+            float s = 0.022f * tierMul * cfgScale * pop;
 
             // 末段淡出(alpha 钳 [8,255]:MC 对 alpha<0x04 强制不透明)
             int alpha = 255;
             long fadeStart = life - FADE_MS;
             if (ageMs > fadeStart) alpha = (int) (255 * (1.0 - (ageMs - fadeStart) / (double) FADE_MS));
             alpha = Math.max(8, Math.min(255, alpha));
-            int rgb = n.kind == DamageKind.HEAVY ? 0xFFB428 : 0xFFF2E8;
+            int rgb = switch (n.kind) {
+                case DamageKind.HEAVY -> 0xFFB428;      // 重击=金
+                case DamageKind.CRITICAL -> 0xFF6238;   // 暴击=橙红
+                case DamageKind.EXECUTION -> 0xD42B3A;  // 处决=暗红
+                default -> 0xFFF2E8;                    // 普通=暖白
+            };
             int argb = (alpha << 24) | rgb;
+            // 缀字在渲染层拼(「暴」「斩」不进数字格式层,m379 评审红线;BMP 内字符)
+            String shown = switch (n.kind) {
+                case DamageKind.CRITICAL -> n.text + " 暴";
+                case DamageKind.EXECUTION -> n.text + " 斩";
+                default -> n.text;
+            };
 
             Matrix4f m = new Matrix4f()
                     .translation((float) rx, (float) ry, (float) rz)
                     .rotate(rot)
                     .scale(-s, -s, s);
-            float w = tr.getWidth(n.text);
-            tr.draw(n.text, -w / 2f, -4f, argb, true, m, consumers,
+            float w = tr.getWidth(shown);
+            tr.draw(shown, -w / 2f, -4f, argb, true, m, consumers,
                     TextRenderer.TextLayerType.NORMAL, 0, 0xF000F0);
         }
     }
 
     /** 与 DamageNumberPayload 的 kind 常量同口径(避免客户端类直接依赖 network 包常量名散落)。 */
     private static final class DamageKind {
-        static final int HEAVY = 1;
+        static final int HEAVY = 1, CRITICAL = 2, EXECUTION = 3;   // 与 DamageNumberPayload 同口径(m406)
     }
 }

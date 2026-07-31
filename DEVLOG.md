@@ -3247,3 +3247,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 设置屏样式钮改三态(方块CD/文字列表/玻璃芯片);m404 数值微调页的 CD横移/纵移/透明滑条对方块样式同样生效。
 - 配置net+0(Plain 删除+Style 新增),**configVersion 140→141**;老 json 的 skillCdHudPlain 成死键(config check 会提示一次,无害);括号三文件全平。
 - 实机盯:平时屏幕干净无格;放一个技能看对应方格出现在面板上方居中(键位+秒数+蓝色从底往上涨)、转好看绿✔闪一下消失;连放多个看多格并排、中间某格先转好消失其余不挪位;数值微调页拖 CD纵移 看整排上下走;切「文字列表/玻璃芯片」两旧样式回归常显。
+
+## m406 暴击/处决专属飘字+同目标合并窗口(路线图14+m389挂账,2026-08-01)
+- **语义档进数据结构**:DamageNumberPayload.kind 扩 CRITICAL=2/EXECUTION=3(kind 本就 int,**协议零变**);观感全在渲染层定——重击恒×1.45金、暴击×damageNumberCritScale(默1.6,滑条可拖)橙红、处决×1.9暗红;缀字「暴」「斩」**渲染层拼接**,数字格式层 fmt() 纯数字不掺语义(m379 评审红线,本地化留路)。
+- **打标机制(战斗数值零改动)**:新 DamageFxTag 同栈标记——暴击/处决的追伤都是"proc 点先知道、再调 entity.damage()",damage() 同步走进 CombatFxHandler 的 ALLOW_DAMAGE 观察者,proc 点 mark() 观察者 consume()(即取即清防泄漏,服务端主线程无并发);打标点三处=天赋暴击(SkillEffectManager m291)/刺客暴击(ClassSkillHandler)/处决终结刀(ExecuteHandler)。处决名义值 1e7 直显=报假账→发包前封成 min(名义,目标当前血量)。处决原刀被 ExecuteHandler return false 短路,观察者只见终结刀=天然不重报。
+- **同目标合并窗口(m389 挂账清账)**:enableDamageNumberMerge(默开)——同 targetId 350ms 窗内新伤并入旧条(数值累加重排文本/档位取高,record 不可变=原位整条替换),超窗另起;targetId==0 或关配置=回 m373 逐条。AOE 连跳/暴击尾刀不再同一只怪叠一摞小字。
+- 配置+2(合并开关+暴击字号),**configVersion 141→142**;设置屏合并开/关两钮+数值页「暴击字号」滑条;int switch 常量 case(DamageKind 静态终态常量=合法常量表达式,在树 switch 先例);九文件括号全平零新 API。
+- 实机盯:学暴击天赋/玩刺客看橙红「N 暴」大字与普通字并存不同尺寸;打进斩杀线看暗红「N 斩」且 N=怪剩余血非 1e7;AOE 扫一群看每只怪身上单条数字滚大而非叠摞;关合并回逐条;拖「暴击字号」滑条实时变。

@@ -60,6 +60,7 @@ public final class ExecuteHandler {
             REENTRY = true;
             try {
                 mob.timeUntilRegen = 0;                             // 清无敌帧,保证补刀吃满
+                DamageFxTag.mark(com.yongye.network.DamageNumberPayload.EXECUTION); // m406 语义档:处决刀
                 mob.damage(sw.getDamageSources().playerAttack(p), 1.0E7f);
             } finally {
                 REENTRY = false;

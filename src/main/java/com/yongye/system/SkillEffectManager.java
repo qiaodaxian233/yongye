@@ -213,6 +213,7 @@ public final class SkillEffectManager {
                 double extraMult = Math.max(0, cfg.skillCritMultiplier - 1.0);
                 if (extraMult > 0 && p.getRandom().nextDouble() < cc) {
                     procApplying = true;
+                    DamageFxTag.mark(com.yongye.network.DamageNumberPayload.CRITICAL); // m406 语义档:这笔追伤是暴击
                     entity.damage(p.getDamageSources().playerAttack(p), (float) (amount * extraMult));
                     procApplying = false;
                     sw.spawnParticles(net.minecraft.particle.ParticleTypes.CRIT,
