@@ -3254,3 +3254,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **同目标合并窗口(m389 挂账清账)**:enableDamageNumberMerge(默开)——同 targetId 350ms 窗内新伤并入旧条(数值累加重排文本/档位取高,record 不可变=原位整条替换),超窗另起;targetId==0 或关配置=回 m373 逐条。AOE 连跳/暴击尾刀不再同一只怪叠一摞小字。
 - 配置+2(合并开关+暴击字号),**configVersion 141→142**;设置屏合并开/关两钮+数值页「暴击字号」滑条;int switch 常量 case(DamageKind 静态终态常量=合法常量表达式,在树 switch 先例);九文件括号全平零新 API。
 - 实机盯:学暴击天赋/玩刺客看橙红「N 暴」大字与普通字并存不同尺寸;打进斩杀线看暗红「N 斩」且 N=怪剩余血非 1e7;AOE 扫一群看每只怪身上单条数字滚大而非叠摞;关合并回逐条;拖「暴击字号」滑条实时变。
+
+## m407 大招起手屏幕边缘职业色光晕(路线图17,2026-08-01)
+- **触发零新协议**:SkillCdPayload 收包处抓「大招槽(3)CD 从 0 跳正」边沿=刚施放;**首包只播种**(skillCdSeeded)——重登/换世界带半截 CD 回来不算起手(m380 六边界同思路);无职业不触发。
+- **观感**:新 UltimateCastFx——屏幕四边向内职业色光带(肉盾钢蓝/战士炽橙/术士紫/剑客青/武僧金/刺客绯红/召唤师翠绿,兜底暖金),80ms 冲峰→余程平方淡出总 0.4s(FxBudget.scaleLife 低档缩短保底 150ms);上下=fillGradient 纵向渐隐(勋章屏在树先例),左右=fillGradient 仅纵向故用**双层阶梯 fill**(内窄 3/4 峰/外宽 1/3 峰)近似横向衰减;峰值 0x5A×skillCastFxIntensity,**reduceScreenFlash 开=减半**(全局弱闪光铁律),alpha≤3 直接不画;同时最多 1 个新覆盖旧(全屏叠层预算)。
+- 配置+2(enableSkillCastFx 默开+强度倍率),**configVersion 142→143**;设置屏开关两钮+数值页「起手光晕」滑条;全 fill/fillGradient 在树零新 API;四文件括号平。
+- 实机盯:放大招看四边职业色闪 0.4s(七职业各色);重登带 CD 不闪;开弱闪光变淡一半;拖强度滑条 0=彻底不见;低特效档更短更淡。

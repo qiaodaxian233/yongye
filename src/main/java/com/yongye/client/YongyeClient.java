@@ -63,6 +63,8 @@ public class YongyeClient implements ClientModInitializer {
     /** 灾厄核心定位器状态(由 CoreLocatorPayload 更新):是否有目标 + 世界坐标 */
     public static boolean coreHasTarget = false;
     public static double coreTX = 0, coreTY = 0, coreTZ = 0;
+    /** m407:CD 同步是否已收到过首包(首包=播种基线,不当施放边沿;防重登半截 CD 误触发起手光晕)。 */
+    private static boolean skillCdSeeded = false;
     /** m346 技能CD常显HUD:剩余冷却 tick(0..2=R/G/V 3=大招 4=小技能;SkillCdPayload 每10t刷新,本地每t递减保平滑) */
     private static final int[] skillCdLeft = new int[5];
     /** m346 冷却峰值(=本轮总冷却,进度分母;收包时「变大=新施放」置峰、归零清峰,免下发总CD) */
@@ -365,6 +367,7 @@ public class YongyeClient implements ClientModInitializer {
                     MobHealthBarManager.onHit(payload.targetId());   // m385 微型血条追踪同包分发
                 }));
         DamageNumberManager.register();
+        UltimateCastFx.register();   // m407 大招起手屏幕边缘职业色光晕
         // m374 受击方向指示:收来源坐标 → 准星四周对应方向弹红色弧段(逐帧按视角重算方位)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.HurtDirectionPayload.ID, (payload, context) ->
                 context.client().execute(() -> HurtDirectionManager.onHurt(
@@ -807,6 +810,12 @@ public class YongyeClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.SkillCdPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
                     int[] vals = {payload.slash(), payload.devour(), payload.finality(), payload.ultimate(), payload.minor()};
+                    // m407 大招施放边沿:槽3 CD 从 0 跳正=刚起手 → 屏幕边缘职业色光晕;
+                    // 首包只播种(skillCdSeeded)——重登带半截 CD 回来不算起手(m380 六边界同思路)
+                    if (skillCdSeeded && vals[3] > 0 && skillCdLeft[3] <= 0 && !ClientStats.className.isEmpty()) {
+                        UltimateCastFx.onUltimateCast();
+                    }
+                    skillCdSeeded = true;
                     for (int i = 0; i < 5; i++) {
                         if (vals[i] > skillCdLeft[i]) skillCdPeak[i] = vals[i];
                         else if (vals[i] == 0) {
