@@ -3140,3 +3140,6 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 预览已复核入库:docs/hud/m392_accessory_preview.png(×3)与 m392_elite_skins_preview.png(四联 ×3)。
 - 纯资源+纯客户端绘制简化,零新 API 零配置,**configVersion 仍 136**;括号自检 AccessoryScreen 配平。
 - 实机盯:给僵尸/骷髅/苦力怕/蜘蛛/女巫改名带「精英」各看一只紫皮(女巫重点看 64×128 尺寸修正后不花)、精英苦力怕爆炸前脸部可辨、背包点「饰品」看玻璃蓝界面槽位与凹槽严丝合缝、拖神器进槽看物品压在凹槽上、鞘翅空槽红「翼」字、放入鞘翅字消失、GUI Scale 1~4 各看对齐。
+
+## m392 附:CI 绿入册(2026-07-31)
+- m392(1a55ccb)云端构建 success(本轮零新 API 面,CI=类加载与资源打包回归);路线图第 10 项 🛠→🧪(CI 绿待实机),实机盯清单见 m392 条目。
