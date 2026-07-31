@@ -3130,3 +3130,6 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **矩阵配对安全**:beforeRender push+translate、afterRender 按 pushed 旗标**无条件先 pop 再画薄纱**——配对只认旗标,过渡中途关开关/降质量档也不失衡且立即消(remain() 双门复核归零=「关开关零残留」口径);命中区按真实坐标(m369/m375 同取舍,120ms 内偏移≤14px);背景压暗层同被平移=一侧 14px 短暂浅带被薄纱盖住(取舍已知)。
 - 配置+1(enableTabSwitchFx 默认开),**configVersion 135→136**;设置屏「界面·HUD」UI 动效区加 2 钮。括号自检 8 文件全平;**待编译验证 1(低险)**=ScreenEvents.beforeRender(screen) 实例级事件仓库首用——与 m375 已编过的 afterRender 同类同签名族(官方源码五参已逐字核对),报错删 beforeRender 段=只损失滑动、薄纱淡入照常。
 - 实机盯:设置屏左右点页签看内容随方向滑入带薄纱、调试菜单同、任务书三页签同且点节点地图里的节点**不**触发过渡、仓库 ◀▶ 看方向相反、选职界面点职业看海报翻页感、连点页签看过渡重置不叠加、过渡中拉窗口大小看不残留不错位、关「页签过渡」回硬切、质量档 0 全关、GUI Scale 1~4 各看居中不裁。
+
+## m391 附:CI 绿入册(2026-07-31)
+- m391(7d1bad2)云端构建 success,唯一待编译验证点 ScreenEvents.beforeRender(screen) 随 CI 编过,**待编译验证清零**;路线图第 8 项 🛠→🧪(CI 绿待实机),实机盯清单见 m391 条目。
