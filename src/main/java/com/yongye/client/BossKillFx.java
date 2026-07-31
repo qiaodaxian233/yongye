@@ -22,6 +22,9 @@ public final class BossKillFx {
     private static long bornNanos = 0;
     private static String bossName = "";
 
+    /** m388 音景避让探针:讨伐演出是否进行中。 */
+    static boolean isShowing() { return showing; }
+
     /** 收包入口(主线程)。 */
     public static void onBossKill(String name) {
         if (!YongyeConfig.get().enableBossKillFx || !FxBudget.on()) return;

@@ -3091,3 +3091,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **BOSS 识别(isBossKill)**:五皮肤 BOSS 按类(BossRageHandler m274 同口径)+ MobBoss 化怪(IS_BOSS 附件)+ 名牌含 佩恩/BOSS 字面量(「xx BOSS」玩家皮肤 BOSS 一并覆盖);字幕名剥 ‖ 血量后缀(m187 血条协议)。新 BossKillFxPayload 空值兜底空串(writeString(null) 踢连接老坑)。
 - 配置+1(enableBossKillFx 默认开),**configVersion 133→134**;设置屏 2 钮。括号自检 7 文件全平;零新 API(实体类/附件/playSound/矩阵画字全在树)。
 - 实机盯:杀凤凰/阿努比斯看金闪+讨伐成功+名字副标+重顿帧、杀 0.8% BOSS 化僵尸也触发、旁边队友屏幕无演出且操作不卡、弱闪光开着金闪变淡、名字无 ‖数字尾巴、关开关只剩普通击杀反馈。
+
+## m388 永夜环境音景(3A 打磨第 18 项,按评审防疲劳约束,2026-07-30)
+- **空气里的声音**:永夜≥2 每 20~40s(≥4 级 12~28s)在玩家远处响一声氛围音,四池=洞穴幽响(AMBIENT_CAVE)/低鸣心跳(WARDEN_HEARTBEAT 在树)/夜魇远啼(PHANTOM_AMBIENT)/深海低吼(ELDER_GUARDIAN_AMBIENT),音高 0.6~0.9 随机压暗;补 m377 视觉粒子的听觉半边。
+- **防疲劳四约束落地**:①同种不连播两次=记上次池号重抽同款顺移一位;②战斗中降概率=本地血量下降记 lastCombat,8s 内 75% 吞掉(攻击不算,安全刷怪不吞);③重要演出避让=永夜转场/讨伐演出进行中跳过(两类各加包内只读探针 isPlaying/isShowing);④不贴耳=落点水平 10~18 格环带垂直 ±3 **定位播放**(World.playSound 八参签名与在树 ChargeSlashHandler 服务端同方法,客户端世界同签名本地播),音量单独可调默认 0.6 刻意当底噪。
+- 触发点先重掷间隔再判条件(不播也不每 tick 重试);世界引用变化重置计时+进世界先静 10s;enableNightAmbientSound 与 FxBudget.on() 双门。
+- 配置+2,**configVersion 134→135**;设置屏 5 钮(开/关+轻0.3/默认0.6/响1.0)。括号自检 6 文件全平。
+- **待编译验证 2(低险,各一行退路)**:AMBIENT_CAVE 按 RegistryEntry 型取 .value()(.value() 在树 Yongye:183;若实为普通 SoundEvent 报错=删 .value() 即退);PHANTOM_AMBIENT/ELDER_GUARDIAN_AMBIENT 常量首用(注册表自动命名档,报错换池内在树常量)。World.playSound 客户端调用同签名在树。
+- 实机盯:/yongye nightfall 2 站着等半分钟听远处幽响且有方向感、连续两声不同款、被怪咬着打时基本听不到、转场演出播放中不插音、音量三档点着变、等级 1 无声、关开关绝迹。

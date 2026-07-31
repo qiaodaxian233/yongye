@@ -138,5 +138,8 @@ public final class NightfallTransitionFx {
         }
     }
 
+    /** m388 音景避让探针:转场演出是否进行中。 */
+    static boolean isPlaying() { return playing; }
+
     private static float easeOut(float t) { return 1f - (1f - t) * (1f - t); }
 }

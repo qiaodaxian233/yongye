@@ -106,6 +106,11 @@ public class VisualFxScreen extends Screen {
                             new Btn("拾取通知·关", "yongye config set enablePickupNotice false"),
                             new Btn("讨伐演出·开", "yongye config set enableBossKillFx true"),
                             new Btn("讨伐演出·关", "yongye config set enableBossKillFx false"),
+                            new Btn("夜声·开", "yongye config set enableNightAmbientSound true"),
+                            new Btn("夜声·关", "yongye config set enableNightAmbientSound false"),
+                            new Btn("夜声·轻0.3", "yongye config set nightAmbientSoundVolume 0.3"),
+                            new Btn("夜声·默认0.6", "yongye config set nightAmbientSoundVolume 0.6"),
+                            new Btn("夜声·响1.0", "yongye config set nightAmbientSoundVolume 1.0"),
                     }),
                     new Section("刀光(斩击轨迹)", new Btn[]{
                             new Btn("刀光·开", "yongye config set enableSlashFx true"),

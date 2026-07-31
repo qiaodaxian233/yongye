@@ -363,6 +363,8 @@ public class YongyeClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.BossKillFxPayload.ID, (payload, context) ->
                 context.client().execute(() -> BossKillFx.onBossKill(payload.bossName())));
         BossKillFx.register();
+        // m388 永夜环境音景:等级≥2 远处随机幽响(防疲劳四约束,补 m377 视觉粒子的听觉半边)
+        NightAmbientSound.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->
