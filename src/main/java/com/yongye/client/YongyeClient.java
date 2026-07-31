@@ -843,9 +843,38 @@ public class YongyeClient implements ClientModInitializer {
             if (!weapon && !hasClass) return;
 
             int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
-            // m403 六档停靠位(照 m308 看板套路):0右下(默认) 1左下 2右中 3左中 4右上 5左上 6面板左侧(m353旧位);
+
+            // ===== m405 样式0=方块CD(新默认,作者供草图):正方形技能格一排居中在阶段名/面板上方,
+            //       仅冷却中的技能显示对应格(固定槽位不重排,照草图五格预留),CD结束绿✔闪12t即消失;
+            //       格内=键位(上)+剩余秒(下)+自下而上蓝色恢复填充;半透明走 skillCdHudAlpha;不吃停靠只吃偏移。 =====
+            if (cfg.skillCdHudStyle == 0) {
+                java.util.ArrayList<Integer> slots = new java.util.ArrayList<>(); // 槽序:R G V(持武器已解锁) X C(有职业)
+                if (weapon) {
+                    int lvl = held.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);
+                    boolean freeUnlock = held.getItem() == com.yongye.registry.ModItems.CHAOS_BLADE
+                            || held.getItem() == com.yongye.registry.ModItems.DRAGON_BLADE;
+                    com.yongye.item.WeaponSkill[] sk = com.yongye.item.WeaponSkill.values();
+                    for (int i = 0; i < sk.length; i++) {
+                        if (freeUnlock || sk[i].isUnlocked(lvl)) slots.add(i);
+                    }
+                }
+                if (hasClass) { slots.add(3); slots.add(4); }
+                if (slots.isEmpty()) return;
+                int size = 22, gap = 4;
+                int totalW = slots.size() * size + (slots.size() - 1) * gap;
+                int x0 = w / 2 - totalW / 2 + cfg.skillCdHudOffsetX;
+                int ty = h - 112 + cfg.skillCdHudOffsetY;                     // 面板/阶段名/箭头(h-82)再上方
+                x0 = Math.max(2, Math.min(w - totalW - 2, x0));
+                ty = Math.max(2, Math.min(h - size - 2, ty));
+                for (int k = 0; k < slots.size(); k++) {
+                    drawSkillCdSquare(ctx, tr, x0 + k * (size + gap), ty, size, slots.get(k));
+                }
+                return;
+            }
+
+            // m403 六档停靠位(照 m308 看板套路,样式1/2 列表用):0右下(默认) 1左下 2右中 3左中 4右上 5左上 6面板左侧(m353旧位);
             // 左停靠=左对齐(edge=左缘),右停靠=右对齐(edge=右缘);行高无框13/芯片16,顶部停靠先算总行数把起始行压下来。
-            int rowH = cfg.skillCdHudPlain ? 13 : 16;
+            int rowH = cfg.skillCdHudStyle == 1 ? 13 : 16;
             int rows = (hasClass ? 2 : 0) + (weapon ? com.yongye.item.WeaponSkill.values().length : 0);
             boolean alignLeft;
             int edge, y;
@@ -1002,6 +1031,54 @@ public class YongyeClient implements ClientModInitializer {
     /** m353:技能CD 玻璃芯片单行(右对齐;返回上一行 y)。芯片=暗玻璃底+状态色描边+顶高光(照 m142 HUD 手法);
      *  冷却=芯片内部蓝色充能填充从左涨满(峰值当分母)+灰名橙秒;就绪=金框绿字;转好瞬间金框闪光(readyFlash);
      *  未解锁=整片压暗。键位标签走 getBoundKeyLocalizedText(yarn method_16007 已核),玩家改键即时跟变。 */
+    /** m405 方块CD单格(样式0):**仅冷却中绘制**——left>0 画格(半透明暗底+描边+自下而上蓝色恢复填充+
+     *  上行键位金字+下行剩余秒橙字);left==0 且转好闪光期=绿框绿✔淡出 12t 随后彻底消失;其余情况不画。
+     *  槽序 0..2=R/G/V(键取 skillKeysRef) 3=大招 4=小技能。全 fill/drawText 在树零新 API。 */
+    private static void drawSkillCdSquare(net.minecraft.client.gui.DrawContext ctx, net.minecraft.client.font.TextRenderer tr,
+                                          int x, int y, int size, int slot) {
+        int left = skillCdLeft[slot];
+        int flash = skillCdReadyFlash[slot];
+        if (left <= 0 && flash <= 0) return;                       // 不在CD=不显示(作者定稿口径)
+        var cfg = com.yongye.YongyeConfig.get();
+        int a = Math.max(40, Math.min(255, cfg.skillCdHudAlpha));
+        KeyBinding key = slot <= 2 ? (skillKeysRef != null ? skillKeysRef[slot] : null)
+                : slot == 3 ? ultimateKeyRef : minorSkillKeyRef;
+        String keyLabel = key == null ? "?" : key.getBoundKeyLocalizedText().getString();
+        if (keyLabel.length() > 2) keyLabel = keyLabel.substring(0, 2);   // 长键名(如鼠标键)截两字符防溢出
+
+        if (left <= 0) {                                           // 转好瞬间:绿✔淡出即消失
+            int fa = Math.min(a, flash * 21);
+            ctx.fill(x, y, x + size, y + size, (fa * 3 / 5 << 24) | 0x0C2616);
+            skillSquareBorder(ctx, x, y, size, (fa << 24) | 0x55FF77);
+            String ok = "✔";
+            ctx.drawTextWithShadow(tr, Text.literal(ok),
+                    x + (size - tr.getWidth(ok)) / 2, y + (size - 8) / 2, (fa << 24) | 0x66FF77);
+            return;
+        }
+        // 冷却中:暗底 + 恢复填充(自下而上) + 描边 + 键位/秒数
+        ctx.fill(x, y, x + size, y + size, (a * 3 / 4 << 24) | 0x0C1626);
+        if (skillCdPeak[slot] > 0) {
+            float frac = 1f - (float) left / skillCdPeak[slot];
+            int fh = (int) (size * Math.max(0f, Math.min(1f, frac)));
+            if (fh > 0) ctx.fill(x, y + size - fh, x + size, y + size, (a / 2 << 24) | 0x2E7AD0);
+        }
+        skillSquareBorder(ctx, x, y, size, (a << 24) | 0x2E5A8A);
+        int secs = (left + 19) / 20;
+        String sTxt = secs > 999 ? "999" : String.valueOf(secs);
+        ctx.drawTextWithShadow(tr, Text.literal(keyLabel),
+                x + (size - tr.getWidth(keyLabel)) / 2, y + 2, (a << 24) | 0xFFD700);
+        ctx.drawTextWithShadow(tr, Text.literal(sTxt),
+                x + (size - tr.getWidth(sTxt)) / 2, y + size - 10, (a << 24) | 0xFFA040);
+    }
+
+    /** m405:1px 方形描边(fill 四边,照 comboRing 手法)。 */
+    private static void skillSquareBorder(net.minecraft.client.gui.DrawContext ctx, int x, int y, int size, int color) {
+        ctx.fill(x, y, x + size, y + 1, color);
+        ctx.fill(x, y + size - 1, x + size, y + size, color);
+        ctx.fill(x, y + 1, x + 1, y + size - 1, color);
+        ctx.fill(x + size - 1, y + 1, x + size, y + size - 1, color);
+    }
+
     private static int drawSkillCdRow(net.minecraft.client.gui.DrawContext ctx, net.minecraft.client.font.TextRenderer tr,
                                       int edge, boolean alignLeft, int y, KeyBinding key, String name, int slot, boolean unlocked) {
         var cfg = com.yongye.YongyeConfig.get();
@@ -1016,8 +1093,8 @@ public class YongyeClient implements ClientModInitializer {
         int tw = wKey + 3 + wName + tr.getWidth(status);
 
         // ===== m403 无框半透明版(默认):纯文字带阴影,无底无框;冷却进度=文字下 1px 细线;
-        //       转好=文字向白亮闪 12t;未解锁再压淡。skillCdHudPlain=false 走下面 m353 芯片旧观感。 =====
-        if (cfg.skillCdHudPlain) {
+        //       转好=文字向白亮闪 12t;未解锁再压淡。skillCdHudStyle==2 走下面 m353 芯片旧观感。 =====
+        if (cfg.skillCdHudStyle == 1) {
             int a = Math.max(40, Math.min(255, cfg.skillCdHudAlpha));
             if (!unlocked) a = a * 3 / 5;                              // 未解锁更透,弱存在感
             int tx0 = alignLeft ? edge : edge - tw;

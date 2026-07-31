@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m404 设置屏新增「数值微调」页(作者点名 UI 调整要能输数值/滑条:20 个 UI 数值项每项=滑条拖动即调+输入框回车精确设置,松手才发 config set 防刷盘,SliderWidget 首用已核 yarn),纯客户端零配置字段 v 仍 140,详见 DEVLOG m404。
+> 最新:m405 技能CD改方块样式(作者供草图:正方形技能格居中面板上方,仅冷却中显示,格内键位+秒数+自下而上恢复填充,转好绿✔闪即消;skillCdHudStyle 三态,文字列表/玻璃芯片保留),配置 v140→141,详见 DEVLOG m405。

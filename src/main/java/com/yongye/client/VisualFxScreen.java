@@ -224,11 +224,12 @@ public class VisualFxScreen extends Screen {
                             new Btn("HUD微动·开", "yongye config set enableHudMicroFx true"),
                             new Btn("HUD微动·关", "yongye config set enableHudMicroFx false"),
                     }),
-                    new Section("技能CD常显(R/G/V·大招·小技能;m403 默认无框半透明+可停靠)", new Btn[]{
+                    new Section("技能CD(m405 默认方块:仅冷却中显示,面板上方居中;偏移/透明在数值微调页)", new Btn[]{
                             new Btn("CD显示·开", "yongye config set enableSkillCdHud true"),
                             new Btn("CD显示·关", "yongye config set enableSkillCdHud false"),
-                            new Btn("样式·无框半透明", "yongye config set skillCdHudPlain true"),
-                            new Btn("样式·玻璃芯片", "yongye config set skillCdHudPlain false"),
+                            new Btn("样式·方块CD", "yongye config set skillCdHudStyle 0"),
+                            new Btn("样式·文字列表", "yongye config set skillCdHudStyle 1"),
+                            new Btn("样式·玻璃芯片", "yongye config set skillCdHudStyle 2"),
                             new Btn("停·右下(默认)", "yongye config set skillCdHudAnchor 0"),
                             new Btn("停·左下", "yongye config set skillCdHudAnchor 1"),
                             new Btn("停·右中", "yongye config set skillCdHudAnchor 2"),
