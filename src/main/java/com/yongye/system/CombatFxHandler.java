@@ -5,7 +5,10 @@ import com.yongye.network.CombatFxPayload;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.mob.AbstractSkeletonEntity;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 
@@ -93,6 +96,24 @@ public final class CombatFxHandler {
                 int n = Math.min(14, 4 + (int) (frac * 24));
                 sw.spawnParticles(ParticleTypes.CRIT,
                         entity.getX(), entity.getBodyY(0.6), entity.getZ(), n, 0.35, 0.3, 0.35, 0.25);
+            }
+
+            // —— m383 命中音材质分层(骨=脆响/硬甲=铿锵/肉=闷响,原版音变调零新资源)——
+            //    与镜头手感共用上方 3t 节流(节流内=不响,天然限流不炸耳,m379 评审 27 号预览口径);
+            //    重击音量略抬、音高随伤害占比微升,叠在原版怪物受伤叫声之上出"打在材质上"的层次。
+            if (c.enableCombatHitSound && entity.getWorld() instanceof ServerWorld sw2) {
+                float vol = (kind == CombatFxPayload.HEAVY ? 0.55f : 0.4f);
+                float pitch = 1.0f + Math.min(0.4f, frac * 0.8f);
+                if (entity instanceof AbstractSkeletonEntity) {          // 骨:脆响
+                    sw2.playSound(null, entity.getX(), entity.getY(), entity.getZ(),
+                            SoundEvents.BLOCK_BONE_BLOCK_HIT, SoundCategory.PLAYERS, vol + 0.15f, pitch * 1.1f);
+                } else if (entity.getArmor() >= 10) {                     // 硬甲(重甲怪/傀儡/多数 BOSS):铿锵
+                    sw2.playSound(null, entity.getX(), entity.getY(), entity.getZ(),
+                            SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 0.20f, 1.7f + frac);
+                } else {                                                  // 肉:闷响
+                    sw2.playSound(null, entity.getX(), entity.getY(), entity.getZ(),
+                            SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, vol, pitch * 0.85f);
+                }
             }
             return true;
         });

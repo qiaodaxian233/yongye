@@ -3054,3 +3054,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **DoD 口径**:纯 nanoTime 驱动到点必消;坐标全 scaled 尺寸 GUI 缩放安全;enableMultiKillFx 与 FxBudget.on() 双门;弹出=前 120ms 缩放 2.0→1.5 冲击落位,1.3s 末 300ms 淡出;位置 h/2-58 与永夜转场字幕(h/2-26 起)错层不叠。
 - 配置+1,**configVersion 128→129**;设置屏「镜头·特效」加 2 钮。括号自检 4 文件全平;零新 API 零待编译验证。
 - 实机盯:AOE 一刀清一群看「双杀→三杀→四连杀→五连绝灭」逐档弹出音调渐升、隔 4 秒再杀看链归 1 不弹、刷 10+ 看十连灭世彩虹字、开背包时演出到点自消、GUI Scale 1~4 居中、关开关绝迹、质量档 0 全关。
+
+## m383 命中音材质分层(3A 打磨第 9 项,2026-07-30)
+- **打在什么材质上听得出来**:命中怪物在其位置叠一层材质冲击音——骨(AbstractSkeletonEntity 全族)=骨块脆响(BLOCK_BONE_BLOCK_HIT 音高 ×1.1)/硬甲(getArmor()≥10,重甲怪、傀儡、多数 BOSS)=铁砧轻铿(BLOCK_ANVIL_LAND 音量压到 0.20 音高 1.7+占比)/肉(默认)=击退闷响(ENTITY_PLAYER_ATTACK_KNOCKBACK 音高 ×0.85);重击音量抬档、音高随伤害占比微升;叠在原版怪物受伤叫声之上出层次,零新音频资源。
+- **限流口径(评审 27 号音效并发的预览版)**:与镜头手感共用既有 3t 节流——节流内不出音,AOE 连打天然不炸耳;真正的并发管理器(同类限流/优先级/ducking)按路线图第 27 项后续单独立项。
+- **BOSS 战 stinger 判定为已有**:BossEntranceFx(m263)出场演出已含吼声+震屏+标题,按路线图防重复列不重做;若作者要"进入 BOSS 视野再来一记"另点名。
+- 配置+1(enableCombatHitSound 默认开),**configVersion 129→130**;设置屏「镜头·特效」加 2 钮。括号自检 3 文件全平;getArmor()I 走 yarn 已核(method_6096),AbstractSkeletonEntity/playSound(null,…)/SoundCategory 全在树先例。
+- **待编译验证 3(低险)**:BLOCK_BONE_BLOCK_HIT / BLOCK_ANVIL_LAND / ENTITY_PLAYER_ATTACK_KNOCKBACK 常量首用(注册表自动命名档,ANVIL 族在树 ANVIL_USE 已编;若个别报错=该行换族内在树常量即退)。
+- 实机盯:砍骷髅听脆响、砍僵尸听闷响、砍铁傀儡/穿满甲精英听金属铿、连点节流内不叠音、重击音量略大音调略高、关开关只剩原版叫声。
