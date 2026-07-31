@@ -40,6 +40,13 @@ import java.util.Map;
  * <p>渲染:AFTER_TRANSLUCENT,EntityTranslucentEmissive(4×4 纯白贴图)顶点染色
  * (半透明层能画深色底,规避 getLightning 加色混合画不出暗底的坑),相机四元数变换
  * 局部偏移出正对屏幕的广告牌,双面绕序;顶点链与 MagicCircleFxManager 逐字同款(在树已编)。
+ *
+ * <p><b>m389 评审修补:</b>①quad/diamond 改纯标量顶点计算,世界渲染热路径不再每帧
+ * new float[][](多怪持续显示时的短命数组 GC 抖动);基向量改复用静态 scratch Vector3f
+ * (渲染单线程安全);②记录世界引用,换维度立即 BARS.clear()——防新世界撞相同实体
+ * 网络 id 时旧血条短暂错绑;③BOSS/精英判定改复用 {@link MobAuraFeatureRenderer#tierOf}
+ * 统一口径(五皮肤 BOSS 类/HIM/「xx BOSS」全覆盖,精英连带覆盖毒蛛/巨蟹实体类),
+ * 不再维护第二套名字表。
  */
 public final class MobHealthBarManager {
     private MobHealthBarManager() {}
@@ -56,6 +63,10 @@ public final class MobHealthBarManager {
 
     private static final Map<Integer, Bar> BARS = new HashMap<>();
     private static long lastFrameNanos = System.nanoTime();
+    private static Object lastWorldRef = null;                      // m389:换世界即清防实体 id 撞车
+    // m389:广告牌基向量 scratch(渲染单线程,复用免每帧分配)
+    private static final Vector3f RIGHT = new Vector3f();
+    private static final Vector3f UP = new Vector3f();
 
     /** 命中信号入口(DamageNumberPayload 接收处调,主线程)。 */
     public static void onHit(int entityId) {
@@ -84,11 +95,15 @@ public final class MobHealthBarManager {
     }
 
     private static void render(WorldRenderContext ctx) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.world != lastWorldRef) {                             // m389:换维度/退出即清,防 id 撞车错绑
+            lastWorldRef = mc.world;
+            BARS.clear();
+        }
         if (BARS.isEmpty()) return;
         if (!YongyeConfig.get().enableMobHealthBar || !FxBudget.on()) { BARS.clear(); return; }
         VertexConsumerProvider consumers = ctx.consumers();
         if (consumers == null) return;
-        MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.world == null || mc.player == null) { BARS.clear(); return; }
 
         long now = System.nanoTime();
@@ -96,9 +111,9 @@ public final class MobHealthBarManager {
         lastFrameNanos = now;
         Vec3d cam = ctx.camera().getPos();
         Quaternionf rot = ctx.camera().getRotation();
-        // 广告牌基向量:相机右/上
-        Vector3f rv = rot.transform(new Vector3f(1, 0, 0));
-        Vector3f uv = rot.transform(new Vector3f(0, 1, 0));
+        // 广告牌基向量:相机右/上(m389:scratch 复用,不再每帧 new)
+        Vector3f rv = rot.transform(RIGHT.set(1, 0, 0));
+        Vector3f uv = rot.transform(UP.set(0, 1, 0));
         VertexConsumer vc = consumers.getBuffer(RenderLayer.getEntityTranslucentEmissive(WHITE));
         long life = FxBudget.scaleLife(SHOW_MS);
 
@@ -112,9 +127,10 @@ public final class MobHealthBarManager {
             if (!(mc.world.getEntityById(en.getKey()) instanceof LivingEntity liv) || !liv.isAlive()) {
                 it.remove(); continue;                          // 死亡/卸载即撤条
             }
-            // BOSS 有画框大血条,不重复;隐身怪保留追踪不画
-            String n = liv.hasCustomName() && liv.getCustomName() != null ? liv.getCustomName().getString() : "";
-            if (n.contains("BOSS") || n.contains("佩恩") || n.contains("长门")) { it.remove(); continue; }
+            // BOSS 有画框大血条,不重复(m389:复用 MobAuraFeatureRenderer.tierOf 统一口径);
+            // 隐身怪保留追踪不画
+            int mobTier = MobAuraFeatureRenderer.tierOf(liv);
+            if (mobTier >= 3) { it.remove(); continue; }
             if (liv.isInvisible()) continue;
             if (liv.squaredDistanceTo(mc.player) > FxBudget.scaleDistSq(MAX_DIST_SQ)) continue;
 
@@ -123,7 +139,7 @@ public final class MobHealthBarManager {
             b.displayed = b.displayed < 0 ? real : b.displayed + (real - b.displayed) * Math.min(1f, dt * 10f);
 
             float fade = ageMs > life - FADE_MS ? (life - ageMs) / (float) FADE_MS : 1f;
-            boolean elite = n.contains("精英");
+            boolean elite = mobTier == 2;                           // m389:统一口径(名牌精英+毒蛛/巨蟹)
             float w = elite ? 1.15f : 0.90f;
             float h = elite ? 0.11f : 0.07f;
 
@@ -148,44 +164,53 @@ public final class MobHealthBarManager {
         }
     }
 
-    /** 相机对齐广告牌矩形:中心+局部偏移(ox,oy)+半宽半高,双面绕序(顶点链照 MagicCircle 在树)。 */
+    /** 相机对齐广告牌矩形:中心+局部偏移(ox,oy)+半宽半高,双面绕序(顶点链照 MagicCircle 在树)。
+     *  m389:纯标量顶点计算,渲染热路径零数组分配。四角局部偏移=(ox±hw, oy±hh)。 */
     private static void quad(VertexConsumer vc, float cx, float cy, float cz,
                              Vector3f rv, Vector3f uv, float ox, float oy, float hw, float hh,
                              int r, int g, int b, int a) {
         if (a < 8) return;
-        float[][] c = new float[4][];
-        float[][] off = {{ox - hw, oy - hh}, {ox + hw, oy - hh}, {ox + hw, oy + hh}, {ox - hw, oy + hh}};
-        for (int i = 0; i < 4; i++) {
-            c[i] = new float[]{
-                    cx + rv.x * off[i][0] + uv.x * off[i][1],
-                    cy + rv.y * off[i][0] + uv.y * off[i][1],
-                    cz + rv.z * off[i][0] + uv.z * off[i][1]};
-        }
-        float[][] t = {{0f, 0f}, {1f, 0f}, {1f, 1f}, {0f, 1f}};
-        for (int i = 0; i < 4; i++) v(vc, c[i], t[i], r, g, b, a, 1);
-        for (int i = 3; i >= 0; i--) v(vc, c[i], t[i], r, g, b, a, -1);
+        float x0 = ox - hw, x1 = ox + hw, y0 = oy - hh, y1 = oy + hh;
+        float ax = cx + rv.x * x0 + uv.x * y0, ay = cy + rv.y * x0 + uv.y * y0, az = cz + rv.z * x0 + uv.z * y0;
+        float bx = cx + rv.x * x1 + uv.x * y0, by = cy + rv.y * x1 + uv.y * y0, bz = cz + rv.z * x1 + uv.z * y0;
+        float qx = cx + rv.x * x1 + uv.x * y1, qy = cy + rv.y * x1 + uv.y * y1, qz = cz + rv.z * x1 + uv.z * y1;
+        float dx = cx + rv.x * x0 + uv.x * y1, dy = cy + rv.y * x0 + uv.y * y1, dz = cz + rv.z * x0 + uv.z * y1;
+        // 正面
+        v(vc, ax, ay, az, 0f, 0f, r, g, b, a, 1);
+        v(vc, bx, by, bz, 1f, 0f, r, g, b, a, 1);
+        v(vc, qx, qy, qz, 1f, 1f, r, g, b, a, 1);
+        v(vc, dx, dy, dz, 0f, 1f, r, g, b, a, 1);
+        // 背面(反绕序)
+        v(vc, dx, dy, dz, 0f, 1f, r, g, b, a, -1);
+        v(vc, qx, qy, qz, 1f, 1f, r, g, b, a, -1);
+        v(vc, bx, by, bz, 1f, 0f, r, g, b, a, -1);
+        v(vc, ax, ay, az, 0f, 0f, r, g, b, a, -1);
     }
 
-    /** 相机对齐菱形(精英徽记):四顶点=上右下上… 以两三角拼(用两个绕序面)。 */
+    /** 相机对齐菱形(精英徽记):四顶点=上/右/下/左,双面绕序。m389:同样纯标量零分配。 */
     private static void diamond(VertexConsumer vc, float cx, float cy, float cz,
                                 Vector3f rv, Vector3f uv, float ox, float oy, float rad,
                                 int r, int g, int b, int a) {
         if (a < 8) return;
-        float[][] off = {{ox, oy + rad}, {ox + rad, oy}, {ox, oy - rad}, {ox - rad, oy}};
-        float[][] c = new float[4][];
-        for (int i = 0; i < 4; i++) {
-            c[i] = new float[]{
-                    cx + rv.x * off[i][0] + uv.x * off[i][1],
-                    cy + rv.y * off[i][0] + uv.y * off[i][1],
-                    cz + rv.z * off[i][0] + uv.z * off[i][1]};
-        }
-        float[][] t = {{0.5f, 0f}, {1f, 0.5f}, {0.5f, 1f}, {0f, 0.5f}};
-        for (int i = 0; i < 4; i++) v(vc, c[i], t[i], r, g, b, a, 1);
-        for (int i = 3; i >= 0; i--) v(vc, c[i], t[i], r, g, b, a, -1);
+        float ax = cx + rv.x * ox + uv.x * (oy + rad), ay = cy + rv.y * ox + uv.y * (oy + rad), az = cz + rv.z * ox + uv.z * (oy + rad);
+        float bx = cx + rv.x * (ox + rad) + uv.x * oy, by = cy + rv.y * (ox + rad) + uv.y * oy, bz = cz + rv.z * (ox + rad) + uv.z * oy;
+        float qx = cx + rv.x * ox + uv.x * (oy - rad), qy = cy + rv.y * ox + uv.y * (oy - rad), qz = cz + rv.z * ox + uv.z * (oy - rad);
+        float dx = cx + rv.x * (ox - rad) + uv.x * oy, dy = cy + rv.y * (ox - rad) + uv.y * oy, dz = cz + rv.z * (ox - rad) + uv.z * oy;
+        // 正面
+        v(vc, ax, ay, az, 0.5f, 0f, r, g, b, a, 1);
+        v(vc, bx, by, bz, 1f, 0.5f, r, g, b, a, 1);
+        v(vc, qx, qy, qz, 0.5f, 1f, r, g, b, a, 1);
+        v(vc, dx, dy, dz, 0f, 0.5f, r, g, b, a, 1);
+        // 背面(反绕序)
+        v(vc, dx, dy, dz, 0f, 0.5f, r, g, b, a, -1);
+        v(vc, qx, qy, qz, 0.5f, 1f, r, g, b, a, -1);
+        v(vc, bx, by, bz, 1f, 0.5f, r, g, b, a, -1);
+        v(vc, ax, ay, az, 0.5f, 0f, r, g, b, a, -1);
     }
 
-    private static void v(VertexConsumer vc, float[] p, float[] t, int r, int g, int b, int a, int ny) {
-        vc.vertex(p[0], p[1], p[2]).color(r, g, b, a).texture(t[0], t[1])
+    private static void v(VertexConsumer vc, float x, float y, float z, float u, float tv,
+                          int r, int g, int b, int a, int ny) {
+        vc.vertex(x, y, z).color(r, g, b, a).texture(u, tv)
                 .overlay(OverlayTexture.DEFAULT_UV).light(0xF000F0).normal(0, ny, 0);
     }
 }

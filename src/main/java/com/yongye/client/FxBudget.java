@@ -3,7 +3,11 @@ package com.yongye.client;
 import com.yongye.YongyeConfig;
 
 /**
- * FX 统一预算闸(m381,3A 打磨路线图第 22 项,按 m379 评审提前落地):
+ * FX 统一质量档与降级入口(m381,3A 打磨路线图第 22 项,按 m379 评审提前落地;
+ * m389 评审定性修正:本类是<b>无状态的质量缩放工具</b>,不是运行时计数预算——
+ * 没有类别额度/每帧消耗/拒绝统计,原路线图写的 FxBudget.allow(类别,代价) 那半截
+ * 「计数型总预算与统计」并入第 23 项 FX 调试面板一起做,届时再补 beginFrame/
+ * tryConsume/used/dropped 一族,现有各管理器接法不变):
  * 全模组客户端特效不再各自判断"低配模式",统一向本类查询质量档并做<b>动态降级而非硬丢</b>。
  *
  * <p>质量档 {@code fxQuality}(/yongye config set fxQuality N 即改即生效,HUD/渲染每帧读):

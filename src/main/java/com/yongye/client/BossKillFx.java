@@ -12,6 +12,10 @@ import net.minecraft.text.Text;
  * 顿帧/震屏由服务端另发的 CombatFxPayload 加强档承担(HEAVY 档避免 KILL 档被 MultiKillFx
  * 重复计链);演出纯 nanoTime 驱动到点必消,同屏 1 个新来替换;
  * enableBossKillFx 与 FxBudget.on() 双门。零新 API 面。
+ *
+ * <p>m389 评审修补:①双门从「只在收包时查」升级为渲染入口每帧复核——演出进行中关开关或
+ * 把 fxQuality 调 0,字幕/金闪立即消失(路线图「关掉开关=零残留」口径);②BOSS 名副标
+ * trimToWidth 裁宽,超长自定义名不出屏。
  */
 public final class BossKillFx {
     private BossKillFx() {}
@@ -41,9 +45,10 @@ public final class BossKillFx {
     public static void register() {
         HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             if (!showing) return;
+            YongyeConfig c = YongyeConfig.get();
+            if (!c.enableBossKillFx || !FxBudget.on()) { showing = false; return; } // m389:运行中关开关/降 OFF 立即消
             long ageMs = (System.nanoTime() - bornNanos) / 1_000_000L;
             if (ageMs >= SHOW_MS) { showing = false; return; }   // 到点必消
-            YongyeConfig c = YongyeConfig.get();
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.options.hudHidden) return;
             int w = ctx.getScaledWindowWidth(), h = ctx.getScaledWindowHeight();
@@ -68,7 +73,8 @@ public final class BossKillFx {
                     0, -4, (a << 24) | 0xFFC332);
             ctx.getMatrices().pop();
             if (!bossName.isEmpty()) {
-                ctx.drawCenteredTextWithShadow(mc.textRenderer, Text.literal(bossName),
+                String sub = mc.textRenderer.trimToWidth(bossName, w - 40); // m389:超长自定义名裁宽防出屏
+                ctx.drawCenteredTextWithShadow(mc.textRenderer, Text.literal(sub),
                         w / 2, h / 2 - 44, (a << 24) | 0xF0EADC);
             }
         });

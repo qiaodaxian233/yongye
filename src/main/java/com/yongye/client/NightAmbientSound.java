@@ -50,6 +50,8 @@ public final class NightAmbientSound {
                 lastWorldRef = mc.world;
                 cooldownTicks = 200;
                 prevHealth = -1;
+                lastCombatNanos = 0;                            // m389:上一世界的战斗抑制不带进新维度
+                lastIdx = -1;                                   // m389:「同种不连播」参照一并复位
                 return;
             }
             if (mc.world == null || mc.player == null) return;

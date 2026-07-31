@@ -1,12 +1,14 @@
 package com.yongye.client;
 
 import com.yongye.YongyeConfig;
+import com.yongye.registry.ModComponents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
@@ -28,6 +30,15 @@ import java.util.Map;
  * ④任务奖励/命令发放也会提示——「获得即播报」语义,符合直觉;
  * ⑤世界引用变化(进世界/重登/换维度)快照清空,首轮只记账不发卡,登录不刷屏。
  *
+ * <p><b>m389 评审修补——快照键从裸 Item 升级为「物品+组件指纹」:</b>
+ * 旧版用 Map&lt;Item,Integer&gt; 且卡片 new ItemStack(item) 重建,会把自定义名/强化/品质组件洗掉
+ * (两把同基础不同强化的武器被合并、卡片显示默认名、tierOf 按裸栈定级失真)。现改为:
+ * 键=物品 id+显示名+Rarity+强化等级(影响显示/定级的组件;<b>刻意不含耐久 DAMAGE</b>,
+ * 否则用工具掉耐久=换指纹会被误报成拾取);快照同时保存该指纹的代表性 {@code ItemStack}
+ * 样本(copyWithCount(1),yarn 已核 method_46651),卡片图标/名字/定级全取自真实组件。
+ * 合并只发生在「物品与相关组件相同」的栈之间。另设<b>每物品总量闸</b>:强化/砧上改名等
+ * 纯组件变化(旧指纹-1 新指纹+1,总量不变)不发卡,只有该物品总数真涨才播报。
+ *
  * <p>队列≤5 张:满了按「品质低者先挤、同品质旧者先挤」淘汰(神器/职业武器金档最后被挤,
  * 评审优先级要求);渲染=右缘滑入 150ms ease-out、驻留、末 300ms 淡出,竖向堆叠;
  * nanoTime 驱动到点必消;enablePickupNotice 与 FxBudget.on() 双门。
@@ -46,15 +57,21 @@ public final class PickupNoticeFx {
 
     private static final class Card {
         final ItemStack icon; final String name; final int count; final int tier; final long bornNanos;
-        Card(Item item, int count, int tier) {
-            this.icon = new ItemStack(item);
-            this.name = this.icon.getName().getString();
+        Card(ItemStack source, int count, int tier) {
+            this.icon = source.copyWithCount(1);           // m389:保留真实组件(自定义名/强化/品质)
+            this.name = source.getName().getString();
             this.count = count; this.tier = tier; this.bornNanos = System.nanoTime();
         }
     }
 
+    /** m389:同指纹物品的快照条目——计数 + 代表性样本栈(发卡直接用真实组件)。 */
+    private static final class Snap {
+        final ItemStack sample; int count;
+        Snap(ItemStack sample) { this.sample = sample; }
+    }
+
     private static final List<Card> CARDS = new ArrayList<>();
-    private static Map<Item, Integer> baseline = null;   // null=未知(首轮只记账)
+    private static Map<String, Snap> baseline = null;    // null=未知(首轮只记账);键=指纹 keyOf
     private static Object lastWorldRef = null;
     private static int scanCd = 0;
 
@@ -72,12 +89,23 @@ public final class PickupNoticeFx {
             if (mc.player == null) return;
             if (!YongyeConfig.get().enablePickupNotice || !FxBudget.on()) { baseline = null; return; }
 
-            Map<Item, Integer> now = snapshot(mc.player.getInventory());
+            Map<String, Snap> now = snapshot(mc.player.getInventory());
             if (baseline != null) {
-                for (Map.Entry<Item, Integer> en : now.entrySet()) {
-                    int gained = en.getValue() - baseline.getOrDefault(en.getKey(), 0);
-                    if (gained > 0) enqueue(new Card(en.getKey(), gained,
-                            LootBeamManager.tierOf(new ItemStack(en.getKey()))));
+                // 每物品总量闸:强化/改名等纯组件变化(旧指纹-1 新指纹+1)总量不变=不发卡
+                Map<Item, Integer> itemGain = new HashMap<>();
+                for (Snap s : now.values()) itemGain.merge(s.sample.getItem(), s.count, Integer::sum);
+                for (Snap s : baseline.values()) itemGain.merge(s.sample.getItem(), -s.count, Integer::sum);
+
+                for (Map.Entry<String, Snap> en : now.entrySet()) {
+                    Snap s = en.getValue();
+                    Snap b = baseline.get(en.getKey());
+                    int gained = s.count - (b == null ? 0 : b.count);
+                    if (gained <= 0) continue;
+                    int allow = itemGain.getOrDefault(s.sample.getItem(), 0);
+                    if (allow <= 0) continue;                        // 总量没涨=组件变换,不是新获得
+                    int shown = Math.min(gained, allow);
+                    itemGain.put(s.sample.getItem(), allow - shown); // 同物品多指纹间不重复计入
+                    enqueue(new Card(s.sample, shown, LootBeamManager.tierOf(s.sample)));
                 }
             }
             baseline = now;
@@ -118,16 +146,26 @@ public final class PickupNoticeFx {
         });
     }
 
-    /** 背包快照:主 36 格 + 副手,只统计 tier>0 的稀有+物品。 */
-    private static Map<Item, Integer> snapshot(PlayerInventory inv) {
-        Map<Item, Integer> m = new HashMap<>();
+    /** 背包快照:主 36 格 + 副手,只统计 tier>0 的稀有+物品;按组件指纹聚合并保存样本栈(m389)。 */
+    private static Map<String, Snap> snapshot(PlayerInventory inv) {
+        Map<String, Snap> m = new HashMap<>();
         for (int i = 0; i < inv.size(); i++) {
             ItemStack st = inv.getStack(i);
             if (st.isEmpty()) continue;
             if (LootBeamManager.tierOf(st) <= 0) continue;
-            m.merge(st.getItem(), st.getCount(), Integer::sum);
+            String key = keyOf(st);
+            Snap s = m.get(key);
+            if (s == null) m.put(key, s = new Snap(st.copyWithCount(1)));
+            s.count += st.getCount();
         }
         return m;
+    }
+
+    /** m389 组件指纹:物品 id + 显示名 + 稀有度 + 强化等级——覆盖影响「显示与定级」的组件;
+     *  刻意不含耐久(DAMAGE):计入的话用工具掉耐久=换指纹,会把耐久变化误报成拾取。 */
+    private static String keyOf(ItemStack st) {
+        return Registries.ITEM.getId(st.getItem()) + "|" + st.getName().getString()
+                + "|" + st.getRarity().name() + "|" + st.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);
     }
 
     /** 入队:满 5 张按「品质低者先挤、同品质旧者先挤」淘汰(高品质优先保留,评审口径)。 */

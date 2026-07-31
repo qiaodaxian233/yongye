@@ -94,8 +94,9 @@ public class MobAuraFeatureRenderer<T extends Entity, M extends EntityModel<T>> 
         }
     }
 
-    /** 0=不冒 1=普通 2=精英 3=BOSS。客户端口径,与精英叠皮/佩恩名判一致。 */
-    private static int tierOf(LivingEntity e) {
+    /** 0=不冒 1=普通 2=精英 3=BOSS。客户端口径,与精英叠皮/佩恩名判一致。
+     *  m389:放宽包内可见——MobHealthBarManager 复用同一判定(评审点名别维护第二套名字表)。 */
+    static int tierOf(LivingEntity e) {
         if (e instanceof AnubisEntity || e instanceof ToroEnderDragonEntity || e instanceof FirePhoenixEntity
                 || e instanceof DeathMageEntity || e instanceof RedSpiderEntity) return 3;
         if (e.hasCustomName() && e.getCustomName() != null) {
