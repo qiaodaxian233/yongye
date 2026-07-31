@@ -98,6 +98,8 @@ public class VisualFxScreen extends Screen {
                             new Btn("多杀弹字·关", "yongye config set enableMultiKillFx false"),
                             new Btn("命中音分层·开", "yongye config set enableCombatHitSound true"),
                             new Btn("命中音分层·关", "yongye config set enableCombatHitSound false"),
+                            new Btn("死亡转场·开", "yongye config set enableDeathTransition true"),
+                            new Btn("死亡转场·关", "yongye config set enableDeathTransition false"),
                     }),
                     new Section("刀光(斩击轨迹)", new Btn[]{
                             new Btn("刀光·开", "yongye config set enableSlashFx true"),

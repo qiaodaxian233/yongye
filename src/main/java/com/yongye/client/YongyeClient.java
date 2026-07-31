@@ -350,6 +350,8 @@ public class YongyeClient implements ClientModInitializer {
         NightfallTransitionFx.register();
         // m382 击杀连锁演出:双杀/三杀/…中屏弹字+升调音(零新网络,复用 KILL 包)
         MultiKillFx.register();
+        // m384 死亡/重生转场:黑幕渐入渐出+重生状况提示(第N天·永夜阶段)
+        DeathTransitionFx.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->

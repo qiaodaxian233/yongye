@@ -3062,3 +3062,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 配置+1(enableCombatHitSound 默认开),**configVersion 129→130**;设置屏「镜头·特效」加 2 钮。括号自检 3 文件全平;getArmor()I 走 yarn 已核(method_6096),AbstractSkeletonEntity/playSound(null,…)/SoundCategory 全在树先例。
 - **待编译验证 3(低险)**:BLOCK_BONE_BLOCK_HIT / BLOCK_ANVIL_LAND / ENTITY_PLAYER_ATTACK_KNOCKBACK 常量首用(注册表自动命名档,ANVIL 族在树 ANVIL_USE 已编;若个别报错=该行换族内在树常量即退)。
 - 实机盯:砍骷髅听脆响、砍僵尸听闷响、砍铁傀儡/穿满甲精英听金属铿、连点节流内不叠音、重击音量略大音调略高、关开关只剩原版叫声。
+
+## m384 死亡/重生转场(3A 打磨第 11 项,2026-07-30)
+- **死亡**=600ms 黑幕渐入后维持暗纱(弱闪光模式上限 160→110),画在 HUD 层位于死亡界面按钮之下,「重生/返回标题」交互零遮挡;**重生**=1s 黑幕渐出(ease-in 前深后快散),渐出中屏幕中央淡入淡出「第 N 天 · <永夜阶段名>」暖灰金一行——一睁眼重建状况感知(天数=ProgressionManager.gameDay(mc.world)+1,在树 m288 同款客户端调用;阶段名=NightfallSync 缓存,空则"昼夜正常")。
+- **状态机(纯客户端零网络)**:每 tick 跟踪本地玩家——活→死起渐入;死→活**或玩家实体引用更换**(重生必换实体,双信号兜底)起渐出;世界引用变化整体复位防跨世界残留(m380 同款检测点);演出 nanoTime 驱动到点必消;enableDeathTransition 与 FxBudget.on() 双门;死亡机制/掉落/重生逻辑零改动。
+- 配置+1,**configVersion 130→131**;设置屏「镜头·特效」加 2 钮。括号自检 4 文件全平;零新 API 零待编译验证(isAlive/fill/gameDay/drawCentered 全在树)。
+- 实机盯:摔死看黑幕渐入且死亡界面按钮能点、点重生看黑幕渐出中央出「第 N 天·永夜X」、keepInventory 开关都试、硬核档死亡界面正常、死亡瞬间退回主菜单再进不残留暗纱、弱闪光开着暗纱变淡、关开关全无。
