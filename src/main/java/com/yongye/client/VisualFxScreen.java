@@ -81,6 +81,13 @@ public class VisualFxScreen extends Screen {
                             new Btn("受击方向·关", "yongye config set enableHurtDirectionFx false"),
                             new Btn("掉落光柱·开", "yongye config set enableLootBeam true"),
                             new Btn("掉落光柱·关", "yongye config set enableLootBeam false"),
+                            new Btn("永夜转场·开", "yongye config set enableNightfallTransition true"),
+                            new Btn("永夜转场·关", "yongye config set enableNightfallTransition false"),
+                            new Btn("转场·柔0.5", "yongye config set transitionIntensity 0.5"),
+                            new Btn("转场·默认1", "yongye config set transitionIntensity 1.0"),
+                            new Btn("转场·重1.5", "yongye config set transitionIntensity 1.5"),
+                            new Btn("弱闪光·开", "yongye config set reduceScreenFlash true"),
+                            new Btn("弱闪光·关", "yongye config set reduceScreenFlash false"),
                     }),
                     new Section("刀光(斩击轨迹)", new Btn[]{
                             new Btn("刀光·开", "yongye config set enableSlashFx true"),

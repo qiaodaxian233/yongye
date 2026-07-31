@@ -173,6 +173,8 @@ public class YongyeClient implements ClientModInitializer {
         // 永夜同步:更新 HUD 状态
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.NightfallSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
+                    // m380 永夜转场:先比对基线再更新(真实变化才起演出,首同步/换世界只记账)
+                    NightfallTransitionFx.onLevelSync(payload.level(), payload.name());
                     nightfallLevel = payload.level();
                     nightfallName = payload.name();
                     nightfallVision = payload.vision();
@@ -340,6 +342,8 @@ public class YongyeClient implements ClientModInitializer {
         LootBeamManager.register();
         // m377 永夜氛围粒子:等级≥1 空中飘灰烬/白烬,越深越浓(纯客户端本地零流量)
         NightAmbientFx.register();
+        // m380 永夜升级/消退转场演出(六边界口径见 NightfallTransitionFx 类注释)
+        NightfallTransitionFx.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->
