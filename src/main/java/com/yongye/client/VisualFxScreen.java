@@ -122,6 +122,8 @@ public class VisualFxScreen extends Screen {
                             new Btn("飘字·小0.7", "yongye config set damageNumberScale 0.7"),
                             new Btn("飘字·默认1", "yongye config set damageNumberScale 1.0"),
                             new Btn("飘字·大1.4", "yongye config set damageNumberScale 1.4"),
+                            new Btn("天赋脉冲·开", "yongye config set enableTalentPulseFx true"),
+                            new Btn("天赋脉冲·关", "yongye config set enableTalentPulseFx false"),
                             new Btn("强化演出·开", "yongye config set enableEnhanceFx true"),
                             new Btn("强化演出·关", "yongye config set enableEnhanceFx false"),
                             new Btn("主菜单动效·开", "yongye config set enableTitleFx true"),

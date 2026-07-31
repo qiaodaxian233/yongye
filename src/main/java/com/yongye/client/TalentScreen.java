@@ -62,6 +62,15 @@ public class TalentScreen extends Screen {
         return ClientTalents.learned.getOrDefault(id, 0);
     }
 
+    // ===== m410(路线图21)加点脉冲:点击只"挂起",TalentSyncPayload 回来该节点等级真涨了才播 —
+    //       服务端拒绝(竞态/点数被别处花掉)=挂起 1.5s 过期,绝不空欢喜;数值/树结构零碰。 =====
+    private String pendingId = null;
+    private int pendingRank = 0;
+    private long pendingNanos = 0;
+    private String pulseId = null;
+    private long pulseNanos = 0;
+    private static final long PULSE_MS = 700, PENDING_TIMEOUT_MS = 1500;
+
     /** 该节点当前是否可加点(与服务端 learn 的门控保持一致)。 */
     private boolean learnable(TalentManager.NodeView n) {
         if (ClientTalents.points <= 0) return false;
@@ -84,6 +93,9 @@ public class TalentScreen extends Screen {
                     if (mouseX >= x && mouseX <= x + NW && mouseY >= y && mouseY <= y + NH) {
                         TalentManager.NodeView n = nodes.get(ni);
                         if (learnable(n)) {
+                            pendingId = n.id();                       // m410 挂起:等服务端确认涨级再播脉冲
+                            pendingRank = rank(n.id());
+                            pendingNanos = System.nanoTime();
                             ClientPlayNetworking.send(new TalentLearnPayload(n.id()));
                         }
                         return true;
@@ -152,6 +164,45 @@ public class TalentScreen extends Screen {
                         x + NW / 2, y + 24, locked ? 0xFFAA5555 : 0xFFBBBBBB);
 
                 if (hover) hoverDesc = n.cn() + " — " + n.desc();
+
+                // —— m410 加点脉冲 —— //
+                long nowNs = System.nanoTime();
+                if (pendingId != null && (nowNs - pendingNanos) / 1_000_000L > PENDING_TIMEOUT_MS) pendingId = null;
+                if (n.id().equals(pendingId) && r > pendingRank) {    // 同步确认:真涨级了
+                    pulseId = n.id(); pulseNanos = nowNs; pendingId = null;
+                }
+                if (n.id().equals(pulseId) && com.yongye.YongyeConfig.get().enableTalentPulseFx) {
+                    long age = (nowNs - pulseNanos) / 1_000_000L;
+                    if (age >= PULSE_MS) { pulseId = null; }
+                    else {
+                        float t = age / (float) PULSE_MS;
+                        // ① 光环扩散:节点边界向外涨 0→10px 的方形环,金绿渐淡(fill 四边,零新 API)
+                        int off = 2 + (int) (10 * t);
+                        int ra = (int) (0xC0 * (1f - t) * (1f - t));
+                        if (ra > 3) {
+                            int ring = (ra << 24) | 0x9CE87A;
+                            ctx.fill(x - off, y - off, x + NW + off, y - off + 1, ring);
+                            ctx.fill(x - off, y + NH + off - 1, x + NW + off, y + NH + off, ring);
+                            ctx.fill(x - off, y - off + 1, x - off + 1, y + NH + off - 1, ring);
+                            ctx.fill(x + NW + off - 1, y - off + 1, x + NW + off, y + NH + off - 1, ring);
+                        }
+                        // ② 连线流光一次:前置节点右缘 → 本节点左缘,亮点带拖尾跑一趟(前 400ms)
+                        if (n.prereq() != null && age < 400) {
+                            int pi = -1;
+                            for (int k = 0; k < nodes.size(); k++) if (nodes.get(k).id().equals(n.prereq())) { pi = k; break; }
+                            if (pi >= 0) {
+                                int fromX = nodeX(pi, nodes.size()) + NW;
+                                int midY = y + NH / 2;
+                                float lt = age / 400f;
+                                int hx = fromX + (int) ((x - fromX) * lt);
+                                int la = (int) (0xE0 * (1f - lt * 0.4f));
+                                ctx.fill(fromX, midY, x, midY + 1, (0x38 << 24) | 0xFFD75A); // 底线微亮
+                                ctx.fill(Math.max(fromX, hx - 6), midY - 1, hx, midY + 2, ((la / 2) << 24) | 0xFFE9A0); // 拖尾
+                                ctx.fill(hx, midY - 1, Math.min(x, hx + 3), midY + 2, (la << 24) | 0xFFF6C8);           // 头
+                            }
+                        }
+                    }
+                }
             }
         }
 
