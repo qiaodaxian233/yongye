@@ -40,6 +40,13 @@ public class YongyeClient implements ClientModInitializer {
     /** m273 连击 HUD 状态:当前连击数 + 跳动帧(计数增加瞬间放大回落) */
     private static int comboCount = 0;
     private static int comboPopTicks = 0;
+    /** m393 HUD 微动效:连击弹簧弹跳时基(nanoTime,亚 tick 平滑;关微动效回 4t 线性) */
+    private static long comboPopNanos = 0;
+    /** m393 HUD 微动效:看板击杀数滚动显示(shown 向真值指数趋近)+ 增量瞬间暖金亮闪 */
+    private static double hudKillShown = -1;
+    private static long hudKillPrev = -1;
+    private static long hudKillFlashNanos = 0;
+    private static long hudKillLastNanos = 0;
     /** m279 连击特效状态:升档冲击环(12→0 外扩淡出)/称号弹字(24→0 上浮)/断连提示(30→0 下沉) */
     private static int comboRingTicks = 0;
     private static int comboRingTier = 0;
@@ -240,7 +247,22 @@ public class YongyeClient implements ClientModInitializer {
             // 行1:第 N 天 · 击杀 X(天数客户端按昼夜时钟直算,睡觉跳夜也算天——m252 收口同源)
             long day = com.yongye.system.ProgressionManager.gameDay(mc.world) + 1;   // 第 1 天起算
             String l1a = cp ? "第" + day + "天" : "第 " + day + " 天";
-            String l1b = (cp ? "·击杀" : " · 击杀 ") + NumFmt.compact(ClientStats.totalKills);
+            // m393 HUD 微动效:击杀数滚动显示(真值涨→显示值指数趋近滚上去,增量瞬间暖金亮闪 0.4s;
+            // 关微动效/质量档 OFF/首帧/回退(重连清零)= 直贴真值,回旧硬跳观感)
+            boolean micro = cfg.enableHudMicroFx && FxBudget.on();
+            long killsNow = ClientStats.totalKills;
+            long nanos = System.nanoTime();
+            if (!micro || hudKillShown < 0 || killsNow < Math.round(hudKillShown)) {
+                hudKillShown = killsNow;
+            } else if (killsNow > Math.round(hudKillShown)) {
+                double dt = Math.min(0.1, Math.max(0, nanos - hudKillLastNanos) / 1_000_000_000.0);
+                hudKillShown += Math.max((killsNow - hudKillShown) * Math.min(1.0, dt * 9.0), dt * 4.0);
+                if (killsNow - hudKillShown < 0.5) hudKillShown = killsNow;   // 收口(含保底速度过冲钳制)
+            }
+            hudKillLastNanos = nanos;
+            if (micro && hudKillPrev >= 0 && killsNow > hudKillPrev) hudKillFlashNanos = nanos;
+            hudKillPrev = killsNow;
+            String l1b = (cp ? "·击杀" : " · 击杀 ") + NumFmt.compact(Math.round(hudKillShown));
             // 行2:下一阶段:XXX (mm:ss)——空名=已至上限,整行省略;紧凑=去空格+短前缀
             String l2 = "";
             String l2t = "";
@@ -286,7 +308,12 @@ public class YongyeClient implements ClientModInitializer {
             ctx.fill(bx, by, bx + bw, by + 1, 0x802E7AD0);                           // 顶描边(面板同蓝系)
             int ty = by + 3;
             ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l1a), bx + 4, ty, 0xFFFFD700);
-            ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l1b), bx + 4 + tr.getWidth(l1a), ty, 0xFFFF7070);
+            int killCol = 0xFFFF7070;
+            if (micro && hudKillFlashNanos > 0) {                          // m393 增量瞬间暖金亮闪回落
+                long fa = (nanos - hudKillFlashNanos) / 1_000_000L;
+                if (fa < 400) killCol = mixColor(0xFFFF7070, 0xFFFFE9A0, 1f - fa / 400f);
+            }
+            ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l1b), bx + 4 + tr.getWidth(l1a), ty, killCol);
             if (!l2.isEmpty()) {
                 ty += 11;
                 ctx.drawTextWithShadow(tr, net.minecraft.text.Text.literal(l2), bx + 4, ty, 0xFFC08CFF);
@@ -379,6 +406,7 @@ public class YongyeClient implements ClientModInitializer {
                     }
                     if (nc > comboCount) {
                         comboPopTicks = 4;
+                        comboPopNanos = System.nanoTime();   // m393 弹簧弹跳时基(微动效开时用)
                         int newTier = nc / 5;
                         if (fancy && newTier > comboCount / 5 && newTier >= 1) {   // 升档瞬间
                             comboRingTicks = 12;
@@ -445,7 +473,16 @@ public class YongyeClient implements ClientModInitializer {
             String main = comboCount + " 连击";
             var m = ctx.getMatrices();
             m.push();
-            float scale = 1.15f + comboPopTicks * 0.09f; // 计数跳动瞬间放大回落
+            float scale;
+            if (com.yongye.YongyeConfig.get().enableHudMicroFx && FxBudget.on() && comboPopNanos > 0) {
+                // m393 弹簧弹跳:300ms 衰减余弦(1.70 猛胀→过 1.15 微缩 squash→回位),nanoTime 亚 tick 平滑;
+                // 关微动效/质量档 OFF = 回 m273 四 tick 线性
+                float pt = (System.nanoTime() - comboPopNanos) / 300_000_000f;
+                scale = pt >= 1f ? 1.15f
+                        : Math.max(1.0f, 1.15f + 0.55f * (float) (Math.exp(-3.2 * pt) * Math.cos(pt * Math.PI * 2)));
+            } else {
+                scale = 1.15f + comboPopTicks * 0.09f; // 计数跳动瞬间放大回落
+            }
             int jx = 0, jy = 0;
             if (fancy && tier >= 3) {                    // m279:3 档起 1px 高频抖动
                 long jt = System.currentTimeMillis() / 50;
@@ -980,6 +1017,13 @@ public class YongyeClient implements ClientModInitializer {
         }
         // ④ 顶部玻璃高光 + 文字
         ctx.fill(x, ty, x + cw, ty + 1, 0x30FFFFFF);
+        // m393 微动效:转好瞬间芯片整面白闪随 readyFlash 12t 衰减(m353 金框闪保留在①;
+        // 关微动效/质量档 OFF=只剩金框闪回旧观感)
+        if (skillCdReadyFlash[slot] > 0
+                && com.yongye.YongyeConfig.get().enableHudMicroFx && FxBudget.on()) {
+            int fa = Math.min(200, skillCdReadyFlash[slot] * 14);
+            ctx.fill(x, ty, x + cw, ty + ch, (fa << 24) | 0xFFFFFF);
+        }
         int tx = x + 5;
         ctx.drawTextWithShadow(tr, Text.literal(keyLabel), tx, ty + 3, keyColor);
         ctx.drawTextWithShadow(tr, Text.literal(name), tx + wKey + 3, ty + 3, nameColor);
@@ -993,6 +1037,16 @@ public class YongyeClient implements ClientModInitializer {
         ctx.fill(-r, r - 1, r, r, color);            // 下边
         ctx.fill(-r, -r + 1, -r + 1, r - 1, color);  // 左边
         ctx.fill(r - 1, -r + 1, r, r - 1, color);    // 右边
+    }
+
+    /** m393:ARGB 线性混合(t=0 取 c0,t=1 取 c1;HUD 微动效亮闪用,纯算术零 API)。 */
+    private static int mixColor(int c0, int c1, float t) {
+        t = Math.max(0f, Math.min(1f, t));
+        int a = (int) (((c0 >>> 24) & 0xFF) + (((c1 >>> 24) & 0xFF) - ((c0 >>> 24) & 0xFF)) * t);
+        int r = (int) (((c0 >> 16) & 0xFF) + (((c1 >> 16) & 0xFF) - ((c0 >> 16) & 0xFF)) * t);
+        int g = (int) (((c0 >> 8) & 0xFF) + (((c1 >> 8) & 0xFF) - ((c0 >> 8) & 0xFF)) * t);
+        int b = (int) ((c0 & 0xFF) + ((c1 & 0xFF) - (c0 & 0xFF)) * t);
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
     /** m345:背包左侧双列 11 钮装配(从 onInitializeClient 抽出,降复杂度热点;内容与抽出前逐行一致)。 */

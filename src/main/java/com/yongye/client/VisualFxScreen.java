@@ -162,6 +162,8 @@ public class VisualFxScreen extends Screen {
                             new Btn("UI动效·关", "yongye config set enableUiFx false"),
                             new Btn("页签过渡·开", "yongye config set enableTabSwitchFx true"),
                             new Btn("页签过渡·关", "yongye config set enableTabSwitchFx false"),
+                            new Btn("HUD微动·开", "yongye config set enableHudMicroFx true"),
+                            new Btn("HUD微动·关", "yongye config set enableHudMicroFx false"),
                     }),
                     new Section("技能CD常显(R/G/V·大招·小技能,m353 玻璃芯片)", new Btn[]{
                             new Btn("CD显示·开", "yongye config set enableSkillCdHud true"),
