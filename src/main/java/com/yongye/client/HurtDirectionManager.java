@@ -45,7 +45,7 @@ public final class HurtDirectionManager {
     public static void register() {
         HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             if (HITS.isEmpty()) return;
-            if (!YongyeConfig.get().enableHurtDirectionFx) { HITS.clear(); return; }
+            if (!YongyeConfig.get().enableHurtDirectionFx || !FxBudget.on()) { HITS.clear(); return; } // m381
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.player == null || mc.options.hudHidden) return;
 
@@ -77,7 +77,9 @@ public final class HurtDirectionManager {
                 float fade = 1f - ageMs / (float) LIFE_MS;
                 float base = (0.55f + 0.45f * h.severity) * fade;
 
+                boolean low = FxBudget.lowDetail(); // m381 LOW 减子段
                 for (int i = 0; i < SEG_DEG.length; i++) {
+                    if (low && (i == 0 || i == SEG_DEG.length - 1)) continue;
                     int a = (int) (255 * Math.min(1f, base * SEG_A[i]));
                     if (a < 8) continue;
                     int col = (a << 24) | 0xE83030;

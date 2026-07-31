@@ -38,7 +38,8 @@ public final class NightAmbientFx {
 
             double density = Math.max(0.0, Math.min(3.0, c.nightAmbientDensity));
             if (density <= 0) return;
-            int count = (int) Math.round(Math.min(14, 2 + lvl * 2) * density);
+            int count = FxBudget.scaleCount((int) Math.round(Math.min(14, 2 + lvl * 2) * density)); // m381 预算闸
+            if (count <= 0) return;
             for (int i = 0; i < count; i++) {
                 // 水平 4~18 格环带(贴脸不撒),垂直 -2~+10
                 double ang = RAND.nextDouble() * Math.PI * 2;

@@ -45,6 +45,12 @@ public class VisualFxScreen extends Screen {
 
     private static final Page[] PAGES = new Page[]{
             new Page("镜头·特效", new Section[]{
+                    new Section("特效质量总档(m381 统一预算闸:量/寿命/距离/分段整体降级)", new Btn[]{
+                            new Btn("质量·全关0", "yongye config set fxQuality 0"),
+                            new Btn("质量·低1", "yongye config set fxQuality 1"),
+                            new Btn("质量·中2", "yongye config set fxQuality 2"),
+                            new Btn("质量·高3(默认)", "yongye config set fxQuality 3"),
+                    }),
                     new Section("镜头(打击震动 / BOSS 登场震 / FOV 冲击 / 打击顿帧)", new Btn[]{
                             new Btn("震动·关", "yongye config set combatFxShakeScale 0"),
                             new Btn("震动·轻0.5", "yongye config set combatFxShakeScale 0.5"),

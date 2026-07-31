@@ -28,7 +28,7 @@ public final class ScreenOpenFx {
     /** 客户端初始化时挂(YongyeClient 调)。 */
     public static void register() {
         ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-            if (!YongyeConfig.get().enableUiFx) return;
+            if (!YongyeConfig.get().enableUiFx || !FxBudget.on()) return; // m381 OFF 档让位
             if (screen == null || !screen.getClass().getName().startsWith("com.yongye.")) return;
             long opened = System.nanoTime();
             ScreenEvents.afterRender(screen).register((scr, ctx, mouseX, mouseY, tickDelta) -> {

@@ -69,7 +69,7 @@ public class YongyeButton extends ButtonWidget {
 
     @Override
     protected void renderWidget(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        boolean fx = YongyeConfig.get().enableUiFx;
+        boolean fx = YongyeConfig.get().enableUiFx && FxBudget.on(); // m381 OFF 档回静态
         long now = System.nanoTime();
         boolean hover = this.active && isHovered();
 

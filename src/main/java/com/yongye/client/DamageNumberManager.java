@@ -61,8 +61,8 @@ public final class DamageNumberManager {
 
     /** 收包入口(主线程)。 */
     public static void onNumber(double x, double y, double z, float amount, int kind) {
-        if (amount <= 0) return;
-        if (NUMS.size() >= MAX) NUMS.remove(0);
+        if (amount <= 0 || !FxBudget.on()) return; // m381 预算闸
+        while (NUMS.size() >= Math.max(12, FxBudget.scaleCount(MAX))) NUMS.remove(0); // m381 缩上限(保底 12)
         // 随机散布:水平 ±0.45 格圆盘内一点,连击时数字错开不叠字
         double ang = RAND.nextDouble() * Math.PI * 2;
         double r = 0.15 + RAND.nextDouble() * 0.30;
@@ -90,10 +90,11 @@ public final class DamageNumberManager {
         while (it.hasNext()) {
             Num n = it.next();
             long ageMs = (now - n.bornNanos) / 1_000_000L;
-            if (ageMs >= LIFE_MS) { it.remove(); continue; }
+            long life = FxBudget.scaleLife(LIFE_MS); // m381 LOW 档短寿
+            if (ageMs >= life) { it.remove(); continue; }
 
             // 位置:ease-out 上浮 1.0 格 + 同曲线水平漂移
-            double t = ageMs / (double) LIFE_MS;
+            double t = ageMs / (double) life;
             double rise = 1.0 - Math.pow(1.0 - t, 3);
             double px = n.x + n.dx * rise, py = n.y + 1.0 * rise, pz = n.z + n.dz * rise;
             double rx = px - cam.x, ry = py - cam.y, rz = pz - cam.z;
@@ -110,7 +111,7 @@ public final class DamageNumberManager {
 
             // 末段淡出(alpha 钳 [8,255]:MC 对 alpha<0x04 强制不透明)
             int alpha = 255;
-            long fadeStart = LIFE_MS - FADE_MS;
+            long fadeStart = life - FADE_MS;
             if (ageMs > fadeStart) alpha = (int) (255 * (1.0 - (ageMs - fadeStart) / (double) FADE_MS));
             alpha = Math.max(8, Math.min(255, alpha));
             int rgb = n.kind == DamageKind.HEAVY ? 0xFFB428 : 0xFFF2E8;

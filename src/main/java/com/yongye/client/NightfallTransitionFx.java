@@ -119,7 +119,7 @@ public final class NightfallTransitionFx {
         lastLevel = level;                                     // 边界 3:终值记账,跨级天然合并
 
         YongyeConfig c = YongyeConfig.get();
-        if (!c.enableNightfallTransition) return;
+        if (!c.enableNightfallTransition || !FxBudget.on()) return; // m381 OFF 档让位
         float inten = (float) Math.max(0.0, Math.min(2.0, c.transitionIntensity));
         if (inten <= 0f) return;
 

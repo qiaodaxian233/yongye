@@ -64,15 +64,15 @@ public final class LootBeamManager {
         if (--scanCd > 0) return;
         scanCd = SCAN_INTERVAL;
         BEAMS.clear();
-        if (!YongyeConfig.get().enableLootBeam) return;
+        if (!YongyeConfig.get().enableLootBeam || !FxBudget.on()) return; // m381 预算闸
         if (mc.world == null || mc.player == null) return;
         for (Entity e : mc.world.getEntities()) {
             if (!(e instanceof ItemEntity item) || !item.isAlive()) continue;
-            if (item.squaredDistanceTo(mc.player) > MAX_DIST_SQ) continue;
+            if (item.squaredDistanceTo(mc.player) > FxBudget.scaleDistSq(MAX_DIST_SQ)) continue; // m381 缩可见距
             int tier = tierOf(item.getStack());
             if (tier <= 0) continue;
             BEAMS.add(new Beam(item, tier));
-            if (BEAMS.size() >= MAX_BEAMS) break;
+            if (BEAMS.size() >= Math.max(4, FxBudget.scaleCount(MAX_BEAMS))) break; // m381 缩上限(保底 4)
         }
     }
 
@@ -118,7 +118,7 @@ public final class LootBeamManager {
                 double ang = Math.toRadians(spinDeg + k * 90);
                 float dx = (float) Math.cos(ang), dz = (float) Math.sin(ang);
                 plane(vc, cx, cy, cz, dx, dz, half, BEAM_H, cr, cg, cb, aCore);
-                plane(vc, cx, cy, cz, dx, dz, half * 2.6f, BEAM_H, cr, cg, cb, aOut);
+                if (!FxBudget.lowDetail()) plane(vc, cx, cy, cz, dx, dz, half * 2.6f, BEAM_H, cr, cg, cb, aOut); // m381 LOW 裁外圈
             }
             // 底部菱形光晕(水平,双面)
             float gr = b.tier == 3 ? 0.65f : 0.5f;
