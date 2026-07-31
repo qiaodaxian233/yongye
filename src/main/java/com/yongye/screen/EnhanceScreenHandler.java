@@ -122,6 +122,11 @@ public class EnhanceScreenHandler extends ScreenHandler {
                 (player instanceof net.minecraft.server.network.ServerPlayerEntity s) ? s : null;
         EquipmentEnhancer.EnhanceResult res = EquipmentEnhancer.enhanceWith(sp, equip, sum);
         input.setStack(MAT_SLOT, ItemStack.EMPTY); // 整组材料全部消耗(成败都耗)
+        if (sp != null) {   // m409 强化结果演出:结果已定,发给操作者本人播演出(纯视觉)
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(sp,
+                    new com.yongye.network.EnhanceFxPayload(res.startLevel, res.endLevel,
+                            res.succeeded, res.failed, res.broke, res.usedProtect));
+        }
         if (res.broke) {
             input.setStack(EQUIP_SLOT, ItemStack.EMPTY);
             if (sp != null) {

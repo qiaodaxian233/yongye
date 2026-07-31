@@ -368,6 +368,11 @@ public class YongyeClient implements ClientModInitializer {
                 }));
         DamageNumberManager.register();
         UltimateCastFx.register();   // m407 大招起手屏幕边缘职业色光晕
+        // m409 强化结果演出:收结果 → EnhanceScreen 上播(数字滚动/粒子柱/碎裂红闪震屏)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.EnhanceFxPayload.ID, (payload, context) ->
+                context.client().execute(() -> EnhanceScreen.onEnhanceFx(
+                        payload.startLevel(), payload.endLevel(), payload.succeeded(),
+                        payload.failed(), payload.broke(), payload.protect())));
         // m374 受击方向指示:收来源坐标 → 准星四周对应方向弹红色弧段(逐帧按视角重算方位)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.HurtDirectionPayload.ID, (payload, context) ->
                 context.client().execute(() -> HurtDirectionManager.onHurt(

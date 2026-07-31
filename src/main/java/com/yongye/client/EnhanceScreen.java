@@ -17,6 +17,21 @@ import net.minecraft.util.Formatting;
  */
 public class EnhanceScreen extends HandledScreen<EnhanceScreenHandler> {
 
+    // ===== m409 强化结果演出状态(收 EnhanceFxPayload 置位;纯时间驱动到点自灭,关屏不残留)=====
+    private static long fxStart = 0;
+    private static int fxFrom, fxTo, fxSucceeded, fxFailed;
+    private static boolean fxBroke, fxProtect;
+    private static final long ROLL_MS = 900, FX_LIFE_MS = 1600, BREAK_FLASH_MS = 600;
+
+    /** 收包入口(YongyeClient 转发,主线程)。碎裂顺手踢一脚镜头(震屏加强,复用打击感通道)。 */
+    public static void onEnhanceFx(int from, int to, int succeeded, int failed, boolean broke, boolean protect) {
+        if (!com.yongye.YongyeConfig.get().enableEnhanceFx) return;
+        fxStart = System.nanoTime();
+        fxFrom = from; fxTo = to; fxSucceeded = succeeded; fxFailed = failed;
+        fxBroke = broke; fxProtect = protect;
+        if (broke) CombatFxManager.onFx(1, 1.5f, 0f, false, false, 0);   // 震屏加强(m275 通道,客户端本地)
+    }
+
     public EnhanceScreen(EnhanceScreenHandler handler, PlayerInventory inv, Text title) {
         super(handler, inv, title);
         this.backgroundWidth = 176;
@@ -61,6 +76,69 @@ public class EnhanceScreen extends HandledScreen<EnhanceScreenHandler> {
                 : Text.literal("放入装备 + 强化材料,点「升级」").formatted(Formatting.GRAY);
         ctx.drawCenteredTextWithShadow(this.textRenderer, preview,
                 this.x + backgroundWidth / 2, this.y + 60, add > 0 ? 0xFF55FFFF : 0xFFAAAAAA);
+        renderEnhanceFx(ctx);   // m409 结果演出叠最上层
         this.drawMouseoverTooltip(ctx, mouseX, mouseY);
+    }
+
+    /** m409 结果演出:成功=Lv 数字滚动+金色粒子柱;碎裂=红闪(reduceScreenFlash 减半)+「碎 裂」+震屏。 */
+    private void renderEnhanceFx(DrawContext ctx) {
+        if (fxStart == 0) return;
+        long age = (System.nanoTime() - fxStart) / 1_000_000L;
+        if (age >= FX_LIFE_MS || !com.yongye.YongyeConfig.get().enableEnhanceFx) { fxStart = 0; return; }
+        int cx = this.x + backgroundWidth / 2;
+        var cfg = com.yongye.YongyeConfig.get();
+
+        if (fxBroke) {
+            // 红闪:整屏,600ms 淡尽;弱闪光=峰值减半
+            if (age < BREAK_FLASH_MS) {
+                int peak = cfg.reduceScreenFlash ? 0x48 : 0x90;
+                int a = (int) (peak * (1.0 - age / (double) BREAK_FLASH_MS));
+                if (a > 3) ctx.fill(0, 0, this.width, this.height, (a << 24) | 0xC01212);
+            }
+            float t = Math.min(1f, age / 300f);
+            int ta = Math.max(8, (int) (255 * (age > FX_LIFE_MS - 400 ? (FX_LIFE_MS - age) / 400f : 1f)));
+            ctx.getMatrices().push();
+            ctx.getMatrices().translate(cx, this.y - 26, 0);
+            float sc = 2.2f + 0.8f * (1f - t) * (1f - t);           // 砸下来:2.2 收尾,起手更大
+            ctx.getMatrices().scale(sc, sc, 1f);
+            Text broke = Text.literal("碎 裂").formatted(Formatting.BOLD);
+            ctx.drawText(this.textRenderer, broke, -this.textRenderer.getWidth(broke) / 2, -4,
+                    (ta << 24) | 0xD42B3A, true);
+            ctx.getMatrices().pop();
+            if (fxProtect) { /* 不可达:碎裂与保护互斥,保护走成功分支 */ }
+            return;
+        }
+
+        // —— 成功/部分成功 —— //
+        // 等级数字滚动:900ms ease-out 从 from 滚到 to
+        double rt = Math.min(1.0, age / (double) ROLL_MS);
+        rt = 1.0 - Math.pow(1.0 - rt, 3);
+        int shown = fxFrom + (int) Math.round((fxTo - fxFrom) * rt);
+        int ta = Math.max(8, (int) (255 * (age > FX_LIFE_MS - 400 ? (FX_LIFE_MS - age) / 400f : 1f)));
+        ctx.getMatrices().push();
+        ctx.getMatrices().translate(cx, this.y - 24, 0);
+        float pop = age < 140 ? 1.4f + (age / 140f) * 0.6f : 2.0f;   // 弹出 1.4→2.0
+        ctx.getMatrices().scale(pop, pop, 1f);
+        Text lv = Text.literal("Lv." + shown).formatted(Formatting.BOLD);
+        ctx.drawText(this.textRenderer, lv, -this.textRenderer.getWidth(lv) / 2, -4,
+                (ta << 24) | 0xFFC63C, true);
+        ctx.getMatrices().pop();
+        if (fxFailed > 0 || fxProtect) {
+            String sub = "成功 " + fxSucceeded + " / 失败 " + fxFailed + (fxProtect ? "  ✔保护卷抵挡碎裂" : "");
+            ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(sub), cx, this.y - 8,
+                    (ta << 24) | 0xE8D8A0);
+        }
+        // 金色粒子柱:14 颗程序化火花在面板中轴 ±30px 内上升淡出(无状态:序号做种,逐帧重算)
+        for (int i = 0; i < 14; i++) {
+            long seed = i * 7919L + 13;
+            double phase = ((age + (seed % 500)) % 1100) / 1100.0;   // 各自错相循环上升
+            if (age > FX_LIFE_MS - 400 && phase > 0.7) continue;      // 收尾别再冒新头
+            int px = cx + (int) ((seed * 31 % 61) - 30);
+            int py = (int) (this.y + 70 - phase * 96);
+            int pa = (int) (200 * (1.0 - phase) * (ta / 255f));
+            if (pa <= 3) continue;
+            int sz = 1 + (int) (seed % 2);
+            ctx.fill(px, py, px + sz, py + sz, (pa << 24) | (phase < 0.5 ? 0xFFD75A : 0xFFB428));
+        }
     }
 }

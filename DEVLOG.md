@@ -3267,3 +3267,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **待编译验证(低险)**:mixin 注入 TitleScreen.init(在树 render TAIL 先例同类;init 为 Screen 覆写方法名稳定);mixin 新增静态字段未标 @Unique(与在树 mixin 同风格,仅编译警告级)。
 - 配置+1,**configVersion 143→144**;设置屏主菜单动效开/关两钮。
 - 实机盯:开游戏看标题 600ms 浮入、随后 3s 一轮呼吸(辉光深浅+微亮暗);进单机再退回主菜单再淡入一次;关开关立刻回静态;全景背景下呼吸别过亮(嫌晃就关)。
+
+## m409 强化结果演出(路线图20,2026-08-01)
+- **新 S2C 包 EnhanceFxPayload**(start/end/succeeded/failed/broke/protect,VarInt+Boolean):EnhanceScreenHandler 结算完 attempt 结果后发给操作者本人——**结果算完才发包,强化逻辑/概率/落袋一个字不碰**(路线图红线);字段名与 EquipmentEnhancer.EnhanceResult 逐一核实。
+- **演出画在 EnhanceScreen 上层**(自家 GUI 类,HUD 回调会被界面暗幕盖住故不走 HUD):成功=「Lv.N」金色大字 900ms ease-out 从旧级滚到新级+弹出 1.4→2.0,有失败/保护卷再补一行小字;**金色粒子柱**=14 颗程序化火花在面板中轴 ±30px 循环上升淡出(序号做种逐帧重算,**无状态零对象池**),收尾 400ms 不再冒新头;碎裂=整屏红闪 600ms 淡尽(**reduceScreenFlash 峰值减半**)+「碎 裂」暗红大字砸落(2.2 收尾)+`CombatFxManager.onFx` 本地踢震屏 1.5(复用 m275 打击感通道零新协议)。纯时间驱动 1.6s 到点自灭,关屏零残留;保护卷与碎裂互斥(保护走成功分支)注释坐实。
+- 配置+1(enableEnhanceFx 默开),**configVersion 144→145**;设置屏强化演出开/关两钮;全 fill/drawText/矩阵缩放在树零新 API;七文件括号平。
+- 实机盯:强化成功看数字从旧级滚到新级+金火花柱;混料含失败看小字账目;碎裂看红闪+碎裂大字+镜头晃一下(弱闪光开=红闪减半);关演出回 m302 纯聊天条;演出中途关界面再开不残影。
