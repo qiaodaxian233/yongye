@@ -329,6 +329,11 @@ public class YongyeClient implements ClientModInitializer {
                 context.client().execute(() -> DamageNumberManager.onNumber(
                         payload.x(), payload.y(), payload.z(), payload.amount(), payload.kind())));
         DamageNumberManager.register();
+        // m374 受击方向指示:收来源坐标 → 准星四周对应方向弹红色弧段(逐帧按视角重算方位)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.HurtDirectionPayload.ID, (payload, context) ->
+                context.client().execute(() -> HurtDirectionManager.onHurt(
+                        payload.x(), payload.z(), payload.severity())));
+        HurtDirectionManager.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->

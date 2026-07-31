@@ -72,6 +72,8 @@ public class VisualFxScreen extends Screen {
                             new Btn("飘字·小0.7", "yongye config set damageNumberScale 0.7"),
                             new Btn("飘字·默认1", "yongye config set damageNumberScale 1.0"),
                             new Btn("飘字·大1.4", "yongye config set damageNumberScale 1.4"),
+                            new Btn("受击方向·开", "yongye config set enableHurtDirectionFx true"),
+                            new Btn("受击方向·关", "yongye config set enableHurtDirectionFx false"),
                     }),
                     new Section("刀光(斩击轨迹)", new Btn[]{
                             new Btn("刀光·开", "yongye config set enableSlashFx true"),

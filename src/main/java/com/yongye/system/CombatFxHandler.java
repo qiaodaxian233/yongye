@@ -118,5 +118,41 @@ public final class CombatFxHandler {
                         entity.getX(), entity.getBodyY(0.6), entity.getZ(), 16, 0.5, 0.5, 0.5, 0.3);
             }
         });
+
+        // —— m374 受击方向指示:玩家挨打 → 把来源水平坐标发给受击者(观察者,永远放行)。 —— //
+        //    注册在格挡(m259)/坦克真减伤(m208)之后:被挡下/取消的伤害事件链已短路,不出指示——
+        //    与「无效伤害天然不出打击感」口径一致。无坐标来源的环境伤害(摔落/中毒/凋零)天然跳过。
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            YongyeConfig c = YongyeConfig.get();
+            if (!c.enableHurtDirectionFx || amount <= 0) return true;
+            if (!(entity instanceof ServerPlayerEntity victim)) return true;
+
+            // 来源坐标:攻击者优先(近战/弓手本体),弹射物/无主来源实体兜底(getSource 在树 m192 先例)
+            var src = source.getAttacker() != null ? source.getAttacker() : source.getSource();
+            if (src == null || src == victim) return true;
+
+            long now = victim.getWorld().getTime();
+            if (!hurtDirBudgetOk(victim.getUuid(), now)) return true;
+
+            float severity = amount / Math.max(1.0f, victim.getMaxHealth());
+            ServerPlayNetworking.send(victim, new com.yongye.network.HurtDirectionPayload(
+                    src.getX(), src.getZ(), Math.min(1.0f, severity)));
+            return true;
+        });
+    }
+
+    /** m374 受击方向指示每玩家每 tick 限发条数(被围殴/AOE 弹幕时防包洪)。 */
+    private static final int HURT_DIR_PER_TICK = 4;
+    private static final Map<UUID, long[]> HURT_DIR_BUDGET = new HashMap<>();
+
+    private static boolean hurtDirBudgetOk(UUID id, long now) {
+        long[] st = HURT_DIR_BUDGET.get(id);
+        if (st == null || st[0] != now) {
+            HURT_DIR_BUDGET.put(id, new long[]{now, 1});
+            return true;
+        }
+        if (st[1] >= HURT_DIR_PER_TICK) return false;
+        st[1]++;
+        return true;
     }
 }
