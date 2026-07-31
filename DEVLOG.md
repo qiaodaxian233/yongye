@@ -3099,3 +3099,6 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 配置+2,**configVersion 134→135**;设置屏 5 钮(开/关+轻0.3/默认0.6/响1.0)。括号自检 6 文件全平。
 - **待编译验证 2(低险,各一行退路)**:AMBIENT_CAVE 按 RegistryEntry 型取 .value()(.value() 在树 Yongye:183;若实为普通 SoundEvent 报错=删 .value() 即退);PHANTOM_AMBIENT/ELDER_GUARDIAN_AMBIENT 常量首用(注册表自动命名档,报错换池内在树常量)。World.playSound 客户端调用同签名在树。
 - 实机盯:/yongye nightfall 2 站着等半分钟听远处幽响且有方向感、连续两声不同款、被怪咬着打时基本听不到、转场演出播放中不插音、音量三档点着变、等级 1 无声、关开关绝迹。
+
+## m388 勘误(2026-07-30)
+- m388(e6ec79e)的 commit 标题误带「m389前置说明见m388」字样(拼提交信息时手滑),内容确为 m388 永夜音景本体;里程碑账以 DEVLOG/HANDOVER 为准,下一里程碑照常 m389。AMBIENT_CAVE.value()/两首用常量随本次 CI 编译通过,待编译验证清零。
