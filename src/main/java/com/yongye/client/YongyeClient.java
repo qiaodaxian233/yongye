@@ -357,6 +357,8 @@ public class YongyeClient implements ClientModInitializer {
         DeathTransitionFx.register();
         // m385 怪物头顶微型血条:最近命中的怪显 3 秒插值血条(精英紫条金线菱记,BOSS 剔除)
         MobHealthBarManager.register();
+        // m386 拾取通知卡:稀有物真正进包时右缘滑入品质色卡片(背包差分口径,满包/被截胡不误报)
+        PickupNoticeFx.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->

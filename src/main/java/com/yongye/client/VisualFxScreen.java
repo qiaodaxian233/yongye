@@ -102,6 +102,8 @@ public class VisualFxScreen extends Screen {
                             new Btn("死亡转场·关", "yongye config set enableDeathTransition false"),
                             new Btn("怪物血条·开", "yongye config set enableMobHealthBar true"),
                             new Btn("怪物血条·关", "yongye config set enableMobHealthBar false"),
+                            new Btn("拾取通知·开", "yongye config set enablePickupNotice true"),
+                            new Btn("拾取通知·关", "yongye config set enablePickupNotice false"),
                     }),
                     new Section("刀光(斩击轨迹)", new Btn[]{
                             new Btn("刀光·开", "yongye config set enableSlashFx true"),

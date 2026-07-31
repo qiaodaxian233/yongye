@@ -77,7 +77,7 @@ public final class LootBeamManager {
     }
 
     /** 品质定级:0=不起柱 1=蓝 2=紫 3=金。 */
-    private static int tierOf(ItemStack stack) {
+    static int tierOf(ItemStack stack) { // m386:放宽包内可见,PickupNoticeFx 复用同一定级口径
         if (stack.isEmpty()) return 0;
         Item it = stack.getItem();
         if (it instanceof ClassWeaponItem || it instanceof ArtifactItem) return 3;
