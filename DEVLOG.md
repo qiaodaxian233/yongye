@@ -3260,3 +3260,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **观感**:新 UltimateCastFx——屏幕四边向内职业色光带(肉盾钢蓝/战士炽橙/术士紫/剑客青/武僧金/刺客绯红/召唤师翠绿,兜底暖金),80ms 冲峰→余程平方淡出总 0.4s(FxBudget.scaleLife 低档缩短保底 150ms);上下=fillGradient 纵向渐隐(勋章屏在树先例),左右=fillGradient 仅纵向故用**双层阶梯 fill**(内窄 3/4 峰/外宽 1/3 峰)近似横向衰减;峰值 0x5A×skillCastFxIntensity,**reduceScreenFlash 开=减半**(全局弱闪光铁律),alpha≤3 直接不画;同时最多 1 个新覆盖旧(全屏叠层预算)。
 - 配置+2(enableSkillCastFx 默开+强度倍率),**configVersion 142→143**;设置屏开关两钮+数值页「起手光晕」滑条;全 fill/fillGradient 在树零新 API;四文件括号平。
 - 实机盯:放大招看四边职业色闪 0.4s(七职业各色);重登带 CD 不闪;开弱闪光变淡一半;拖强度滑条 0=彻底不见;低特效档更短更淡。
+
+## m408 主菜单动效:标题呼吸辉光+入场淡入(路线图19,2026-08-01)
+- TitleScreenMixin(m79 起的底子)扩:**呼吸**=3s 正弦周期,辉光层颜色暗红(0x4A0000)↔血红(0x8C0808)摆+主体亮度 ±8% 微摆+呼吸峰再叠一圈 2px 远偏移描边"涨开";**入场**=打开主菜单头 600ms 标题/副标 alpha 0→255 ease-out 淡入+标题从上方 6px 落到位,进屏时刻由 `@Inject(method="init",HEAD)` 重置静态字段(TitleScreen 每次进屏都跑 init,切回再淡一次观感统一)。
+- 纯时间驱动(nanoTime)零状态残留;alpha 恒显式且钳 ≥8(MC 文本 alpha<0x04 强制不透明);呼吸幅 ±8% 远低闪光阈,暂不吃 reduceScreenFlash(25 号低刺激档扩展时统一收编,已在路线图该项注记)。enableTitleFx 关=逐帧回 m125 静态观感。
+- **待编译验证(低险)**:mixin 注入 TitleScreen.init(在树 render TAIL 先例同类;init 为 Screen 覆写方法名稳定);mixin 新增静态字段未标 @Unique(与在树 mixin 同风格,仅编译警告级)。
+- 配置+1,**configVersion 143→144**;设置屏主菜单动效开/关两钮。
+- 实机盯:开游戏看标题 600ms 浮入、随后 3s 一轮呼吸(辉光深浅+微亮暗);进单机再退回主菜单再淡入一次;关开关立刻回静态;全景背景下呼吸别过亮(嫌晃就关)。

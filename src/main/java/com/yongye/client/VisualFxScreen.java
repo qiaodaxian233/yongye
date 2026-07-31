@@ -122,6 +122,8 @@ public class VisualFxScreen extends Screen {
                             new Btn("飘字·小0.7", "yongye config set damageNumberScale 0.7"),
                             new Btn("飘字·默认1", "yongye config set damageNumberScale 1.0"),
                             new Btn("飘字·大1.4", "yongye config set damageNumberScale 1.4"),
+                            new Btn("主菜单动效·开", "yongye config set enableTitleFx true"),
+                            new Btn("主菜单动效·关", "yongye config set enableTitleFx false"),
                             new Btn("起手光晕·开", "yongye config set enableSkillCastFx true"),
                             new Btn("起手光晕·关", "yongye config set enableSkillCastFx false"),
                             new Btn("飘字合并·开", "yongye config set enableDamageNumberMerge true"),
