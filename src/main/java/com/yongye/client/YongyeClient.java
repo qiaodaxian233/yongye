@@ -332,8 +332,11 @@ public class YongyeClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
         // m373 伤害飘字:收命中数值 → 世界内怪身上弹漂浮数字(普通白/重击金大字)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.DamageNumberPayload.ID, (payload, context) ->
-                context.client().execute(() -> DamageNumberManager.onNumber(
-                        payload.x(), payload.y(), payload.z(), payload.amount(), payload.kind())));
+                context.client().execute(() -> {
+                    DamageNumberManager.onNumber(
+                            payload.x(), payload.y(), payload.z(), payload.amount(), payload.kind());
+                    MobHealthBarManager.onHit(payload.targetId());   // m385 微型血条追踪同包分发
+                }));
         DamageNumberManager.register();
         // m374 受击方向指示:收来源坐标 → 准星四周对应方向弹红色弧段(逐帧按视角重算方位)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.HurtDirectionPayload.ID, (payload, context) ->
@@ -352,6 +355,8 @@ public class YongyeClient implements ClientModInitializer {
         MultiKillFx.register();
         // m384 死亡/重生转场:黑幕渐入渐出+重生状况提示(第N天·永夜阶段)
         DeathTransitionFx.register();
+        // m385 怪物头顶微型血条:最近命中的怪显 3 秒插值血条(精英紫条金线菱记,BOSS 剔除)
+        MobHealthBarManager.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->

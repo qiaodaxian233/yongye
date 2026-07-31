@@ -71,11 +71,12 @@ public final class CombatFxHandler {
 
             // —— m373 伤害飘字:每一下命中都弹数字(刻意不吃下方 3t 手感节流——数字漏帧=报假账);
             //    AOE 刷屏由独立的每玩家每 tick 限额兜住,同屏总量客户端 DamageNumberManager 再兜一层。 —— //
-            if (c.enableDamageNumbers && dmgNumBudgetOk(p.getUuid(), now)) {
+            if ((c.enableDamageNumbers || c.enableMobHealthBar) && dmgNumBudgetOk(p.getUuid(), now)) {
                 ServerPlayNetworking.send(p, new com.yongye.network.DamageNumberPayload(
                         entity.getX(), entity.getBodyY(0.9), entity.getZ(), amount,
                         frac >= 0.25f ? com.yongye.network.DamageNumberPayload.HEAVY
-                                      : com.yongye.network.DamageNumberPayload.HIT));
+                                      : com.yongye.network.DamageNumberPayload.HIT,
+                        entity.getId()));       // m385:目标 id 供微型血条追踪(两功能任一开即发,客户端各取所需)
             }
 
             Long last = LAST_HIT_FX.get(p.getUuid());

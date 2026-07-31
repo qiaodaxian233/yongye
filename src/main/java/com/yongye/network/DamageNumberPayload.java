@@ -15,8 +15,9 @@ import net.minecraft.util.Identifier;
  * @param x/y/z  数字出生点(怪物身上)
  * @param amount 这一下的伤害值(服务端真值,客户端只负责显示)
  * @param kind   0=普通命中 1=重击(单刀≥怪最大生命 25%,与 CombatFxPayload.HEAVY 同口径)
+ * @param targetId 被命中实体的网络 id(m385 微型血条追踪用;顺手为飘字同目标合并留口)
  */
-public record DamageNumberPayload(double x, double y, double z, float amount, int kind)
+public record DamageNumberPayload(double x, double y, double z, float amount, int kind, int targetId)
         implements CustomPayload {
 
     public static final int HIT = 0, HEAVY = 1;
@@ -31,9 +32,10 @@ public record DamageNumberPayload(double x, double y, double z, float amount, in
                 buf.writeDouble(value.z);
                 buf.writeFloat(value.amount);
                 buf.writeInt(value.kind);
+                buf.writeInt(value.targetId);
             },
             buf -> new DamageNumberPayload(buf.readDouble(), buf.readDouble(), buf.readDouble(),
-                    buf.readFloat(), buf.readInt())
+                    buf.readFloat(), buf.readInt(), buf.readInt())
     );
 
     @Override
