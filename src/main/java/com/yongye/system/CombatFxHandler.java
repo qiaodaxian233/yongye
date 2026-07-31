@@ -37,6 +37,23 @@ public final class CombatFxHandler {
     /** 上一次给该玩家发命中 FX 的世界时间(transient,不持久化)。 */
     private static final Map<UUID, Long> LAST_HIT_FX = new HashMap<>();
 
+    /** m373 伤害飘字每玩家每 tick 限发条数(AOE 一刀扫几十只时防包洪与客户端铺屏)。 */
+    private static final int DMG_NUM_PER_TICK = 8;
+    /** 飘字限额跟踪:值=[该 tick 的世界时间, 该 tick 已发条数](transient)。 */
+    private static final Map<UUID, long[]> DMG_NUM_BUDGET = new HashMap<>();
+
+    /** 该玩家本 tick 是否还有飘字额度(有则顺手计数)。 */
+    private static boolean dmgNumBudgetOk(UUID id, long now) {
+        long[] st = DMG_NUM_BUDGET.get(id);
+        if (st == null || st[0] != now) {
+            DMG_NUM_BUDGET.put(id, new long[]{now, 1});
+            return true;
+        }
+        if (st[1] >= DMG_NUM_PER_TICK) return false;
+        st[1]++;
+        return true;
+    }
+
     public static void register() {
         // —— 命中/重击:观察者,永远 return true —— //
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
@@ -47,11 +64,21 @@ public final class CombatFxHandler {
             if (entity == p) return true;
 
             long now = p.getWorld().getTime();
+            float frac = amount / Math.max(1.0f, entity.getMaxHealth()); // 这一下占怪最大生命的比例
+
+            // —— m373 伤害飘字:每一下命中都弹数字(刻意不吃下方 3t 手感节流——数字漏帧=报假账);
+            //    AOE 刷屏由独立的每玩家每 tick 限额兜住,同屏总量客户端 DamageNumberManager 再兜一层。 —— //
+            if (c.enableDamageNumbers && dmgNumBudgetOk(p.getUuid(), now)) {
+                ServerPlayNetworking.send(p, new com.yongye.network.DamageNumberPayload(
+                        entity.getX(), entity.getBodyY(0.9), entity.getZ(), amount,
+                        frac >= 0.25f ? com.yongye.network.DamageNumberPayload.HEAVY
+                                      : com.yongye.network.DamageNumberPayload.HIT));
+            }
+
             Long last = LAST_HIT_FX.get(p.getUuid());
             if (last != null && now - last < HIT_THROTTLE_TICKS) return true;
             LAST_HIT_FX.put(p.getUuid(), now);
 
-            float frac = amount / Math.max(1.0f, entity.getMaxHealth()); // 这一下占怪最大生命的比例
             int kind = frac >= 0.25f ? CombatFxPayload.HEAVY : CombatFxPayload.HIT;
             // m248:基准强度整体上调(实机反馈「打击感还是不强」)——普通命中 0.30→0.55 起步、
             // 封顶 1.0→1.5,重击 FOV 1.4→2.4、轻击 0.6→1.1;倍率配置照乘,想回旧手感把两倍率设 0.6 即可。

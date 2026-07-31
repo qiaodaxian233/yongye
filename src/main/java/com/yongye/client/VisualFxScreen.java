@@ -67,6 +67,11 @@ public class VisualFxScreen extends Screen {
                             new Btn("击杀闪光·关", "yongye config set combatFxKillFlash false"),
                             new Btn("击杀音效·开", "yongye config set combatFxKillSound true"),
                             new Btn("击杀音效·关", "yongye config set combatFxKillSound false"),
+                            new Btn("伤害飘字·开", "yongye config set enableDamageNumbers true"),
+                            new Btn("伤害飘字·关", "yongye config set enableDamageNumbers false"),
+                            new Btn("飘字·小0.7", "yongye config set damageNumberScale 0.7"),
+                            new Btn("飘字·默认1", "yongye config set damageNumberScale 1.0"),
+                            new Btn("飘字·大1.4", "yongye config set damageNumberScale 1.4"),
                     }),
                     new Section("刀光(斩击轨迹)", new Btn[]{
                             new Btn("刀光·开", "yongye config set enableSlashFx true"),

@@ -324,6 +324,11 @@ public class YongyeClient implements ClientModInitializer {
                         payload.kind(), payload.shake(), payload.fov(), payload.flash(), payload.sound(),
                         payload.hitstop())));
         ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
+        // m373 伤害飘字:收命中数值 → 世界内怪身上弹漂浮数字(普通白/重击金大字)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.DamageNumberPayload.ID, (payload, context) ->
+                context.client().execute(() -> DamageNumberManager.onNumber(
+                        payload.x(), payload.y(), payload.z(), payload.amount(), payload.kind())));
+        DamageNumberManager.register();
         // m273 连击计数器:收计数 → HUD 在热栏右上画连击数(变化瞬间弹一下)
         // m279:升档瞬间触发冲击环+称号弹字+升调音效;10 连以上被断触发断连提示
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.ComboPayload.ID, (payload, context) ->

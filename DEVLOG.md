@@ -2986,3 +2986,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 新增 `POLISH_ROADMAP.md`:12 项打磨清单(伤害飘字/受击方向指示/UI 动效底座/掉落光柱/永夜氛围粒子/升级转场/多杀弹字/页签过渡/命中音分层/美术占位/死亡转场/HUD 微动效),每项注明「防重复」列——立项前已对账现有系统(顿帧震屏 m239/m275、濒死渐晕 m287、连击全家桶 m273~284 均已有,不重做),各项只补缺失层。
 - 后续会话按序号领项,一项=一个里程碑,做完在表内打勾记里程碑号;通用验收口径(开关全回退/高频场景零掉帧/BMP 字符/满 alpha/新 API 先核)写在表下。
 - 纯文档,零代码零配置。
+
+## m373 伤害飘字(3A 打磨路线图第 1 项,2026-07-30)
+- **命中出数字**:玩家每一下打中怪,怪身上弹漂浮伤害数字——普通=暖白小字(0.022 基准,略小于名牌不喧宾),重击(≥怪最大生命 25%,与 CombatFxPayload.HEAVY 同口径)=金色大字 ×1.45;动效=弹出过冲(140ms 0.4→1.35 再 90ms 回 1.0)→ease-out 上浮 1 格带随机水平散布(防叠字)→末 260ms 淡出;数字口径=≥10 取整走 NumFmt.compact,<10 保一位小数(前期 2.5 伤取整成 2 是报假账)。
+- **链路**:服务端 CombatFxHandler 命中观察者里先发新 DamageNumberPayload(S2C:xyz+amount+kind)——**刻意不吃 3t 手感节流**(数字漏帧=报假账),AOE 刷屏由独立限额兜住=每玩家每 tick 限发 8 条(DMG_NUM_BUDGET),客户端 DamageNumberManager 同屏 60 条上限+48 格外不画再兜一层;frac 计算前移一次算两用。
+- **渲染**:AFTER_TRANSLUCENT(MagicCircle 同挂点),广告牌=手工 Matrix4f(translation→rotate(相机四元数)→scale(-s,-s,s) 名牌同约定)不碰 MatrixStack;文本走 TextRenderer.draw(String,…,Matrix4f,VertexConsumerProvider,TextLayerType,int,int)。**yarn 1.21.1 映射已核**:Camera.getRotation=method_23767 返 org.joml.Quaternionf、draw=method_27521 逐参对上;淡出走 alpha 高字节钳 [8,255](MC 对 <0x04 强制不透明),颜色满 alpha(m213 铁律)。
+- 配置+2(enableDamageNumbers 默认开 / damageNumberScale 默认 1.0 渲染端钳 0.3~3.0),**configVersion 121→122**;设置屏「镜头·特效」页加 5 钮(开/关+小0.7/默认1/大1.4)。括号自检 7 文件全平;import 逐条比对在树先例全中。
+- **待编译验证 1(极低险)**:TextRenderer.TextLayerType.NORMAL 常量名仓库首用(1.17 起未变;若报错换同枚举 SEE_THROUGH/POLYGON_OFFSET 任一)。
+- 实机盯:砍怪看白字弹出上浮淡出、重击看金色大字、AOE 清一群看数字错开不铺屏、大数显示 1.5K/2.3M 紧凑、设置屏点「飘字·关」立即绝迹、点大小档立即变。

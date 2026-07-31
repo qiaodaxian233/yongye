@@ -83,6 +83,7 @@ public final class YongyeNet {
         PayloadTypeRegistry.playS2C().register(com.yongye.network.SkillCdPayload.ID, com.yongye.network.SkillCdPayload.CODEC); // m346 技能CD常显HUD
         PayloadTypeRegistry.playS2C().register(com.yongye.network.BossAtlasPayload.ID, com.yongye.network.BossAtlasPayload.CODEC); // m351 Boss图鉴页
         PayloadTypeRegistry.playS2C().register(com.yongye.network.SkyEventPayload.ID, com.yongye.network.SkyEventPayload.CODEC); // m352 事件限定天象
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.DamageNumberPayload.ID, com.yongye.network.DamageNumberPayload.CODEC); // m373 伤害飘字
         // m356 材料仓库:开屏请求/存入全部/按行取出 → 服务端权威处理后回快照("键=数量\n" 多行)
         PayloadTypeRegistry.playC2S().register(com.yongye.network.RequestVaultPayload.ID, com.yongye.network.RequestVaultPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(com.yongye.network.VaultDepositPayload.ID, com.yongye.network.VaultDepositPayload.CODEC);
