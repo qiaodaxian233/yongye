@@ -267,14 +267,20 @@ public final class EquipmentEnhancer {
         // 耐久:按等级提升上限(从原始最大耐久起算),并修满
         if (level > 0 && pristine.isDamageable()) {
             int baseMax = pristine.getMaxDamage();
-            int newMax = baseMax + level * c.enhanceDurabilityPerLevel;
-            int curDamage = out.getDamage(); // 保留已损耗,不免费修复
+            // m395:long 乘法+十亿封顶——旧 int 乘法在 level 数亿时回卷成负 MAX_DAMAGE,存档编码
+            // 校验直接抛 IllegalStateException=服务器硬崩循环(2026-07-31 作者崩报两数字与本公式
+            // 逐位吻合:MAX_DAMAGE=-509932352 / DAMAGE=newMax-1=-509932353);m293 只 long 化了
+            // 等级本身,这条乘法当时漏了。封顶 1e9 = int 安全且远超任何实际耐久需要。
+            long newMaxL = (long) baseMax + (long) level * Math.max(0, c.enhanceDurabilityPerLevel);
+            int newMax = (int) Math.max(1L, Math.min(newMaxL, 1_000_000_000L));
+            int curDamage = Math.max(0, out.getDamage()); // 保留已损耗,不免费修复;历史负损耗一并钳回
             out.set(DataComponentTypes.MAX_DAMAGE, newMax);
             out.set(DataComponentTypes.DAMAGE, Math.min(curDamage, newMax - 1));
         } else if (level == 0 && pristine.isDamageable()) {
             // m324:归零同时把耐久上限组件还原为物品默认(remove=回默认),损耗钳到默认上限内
             out.remove(DataComponentTypes.MAX_DAMAGE);
-            out.set(DataComponentTypes.DAMAGE, Math.min(out.getDamage(), Math.max(1, pristine.getMaxDamage()) - 1));
+            out.set(DataComponentTypes.DAMAGE,
+                    Math.min(Math.max(0, out.getDamage()), Math.max(1, pristine.getMaxDamage()) - 1)); // m395:同钳非负
         }
         return out;
     }
@@ -283,6 +289,40 @@ public final class EquipmentEnhancer {
         // m293:long 运算防 int 溢出(等级堆近 21.4 亿再加会回卷成负数→被 withLevel 钳 0=一夜清零)
         long v = (long) getLevel(equipment) + delta;
         return withLevel(equipment, (int) Math.max(0, Math.min(Integer.MAX_VALUE, v)));
+    }
+
+    /** m395 负耐久自愈守卫(Yongye.register 调,只挂一次):每 100t 扫全服玩家背包(含盔甲/副手),
+     *  把历史溢出产生的负 MAX_DAMAGE / 负 DAMAGE 物品按当前强化等级重建(公式已 long 化封顶)。
+     *  不修的话这类物品一进存档编码就抛 IllegalStateException=每次自动存档必崩的硬崩循环
+     *  (2026-07-31 作者崩报);修复动作写服务端日志留痕。41 槽 × 在线人数 / 5 秒,开销可忽略。 */
+    public static void registerDurabilityGuard() {
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (server.getTicks() % 100 != 0) return;
+            for (net.minecraft.server.network.ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                var inv = p.getInventory();
+                for (int i = 0; i < inv.size(); i++) {
+                    ItemStack st = inv.getStack(i);
+                    if (st.isEmpty()) continue;
+                    Integer md = st.get(DataComponentTypes.MAX_DAMAGE);
+                    Integer dm = st.get(DataComponentTypes.DAMAGE);
+                    if ((md == null || md > 0) && (dm == null || dm >= 0)) continue;   // 健康件直过
+                    int lv = getLevel(st);
+                    ItemStack fixed;
+                    if (lv > 0) {
+                        fixed = withLevel(st, lv);                     // 按等级重建(m395 后公式必出正值)
+                    } else {
+                        fixed = st.copy();
+                        fixed.remove(DataComponentTypes.MAX_DAMAGE);   // 回物品默认上限
+                        fixed.set(DataComponentTypes.DAMAGE, 0);
+                    }
+                    fixed.setCount(st.getCount());
+                    inv.setStack(i, fixed);
+                    com.yongye.Yongye.LOGGER.warn(
+                            "[夜蚀] m395 自愈:修复负耐久物品 玩家={} 槽位={} 物品={} maxDamage={} damage={} 强化等级={}",
+                            p.getName().getString(), i, st.getItem(), md, dm, lv);
+                }
+            }
+        });
     }
 
     /**

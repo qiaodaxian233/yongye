@@ -3161,3 +3161,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **病根②站定残留**:isSprinting 旗标在顶墙/停步瞬间可能残留=人站定了武器还挂背上、手上空着(截图里人就是站姿)。修=shouldSheath 加水平速度门槛(vx²+vz²<1e-4 视为站定必回手,纯矢量算术零新 API;藏手 mixin 共用同函数一并自愈)。拖刀姿态(样式 2 默认值)不受影响——其臂偏随步幅包络自衰减,静止本就归零。
 - 配置+4,**configVersion 137→138**;括号自检 3 文件全平;零新 API 面。
 - 实机盯:设置屏点「跑时武器·背后」→疾跑看武器斜挎贴背(柄朝右肩)、停步瞬间武器回手、站定绝不背挂;巨阙偏大就点「大小·0.6」、角度不顺眼点「角·陡挎-55」对比;换回「拖刀」与「原版」样式各确认正常;第一人称全程不受影响。
+
+## m395 P0:强化耐久 int 溢出致存档硬崩(作者崩报回修,2026-07-31)
+- **崩报**:`Saving entity NBT → IllegalStateException: Value must be positive: -509932352; Value must be non-negative: -509932353`,栈=ItemStack 编码 → PlayerInventory.writeNbt → 玩家存档。两数恰差 1=本模组 withLevel 里的 `MAX_DAMAGE=newMax` 与 `DAMAGE=newMax-1`,铁证。
+- **根因**:EquipmentEnhancer.withLevel 耐久公式 `baseMax + level * enhanceDurabilityPerLevel(默认8)` 是 **int 乘法**——无限强化等级堆到 ~4.7 亿(乘 8 越过 2³¹)回卷为负,负 MAX_DAMAGE 一进存档编码校验就抛=**每次自动存档必崩的硬崩循环**(存档失败旧档保留,重进→再强化/任何 withLevel 触碰→再溢出→再崩)。m293 当年只把「等级自身」long 化,这条乘法漏网。
+- **修①公式**:long 乘法 + **1e9 封顶**(int 安全且远超任何实际耐久),newMax 钳 ≥1,curDamage 钳 ≥0;归零分支的损耗同钳非负。
+- **修②自愈守卫**:EquipmentEnhancer.registerDurabilityGuard()(Yongye.register 单点挂)——每 100t 扫全服玩家背包 41 槽(含盔甲/副手),负 MAX_DAMAGE/负 DAMAGE 物品按当前强化等级 withLevel 重建(修后公式必出正值;无等级的直接回默认上限+损耗清零),修复写服务端 warn 日志留痕。开销 41 槽×在线人数/5s 可忽略。兜住两类存量:重进存档前的内存坏件、以及命令/历史版本造出的任何负耐久物品。
+- 零新 API(ServerTickEvents/getTicks/组件 get-set 全在树),零配置 v 仍 138;括号自检 2 文件配平。
+- 实机盯:重进出事存档→装备该武器打两下→等 10 秒看日志出「m395 自愈」行→F3 存档/退出重进不崩;再用强化界面把等级继续往上堆看耐久停在 1e9 封顶不再回卷;`/yongye` 强化命令直接 set 十亿级等级复测一遍。

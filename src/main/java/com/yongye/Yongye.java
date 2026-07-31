@@ -75,6 +75,7 @@ public class Yongye implements ModInitializer {
         // 玩法系统(Phase 1~2)
         // 注意 ENTITY_LOAD 监听器注册顺序:基础增强 → Boss 标记 → 精英化
         com.yongye.system.ProgressionManager.register();
+        com.yongye.system.EquipmentEnhancer.registerDurabilityGuard(); // m395 负耐久自愈(崩报回修,单点注册)
         com.yongye.system.ClassManager.register();
         com.yongye.system.MonkSystem.register();
         com.yongye.system.ItemCleanupHandler.register();
