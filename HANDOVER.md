@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m400 四职业武器 display 全量回退原始值(m398/m399 定性误改撤销;真凶=站姿动画已由 m396/m397 修掉;职业↔武器对照=肉盾·镇魂/战士·巨阙/术士·噬魂杖/剑客·流光/刺客·影刺/召唤师·鹰扬,改武器前必先问作者玩哪把、未点名文件禁碰),纯资源零配置 v 仍 139,详见 DEVLOG m400。
+> 最新:m401 流光第三人称持握修复(m400 还原后刀横浮腰前——原始 TP 值本就错;新法=以原版剑已验证 TP 姿态为锚点相对求解,rot[-145,0,90]×0.73 握柄归位,刃向/握柄落点与原版剑逐位重合;只动流光 TP 两小节,FP/其余三把未碰),纯资源零配置 v 仍 139,详见 DEVLOG m401。
