@@ -3287,3 +3287,8 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **FxTestPayload(新 S2C)**:kind/value/text(text 恒非空兜底,writeString(null) 踩坑第 5 条);客户端 switch 分发只戳测试入口零状态污染;NightfallManager 补 nameOf(lvl) 按级取名与 getLevelName 同口径。
 - 配置+1(面板开关默关),**configVersion 146→147**;fxtestDamage 助手金额按档位阶梯随机;十一文件括号全平;新 API 面=IntegerArgumentType(brigadier,config set 同族在树)/ItemEntity 构造与 spawnEntity(掉落系统在树)。
 - 实机盯:`/yongye fxtest panel` 开面板→`stress 200` 看飘字每秒计数与丢弃数跳动、同怪数字滚大;`lootbeam` 看三色光柱+捡起看拾取卡;`nightfall 3`/`nightfall 0` 看升降两套观感且真实等级 HUD 不变;`bosskill`/`cast` 各闪一次;30 号回归场景=fxtest 已覆演出侧,刷怪/掉落矩阵待 30 号立项补齐。
+
+## m412 修 m411 编译失败:isPlaying 重复定义(CI 红→绿,2026-08-01)
+- 根因:NightfallTransitionFx **本就有 m388 音景避让加的 `isPlaying()` 探针**(第 124 行),m411 又插了一份同签名(第 154 行)→ javac already defined。教训:给类补探针前先 grep 同名方法——m388 那批"演出避让探针"(isShowing/isPlaying)已经埋过一轮。
+- 修:删 m411 那份,FxDebugHud 直接用 m388 原探针(同签名零改调用);CI 日志因沙盒出网白名单拉不到(Azure blob 域),改用 **jobs API 分步结论定位失败步骤 + 本地 apt 装 JDK21 javac 逐文件语法筛查**兜出真错——此路子记进 SKILL 侧备用。
+- 其余 m411 改动文件 javac 语法级复查通过(仅剩缺依赖噪音);零配置变更,v 仍 147。

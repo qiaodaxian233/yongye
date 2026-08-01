@@ -120,9 +120,6 @@ public final class NightfallTransitionFx {
         playing = true;
     }
 
-    /** m411 调试面板探针:转场是否进行中。 */
-    static boolean isPlaying() { return playing; }
-
     /** NightfallSyncPayload 接收处调(主线程):比对基线,真实变化才起演出。 */
     public static void onLevelSync(int level, String name) {
         if (lastLevel == -1) { lastLevel = level; return; }   // 边界 2:首同步只记账
