@@ -45,6 +45,12 @@ public final class NightfallManager {
         return cfg.nightfallEndless ? Integer.MAX_VALUE : cfg.nightfallMaxLevel;
     }
 
+    /** m411 fxtest 用:任意等级的阶段名(与 getLevelName 同口径)。 */
+    public static String nameOf(int lvl) {
+        if (lvl < NAMES.length) return NAMES[Math.max(0, lvl)];
+        return "永夜 · 深渊 " + (lvl - 5) + " 层";
+    }
+
     public static String getLevelName() {
         if (level < NAMES.length) return NAMES[Math.max(0, level)];
         // 超过 V5(灭世)后:深渊层,层数 = level-5

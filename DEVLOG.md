@@ -3279,3 +3279,11 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **观感(700ms 一次性)**:①光环扩散=节点边界向外 2→12px 的方形环,金绿(0x9CE87A)二次淡出;②连线流光=有前置时,自前置节点右缘到本节点左缘的中线亮一条微光底线+亮点带 6px 拖尾跑一趟(前 400ms);全 fill 四边手法零新 API,状态两组字段随屏实例走(关屏即弃零残留)。
 - 配置+1(enableTalentPulseFx 默开),**configVersion 145→146**;设置屏天赋脉冲开/关两钮;三文件括号平。
 - 实机盯:点一格看方环涨开+前置连线流光跑一趟;首列(无前置)只有光环;快速连点每次各闪一次;点数不足点击无反应不闪;关开关立止。
+
+## m411 FX 调试面板 + /yongye fxtest + 运行时统计(路线图23,含 m389 迁账,2026-08-01)
+- **FxStats(新)**:计数型运行时统计落地(m389 自 22 号迁来)——五类(飘字/光柱/血条/叠层/拾取卡)used/dropped 打点,每 20t 滚动成"每秒"读数;打点=数组自增热路径零负担;与 FxBudget 分工=Budget 定"缩多少"、Stats 记"发生了什么"。已接打点:飘字(收/合并=used,关档/上限裁=dropped)、拾取卡(入队=used,挤队/被拒=dropped);光柱/血条/叠层先给存活探针(liveCount/isPlaying/isActive/isShowing 复用 m388 探针),细粒度丢弃待 24/27 号顺路补。
+- **FxDebugHud(新)**:左下角深底小字面板=画质档+各类 活/每秒新增/每秒丢弃;enableFxDebugHud 默认关,`/yongye fxtest panel` 一键开合(调试工具不走美化)。
+- **/yongye fxtest(权限 2 继承根)**:`damage [n]`=n 条四档轮换测试飘字散布身前(默 12);`stress [n]`=紧簇+同 targetId 轮换练 m406 合并(默 100);`lootbeam`=面前真实落 金(混沌刃)/紫(附魔金苹果 EPIC)/蓝(金苹果 RARE) 三档验光柱+拾取卡(反馈提醒验完清走);`nightfall <lvl>`=触发转场演出(新 FxTestPayload 直戳 testPlay,**不碰 lastLevel 基线**,lvl>0 升级观感/0 降级);`bosskill`=讨伐演出;`cast`=起手光晕;`panel`=面板开合。
+- **FxTestPayload(新 S2C)**:kind/value/text(text 恒非空兜底,writeString(null) 踩坑第 5 条);客户端 switch 分发只戳测试入口零状态污染;NightfallManager 补 nameOf(lvl) 按级取名与 getLevelName 同口径。
+- 配置+1(面板开关默关),**configVersion 146→147**;fxtestDamage 助手金额按档位阶梯随机;十一文件括号全平;新 API 面=IntegerArgumentType(brigadier,config set 同族在树)/ItemEntity 构造与 spawnEntity(掉落系统在树)。
+- 实机盯:`/yongye fxtest panel` 开面板→`stress 200` 看飘字每秒计数与丢弃数跳动、同怪数字滚大;`lootbeam` 看三色光柱+捡起看拾取卡;`nightfall 3`/`nightfall 0` 看升降两套观感且真实等级 HUD 不变;`bosskill`/`cast` 各闪一次;30 号回归场景=fxtest 已覆演出侧,刷怪/掉落矩阵待 30 号立项补齐。

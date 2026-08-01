@@ -89,6 +89,9 @@ public final class LootBeamManager {
         return 0;
     }
 
+    /** m411 调试面板探针:当前光柱数。 */
+    static int liveCount() { return BEAMS.size(); }
+
     private static void render(WorldRenderContext ctx) {
         if (BEAMS.isEmpty()) return;
         VertexConsumerProvider consumers = ctx.consumers();

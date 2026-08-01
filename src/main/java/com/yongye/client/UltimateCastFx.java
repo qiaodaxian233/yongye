@@ -45,6 +45,9 @@ public final class UltimateCastFx {
         startNanos = System.nanoTime();               // 覆盖旧的:同时最多 1 个
     }
 
+    /** m411 调试面板探针:光晕是否进行中。 */
+    static boolean isActive() { return startNanos != 0; }
+
     public static void register() {
         HudRenderCallback.EVENT.register((ctx, tickCounter) -> {
             if (startNanos == 0) return;

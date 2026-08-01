@@ -21,6 +21,7 @@ public final class YongyeNet {
         PayloadTypeRegistry.playS2C().register(StatsPayload.ID, StatsPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.yongye.network.MagicFxPayload.ID, com.yongye.network.MagicFxPayload.CODEC); // 魔法阵特效(m246)
         PayloadTypeRegistry.playS2C().register(com.yongye.network.EnhanceFxPayload.ID, com.yongye.network.EnhanceFxPayload.CODEC); // 强化结果演出(m409)
+        PayloadTypeRegistry.playS2C().register(com.yongye.network.FxTestPayload.ID, com.yongye.network.FxTestPayload.CODEC); // FX测试触发(m411)
         PayloadTypeRegistry.playC2S().register(SkillUsePayload.ID, SkillUsePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(OpenAccessoryPayload.ID, OpenAccessoryPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(SkillUsePayload.ID, (payload, context) -> {

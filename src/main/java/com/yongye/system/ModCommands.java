@@ -335,6 +335,70 @@ public final class ModCommands {
                             return 1;
                         }))
 
+                        // m411(路线图23)FX 测试:不跑真实流程,一条命令触发各演出/压测(纯视觉零状态)
+                        .then(CommandManager.literal("fxtest")
+                                .then(CommandManager.literal("damage")
+                                        .executes(ctx -> fxtestDamage(ctx.getSource().getPlayerOrThrow(), 12, false))
+                                        .then(CommandManager.argument("n", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 400))
+                                                .executes(ctx -> fxtestDamage(ctx.getSource().getPlayerOrThrow(),
+                                                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "n"), false))))
+                                .then(CommandManager.literal("stress")
+                                        .executes(ctx -> fxtestDamage(ctx.getSource().getPlayerOrThrow(), 100, true))
+                                        .then(CommandManager.argument("n", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 1000))
+                                                .executes(ctx -> fxtestDamage(ctx.getSource().getPlayerOrThrow(),
+                                                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "n"), true))))
+                                .then(CommandManager.literal("lootbeam").executes(ctx -> {
+                                    ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                    var w = p.getServerWorld();
+                                    net.minecraft.item.ItemStack[] drops = {
+                                            new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.CHAOS_BLADE),   // 金(职业武器口径)
+                                            new net.minecraft.item.ItemStack(net.minecraft.item.Items.ENCHANTED_GOLDEN_APPLE), // 紫(EPIC)
+                                            new net.minecraft.item.ItemStack(net.minecraft.item.Items.GOLDEN_APPLE)};     // 蓝(RARE)
+                                    for (int i = 0; i < drops.length; i++) {
+                                        var e = new net.minecraft.entity.ItemEntity(w,
+                                                p.getX() + (i - 1) * 2.0, p.getY() + 0.3, p.getZ() + 2.5, drops[i]);
+                                        e.setVelocity(0, 0.1, 0);
+                                        w.spawnEntity(e);
+                                    }
+                                    ctx.getSource().sendFeedback(() -> Text.literal(
+                                            "已在面前落下 金/紫/蓝 三档测试掉落(真实物品,验完记得捡走或清掉)").formatted(Formatting.GOLD), false);
+                                    return 1;
+                                }))
+                                .then(CommandManager.literal("nightfall")
+                                        .then(CommandManager.argument("lvl", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 99))
+                                                .executes(ctx -> {
+                                                    ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                                    int lvl = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "lvl");
+                                                    net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                                                            new com.yongye.network.FxTestPayload(com.yongye.network.FxTestPayload.NIGHTFALL,
+                                                                    lvl, NightfallManager.nameOf(lvl)));
+                                                    ctx.getSource().sendFeedback(() -> Text.literal(
+                                                            "已触发永夜转场演出(纯视觉,真实等级不变):" + NightfallManager.nameOf(lvl)
+                                                                    + (lvl > 0 ? " [升级观感]" : " [降级观感]")).formatted(Formatting.GOLD), false);
+                                                    return 1;
+                                                })))
+                                .then(CommandManager.literal("bosskill").executes(ctx -> {
+                                    ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                    net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                                            new com.yongye.network.FxTestPayload(com.yongye.network.FxTestPayload.BOSSKILL, 0, "测试 · 灾厄之主"));
+                                    ctx.getSource().sendFeedback(() -> Text.literal("已触发讨伐演出(纯视觉)").formatted(Formatting.GOLD), false);
+                                    return 1;
+                                }))
+                                .then(CommandManager.literal("cast").executes(ctx -> {
+                                    ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                    net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                                            new com.yongye.network.FxTestPayload(com.yongye.network.FxTestPayload.CAST, 0, ""));
+                                    ctx.getSource().sendFeedback(() -> Text.literal("已触发大招起手光晕(纯视觉)").formatted(Formatting.GOLD), false);
+                                    return 1;
+                                }))
+                                .then(CommandManager.literal("panel").executes(ctx -> {
+                                    boolean cur = com.yongye.YongyeConfig.get().enableFxDebugHud;
+                                    setConfigField("enableFxDebugHud", String.valueOf(!cur));
+                                    ctx.getSource().sendFeedback(() -> Text.literal(
+                                            "FX 调试面板:" + (!cur ? "已开启(左下角)" : "已关闭")).formatted(Formatting.AQUA), false);
+                                    return 1;
+                                })))
+
                         .then(CommandManager.literal("config")
                                 .then(CommandManager.literal("reset").executes(ctx -> {
                                     com.yongye.YongyeConfig.reset();
@@ -635,6 +699,29 @@ public final class ModCommands {
     // ===== 通用配置读写(反射:任意 YongyeConfig 公共实例字段都能在游戏内 set/get/list)=====
     // 支持类型:boolean / int / long / double / String。数组等复杂字段只读不写。
     // 改完立即写盘(YongyeConfig.save());部分字段需重进世界才生效。
+
+    /** m411 fxtest:朝玩家周围撒 n 条测试飘字(damage=四档轮换散布;stress=紧簇+同目标id 轮换练合并)。 */
+    private static int fxtestDamage(ServerPlayerEntity p, int n, boolean stress) {
+        var rnd = p.getRandom();
+        for (int i = 0; i < n; i++) {
+            double spread = stress ? 1.5 : 3.0;
+            double x = p.getX() + (rnd.nextDouble() - 0.5) * 2 * spread;
+            double z = p.getZ() + (rnd.nextDouble() - 0.5) * 2 * spread + 2.0;
+            double y = p.getY() + 1.0 + rnd.nextDouble() * 1.5;
+            int kind = i % 4;                                        // HIT/HEAVY/CRITICAL/EXECUTION 轮换
+            float amount = switch (kind) {
+                case 1 -> 200 + rnd.nextInt(1800);
+                case 2 -> 500 + rnd.nextInt(4500);
+                case 3 -> 1000 + rnd.nextInt(9000);
+                default -> 5 + rnd.nextInt(95);
+            };
+            int targetId = stress ? 900_000 + (i % 6) : 0;           // stress:同 id 轮换练 m406 合并窗口
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p,
+                    new com.yongye.network.DamageNumberPayload(x, y, z, amount, kind, targetId));
+        }
+        p.sendMessage(Text.literal("fxtest:已发 " + n + " 条测试飘字" + (stress ? "(压力簇+合并)" : "")).formatted(Formatting.GOLD), true);
+        return 1;
+    }
 
     private static String setConfigField(String key, String value) {
         com.yongye.YongyeConfig cfg = com.yongye.YongyeConfig.get();

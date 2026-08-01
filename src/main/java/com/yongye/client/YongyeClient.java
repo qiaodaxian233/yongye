@@ -358,7 +358,7 @@ public class YongyeClient implements ClientModInitializer {
                     // m382 多杀连锁:击杀信号复用 KILL 包,客户端本地滚动窗口计链
                     if (payload.kind() == com.yongye.network.CombatFxPayload.KILL) MultiKillFx.onKill();
                 }));
-        ClientTickEvents.END_CLIENT_TICK.register(client -> CombatFxManager.tick());
+        ClientTickEvents.END_CLIENT_TICK.register(client -> { CombatFxManager.tick(); FxStats.tick(); }); // m411 统计滚动
         // m373 伤害飘字:收命中数值 → 世界内怪身上弹漂浮数字(普通白/重击金大字)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.DamageNumberPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
@@ -368,6 +368,18 @@ public class YongyeClient implements ClientModInitializer {
                 }));
         DamageNumberManager.register();
         UltimateCastFx.register();   // m407 大招起手屏幕边缘职业色光晕
+        FxDebugHud.register();   // m411 FX 调试面板(enableFxDebugHud 门控,/yongye fxtest panel 开合)
+        // m411 fxtest 触发通道:只戳演出测试入口,不碰任何真实状态
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.FxTestPayload.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    switch (payload.kind()) {
+                        case com.yongye.network.FxTestPayload.NIGHTFALL ->
+                                NightfallTransitionFx.testPlay(payload.text(), payload.value() > 0);
+                        case com.yongye.network.FxTestPayload.BOSSKILL -> BossKillFx.onBossKill(payload.text());
+                        case com.yongye.network.FxTestPayload.CAST -> UltimateCastFx.onUltimateCast();
+                        default -> {}
+                    }
+                }));
         // m409 强化结果演出:收结果 → EnhanceScreen 上播(数字滚动/粒子柱/碎裂红闪震屏)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.EnhanceFxPayload.ID, (payload, context) ->
                 context.client().execute(() -> EnhanceScreen.onEnhanceFx(

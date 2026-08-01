@@ -66,7 +66,8 @@ public final class DamageNumberManager {
 
     /** 收包入口(主线程)。 */
     public static void onNumber(double x, double y, double z, float amount, int kind, int targetId) {
-        if (amount <= 0 || !FxBudget.on()) return; // m381 预算闸
+        if (amount <= 0) return;
+        if (!FxBudget.on()) { FxStats.dropped(FxStats.NUM); return; } // m381 预算闸(m411 记丢弃)
         long now = System.nanoTime();
         // m406 合并窗口:同目标 350ms 内并入旧条(数值累加/档位取高),关配置=回逐条旧观感
         if (YongyeConfig.get().enableDamageNumberMerge && targetId != 0) {
@@ -77,16 +78,21 @@ public final class DamageNumberManager {
                 float sum = n.amount + amount;
                 NUMS.set(i, new Num(n.x, n.y, n.z, n.dx, n.dz,
                         fmt(sum), Math.max(n.kind, kind), n.bornNanos, sum, targetId));
+                FxStats.used(FxStats.NUM);   // m411:合并也算一次接收
                 return;
             }
         }
-        while (NUMS.size() >= Math.max(12, FxBudget.scaleCount(MAX))) NUMS.remove(0); // m381 缩上限(保底 12)
+        while (NUMS.size() >= Math.max(12, FxBudget.scaleCount(MAX))) { NUMS.remove(0); FxStats.dropped(FxStats.NUM); } // m381 缩上限(保底 12,m411 记丢弃)
         // 随机散布:水平 ±0.45 格圆盘内一点,连击时数字错开不叠字
         double ang = RAND.nextDouble() * Math.PI * 2;
         double r = 0.15 + RAND.nextDouble() * 0.30;
         NUMS.add(new Num(x, y, z, Math.cos(ang) * r, Math.sin(ang) * r,
                 fmt(amount), kind, now, amount, targetId));
+        FxStats.used(FxStats.NUM);
     }
+
+    /** m411 调试面板探针:当前存活飘字数。 */
+    static int liveCount() { return NUMS.size(); }
 
     /** 数字口径与 m373 相同:≥10 取整 compact,<10 保一位小数(纯格式,不掺语义缀字——m379 评审红线)。 */
     private static String fmt(float amount) {

@@ -176,11 +176,16 @@ public final class PickupNoticeFx {
                 Card a = CARDS.get(i), b = CARDS.get(worst);
                 if (a.tier < b.tier || (a.tier == b.tier && a.bornNanos < b.bornNanos)) worst = i;
             }
-            if (CARDS.get(worst).tier > card.tier) return;   // 队里全比新卡高级:新卡直接不进
+            if (CARDS.get(worst).tier > card.tier) { FxStats.dropped(FxStats.CARD); return; }   // 队里全比新卡高级:新卡直接不进
             CARDS.remove(worst);
+            FxStats.dropped(FxStats.CARD);
         }
         CARDS.add(card);
+        FxStats.used(FxStats.CARD);
     }
+
+    /** m411 调试面板探针:当前在队卡片数。 */
+    static int liveCount() { return CARDS.size(); }
 
     private static float easeOut(float t) { return 1f - (1f - t) * (1f - t); }
 }

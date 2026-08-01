@@ -111,6 +111,18 @@ public final class NightfallTransitionFx {
         });
     }
 
+    /** m411 fxtest 直触:强制播一场转场,**不碰 lastLevel 基线**——下一次真实同步照常按基线走。 */
+    public static void testPlay(String name, boolean up) {
+        if (!YongyeConfig.get().enableNightfallTransition || !FxBudget.on()) return;
+        stageName = name == null || name.isEmpty() ? "测试阶段" : name;
+        upgrade = up;
+        bornNanos = System.nanoTime();
+        playing = true;
+    }
+
+    /** m411 调试面板探针:转场是否进行中。 */
+    static boolean isPlaying() { return playing; }
+
     /** NightfallSyncPayload 接收处调(主线程):比对基线,真实变化才起演出。 */
     public static void onLevelSync(int level, String name) {
         if (lastLevel == -1) { lastLevel = level; return; }   // 边界 2:首同步只记账

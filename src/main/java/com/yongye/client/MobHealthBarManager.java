@@ -62,6 +62,9 @@ public final class MobHealthBarManager {
     }
 
     private static final Map<Integer, Bar> BARS = new HashMap<>();
+
+    /** m411 调试面板探针:当前追踪血条数。 */
+    static int liveCount() { return BARS.size(); }
     private static long lastFrameNanos = System.nanoTime();
     private static Object lastWorldRef = null;                      // m389:换世界即清防实体 id 撞车
     // m389:广告牌基向量 scratch(渲染单线程,复用免每帧分配)
