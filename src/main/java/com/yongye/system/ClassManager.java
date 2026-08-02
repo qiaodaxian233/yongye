@@ -101,6 +101,11 @@ public final class ClassManager {
     /** 开局选职:把所选职业作为第一(本命)职业授予,出生即生效;可选附赠专属武器。
      *  已选过 / 已有职业则不再授予(防重复与防刷)。 */
     public static boolean chooseStartingClass(ServerPlayerEntity p, PlayerClass c) {
+        // m426 召唤师下架:服务端权威拒绝(选职界面已不显示,此处兜伪造裸包,C2S 复核铁律)
+        if (c == PlayerClass.SUMMONER && !YongyeConfig.get().enableSummonerClass) {
+            p.sendMessage(Text.literal("召唤师职业当前未开放").formatted(Formatting.RED), false);
+            return false;
+        }
         if (p.getAttachedOrElse(ModAttachments.STARTING_CLASS_CHOSEN, false)) return false;
         List<String> learned = learnedList(p);
         if (!learned.isEmpty()) {           // 老玩家已有职业:只补标记,不再弹窗
@@ -143,6 +148,11 @@ public final class ClassManager {
 
     public static boolean learn(ServerPlayerEntity p, PlayerClass type) {
         YongyeConfig cfg = YongyeConfig.get();
+        // m426 召唤师下架:老档里残留的召唤师职业书也学不了(服务端权威)
+        if (type == PlayerClass.SUMMONER && !cfg.enableSummonerClass) {
+            p.sendMessage(Text.literal("召唤师职业当前未开放").formatted(Formatting.RED), true);
+            return false;
+        }
         List<String> learned = learnedList(p);
         if (learned.contains(type.id)) {
             p.sendMessage(Text.literal("你已经学过【" + type.cn + "】了").formatted(Formatting.YELLOW), true);
@@ -176,6 +186,11 @@ public final class ClassManager {
         List<String> learned = learnedList(p);
         PlayerClass nc = PlayerClass.byId(newId);
         if (nc == null) return false;
+        // m426 召唤师下架:替换流程也进不来(与 chooseStartingClass/learn 同门)
+        if (nc == PlayerClass.SUMMONER && !cfg.enableSummonerClass) {
+            p.sendMessage(Text.literal("召唤师职业当前未开放").formatted(Formatting.RED), true);
+            return false;
+        }
         if (learned.size() < 2) {                       // 防御:不足 2 职业不该走替换流程
             p.sendMessage(Text.literal("当前职业不足 2 个,无需替换").formatted(Formatting.YELLOW), true);
             return false;

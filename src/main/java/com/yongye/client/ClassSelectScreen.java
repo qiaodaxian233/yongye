@@ -22,9 +22,20 @@ public class ClassSelectScreen extends Screen {
     /** 海报贴图像素(m215 起横版,统一 1280×720,16:9)。 */
     private static final int TW = 1280, TH = 720;
 
-    private final PlayerClass[] classes = PlayerClass.values();
-    private final YongyeButton[] tabs = new YongyeButton[PlayerClass.values().length];
+    /** m426:开放给玩家选的职业(召唤师被 enableSummonerClass=false 下架时无此页签);
+     *  SKILL_INTRO 仍按 PlayerClass.values() 全量对位,渲染处改用 ordinal 取行,过滤后不错位。 */
+    private final PlayerClass[] classes = buildClasses();
+    private final YongyeButton[] tabs = new YongyeButton[buildClasses().length];
     private int sel = 0;
+
+    private static PlayerClass[] buildClasses() {
+        java.util.List<PlayerClass> l = new java.util.ArrayList<>();
+        for (PlayerClass c : PlayerClass.values()) {
+            if (c == PlayerClass.SUMMONER && !com.yongye.YongyeConfig.get().enableSummonerClass) continue;
+            l.add(c);
+        }
+        return l.toArray(new PlayerClass[0]);
+    }
 
     // init() 里算好的布局(底部页签行/确认行 Y)
     private int tabY, confirmY;
@@ -101,7 +112,8 @@ public class ClassSelectScreen extends Screen {
         ctx.fill(0, tabY - 8, this.width, this.height, 0x99050710);
 
         // 技能按键介绍(m228):压在底部按钮带上方,三行——大招 / 职业机制 / 通用键位
-        String[] intro = SKILL_INTRO[Math.min(sel, SKILL_INTRO.length - 1)];
+        // m426:按 ordinal 取行(SKILL_INTRO=values() 全量对位)——页签被下架过滤后 sel 与枚举序不再同步
+        String[] intro = SKILL_INTRO[Math.min(classes[sel].ordinal(), SKILL_INTRO.length - 1)];
         int introY = tabY - 8 - 4 * 11 - 6;
         ctx.fill(0, introY - 4, this.width, tabY - 8, 0x99050710);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(intro[0]), this.width / 2, introY, 0xFFFFD700);

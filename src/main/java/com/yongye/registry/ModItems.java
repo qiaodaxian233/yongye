@@ -185,6 +185,23 @@ public final class ModItems {
     public static Item getClassWeapon(PlayerClass c) {
         return CLASS_WEAPONS.get(c);
     }
+
+    /** m426:可对玩家下发(掉落/宝箱/创造栏)的职业列表——召唤师被 enableSummonerClass=false
+     *  下架时剔除;掉落点每次调用实时读配置,改配置即时生效(创造栏在注册期取一次需重启)。 */
+    public static PlayerClass[] droppableClasses() {
+        if (com.yongye.YongyeConfig.get().enableSummonerClass) return PlayerClass.values();
+        java.util.List<PlayerClass> l = new java.util.ArrayList<>();
+        for (PlayerClass c : PlayerClass.values()) if (c != PlayerClass.SUMMONER) l.add(c);
+        return l.toArray(new PlayerClass[0]);
+    }
+
+    /** m426:可下发职业武器的职业列表(在 WEAPON_CLASSES 排武僧基础上,再按下架开关剔召唤师)。 */
+    public static PlayerClass[] droppableWeaponClasses() {
+        if (com.yongye.YongyeConfig.get().enableSummonerClass) return WEAPON_CLASSES;
+        java.util.List<PlayerClass> l = new java.util.ArrayList<>();
+        for (PlayerClass c : WEAPON_CLASSES) if (c != PlayerClass.SUMMONER) l.add(c);
+        return l.toArray(new PlayerClass[0]);
+    }
     public static Map<PlayerClass, Item> classWeapons() {
         return CLASS_WEAPONS;
     }

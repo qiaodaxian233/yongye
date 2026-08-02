@@ -35,11 +35,11 @@ public final class ModItemGroups {
             entries.add(ModItems.ENHANCE_PROTECT_SCROLL);
             entries.add(ModItems.AUTO_ENHANCE_SCROLL);
             entries.add(ModItems.AUTO_BOOK_SCROLL);
-            for (com.yongye.item.PlayerClass c : com.yongye.item.PlayerClass.values()) {
+            for (com.yongye.item.PlayerClass c : ModItems.droppableClasses()) { // m426 召唤师下架时书不进创造栏(改配置需重启)
                 entries.add(ModItems.getClassBook(c));
             }
-            // 职业专属武器(武僧无武器,用 WEAPON_CLASSES 排除)
-            for (com.yongye.item.PlayerClass c : ModItems.WEAPON_CLASSES) {
+            // 职业专属武器(武僧无武器;m426 召唤师下架时武器同隐)
+            for (com.yongye.item.PlayerClass c : ModItems.droppableWeaponClasses()) {
                 entries.add(ModItems.getClassWeapon(c));
             }
             entries.add(HealthSkillBookItem.create(1));

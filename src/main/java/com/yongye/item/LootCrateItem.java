@@ -64,8 +64,8 @@ public class LootCrateItem extends Item {
         }
         // 传说箱大奖:随机职业武器
         if (tier >= 3 && r.nextDouble() < cfg.lootCrateWeaponChance) {
-            com.yongye.item.PlayerClass pc =
-                    ModItems.WEAPON_CLASSES[r.nextInt(ModItems.WEAPON_CLASSES.length)];
+            com.yongye.item.PlayerClass[] wcls = ModItems.droppableWeaponClasses(); // m426 召唤师下架时不进池
+            com.yongye.item.PlayerClass pc = wcls[r.nextInt(wcls.length)];
             scatter(world, user, new ItemStack(ModItems.getClassWeapon(pc)));
             user.sendMessage(Text.literal("【战利品】传说宝箱开出了职业武器!").formatted(Formatting.LIGHT_PURPLE), false);
         }

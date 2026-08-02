@@ -180,14 +180,14 @@ public final class LootHandler {
                 drop(world, entity, hi.get(r.nextInt(hi.size())).make(r));
                 // (生命结晶改由下方统一规则按 lifeCrystalDropChance 产出,精英自动翻倍;此处不再额外写死掉落)
                 // (生命核心及血核改由下方统一规则按"仅精英"产出)
-                // 精英概率掉落职业书(随机职业)
+                // 精英概率掉落职业书(随机职业;m426 召唤师下架时不进池)
                 if (r.nextDouble() < cfg.classBookDropChance * lm) {
-                    com.yongye.item.PlayerClass[] cls = com.yongye.item.PlayerClass.values();
+                    com.yongye.item.PlayerClass[] cls = ModItems.droppableClasses();
                     drop(world, entity, new ItemStack(ModItems.getClassBook(cls[r.nextInt(cls.length)])));
                 }
-                // 精英小概率掉落职业专属武器(随机职业,EPIC)
+                // 精英小概率掉落职业专属武器(随机职业,EPIC;m426 同上)
                 if (r.nextDouble() < cfg.classWeaponDropChanceElite * lm) {
-                    com.yongye.item.PlayerClass[] cls = ModItems.WEAPON_CLASSES;
+                    com.yongye.item.PlayerClass[] cls = ModItems.droppableWeaponClasses();
                     drop(world, entity, new ItemStack(ModItems.getClassWeapon(cls[r.nextInt(cls.length)])));
                 }
             } else {

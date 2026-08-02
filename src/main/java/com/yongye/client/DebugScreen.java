@@ -154,6 +154,10 @@ public class DebugScreen extends Screen {
                     new Section("特殊武器", new Btn[]{
                             new Btn("混沌之刃", "yongye chaosblade"),
                     }),
+                    new Section("召唤师上/下架(m426;掉落/选职即时,创造栏重启生效)", new Btn[]{
+                            new Btn("召唤师:开放", "yongye config set enableSummonerClass true"),
+                            new Btn("召唤师:下架·默认", "yongye config set enableSummonerClass false"),
+                    }),
             }),
             // —— 刷怪 / 事件 ——
             new Page("刷怪", new Section[]{

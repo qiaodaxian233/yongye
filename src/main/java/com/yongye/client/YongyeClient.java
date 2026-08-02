@@ -1269,9 +1269,10 @@ public class YongyeClient implements ClientModInitializer {
                 // m423 修:className 存的是职业 id("summoner"),m414 误比中文名"召唤师"永不相等
                 // =任何召唤师都看不见入口(作者实机点名)。改比 id;再兜 ClientTalents 已学列表
                 // (双职业玩家本命非召唤师时 className 是第一职业,但已学召唤师同样能召干弟,该看见入口)。
+                // m426 召唤师下架:开关关时入口一并隐藏(已学者的召唤/干弟功能不受影响,只收设置入口)。
                 boolean isSummoner = com.yongye.item.PlayerClass.SUMMONER.id.equals(ClientStats.className)
                         || ClientTalents.classes.contains(com.yongye.item.PlayerClass.SUMMONER.id);
-                if (isSummoner) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                if (isSummoner && com.yongye.YongyeConfig.get().enableSummonerClass) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal("干弟"), b -> client.setScreen(new GanDiConfigScreen(screen))));
     }
 }
