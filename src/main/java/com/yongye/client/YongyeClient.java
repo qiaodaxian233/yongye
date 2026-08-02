@@ -612,6 +612,7 @@ public class YongyeClient implements ClientModInitializer {
                 (entityType, entityRenderer, registrationHelper, context) -> {
                     if (entityRenderer instanceof net.minecraft.client.render.entity.PlayerEntityRenderer per) {
                         registrationHelper.register(new WeaponBackFeatureRenderer(per));
+                        registrationHelper.register(new SprintAfterimageFeature(per)); // m433 疾跑残影(同一挂点省一次注册回调)
                     }
                 });
         // m240 拔刀剑式攻击动画:斩击轨迹(世界渲染)+ 近战命中兜底触发

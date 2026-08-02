@@ -3438,3 +3438,13 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 爆率编辑器 EDITABLE_KEYS 加两键:healthBookTierCap(新)与 skillBookPercentTierCap(m297 起一直没进编辑器,顺手补),调试菜单即改即生效。
 - 配置+1 **configVersion 159→160**;六文件括号平衡自检过,javac 语法筛查过,healthBookLevelFor 定义 1 处调用 4 处 grep 回验(m300a 教训);零新 API。
 - 实机盯:第 9 天后打精英/BOSS,血量书应从 V1/V10 那种小数变成 V100/V1万 档并随天数爬;`/yongye config set healthBookTierCap 2` 后新掉的封在 V100;`enableStagedSkillBooks false` 后逐条回旧等级;调试菜单爆率编辑器能看到并直接改这两个新键;学一本大血量书看成长面板最大生命跳涨(+10/级)。
+
+## m433 疾跑残影(「大工程点单区」第一项落地;同批作者明确「击杀慢动作不需要」已撤出待办,2026-08-02)
+- **为什么当初记成大工程、现在为什么不是**:立项时设想的是「逐帧存骨骼姿态再回放」——要把 ModelPart 整棵旋转树按帧快照重放,费内存又要碰渲染状态机,故进点单区。本轮改用业界通行取巧法:**用当前姿态、在身后不同距离各画一份半透明副本**。疾跑时肢体摆动频率本来就高、每层残影只存在一帧,眼睛读到的是「速度拖影」不是「姿态回放」,观感等价而复杂度低一个量级——**零新 API 面**。
+- **每一处写法都取自在树已 CI 编过的先例**(这是本笔能一次过的关键):叠渲模型=`getContextModel().render(matrices, vc, light, overlay, ARGB)` 与 EliteSkinFeatureRenderer 逐字同款(5 参打包 ARGB);发光半透明层=`getEntityTranslucentEmissive`(m246 魔法阵 / m385 血条);底图=在树 `textures/fx/white.png`(m385 在用)靠顶点 ARGB 染色;**身后方向=局部 +Z** 取自 m247 背挂已实机验证的约定(它 translate 正的 weaponBackBackOff 把武器放背上),不自己猜坐标系朝向;注册挂 m247 同一个 PlayerEntityRenderer 回调里省一次事件注册。
+- **刻意不取玩家皮肤**:`getSkinTextures` 是仓库首用 API 面(m145 当年就为它单独隔离过),而剪影式残影本来就比贴皮肤的重影干净、也不会在别人皮肤上糊一层——省一个待编译验证点还更好看。
+- **触发条件复用 m394 的教训**:isSprinting 旗标在顶墙/停步瞬间会残留(当年「站定了武器还挂背上」的病根),同样加水平速度门槛 → 站定立刻没残影;潜行/骑乘不出;第一人称天然不出(玩家模型不渲染)。
+- **预算**:层数走 FxBudget.scaleCount(LOW 档自动减层)、FxBudget.on() 为 OFF 直接退场;每层一次模型 draw,硬顶 4 层 = 同屏玩家数 ×4 的常数开销,无队列无残留对象。alpha 显式带满位(m213 铁律)。
+- 配置+5(开关/层数 1~4/间距/浓度/颜色默 0x9C6CF0 夜蚀紫),**configVersion 160→161**;设置屏「疾跑姿态」旁新增「疾跑残影」区 11 钮即点即看;四文件括号平衡自检过,javac 语法筛查过。
+- **路线图收口**:大工程点单区疾跑残影划掉标 m433;BOSS 击杀慢动作按作者本轮口头「不需要」撤出待办(**不删条目、注明撤出原因**,以后想要还能翻回来);天气联动仍挂点单。
+- 实机盯:第三人称疾跑看身后三层紫色渐隐剪影、停下立刻消失、潜行走不出;层数/间距/浓度三档各点一遍看即时变化;画质档拉 LOW 看层数自动减、OFF 全无;联机看别的玩家跑起来也有;关 enableSprintAfterimage 逐帧回原样。
