@@ -33,3 +33,14 @@ MIT 许可证要求保留上述版权声明;完整许可证文本见来源仓库
 - 许可证:MIT License — Copyright (c) 2026 Jahrome907(核验日期 2026-07-29)
 
 MIT 许可证要求保留上述版权声明;完整许可证文本见来源仓库 LICENSE 文件。
+
+## Celestisynth（MIT License）
+
+- 来源:https://github.com/AquexTheSeal/Celestisynth
+- 借鉴内容(m437 起):**不引入其任何代码或资产**,仅学习其 `CSAnimator` 里
+  「在关键帧动画之上叠一层程序化 `AdjustmentModifier`、按玩家实时 pitch 逐骨骼补角度」的手法
+  (夜蚀自 m254 起与其使用同一个 player-animator 库,故手法可直接对应);
+  骨骼分配系数与开关口径为夜蚀自行设计,动作 JSON 全部为夜蚀自制。
+- 许可证:MIT License — Copyright (c) 2023 The Celestial Workshop(核验日期 2026-08-02)
+
+MIT 许可证要求保留上述版权声明;完整许可证文本见来源仓库 LICENSE 文件。

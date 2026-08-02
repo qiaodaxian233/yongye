@@ -26,7 +26,7 @@ public final class UltimateCastFx {
     /** 职业色(键=PlayerClass **id**,ClientStats.className 同口径;没配到=暖金兜底)。
      *  m423 修:原键是中文名而 className 传的是 id("summoner"等)永不命中,
      *  大招光晕一直走暖金兜底不分职业——与干弟入口同根病(cn↔id 口径混用),一并清账。 */
-    private static int classColor(String id) {
+    static int classColor(String id) {   // m438:放宽包内可见,咏唱台词复用同一张职业色表
         return switch (id) {
             case "tank"      -> 0x4C8DFF; // 肉盾·钢蓝
             case "warrior"   -> 0xFF7A2E; // 战士·炽橙
@@ -47,6 +47,7 @@ public final class UltimateCastFx {
         FxStats.used(FxStats.OVERLAY);
         color = classColor(ClientStats.className);
         startNanos = System.nanoTime();               // 覆盖旧的:同时最多 1 个
+        ChantFx.onCast(ClientStats.className);        // m438 咏唱台词同帧甩出(零新协议,共用本边沿)
     }
 
     /** m411 调试面板探针:光晕是否进行中。 */

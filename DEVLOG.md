@@ -3479,3 +3479,25 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **API**:`MathHelper.wrapDegrees(F)F` 已核 yarn 1.21.1(method_15393);`RotationAxis.POSITIVE_Y.rotationDegrees` 在树(m247 背挂 CI 已编);`LivingEntity.bodyYaw` m434 已核。零待编译验证。
 - 零新配置(v 仍 162,m433 那五项照旧管用);单文件括号平衡自检过,javac 语法筛查过。
 - 实机盯:疾跑中**原地快速甩鼠标左右看**——残影应完全不动(这是最直接的判据,m434 后仍会摆的就是这一项);直线疾跑看残影稳稳一条直线不左右晃;绕圈跑看每层残影**各自朝着当时的方向**沿弧线排开(像一串脚印而不是一把扇子);急停淡出正常。
+
+## m437 动作俯仰跟随 + m438 大招咏唱台词(研读 Celestisynth 后落地两笔,2026-08-02)
+
+### 研读结论(AquexTheSeal/Celestisynth,MIT,Forge 1.20.1;已挂名 THIRD_PARTY_NOTICES)
+- **它的动作栈与夜蚀同源**:用的正是 KosmX 的 player-animator——夜蚀 m254 起 JiJ 的同一个库,所以它的手法**可以逐条对应搬过来**,不像 MoBends(m243)那样只能取神不能取形。
+- **四条可学的**:①`AdjustmentModifier` 程序化补骨骼(本轮 m437 落地);②准星附近的 chant 短台词(本轮 m438 落地);③`WeaponAttackInstance` 的 tick 时间轴技能编排(`startUsing/tickAttack(if timer==13/22/25)/stopUsing`)——**夜蚀 m255 的 WeaponSkillFx 多帧编排器已是同款,不重做**;④`shakeScreensForNearbyPlayers` 按距离衰减震附近所有人——夜蚀 m421 只震施放者本人,**记为后续候选,本轮不动**(m421 刚立了「镜头单入口」的规矩,加广播式生产者要连同 payload 分发一起改,单独一笔更稳)。
+
+### m437 动作俯仰跟随
+- **病**:m254 起七式是**烘焙好的关键帧**,抬头看天和低头劈地挥出来一模一样——朝天挥砍刀却平着扫,动作与瞄准脱节。
+- **修**:在关键帧播放器**之上**叠一层程序化 `AdjustmentModifier`(库 javadoc 明确要求「必须排在 KeyframeAnimationPlayer 之前」→ `addModifier(..., 0)`),按实时 pitch 逐骨骼补角度;lambda 惰性求值,每帧读当帧 pitch,不用自己 tick。挥砍层与 m260 站姿层**都挂**(站姿也跟着抬头挺身)。
+- **骨骼分配比抄来的更克制**:持械臂吃满 pitch(按 getMainArm 分左右手)、副手臂四成、躯干三成**反向**(抬头挺胸/低头压身),**头一律不补**——原版 head 本来就跟视线转,再补会缩脖子/仰过头;其余部位返回 `Optional.empty()` 走原动画(库约定:空=不调整)。pitch 先折半防过冲。
+- 幅度配置 `slashFxAimFollow`(0=关回 m254 纯关键帧,默 1.0,钳 0~2)。
+- **API 已核**:拉 KosmX/minecraftPlayerAnimator **1.21 分支**(即夜蚀用的 2.0.1+1.21.1)源码逐字核对——`AdjustmentModifier` 在 `api.layered.modifier`(与在树已编的 AbstractFadeModifier 同包)、`PartModifier(Vec3f 旋转, Vec3f 位移)` 二参构造存在、`ModifierLayer.addModifier(AbstractModifier,int)` 存在、部位名 `head/body/torso/rightArm/leftArm` 是库内建键。**零待编译验证**。
+
+### m438 大招咏唱台词
+- **学到的点**:它每次放技能在准星附近甩一句短台词(「Firestarter」「HEAT.」),8 向描边+淡出+颜色随武器——文本量极小却把仪式感拉满,是整个模组辨识度最高的廉价特效。夜蚀本有说话传统(m190 怪物嘲讽/m226 肝帝台词),但七职业大招一直只有光晕没有声口。
+- **三处改得比抄来的更合夜蚀**:①它把台词写死成 lang 翻译键,夜蚀改成**配置池**(照 m226:竖线分隔随机抽、清空=该职业不出声),作者加梗不用改代码;②它画准星左上,夜蚀画**准星下方**——中屏上方 −70/−58/−44/−26 四个高度已被讨伐字幕/多杀弹字/永夜转场占满(m418 安全区口径),下方是唯一常空区,且吃 safeY 不出屏;③颜色直接复用 m407 职业色表(键=职业 **id**,不重蹈 m423 的 cn↔id 混用)。
+- 8 向描边用在树 `drawText` 手搓——原版 `drawWithOutline`(method_37296)要 `VertexConsumerProvider.Immediate` 批渲,在 HudRenderCallback 里另铺一套批渲不划算。
+- **零新协议**:挂 UltimateCastFx 同一个「大招 CD 从 0 跳正」边沿,光晕与台词天然同帧;时间驱动到点必消,开背包/暂停不残留;同屏最多一句新的顶旧的。**低刺激档不压制**——这是文字信息不是闪光,压了反而看不清(m417 口径:装饰性脉冲才归低刺激管)。
+- 七职业默认台词各 3 句(全 BMP 内字符,踩坑第 9 条)。
+- 配置:m437 +1、m438 +8,合计 **configVersion 162→164**(两笔各自升一版);设置屏新增「大招演出」区 6 钮。六文件括号平衡自检过,javac 语法筛查过。
+- 实机盯:①抬头看天/低头看地各放一次七式,刀应跟着视线角度走;`slashFxAimFollow 0` 逐帧回 m254 老样子,1.5 看夸张版;持械手换左手(原版设置)看跟随镜像正确。②七职业各放一次大招,准星下方应出现职业色台词、1.4 秒淡出;`/yongye config set chantMonk ""` 后武僧大招不出声;`enableChantMessage false` 全关只留光晕。

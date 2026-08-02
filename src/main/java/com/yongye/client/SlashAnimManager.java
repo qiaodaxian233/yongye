@@ -4,8 +4,12 @@ import com.yongye.Yongye;
 import com.yongye.YongyeConfig;
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
+import dev.kosmx.playerAnim.api.layered.modifier.AdjustmentModifier;
 import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
 import dev.kosmx.playerAnim.core.util.Ease;
+import dev.kosmx.playerAnim.core.util.Vec3f;
+
+import java.util.Optional;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationAccess;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationFactory;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationRegistry;
@@ -44,10 +48,54 @@ public final class SlashAnimManager {
     /** 每个客户端玩家构造时自动挂一个空动作层;工厂注册的层同时进 playerAssociatedData,playFor 里按键取回。 */
     public static void register() {
         PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(LAYER_ID, 1000,
-                player -> new ModifierLayer<IAnimation>());
+                player -> {
+                    ModifierLayer<IAnimation> layer = new ModifierLayer<>();
+                    layer.addModifier(aimAdjust(player), 0);   // m437 俯仰跟随(必须排在关键帧播放器之前=idx 0)
+                    return layer;
+                });
         PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(STANCE_ID, 900,
-                player -> new ModifierLayer<IAnimation>()); // m260 站姿层(900<1000,挥砍盖站姿)
+                player -> {
+                    ModifierLayer<IAnimation> layer = new ModifierLayer<>();
+                    layer.addModifier(aimAdjust(player), 0);   // m437:站姿同样跟随俯仰(抬头挺身/低头压刀)
+                    return layer;
+                }); // m260 站姿层(900<1000,挥砍盖站姿)
         Yongye.LOGGER.info("[夜蚀] 真·拔刀动作库已桥接(player-animator)");
+    }
+
+    /**
+     * m437 俯仰跟随(学 Celestisynth 的 CSAnimator,MIT,已挂名 THIRD_PARTY_NOTICES)。
+     *
+     * <p><b>解决什么</b>:m254 起七式是**烘焙好的关键帧**,不管你抬头看天还是低头劈地,挥出来的角度
+     * 一模一样——朝天挥砍时刀却平着扫,是「动作和瞄准脱节」。Celestisynth 的做法是在关键帧播放器
+     * <b>之上</b>再叠一层程序化的 {@code AdjustmentModifier},按玩家实时 pitch 逐骨骼补角度:动作文件保持通用,
+     * 运行时才长出「朝你看的方向出刀」的观感。库作者自己的 javadoc 示例就是这个用法(adjusting the
+     * vertical angle of a custom attack animation),等于官方认证的正解。
+     *
+     * <p><b>本实现的分配</b>(比抄来的更克制,只补三处、系数按夜蚀的七式调):
+     * 持械臂吃满 pitch(刀跟着视线走)、副手臂吃四成(平衡不僵)、躯干吃三成反向(抬头挺胸/低头压身),
+     * <b>头部一律不补</b>——原版 head 已经跟着视线转了,再补会变成缩脖子/仰过头。
+     * 腿与其余骨骼返回 {@code Optional.empty()} 走原动画(库约定:空=该部位不调整)。
+     *
+     * <p>幅度走配置 slashFxAimFollow(0=关,回 m254 纯关键帧;默 1.0),越界钳 [0,2]。
+     * 修饰器是<b>惰性求值</b>的——lambda 每帧被调用,读的都是当帧 pitch,不需要自己 tick。
+     */
+    private static AdjustmentModifier aimAdjust(AbstractClientPlayerEntity player) {
+        return new AdjustmentModifier(partName -> {
+            float k = (float) Math.max(0.0, Math.min(2.0, YongyeConfig.get().slashFxAimFollow));
+            if (k <= 0f) return Optional.empty();
+            // pitch:上负下正(原版口径);折半防幅度过冲,再乘配置系数
+            float pitch = (float) Math.toRadians(player.getPitch() * 0.5f) * k;
+            boolean rightHanded = player.getMainArm() == net.minecraft.util.Arm.RIGHT;
+            String mainArm = rightHanded ? "rightArm" : "leftArm";
+            String offArm  = rightHanded ? "leftArm" : "rightArm";
+            float rx;
+            if (partName.equals(mainArm))      rx = pitch;          // 持械臂:满量跟随
+            else if (partName.equals(offArm))  rx = pitch * 0.4f;   // 副手:四成,不僵
+            else if (partName.equals("torso") || partName.equals("body")) rx = -pitch * 0.3f; // 躯干反向:抬头挺身
+            else return Optional.empty();                            // 头/腿/其余:不动(原版 head 本就跟视线)
+            return Optional.of(new AdjustmentModifier.PartModifier(
+                    new Vec3f(rx, 0f, 0f), Vec3f.ZERO));
+        });
     }
 
     /**

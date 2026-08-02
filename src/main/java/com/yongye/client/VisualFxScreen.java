@@ -235,6 +235,14 @@ public class VisualFxScreen extends Screen {
                             new Btn("跑时武器·背后", "yongye config set sprintWeaponStyle 1"),
                             new Btn("跑时武器·原版", "yongye config set sprintWeaponStyle 0"),
                     }),
+                    new Section("大招演出(m438 咏唱台词 / m437 动作俯仰跟随)", new Btn[]{
+                            new Btn("咏唱台词·开", "yongye config set enableChantMessage true"),
+                            new Btn("咏唱台词·关", "yongye config set enableChantMessage false"),
+                            new Btn("俯仰跟随·关0", "yongye config set slashFxAimFollow 0"),
+                            new Btn("俯仰跟随·收敛0.6", "yongye config set slashFxAimFollow 0.6"),
+                            new Btn("俯仰跟随·默认1.0", "yongye config set slashFxAimFollow 1.0"),
+                            new Btn("俯仰跟随·夸张1.5", "yongye config set slashFxAimFollow 1.5"),
+                    }),
                     new Section("永夜天气联动(m435:原版雨雪雷随永夜加深;天象在跑时让路)", new Btn[]{
                             new Btn("天气联动·开", "yongye config set enableNightfallVanillaWeather true"),
                             new Btn("天气联动·关", "yongye config set enableNightfallVanillaWeather false"),
