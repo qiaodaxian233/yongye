@@ -235,6 +235,16 @@ public class VisualFxScreen extends Screen {
                             new Btn("跑时武器·背后", "yongye config set sprintWeaponStyle 1"),
                             new Btn("跑时武器·原版", "yongye config set sprintWeaponStyle 0"),
                     }),
+                    new Section("永夜天气联动(m435:原版雨雪雷随永夜加深;天象在跑时让路)", new Btn[]{
+                            new Btn("天气联动·开", "yongye config set enableNightfallVanillaWeather true"),
+                            new Btn("天气联动·关", "yongye config set enableNightfallVanillaWeather false"),
+                            new Btn("雨频·稀0.03", "yongye config set nightfallRainChancePerLevel 0.03"),
+                            new Btn("雨频·默认0.06", "yongye config set nightfallRainChancePerLevel 0.06"),
+                            new Btn("雨频·密0.12", "yongye config set nightfallRainChancePerLevel 0.12"),
+                            new Btn("打雷·永夜2起", "yongye config set nightfallThunderMinLevel 2"),
+                            new Btn("打雷·永夜3起", "yongye config set nightfallThunderMinLevel 3"),
+                            new Btn("打雷·永夜5起", "yongye config set nightfallThunderMinLevel 5"),
+                    }),
                     new Section("疾跑残影(m433:当前姿态在身后画渐隐副本,非骨骼回放)", new Btn[]{
                             new Btn("残影·开", "yongye config set enableSprintAfterimage true"),
                             new Btn("残影·关", "yongye config set enableSprintAfterimage false"),

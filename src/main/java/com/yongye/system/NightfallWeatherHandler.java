@@ -105,6 +105,9 @@ public final class NightfallWeatherHandler {
         server.getPlayerManager().broadcast(Text.literal("【永夜天象】" + msg).formatted(Formatting.DARK_RED), false);
     }
 
+    /** m435:当前是否有天象在跑——原版天气联动据此让路(酸雨会强改天气,两边不能对着拧)。 */
+    public static boolean eventActive() { return active != Event.NONE; }
+
     private static void endEvent(MinecraftServer server) {
         if (active == Event.ACID_RAIN) {
             for (ServerWorld w : server.getWorlds()) w.setWeather(6000, 0, false, false);
