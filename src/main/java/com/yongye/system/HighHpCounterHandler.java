@@ -73,7 +73,17 @@ public final class HighHpCounterHandler {
             boolean boss = attacker.getAttachedOrElse(ModAttachments.IS_BOSS, false);
             boolean elite = attacker.getAttachedOrElse(ModAttachments.IS_ELITE, false);
             int nf = NightfallManager.getLevel();
-            if (!boss && !elite && nf < 1) return true;
+            if (!boss && !elite) {
+                // m416 作者点名「普通怪打人太痛」:普通怪的百分比+真伤附加**默认整个去掉**
+                // (0=关·新默认;1=高难度才开——地狱/深渊/永夜难度且已入永夜,沿用 m251 高难门口径;2=旧行为·永夜≥1即开)。
+                // 精英/BOSS 不受此门影响照旧全额——高血量反制的本职就是他们的。
+                boolean allow = switch (cfg.normalMobPercentDamageMode) {
+                    case 1 -> nf >= 1 && DifficultyManager.growthSuppressionOn();
+                    case 2 -> nf >= 1;
+                    default -> false;
+                };
+                if (!allow) return true;
+            }
 
             double pct = boss ? cfg.bossPercentDamage : elite ? cfg.elitePercentDamage : cfg.elitePercentDamage * 0.5;
             double trueDmg = boss ? cfg.bossTrueDamage : elite ? cfg.eliteTrueDamage : cfg.eliteTrueDamage * 0.5;
