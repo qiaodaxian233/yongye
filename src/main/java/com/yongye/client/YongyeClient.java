@@ -364,10 +364,14 @@ public class YongyeClient implements ClientModInitializer {
                 context.client().execute(() -> {
                     DamageNumberManager.onNumber(
                             payload.x(), payload.y(), payload.z(), payload.amount(), payload.kind(), payload.targetId());
+                    CombatLogHud.outgoing(payload.targetId(), payload.amount(), payload.kind());   // m415 只记暴击/处决
                     MobHealthBarManager.onHit(payload.targetId());   // m385 微型血条追踪同包分发
                 }));
         DamageNumberManager.register();
         UltimateCastFx.register();   // m407 大招起手屏幕边缘职业色光晕
+        CombatLogHud.register(); // m415 战斗日志简版(enableCombatLog 门控)
+        ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.CombatLogPayload.ID, (payload, context) ->
+                context.client().execute(() -> CombatLogHud.incoming(payload.source(), payload.amount())));
         FxDebugHud.register();   // m411 FX 调试面板(enableFxDebugHud 门控,/yongye fxtest panel 开合)
         // m411 fxtest 触发通道:只戳演出测试入口,不碰任何真实状态
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.FxTestPayload.ID, (payload, context) ->

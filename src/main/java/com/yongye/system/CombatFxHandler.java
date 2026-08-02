@@ -182,6 +182,12 @@ public final class CombatFxHandler {
             float severity = amount / Math.max(1.0f, victim.getMaxHealth());
             ServerPlayNetworking.send(victim, new com.yongye.network.HurtDirectionPayload(
                     src.getX(), src.getZ(), Math.min(1.0f, severity)));
+            // m415 战斗日志·承伤条目:来源名+伤量(开关关=零流量;与方向指示共用预算闸=天然限流)
+            if (c.enableCombatLog) {
+                String srcName = src.getName().getString();
+                if (srcName.length() > 12) srcName = srcName.substring(0, 12);
+                ServerPlayNetworking.send(victim, new com.yongye.network.CombatLogPayload(amount, srcName));
+            }
             return true;
         });
     }
