@@ -1257,5 +1257,8 @@ public class YongyeClient implements ClientModInitializer {
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
                 if (featureUnlocked("cls")) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal(classLabel), b -> client.setScreen(new StatsScreen(screen))));
+                // m414 干弟小队设置(作者点名:UI 里设皮肤/名字,**只有召唤师看见**;换职业开关背包即时增减)
+                if ("召唤师".equals(ClientStats.className)) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
+                        Text.literal("干弟"), b -> client.setScreen(new GanDiConfigScreen(screen))));
     }
 }

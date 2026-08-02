@@ -737,11 +737,12 @@ public final class ModCommands {
         String[] parts = (raw == null ? "" : raw).split(",", -1);
         String[] five = new String[5];
         for (int i = 0; i < 5; i++) five[i] = i < parts.length ? parts[i] : "";
-        five[slot - 1] = value == null ? "" : value.trim().replace(",", ""); // 槽内不许带逗号(分隔符)
+        String v0 = value == null ? "" : value.trim().replace(",", "");
+        five[slot - 1] = "-".equals(v0) ? "" : v0; // 槽内不许带逗号;"-"=哨兵清槽回默认(m414 UI 空框下发)
         setConfigField(isSkin ? "summonGanDiSkins" : "summonGanDiNames", String.join(",", five));
         int renamed = isSkin ? 0 : SummonerHandler.applyGanDiNames(p);
         String what = isSkin ? "皮肤ID" : "名字";
-        p.sendMessage(Text.literal("干弟槽 " + slot + " 的" + what + " → " + five[slot - 1]
+        p.sendMessage(Text.literal("干弟槽 " + slot + " 的" + what + " → " + (five[slot - 1].isEmpty() ? "默认" : five[slot - 1])
                 + (isSkin ? "(客户端拉取中,几秒内换肤;拉不到=原贴图)" : renamed > 0 ? "(在场 " + renamed + " 只已改名)" : "(下次召唤生效)"))
                 .formatted(Formatting.GOLD), false);
         return 1;
