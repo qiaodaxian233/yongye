@@ -38,6 +38,23 @@ public final class FxBudget {
         return Math.max(OFF, Math.min(HIGH, q));
     }
 
+    /** m417(路线图25)闪光强度中枢:低刺激整档 ×0.25 / 弱闪光 ×0.5 / 常规 ×1。
+     *  所有整屏闪/罩/晕类一律乘此值(替代各处手写 reduceScreenFlash 三目)。 */
+    public static float flashScale() {
+        var c = YongyeConfig.get();
+        return c.lowStimulusMode ? 0.25f : c.reduceScreenFlash ? 0.5f : 1f;
+    }
+
+    /** m417 动感中枢(震屏/FOV冲击/顿帧):低刺激整档 ×0.3 / 常规 ×1。 */
+    public static float motionScale() {
+        return YongyeConfig.get().lowStimulusMode ? 0.3f : 1f;
+    }
+
+    /** m417 脉冲类装饰(CD转好闪/加点脉冲/标题呼吸)是否保留:低刺激整档=否。 */
+    public static boolean pulseOn() {
+        return !YongyeConfig.get().lowStimulusMode;
+    }
+
     /** 装饰性特效是否开启(OFF 档 = false)。 */
     public static boolean on() { return quality() > OFF; }
 

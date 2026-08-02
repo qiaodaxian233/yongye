@@ -62,7 +62,7 @@ public final class UltimateCastFx {
                     : 1f - (age - IN_MS) / (float) (life - IN_MS);
             env = Math.max(0f, Math.min(1f, env)) * env;   // 平方=收尾更柔
             double inten = Math.max(0, Math.min(2.0, c.skillCastFxIntensity));
-            if (c.reduceScreenFlash) inten *= 0.5;          // 全局弱闪光铁律
+            inten *= FxBudget.flashScale();                 // m417 闪光中枢(弱闪光×0.5/低刺激×0.25)
             int peak = (int) (0x5A * env * inten);
             if (peak <= 3) return;                          // alpha<0x04 会被文本管线当不透明,叠层同样别贴地
 

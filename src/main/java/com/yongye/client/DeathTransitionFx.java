@@ -76,7 +76,7 @@ public final class DeathTransitionFx {
 
             if (phase == 1) {
                 // 渐入 600ms 到暗纱,死亡期间持稳(退出条件由 tick 状态机切 phase,不在此驻留判断)
-                int cap = c.reduceScreenFlash ? 110 : 160;               // 暗纱浓度上限(弱闪光下调)
+                int cap = (int) (160 * FxBudget.flashScale());           // m417 闪光中枢(暗纱浓度)
                 float t = Math.min(1f, ageMs / (float) FADE_IN_MS);
                 int a = (int) (cap * (1f - (1f - t) * (1f - t)));
                 if (a >= 8) ctx.fill(0, 0, w, h, (a << 24));             // 纯黑
@@ -86,7 +86,7 @@ public final class DeathTransitionFx {
             // phase == 2:重生渐出 + 状况提示
             if (ageMs >= FADE_OUT_MS) { phase = 0; return; }             // 到点必消
             float t = ageMs / (float) FADE_OUT_MS;
-            int start = c.reduceScreenFlash ? 150 : 210;
+            int start = (int) (210 * FxBudget.flashScale());
             int a = (int) (start * (1f - t) * (1f - t));                 // ease-in 渐出(前段深后段快散)
             if (a >= 8) ctx.fill(0, 0, w, h, (a << 24));
 

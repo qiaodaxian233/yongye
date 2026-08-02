@@ -138,6 +138,10 @@ public final class PickupNoticeFx {
                 // 图标 + 名字 ×N
                 ctx.drawItem(cd.icon, x + 6, y + 4);
                 String label = cd.count > 1 ? cd.name + " ×" + cd.count : cd.name;
+                if (com.yongye.YongyeConfig.get().enableColorblindMarks) {   // m417 三档形状前缀(□/▶/◆,BMP 安全集)
+                    String[] mk = {"□", "▶", "◆"};
+                    label = mk[Math.max(0, Math.min(2, cd.tier - 1))] + " " + label;
+                }
                 String shown = mc.textRenderer.trimToWidth(label, CARD_W - 32); // yarn 已核 method_27523
                 ctx.drawTextWithShadow(mc.textRenderer, Text.literal(shown),
                         x + 26, y + (CARD_H - 8) / 2, (a << 24) | rgb);

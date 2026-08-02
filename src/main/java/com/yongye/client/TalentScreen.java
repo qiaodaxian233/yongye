@@ -171,7 +171,7 @@ public class TalentScreen extends Screen {
                 if (n.id().equals(pendingId) && r > pendingRank) {    // 同步确认:真涨级了
                     pulseId = n.id(); pulseNanos = nowNs; pendingId = null;
                 }
-                if (n.id().equals(pulseId) && com.yongye.YongyeConfig.get().enableTalentPulseFx) {
+                if (n.id().equals(pulseId) && com.yongye.YongyeConfig.get().enableTalentPulseFx && FxBudget.pulseOn()) { // m417
                     long age = (nowNs - pulseNanos) / 1_000_000L;
                     if (age >= PULSE_MS) { pulseId = null; }
                     else {

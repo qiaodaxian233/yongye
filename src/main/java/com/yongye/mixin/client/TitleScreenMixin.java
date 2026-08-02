@@ -66,7 +66,9 @@ public class TitleScreenMixin {
             if (yongye$enterNanos == 0) yongye$enterNanos = now;
             float e = Math.min(1f, (now - yongye$enterNanos) / 600_000_000f);
             in = 1f - (1f - e) * (1f - e);
-            breath = (float) Math.sin((now % 3_000_000_000L) / 3_000_000_000.0 * Math.PI * 2);
+            if (com.yongye.client.FxBudget.pulseOn()) {   // m417 低刺激整档=标题不呼吸(淡入保留)
+                breath = (float) Math.sin((now % 3_000_000_000L) / 3_000_000_000.0 * Math.PI * 2);
+            }
         }
         int inA = Math.max(8, (int) (255 * in));                     // 淡入 alpha(≥8:MC 文本 alpha<0x04 强制不透明)
         float dropY = fx ? -6f * (1f - in) : 0f;                     // 入场标题从上方 6px 落到位

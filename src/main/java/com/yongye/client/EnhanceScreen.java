@@ -91,7 +91,7 @@ public class EnhanceScreen extends HandledScreen<EnhanceScreenHandler> {
         if (fxBroke) {
             // 红闪:整屏,600ms 淡尽;弱闪光=峰值减半
             if (age < BREAK_FLASH_MS) {
-                int peak = cfg.reduceScreenFlash ? 0x48 : 0x90;
+                int peak = (int) (0x90 * FxBudget.flashScale());   // m417 闪光中枢
                 int a = (int) (peak * (1.0 - age / (double) BREAK_FLASH_MS));
                 if (a > 3) ctx.fill(0, 0, this.width, this.height, (a << 24) | 0xC01212);
             }

@@ -68,7 +68,7 @@ public final class NightfallTransitionFx {
             YongyeConfig c = YongyeConfig.get();
             float inten = (float) Math.max(0.0, Math.min(2.0, c.transitionIntensity));
             if (inten <= 0f) { playing = false; return; }
-            float flashMul = c.reduceScreenFlash ? 0.5f : 1f;
+            float flashMul = FxBudget.flashScale();                // m417 闪光中枢
 
             int w = ctx.getScaledWindowWidth(), h = ctx.getScaledWindowHeight();
             MinecraftClient mc = MinecraftClient.getInstance();

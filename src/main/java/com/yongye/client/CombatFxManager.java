@@ -35,6 +35,9 @@ public final class CombatFxManager {
 
     /** 收到服务端 FX 包(已在客户端主线程)。 */
     public static void onFx(int kind, float shake, float fov, boolean flash, boolean sound, int hitstop) {
+        float ms = FxBudget.motionScale();          // m417 低刺激整档:震屏/FOV/顿帧统一 ×0.3
+        shake *= ms; fov *= ms;
+        if (ms < 1f) hitstop = Math.round(hitstop * ms);
         if (hitstop > 0) {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
             if (mc.player != null) {

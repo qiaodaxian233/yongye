@@ -772,7 +772,9 @@ public class YongyeClient implements ClientModInitializer {
             int lvl = stack.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);
             if (lvl > 0) {
                 WeaponQuality q = WeaponQuality.forLevel(lvl);
-                lines.add(Text.literal("【" + q.cn + "】").formatted(q.color)
+                String cbMark = com.yongye.YongyeConfig.get().enableColorblindMarks
+                        ? " " + "◆".repeat(Math.min(8, q.ordinal() + 1)) : "";   // m417 色盲记号:档位=◆数量,不只靠颜色
+                lines.add(Text.literal("【" + q.cn + "】" + cbMark).formatted(q.color)
                         .append(Text.literal("  稀有度 " + q.grade).formatted(Formatting.GRAY)));
                 lines.add(Text.literal("✦ 强化 +" + lvl).formatted(Formatting.AQUA));
             }
@@ -840,7 +842,7 @@ public class YongyeClient implements ClientModInitializer {
                     for (int i = 0; i < 5; i++) {
                         if (vals[i] > skillCdLeft[i]) skillCdPeak[i] = vals[i];
                         else if (vals[i] == 0) {
-                            if (skillCdLeft[i] > 0) skillCdReadyFlash[i] = 12;
+                            if (skillCdLeft[i] > 0) skillCdReadyFlash[i] = FxBudget.pulseOn() ? 12 : 0; // m417 低刺激=无转好闪
                             skillCdPeak[i] = 0;
                         }
                         skillCdLeft[i] = vals[i];

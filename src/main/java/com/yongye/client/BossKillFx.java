@@ -55,7 +55,7 @@ public final class BossKillFx {
 
             // 金色闪光:前 400ms 由峰值渐出(弱闪光减半)
             if (ageMs < FLASH_MS) {
-                int peak = c.reduceScreenFlash ? 45 : 90;
+                int peak = (int) (90 * FxBudget.flashScale());     // m417 闪光中枢
                 int a = (int) (peak * (1f - ageMs / (float) FLASH_MS));
                 if (a >= 8) ctx.fill(0, 0, w, h, (a << 24) | 0xFFD873);
             }
