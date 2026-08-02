@@ -13,6 +13,7 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.HashMap;
@@ -54,6 +55,13 @@ import java.util.UUID;
  *       画完原样恢复——残影本就是一团速度虚影,脑袋不该有独立视线。</li>
  * </ul>
  *
+ * <p><b>m436 二次回修(作者:「进去后还是摇头,能不能头不动」)——m434 只修了「在哪」,没修「朝哪」:</b>
+ * 残影位置钉到世界坐标之后,每一层的**朝向**用的仍是<b>当前</b> bodyYaw,于是所有残影会跟着当前朝向
+ * 齐刷刷原地转——转视角时整排一起摆,而且**直线跑也摆**(原版 bodyYaw 会朝移动方向来回微调,
+ * 这就是「明明没转视角也在摇头」的由来)。修=轨迹缓冲连 bodyYaw 一起采样,每层渲染前右乘
+ * {@code Ry(历史yaw − 当前yaw)} 把它转回被采样时的朝向。至此残影三要素(位置/朝向/头部)全部凝固在过去,
+ * 玩家怎么甩视角它都纹丝不动,只随身体真实位移向后拖。
+ *
  * <p>逆变换推导(渲染器已施加 {@code Ry(180°-bodyYaw)} 与 {@code scale(-1,-1,1)},故局部→世界为
  * {@code wx = lx·cos+lz·sin, wz = lx·sin-lz·cos, wy = -ly};该 XZ 矩阵对称正交且自逆,
  * 所以世界→局部是同一组式子):{@code lx = wx·cos+wz·sin, lz = wx·sin-wz·cos, ly = -wy}。
@@ -74,17 +82,23 @@ public class SprintAfterimageFeature
     /** m434:每玩家最近若干 tick 的真实世界位置(环形缓冲,写指针在 idx)。 */
     private static final class Trail {
         final Vec3d[] pos = new Vec3d[TRAIL_LEN];
+        /** m436:同时记下当时的 bodyYaw——残影不光要待在过去的位置,还得<b>朝着过去的方向</b>。 */
+        final float[] yaw = new float[TRAIL_LEN];
         int idx = 0, filled = 0;
-        void push(Vec3d p) {
+        void push(Vec3d p, float bodyYaw) {
             pos[idx] = p;
+            yaw[idx] = bodyYaw;
             idx = (idx + 1) % TRAIL_LEN;
             if (filled < TRAIL_LEN) filled++;
         }
+        private int at(int back) { return ((idx - back) % TRAIL_LEN + TRAIL_LEN) % TRAIL_LEN; }
         /** back=1 表示上一 tick 采样点;超出已填充范围返回 null。 */
         Vec3d back(int back) {
             if (back <= 0 || back > filled) return null;
-            return pos[((idx - back) % TRAIL_LEN + TRAIL_LEN) % TRAIL_LEN];
+            return pos[at(back)];
         }
+        /** 该采样点当时的 bodyYaw(度)。 */
+        float backYaw(int back) { return yaw[at(back)]; }
     }
 
     private static final Map<UUID, Trail> TRAILS = new HashMap<>();
@@ -103,7 +117,7 @@ public class SprintAfterimageFeature
         }
         TRAILS.keySet().removeIf(id -> mc.world.getPlayerByUuid(id) == null);   // 离开视野/下线即清
         for (net.minecraft.entity.player.PlayerEntity p : mc.world.getPlayers()) {
-            TRAILS.computeIfAbsent(p.getUuid(), k -> new Trail()).push(p.getPos());
+            TRAILS.computeIfAbsent(p.getUuid(), k -> new Trail()).push(p.getPos(), p.bodyYaw);
         }
     }
 
@@ -169,6 +183,11 @@ public class SprintAfterimageFeature
             float lz = (float) (wx * sin - wz * cos);
             matrices.push();
             matrices.translate(lx, ly, lz);
+            // m436:把这一层转回它被采样时的朝向。渲染器施加的是 Ry(180°-当前yaw)·S(-1,-1,1),
+            // 要等效换成 Ry(180°-历史yaw)·S,需右乘 R = S⁻¹·Ry(当前-历史)·S;
+            // 而 S·Ry(θ)·S = Ry(−θ)(S=diag(-1,-1,1) 自逆),故 R = Ry(历史yaw − 当前yaw)。
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(
+                    MathHelper.wrapDegrees(trail.backYaw(i * step) - yawDeg)));
             getContextModel().render(matrices, vc, light, OverlayTexture.DEFAULT_UV, (a << 24) | rgb);
             matrices.pop();
         }
