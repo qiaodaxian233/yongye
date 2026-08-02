@@ -3,10 +3,23 @@ package com.yongye.client;
 import java.util.Random;
 
 /**
- * 沉浸式战斗手感——客户端状态机(m239)。
+ * 沉浸式战斗手感——客户端状态机(m239),m421 起兼任<b>摄像机效果统一器</b>(路线图29)。
  * 收 {@code CombatFxPayload} 置入强度,每客户端 tick 指数衰减;
  * 相机抖动由 {@code CameraShakeMixin} 每帧取偏移、FOV 顿挫由 {@code FovKickMixin} 取偏移、
  * 击杀闪光由 YongyeClient 的 HudRenderCallback 取 alpha。全部读静态字段,无锁无分配。
+ *
+ * <p><b>统一叠加规则(m421 成文,全仓镜头效果唯一口径,防互相打架):</b>
+ * <ol>
+ *   <li><b>单入口</b>:震屏/FOV/顿帧/闪光四通道只从 kickShake / kickFov / kickHitstop / kickFlash
+ *       进(onFx 也走它们)。生产者=服务端 CombatFxPayload(命中/击杀/登场/讨伐等九处构造点)
+ *       与客户端本地(强化碎裂)。<b>新特效禁止绕过本类直接改 Camera / FOV / handSwing</b>;</li>
+ *   <li><b>低刺激缩放只乘一次</b>:FxBudget.motionScale() 在入口处统一乘,任何生产者不得自乘;</li>
+ *   <li><b>通道内取 max 不叠加</b>:连击/多源同刻只保留"最重那一下",不累加不共振;</li>
+ *   <li><b>通道硬顶</b>:震屏≤cameraShakeCap(默2.5)/FOV≤cameraFovKickCap(默6°)/
+ *       顿帧≤cameraHitstopCap(默6t),配置可调、代码侧再钳一层防手滑;</li>
+ *   <li><b>指数衰减</b>:震屏×0.70/t、FOV×0.66/t,顿帧按 tick 计数自然耗尽——效果只会
+ *       "冲一下再回落",不存在常驻位移。</li>
+ * </ol>
  */
 public final class CombatFxManager {
     private CombatFxManager() {}
@@ -33,29 +46,50 @@ public final class CombatFxManager {
     private static int frozenSwingTicks = 0;      // 定住的挥臂帧
     private static float frozenSwingProgress = 0f;
 
-    /** 收到服务端 FX 包(已在客户端主线程)。 */
+    /** 收到服务端 FX 包(已在客户端主线程);四通道统一走 kick 入口(m421 规则见类注释)。 */
     public static void onFx(int kind, float shake, float fov, boolean flash, boolean sound, int hitstop) {
-        float ms = FxBudget.motionScale();          // m417 低刺激整档:震屏/FOV/顿帧统一 ×0.3
-        shake *= ms; fov *= ms;
-        if (ms < 1f) hitstop = Math.round(hitstop * ms);
-        if (hitstop > 0) {
-            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
-            if (mc.player != null) {
-                hitstopTicks = Math.min(6, Math.max(hitstopTicks, hitstop)); // 连杀取最重,封顶防黏
-                frozenSwingTicks = mc.player.handSwingTicks;
-                frozenSwingProgress = mc.player.handSwingProgress;
-            }
-        }
-        // 取 max 而不是叠加:连击时保持"最重那一下"的手感,不会震到失控
-        shakeStrength = Math.min(2.5f, Math.max(shakeStrength, shake));
-        fovPunch = Math.min(6f, Math.max(fovPunch, fov));
-        if (flash) flashTicks = FLASH_MAX_TICKS;
+        kickShake(shake);
+        kickFov(fov);
+        kickHitstop(hitstop);
+        if (flash) kickFlash();
         if (sound) {
             net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
             if (mc.player != null)
                 mc.player.playSound(net.minecraft.sound.SoundEvents.ENTITY_ARROW_HIT_PLAYER, 0.55f, 1.6f);
         }
     }
+
+    // ==== m421 摄像机效果统一入口(规则见类注释;新特效一律从这四个口进) ====
+
+    /** 震屏通道:低刺激缩放→与在途效果取 max→硬顶 cameraShakeCap(代码侧钳 0.5~5 防配置手滑)。 */
+    public static void kickShake(float raw) {
+        if (raw <= 0f) return;
+        float cap = (float) Math.max(0.5, Math.min(5.0, com.yongye.YongyeConfig.get().cameraShakeCap));
+        shakeStrength = Math.min(cap, Math.max(shakeStrength, raw * FxBudget.motionScale()));
+    }
+
+    /** FOV 顿挫通道:同上,硬顶 cameraFovKickCap(钳 1~12°)。 */
+    public static void kickFov(float raw) {
+        if (raw <= 0f) return;
+        float cap = (float) Math.max(1.0, Math.min(12.0, com.yongye.YongyeConfig.get().cameraFovKickCap));
+        fovPunch = Math.min(cap, Math.max(fovPunch, raw * FxBudget.motionScale()));
+    }
+
+    /** 顿帧通道:低刺激缩短→连杀取最重→硬顶 cameraHitstopCap(钳 0~10t,0=全局关顿帧)。 */
+    public static void kickHitstop(int raw) {
+        float ms = FxBudget.motionScale();
+        if (ms < 1f) raw = Math.round(raw * ms);
+        if (raw <= 0) return;
+        int cap = Math.max(0, Math.min(10, com.yongye.YongyeConfig.get().cameraHitstopCap));
+        net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+        if (mc.player == null) return;
+        hitstopTicks = Math.min(cap, Math.max(hitstopTicks, raw));
+        frozenSwingTicks = mc.player.handSwingTicks;
+        frozenSwingProgress = mc.player.handSwingProgress;
+    }
+
+    /** 击杀闪光通道:定长脉冲,重复触发只重置计时不加亮。 */
+    public static void kickFlash() { flashTicks = FLASH_MAX_TICKS; }
 
     /** 每客户端 tick 衰减(YongyeClient 挂 END_CLIENT_TICK)。 */
     public static void tick() {

@@ -3346,3 +3346,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **持久化**:新附件 FIRST_HINTS(持久 int 位掩码 1永夜/2神器/4精英,copyOnDeath 照 CREATIVE_ENTRIES 模板)——死亡保留、跨登录不重复;金字聊天(可回翻)+轻提示音(经验球音在树)。与 m348 分工:那边=前 3 天路线轮播,这边=不限天数事件触发一次性说明。
 - 配置+1(enableFirstTimeHints 默开),**configVersion 153→154**;设置屏音效区+2钮;五文件括号平+javac 语法筛查过;零新 API(ServerTickEvents/getEntitiesByClass/setAttached/playSound 八参全在树)。
 - 实机盯:新号入永夜瞬间/背包首见神器/靠近精英各看一条金字说明+叮声,重登/死亡后不再发;`/yongye config set enableFirstTimeHints false` 全静默。
+
+## m421 摄像机效果统一器(路线图29,2026-08-02)
+- **叠加规则成文(全仓镜头唯一口径,写死进 CombatFxManager 类注释)**:①单入口=震屏/FOV/顿帧/闪光四通道只从新 kickShake/kickFov/kickHitstop/kickFlash 进(onFx 重写为纯委托),新特效禁止绕过直接改 Camera/FOV/handSwing;②低刺激 motionScale 只在入口乘一次,生产者不得自乘;③通道内取 max 不叠加(连击/多源同刻只留最重那一下,不累加不共振);④通道硬顶;⑤指数衰减(震0.70/t、FOV0.66/t)只冲不驻。
+- **生产者审计(防互相打架的实据)**:全仓消费点仅 CameraShakeMixin/FovKickMixin/顿帧 handSwing 冻结三处、全读本类;生产点仅 CombatFxPayload 接收器(服务端命中/击杀/登场/讨伐等九处构造点)+强化碎裂客户端本地一处——**无任何绕行野路子**,单入口收口即闭环。
+- **硬顶入配置**:旧硬编码 2.5/6/6 拆成 cameraShakeCap(默2.5,钳0.5~5)/cameraFovKickCap(默6°,钳1~12)/cameraHitstopCap(默6t,钳0~10,0=全局关顿帧)——倍率滑条管"多重"、上限管"封顶",登场震拉满也不越线;数值微调页+3滑条即拖即看。
+- 配置+3,**configVersion 154→155**;三文件括号平+javac 筛查过;零新 API 零协议(纯客户端重构,行为默认值下与旧完全一致)。
+- 实机盯:默认观感应零变化;拖"震屏上限"到 0.5 后放大招+挨打+登场三连,镜头只轻晃;顿帧上限拖 0 全局无顿帧;低刺激档开着再触发,四通道仍统一变轻(只乘一次)。
