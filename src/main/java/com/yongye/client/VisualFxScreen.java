@@ -38,8 +38,18 @@ public class VisualFxScreen extends Screen {
     private final Screen parent;
     private int page = 0;
 
+    /** m422 整页滚动器:内容超屏时全页随滚+右缘滚动条;装得下时零出现。 */
+    private final ScreenScroller scroller = new ScreenScroller();
+
     private final List<String> headerTexts = new ArrayList<>();
     private final List<Integer> headerYs = new ArrayList<>();
+
+    /** 添加控件并登记进滚动器(本屏所有控件都随页滚动)。 */
+    private <T extends net.minecraft.client.gui.widget.ClickableWidget> T addS(T w) {
+        addDrawableChild(w);
+        scroller.reg(w);
+        return w;
+    }
 
     private record Btn(String label, String cmd) {}
     private record Section(String title, Btn[] btns) {}
@@ -317,6 +327,7 @@ public class VisualFxScreen extends Screen {
         headerTexts.clear();
         headerYs.clear();
         numFields.clear();
+        scroller.begin();   // m422:滚动位保留(数值页回车刷新不丢位置),finish 时钳制
 
         int gridW = COLS * BTN_W + (COLS - 1) * GAP_X;
         int x0 = (this.width - gridW) / 2;
@@ -334,10 +345,11 @@ public class VisualFxScreen extends Screen {
             ButtonWidget tab = ButtonWidget.builder(Text.literal(tabName), b -> {
                 TabSwitchFx.trigger(this, idx - this.page);  // m391 页签过渡
                 this.page = idx;
+                scroller.reset();   // m422 换页=换内容,回到顶部
                 this.clearAndInit();
             }).dimensions(tx, tabY, tabW, tabH).build();
             tab.active = (i != page);
-            addDrawableChild(tab);
+            addS(tab);
         }
 
         // —— 当前页内容 ——
@@ -350,9 +362,10 @@ public class VisualFxScreen extends Screen {
             y = buildSliderPage(x0, y, gridW);   // m404 数值微调页
         }
 
-        // 返回背包(底部居中)
-        addDrawableChild(ButtonWidget.builder(Text.literal("返回背包"), b -> close())
-                .dimensions(this.width / 2 - 50, Math.min(this.height - 24, y + 6), 100, 20).build());
+        // 返回背包(内容末尾,随页滚动;m422 前是 min(height-24,·) 钳底=超屏时浮盖内容,现由滚动器兜)
+        addS(ButtonWidget.builder(Text.literal("返回背包"), b -> close())
+                .dimensions(this.width / 2 - 50, y + 6, 100, 20).build());
+        scroller.finish(y + 6 + 20 + 8, this.height);   // 内容总底=返回钮下缘+8 边距
     }
 
     /** 摆一个分组:登记标题(render 时绘制)+ 按钮(超过 COLS 个自动换行);返回下一组起始 y。 */
@@ -366,7 +379,7 @@ public class VisualFxScreen extends Screen {
             int bx = x0 + col * (BTN_W + GAP_X);
             int byy = by + rowIdx * (BTN_H + GAP_Y);
             final String cmd = btns[i].cmd();
-            addDrawableChild(new YongyeButton(bx, byy, BTN_W, BTN_H,
+            addS(new YongyeButton(bx, byy, BTN_W, BTN_H,
                     Text.literal(btns[i].label()), b -> run(cmd)));
         }
         int rows = (btns.length + COLS - 1) / COLS;
@@ -403,12 +416,12 @@ public class VisualFxScreen extends Screen {
                 int py = by + (i / 2) * rowH;
                 Sld s = slds[i];
                 double cur = cfgGet(s.key());
-                addDrawableChild(new CfgSlider(px, py, sliderW, BTN_H, s, cur));
+                addS(new CfgSlider(px, py, sliderW, BTN_H, s, cur));
                 TextFieldWidget tf = new TextFieldWidget(this.textRenderer,
                         px + sliderW + 2, py + 1, fieldW, BTN_H - 2, Text.literal(s.key()));
                 tf.setMaxLength(10);
                 tf.setText(fmtVal(cur, s.dec()));
-                addDrawableChild(tf);
+                addS(tf);
                 numFields.add(new Object[]{s, tf});
             }
             y = by + ((slds.length + 1) / 2) * rowH;
@@ -523,17 +536,49 @@ public class VisualFxScreen extends Screen {
         this.renderBackground(ctx, mouseX, mouseY, delta);
         super.render(ctx, mouseX, mouseY, delta);
 
+        int off = scroller.offset();   // m422 自绘文本与控件同滚
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("◆ 视觉设置 · " + (page < PAGES.length ? PAGES[page].tab() : "数值微调") + " ◆").formatted(Formatting.GOLD),
-                this.width / 2, 12, 0xFFFFD700);
+                this.width / 2, 12 - off, 0xFFFFD700);
 
         int gridW = COLS * BTN_W + (COLS - 1) * GAP_X;
         int x0 = (this.width - gridW) / 2;
         for (int i = 0; i < headerTexts.size(); i++) {
             ctx.drawTextWithShadow(this.textRenderer,
                     Text.literal(headerTexts.get(i)).formatted(Formatting.AQUA),
-                    x0, headerYs.get(i), 0xFF55FFFF);
+                    x0, headerYs.get(i) - off, 0xFF55FFFF);
         }
+        scroller.renderBar(ctx, this.width, this.height);
+    }
+
+    // ==================== m422 滚动事件转发 ====================
+
+    /** 滚轮:先给子控件(super),没人吃再整页滚。 */
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true;
+        return scroller.mouseScrolled(verticalAmount);
+    }
+
+    /** 左键点右缘轨道带=抓滚动条(优先于其下控件,防误触网格最右列)。 */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && scroller.mouseClicked(mouseX, mouseY, this.width)) return true;
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    /** 拖滚动条跟手(未抓条时不拦,滑条拖动照旧)。 */
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (button == 0 && scroller.mouseDragged(mouseY)) return true;
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+
+    /** 松键结束拖条(无条件转发幂等)。 */
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) scroller.mouseReleased();
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override

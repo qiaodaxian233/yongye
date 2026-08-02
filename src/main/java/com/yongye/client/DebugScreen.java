@@ -38,9 +38,19 @@ public class DebugScreen extends Screen {
     // 当前页签索引
     private int page = 0;
 
+    /** m422 整页滚动器:内容超屏(GUI 缩放大)时全页随滚+右缘滚动条;装得下时零出现。 */
+    private final ScreenScroller scroller = new ScreenScroller();
+
     // init() 里登记每个分组标题与其 y 坐标,render() 时统一绘制(两表一一对应)
     private final List<String> headerTexts = new ArrayList<>();
     private final List<Integer> headerYs = new ArrayList<>();
+
+    /** 添加控件并登记进滚动器(本屏所有控件都随页滚动)。 */
+    private <T extends net.minecraft.client.gui.widget.ClickableWidget> T addS(T w) {
+        addDrawableChild(w);
+        scroller.reg(w);
+        return w;
+    }
 
     public DebugScreen() {
         super(Text.literal("夜蚀 · 调试菜单"));
@@ -250,6 +260,7 @@ public class DebugScreen extends Screen {
     protected void init() {
         headerTexts.clear();
         headerYs.clear();
+        scroller.begin();   // m422:滚动位保留,finish 时钳制
 
         int gridW = COLS * BTN_W + (COLS - 1) * GAP_X;
         int x0 = (this.width - gridW) / 2;
@@ -265,10 +276,11 @@ public class DebugScreen extends Screen {
             ButtonWidget tab = ButtonWidget.builder(Text.literal(PAGES[i].tab()), b -> {
                 TabSwitchFx.trigger(this, idx - this.page);  // m391 页签过渡(方向=新-旧,clearAndInit 前调)
                 this.page = idx;
+                scroller.reset();     // m422 换页=换内容,回到顶部
                 this.clearAndInit();  // 1.21.1 标准:清空子控件并重跑 init() 重建为新页
             }).dimensions(tx, tabY, tabW, tabH).build();
             tab.active = (i != page);   // 当前页签置灰=高亮"正处于此页"
-            addDrawableChild(tab);
+            addS(tab);
         }
 
         // —— 当前页内容 ——
@@ -279,16 +291,17 @@ public class DebugScreen extends Screen {
 
         // 掉率页:额外加一个「直接输入编辑」按钮(客户端动作,打开爆率编辑器,而非发命令)
         if ("掉率".equals(PAGES[page].tab())) {
-            addDrawableChild(ButtonWidget.builder(
+            addS(ButtonWidget.builder(
                             Text.literal("✎ 爆率编辑器(直接输入数值)").formatted(Formatting.YELLOW),
                             b -> MinecraftClient.getInstance().setScreen(new DropRateConfigScreen()))
                     .dimensions(x0, y + 2, COLS * BTN_W + (COLS - 1) * GAP_X, BTN_H).build());
             y += BTN_H + GAP_Y;
         }
 
-        // 关闭按钮(底部居中)
-        addDrawableChild(ButtonWidget.builder(Text.literal("关闭"), b -> close())
-                .dimensions(this.width / 2 - 50, Math.min(this.height - 24, y + 6), 100, 20).build());
+        // 关闭按钮(内容末尾,随页滚动;m422 前是 min(height-24,·) 钳底=超屏时浮盖内容,现由滚动器兜)
+        addS(ButtonWidget.builder(Text.literal("关闭"), b -> close())
+                .dimensions(this.width / 2 - 50, y + 6, 100, 20).build());
+        scroller.finish(y + 6 + 20 + 8, this.height);   // 内容总底=关闭钮下缘+8 边距
     }
 
     /** 摆一个分组:登记标题(render 时绘制)+ 按钮(超过 COLS 个自动换行);返回下一组的起始 y。 */
@@ -322,10 +335,11 @@ public class DebugScreen extends Screen {
         this.renderBackground(ctx, mouseX, mouseY, delta);
         super.render(ctx, mouseX, mouseY, delta); // 绘制所有按钮(含页签)
 
-        // 顶部大标题
+        // 顶部大标题(m422 与控件同滚)
+        int off = scroller.offset();
         ctx.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("◆ 调试菜单 · " + PAGES[page].tab() + " ◆").formatted(Formatting.GOLD),
-                this.width / 2, 12, 0xFFFFD700);
+                this.width / 2, 12 - off, 0xFFFFD700);
 
         // 当前页各分组标题(左对齐到按钮网格左边缘)
         int gridW = COLS * BTN_W + (COLS - 1) * GAP_X;
@@ -333,8 +347,39 @@ public class DebugScreen extends Screen {
         for (int i = 0; i < headerTexts.size(); i++) {
             ctx.drawTextWithShadow(this.textRenderer,
                     Text.literal(headerTexts.get(i)).formatted(Formatting.AQUA),
-                    x0, headerYs.get(i), 0xFF55FFFF);
+                    x0, headerYs.get(i) - off, 0xFF55FFFF);
         }
+        scroller.renderBar(ctx, this.width, this.height);
+    }
+
+    // ==================== m422 滚动事件转发 ====================
+
+    /** 滚轮:先给子控件(super),没人吃再整页滚。 */
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true;
+        return scroller.mouseScrolled(verticalAmount);
+    }
+
+    /** 左键点右缘轨道带=抓滚动条(优先于其下控件)。 */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && scroller.mouseClicked(mouseX, mouseY, this.width)) return true;
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    /** 拖滚动条跟手(未抓条时不拦)。 */
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (button == 0 && scroller.mouseDragged(mouseY)) return true;
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+
+    /** 松键结束拖条(无条件转发幂等)。 */
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) scroller.mouseReleased();
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
