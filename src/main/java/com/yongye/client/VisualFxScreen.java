@@ -174,6 +174,8 @@ public class VisualFxScreen extends Screen {
                             new Btn("同类限流·严1", "yongye config set soundSameIdMaxPerWindow 1"),
                             new Btn("同类限流·默认2", "yongye config set soundSameIdMaxPerWindow 2"),
                             new Btn("同类限流·宽4", "yongye config set soundSameIdMaxPerWindow 4"),
+                            new Btn("首次提示·开", "yongye config set enableFirstTimeHints true"),
+                            new Btn("首次提示·关", "yongye config set enableFirstTimeHints false"),
                     }),
                     new Section("刀光(斩击轨迹)", new Btn[]{
                             new Btn("刀光·开", "yongye config set enableSlashFx true"),

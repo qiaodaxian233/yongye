@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m419 路线图27 音效并发管理器(SoundGateMixin 拦 SoundSystem.play 一口管全部:同类音限流默2次/3t窗+全局24/t预算+音乐唱片天气语音UI循环音优先豁免+重要提示音压环境 ducking 清18号挂账,FxStats/面板加音效行),配置+5 v152→153,详见 DEVLOG m419。第三批剩28~30。
+> 最新:m420 路线图28 新手首次提示(FirstTimeHintHandler 首次永夜/神器/精英各一句机制说明,FIRST_HINTS 持久位掩码只发一次死亡保留),配置+1 v153→154,详见 DEVLOG m420。第三批剩29~30。上一条:m419 路线图27 音效并发管理器(SoundGateMixin 拦 SoundSystem.play 一口管全部:同类音限流默2次/3t窗+全局24/t预算+音乐唱片天气语音UI循环音优先豁免+重要提示音压环境 ducking 清18号挂账,FxStats/面板加音效行),配置+5 v152→153,详见 DEVLOG m419。第三批剩28~30。

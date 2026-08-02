@@ -3340,3 +3340,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 配置+5(enableSoundConcurrency 默开),**configVersion 152→153**;设置屏音效区+5钮(并发开/关+限流严1/默2/宽4);十文件括号平+javac 语法筛查过(仅缺依赖噪音)。
 - **待编译验证 2 处(均低险有退路)**:①SoundSystem/SoundInstance mixin 面首用——play 签名与 getId/getCategory/getVolume/isRepeatable 已逐字核 yarn 1.21.1 官方映射(method_4854/4775/4774/4781/4786),require=0 不符只丢并发管理;②SoundCategory 枚举常量 MUSIC/RECORDS/WEATHER/VOICE/MASTER 首用(AMBIENT/PLAYERS/HOSTILE 在树,同枚举兄弟常量极低险)。
 - 实机盯:开 FX 面板(`/yongye fxtest panel`)后 `stress 200` 或 AOE 清一波怪,看「音效」行丢弃数跳动、耳朵不再被同款音糊脸;杀 BOSS/永夜转场瞬间夜风幽响让路(压制中标记);音符盒红石音乐不缺音;设置屏关并发=完全回原版;latest.log 搜「SoundGate(音效并发)」确认注入存活。
+
+## m420 新手首次提示(路线图28,2026-08-02)
+- **三种「第一次」各一句机制说明,只发一次**:新 FirstTimeHintHandler 每 20t 巡一遍在线玩家(旁观跳过,三位全满零开销早退)——①首次永夜升级=检测 NightfallManager.getLevel()≥1(**含中途进服**,比挂升级边沿更稳)→ 解释永夜加深与赎夜出路(红箭头找核心);②首次捡神器=背包扫到任意 ArtifactItem(捡的/任务给的/兑换的全覆盖)→ 解释放包即生效+饰品栏收纳;③首次遭遇精英=24 格内出现 IS_ELITE 怪 → 解释词缀危险性与掉落价值。
+- **持久化**:新附件 FIRST_HINTS(持久 int 位掩码 1永夜/2神器/4精英,copyOnDeath 照 CREATIVE_ENTRIES 模板)——死亡保留、跨登录不重复;金字聊天(可回翻)+轻提示音(经验球音在树)。与 m348 分工:那边=前 3 天路线轮播,这边=不限天数事件触发一次性说明。
+- 配置+1(enableFirstTimeHints 默开),**configVersion 153→154**;设置屏音效区+2钮;五文件括号平+javac 语法筛查过;零新 API(ServerTickEvents/getEntitiesByClass/setAttached/playSound 八参全在树)。
+- 实机盯:新号入永夜瞬间/背包首见神器/靠近精英各看一条金字说明+叮声,重登/死亡后不再发;`/yongye config set enableFirstTimeHints false` 全静默。

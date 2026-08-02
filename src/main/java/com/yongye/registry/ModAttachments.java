@@ -259,6 +259,14 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .buildAndRegister(Identifier.of(Yongye.MOD_ID, "creative_entries"));
 
+    /** FIRST_HINTS(m420): 新手首次提示位掩码(1=永夜/2=神器/4=精英;死亡保留,只发一次)。 */
+    public static final AttachmentType<Integer> FIRST_HINTS =
+            AttachmentRegistry.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .initializer(() -> 0)
+                    .copyOnDeath()
+                    .buildAndRegister(Identifier.of(Yongye.MOD_ID, "first_hints"));
+
     /** LOST_WEAPON_ENHANCE: 被夺且未找回的武器强化等级(供 /yongye recover 转移到新武器,损失 1/3)。 */
     public static final AttachmentType<Integer> LOST_WEAPON_ENHANCE =
             AttachmentRegistry.<Integer>builder()
