@@ -222,7 +222,7 @@ public final class QuestManager {
             return true;
         }
         if (q.type == Type.GATHER && q.targetItem != null
-                && p.getInventory().count(q.targetItem) >= q.targetCount) {
+                && gatherHave(p, q) >= q.targetCount) {
             complete(p);
             if (q.bar != null) q.bar.clearPlayers();
             return true;
@@ -324,8 +324,30 @@ public final class QuestManager {
         player.sendMessage(Text.literal("【新任务】").formatted(Formatting.GOLD).append(title), false);
     }
 
-    private static void complete(ServerPlayerEntity player) {
-        Quest q = ACTIVE.get(player.getUuid());
+    /**
+     * m431 搜集任务持有量 = 背包 + <b>材料仓库</b>(m358 遗留②「搜集任务目标物入库+自动上交」清账)。
+     * <p><b>这修的是一个实打实的必败 bug</b>:GATHER_POOL 里的生命碎片是可入库材料,m357 自动入库
+     * 每 5 秒把背包区的它扫进仓库 → 老判定只数 {@code inv.count()} 永远够不着目标 = 抽到这条任务必败。
+     * 现在仓库里的也算数(= 自动上交,不用手动取出来);任务不扣物品(complete 只发奖),
+     * 所以「算数」就是全部所需语义,无需从仓库扣账。
+     * <p>目标物是普通原版物品(m250 全物品抽取)时仓库天然存不了,countOf 返 0,行为与旧版逐字一致。
+     */
+    private static int gatherHave(ServerPlayerEntity p, Quest q) {
+        int inv = p.getInventory().count(q.targetItem);
+        YongyeConfig c = YongyeConfig.get();
+        if (!c.enableVault || !c.questCountVault) return inv;
+        long sum = (long) inv + VaultManager.countOf(p, q.targetItem);
+        return (int) Math.min(Integer.MAX_VALUE, sum);
+    }
+
+    /** m431:该玩家当前搜集任务的目标物(无/非搜集任务=null)——供 VaultManager 自动入库豁免。 */
+    public static Item activeGatherTarget(ServerPlayerEntity p) {
+        Quest q = ACTIVE.get(p.getUuid());
+        if (q == null || q.done || q.type != Type.GATHER) return null;
+        return q.targetItem;
+    }
+
+    private static void complete(ServerPlayerEntity player) {        Quest q = ACTIVE.get(player.getUuid());
         if (q != null) {
             if (q.done) return;
             q.done = true;

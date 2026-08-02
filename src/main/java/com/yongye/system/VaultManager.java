@@ -51,6 +51,24 @@ public final class VaultManager {
         return lv != null ? id + "#" + lv : id;
     }
 
+    /**
+     * m431:仓库里某物品的总件数(技能书各等级行求和)。给「搜集任务完成判定也数仓库」用——
+     * 键格式是 "物品id" 或 "物品id#等级",按 '#' 前缀比对即可,无需重建 ItemStack。
+     * 溢出钳 int(仓库是 long 计数,单物品理论可超 int)。
+     */
+    public static int countOf(ServerPlayerEntity p, Item item) {
+        if (item == null || item == Items.AIR) return 0;
+        String want = Registries.ITEM.getId(item).toString();
+        long sum = 0;
+        for (Map.Entry<String, Long> e : p.getAttachedOrElse(ModAttachments.VAULT_ITEMS, Map.<String, Long>of()).entrySet()) {
+            if (e.getValue() == null || e.getValue() <= 0) continue;
+            String k = e.getKey();
+            int h = k.indexOf('#');
+            if (want.equals(h > 0 ? k.substring(0, h) : k)) sum += e.getValue();
+        }
+        return (int) Math.min(Integer.MAX_VALUE, sum);
+    }
+
     /** 由键重建一叠(数量由调用方钳好);解析失败/未知物品返回 EMPTY(卸模组/改档自愈)。 */
     public static ItemStack stackFor(String key, int count) {
         String id = key;
@@ -137,10 +155,14 @@ public final class VaultManager {
                 if (cfg.enableProgressiveUnlock && MainQuestLine.stage(p) < 1) continue;
                 Map<String, Long> vault = null;
                 PlayerInventory inv = p.getInventory();
+                // m431:本人正在做的搜集任务目标物**不自动收走**——玩家得看着背包里数字往上涨,
+                // 收走了会以为任务没进展(判定侧仓库也算数,不收只是为了观感与手动操作空间)。
+                Item questTarget = QuestManager.activeGatherTarget(p);
                 long moved = 0;
                 for (int i = 9; i < 36; i++) {   // 背包区;热栏不动
                     ItemStack s = inv.getStack(i);
                     if (!vaultable(s)) continue;
+                    if (questTarget != null && s.getItem() == questTarget) continue;   // m431 任务目标豁免
                     if (vault == null) vault = new HashMap<>(p.getAttachedOrElse(ModAttachments.VAULT_ITEMS, Map.of()));
                     vault.merge(keyOf(s), (long) s.getCount(), Long::sum);
                     moved += s.getCount();
