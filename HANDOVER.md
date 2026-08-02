@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m411 路线图23 FX调试面板+/yongye fxtest+FxStats运行时统计(m389迁账落地;fxtest damage/stress/lootbeam/nightfall/bosskill/cast/panel七件套,FxTestPayload直戳测试入口零状态污染),配置+1 v146→147,详见 DEVLOG m411。第三批剩24~30。
+> 最新:m413 召唤师干弟自定义皮肤+名字(输正版ID走Mojang官方头颅管线自动拉皮肤与臂型,/yongye puppet skin|name|reset|list,名字在场即改),配置+2 v147→148,详见 DEVLOG m413。路线图第三批剩24~30。

@@ -37,6 +37,32 @@ public final class SummonerHandler {
     private SummonerHandler() {}
 
     public static final String TAG = "yongye_summon";
+
+    /** m413 干弟第 v 槽的显示名:配置 summonGanDiNames 逗号分槽,空槽回默认 VARIANT_NAMES。 */
+    public static String gandiNameFor(int v) {
+        String raw = YongyeConfig.get().summonGanDiNames;
+        if (raw != null && !raw.isBlank()) {
+            String[] parts = raw.split(",", -1);
+            if (v < parts.length && !parts[v].isBlank()) return parts[v].trim();
+        }
+        return com.yongye.entity.GanDiEntity.VARIANT_NAMES[Math.max(0, Math.min(4, v))];
+    }
+
+    /** m413 给在场小队即时套用当前配置名(/yongye puppet 改名后调);返回改了几只。 */
+    public static int applyGanDiNames(net.minecraft.server.network.ServerPlayerEntity p) {
+        List<com.yongye.entity.GanDiEntity> squad = gandiByOwner.get(p.getUuid());
+        if (squad == null) return 0;
+        net.minecraft.util.Formatting[] colors = {net.minecraft.util.Formatting.AQUA, net.minecraft.util.Formatting.YELLOW,
+                net.minecraft.util.Formatting.GREEN, net.minecraft.util.Formatting.LIGHT_PURPLE, net.minecraft.util.Formatting.DARK_GREEN}; // 与 summonGanDi 处同序
+        int n = 0;
+        for (var e : squad) {
+            if (e == null || !e.isAlive()) continue;
+            int v = Math.max(0, Math.min(4, e.getVariant()));
+            e.setCustomName(net.minecraft.text.Text.literal(gandiNameFor(v)).formatted(colors[v]));
+            n++;
+        }
+        return n;
+    }
     private static final Identifier BOOST_ID = Identifier.of(Yongye.MOD_ID, "summon_boost");
     private static final Identifier OWNER_HP_ID = Identifier.of(Yongye.MOD_ID, "summon_owner_hp");
     private static final Identifier OWNER_ATK_ID = Identifier.of(Yongye.MOD_ID, "summon_owner_atk");
@@ -232,7 +258,7 @@ public final class SummonerHandler {
             e.refreshPositionAndAngles(p.getX() + Math.cos(ang) * 1.8, p.getY(), p.getZ() + Math.sin(ang) * 1.8, p.getYaw(), 0);
             e.setOwner(p.getUuid());
             e.setVariant(v);
-            e.setCustomName(net.minecraft.text.Text.literal(com.yongye.entity.GanDiEntity.VARIANT_NAMES[v]).formatted(colors[v]));
+            e.setCustomName(net.minecraft.text.Text.literal(gandiNameFor(v)).formatted(colors[v])); // m413 自定义名(空槽=默认)
             e.setCustomNameVisible(true);
             // m229:肝帝随召唤者属性成长(同傀儡比例)
             addFlat(e, EntityAttributes.GENERIC_MAX_HEALTH,

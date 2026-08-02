@@ -3292,3 +3292,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 根因:NightfallTransitionFx **本就有 m388 音景避让加的 `isPlaying()` 探针**(第 124 行),m411 又插了一份同签名(第 154 行)→ javac already defined。教训:给类补探针前先 grep 同名方法——m388 那批"演出避让探针"(isShowing/isPlaying)已经埋过一轮。
 - 修:删 m411 那份,FxDebugHud 直接用 m388 原探针(同签名零改调用);CI 日志因沙盒出网白名单拉不到(Azure blob 域),改用 **jobs API 分步结论定位失败步骤 + 本地 apt 装 JDK21 javac 逐文件语法筛查**兜出真错——此路子记进 SKILL 侧备用。
 - 其余 m411 改动文件 javac 语法级复查通过(仅剩缺依赖噪音);零配置变更,v 仍 147。
+
+## m413 召唤师干弟自定义皮肤+名字(作者点名:「输入ID就可以自动获取皮肤」,2026-08-01)
+- **皮肤(客户端)**:新 GanDiSkinCache——走**原版玩家头颅同一条 Mojang 官方管线**:SkullBlockEntity.fetchProfileByName(ID) 拉带材质 GameProfile → PlayerSkinProvider.fetchSkinTextures 出贴图与臂型(三方法名逐字核 yarn 1.21.1 = method_52580/52863/52862,零自建 HTTP);异步期间/假 ID/离线=返 null 渲染器回退原贴图,MISS 记忆不反复拉,回调统一调度回渲染线程+ConcurrentHashMap 双保险。GanDiRenderer 覆盖 getTexture/render:有自定义皮肤=用拉到的贴图并按其**臂型自动切细/宽模**;配置串解析按串缓存零逐帧 split。
+- **名字(服务端)**:summonGanDiNames 5 槽逗号分隔,召唤时 gandiNameFor(v) 空槽回默认(岛风/晚安/不爱肝/迷人/芥末);applyGanDiNames 给在场小队**即时改名**(颜色数组与召唤处同序修正:AQUA/YELLOW/GREEN/LIGHT_PURPLE/DARK_GREEN)。
+- **命令**:`/yongye puppet skin <槽1-5> <ID>` / `name <槽1-5> <名字>`(重组逗号串写回配置,槽值剥离逗号防串坏;名字命令顺手在场即改)/ `reset` 全还原 / `list` 看当前两串;皮肤改完客户端下一帧读新配置即换(同 JVM)。
+- 配置+2(两串默认空),**configVersion 147→148**;五文件括号平+javac 语法筛查过(m412 兜底路子);新 API 面=皮肤三件套(已核名)。**专用服注**:皮肤读客户端配置(单机/局域网即改;专用服走各客户端自己的配置,与 m240 口径一致)。
+- 实机盯:`/yongye puppet skin 1 <某正版ID>` 后大招重召或看在场干弟几秒内换肤+臂型跟皮肤走;`puppet name 2 老铁` 看在场即改名;假 ID 不换肤不报错;断网=原贴图;`reset` 全回默认。

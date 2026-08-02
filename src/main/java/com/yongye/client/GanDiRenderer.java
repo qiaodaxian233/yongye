@@ -36,16 +36,33 @@ public class GanDiRenderer extends BipedEntityRenderer<GanDiEntity, PlayerEntity
         this.slim = new PlayerEntityModel<>(ctx.getPart(EntityModelLayers.PLAYER_SLIM), true);
     }
 
+    // —— m413 自定义皮肤(作者点名:输 ID 自动拉皮肤)——配置串解析结果按串缓存,零逐帧 split ——
+    private static String parsedRaw = null;
+    private static String[] parsedIds = new String[0];
+
+    /** 该变体槽的自定义皮肤;null=没配/还没拉到 → 回退原贴图与原臂型。 */
+    private static GanDiSkinCache.SkinData customSkin(int v) {
+        String raw = com.yongye.YongyeConfig.get().summonGanDiSkins;
+        if (raw == null) raw = "";
+        if (!raw.equals(parsedRaw)) { parsedRaw = raw; parsedIds = raw.split(",", -1); }
+        if (v >= parsedIds.length) return null;
+        return GanDiSkinCache.get(parsedIds[v]);
+    }
+
     @Override
     public void render(GanDiEntity entity, float yaw, float tickDelta,
                        MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-        this.model = SLIM[clamp(entity.getVariant())] ? slim : wide;
+        int v = clamp(entity.getVariant());
+        GanDiSkinCache.SkinData custom = customSkin(v);
+        this.model = (custom != null ? custom.slim() : SLIM[v]) ? slim : wide;
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
     }
 
     @Override
     public Identifier getTexture(GanDiEntity entity) {
-        return TEX[clamp(entity.getVariant())];
+        int v = clamp(entity.getVariant());
+        GanDiSkinCache.SkinData custom = customSkin(v);
+        return custom != null ? custom.tex() : TEX[v];
     }
 
     private static int clamp(int v) { return Math.max(0, Math.min(4, v)); }
