@@ -84,7 +84,8 @@ public final class AutoScrollHandler {
 
         // ② 深扫吞材料(含潜影盒)。m294 分账+防溢出;m302:高档强化石(> autoScrollMaxStoneTier)
         //    不自动吞——亿级石该由玩家亲手决定砸哪件;入池的石头也**成功后才扣**(碎裂不消耗)
-        final int stoneTierLimit = YongyeConfig.get().autoScrollMaxStoneTier;
+        final YongyeConfig cfg = YongyeConfig.get();
+        final int stoneTierLimit = cfg.autoScrollMaxStoneTier;
         final EquipmentEnhancer.MaterialSum total = new EquipmentEnhancer.MaterialSum();
         InventoryDeepScan.scan(p, s -> {
             if (s.isEmpty() || !EquipmentEnhancer.isMaterial(s.getItem())) return 0;
@@ -96,6 +97,36 @@ public final class AutoScrollHandler {
             total.add(s);
             return s.getCount(); // 传统材料照旧当场扣(碎裂也不退,老规矩)
         });
+        // ②b m429 仓库直供(vaultUseForAutoScroll 可关):m359 同一分账语义原样接入——
+        //    传统材料并入 budget 且此刻即从仓库扣掉(碎裂不退);强化石并入 direct、键先记下,
+        //    **成功后才从仓库删**;仓库强化石同受 autoScrollMaxStoneTier 档位闸(高档石留手动)。
+        java.util.Map<String, Long> vault = null;
+        java.util.List<String> vaultStoneKeys = new java.util.ArrayList<>();
+        boolean vaultUsed = false;
+        if (cfg.enableVault && cfg.vaultUseForAutoScroll) {
+            vault = new HashMap<>(p.getAttachedOrElse(ModAttachments.VAULT_ITEMS, java.util.Map.of()));
+            var it = vault.entrySet().iterator();
+            while (it.hasNext()) {
+                var en = it.next();
+                long n = en.getValue() == null ? 0 : en.getValue();
+                if (n <= 0) continue;
+                ItemStack probe = VaultManager.stackFor(en.getKey(), 1);
+                if (probe.isEmpty() || !EquipmentEnhancer.isMaterial(probe.getItem())) continue;
+                long unit = EquipmentEnhancer.materialValue(probe.getItem());
+                if (unit <= 0) continue;
+                long contrib = (n > Long.MAX_VALUE / 4 / unit) ? Long.MAX_VALUE / 4 : unit * n;   // 饱和乘防溢出(m293 口径)
+                if (probe.getItem() instanceof com.yongye.item.EnhanceStoneItem stone) {
+                    if (stone.tier > stoneTierLimit) continue;   // 仓库高档石同样不自动吞
+                    total.direct = Math.min(Long.MAX_VALUE / 2, total.direct + contrib);
+                    vaultStoneKeys.add(en.getKey());
+                } else {
+                    total.budget = Math.min(Long.MAX_VALUE / 2, total.budget + contrib);
+                    it.remove();   // 传统材料先扣(碎裂不退)
+                }
+                vaultUsed = true;
+            }
+            if (vaultUsed) p.setAttached(ModAttachments.VAULT_ITEMS, vault);   // 传统材料扣账即时落盘
+        }
         if (!total.any()) return;
 
         // ③ 正规管线强化(强化石必得直加;传统材料的碎裂/被动保护卷/成功率与手动完全一致)
@@ -107,7 +138,12 @@ public final class AutoScrollHandler {
                         && stone.tier <= stoneTierLimit) return s.getCount();
                 return 0;
             });
+            if (vault != null && !vaultStoneKeys.isEmpty()) {   // m429:仓库强化石成功后才删(m359 口径)
+                for (String k : vaultStoneKeys) vault.remove(k);
+                p.setAttached(ModAttachments.VAULT_ITEMS, vault);
+            }
         }
+        if (vaultUsed) VaultManager.sync(p);   // 无论成败把最新仓库快照发回(界面开着立即刷新)
         if (res.broke) {
             p.equipStack(target, ItemStack.EMPTY);
             p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(),
