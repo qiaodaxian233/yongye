@@ -3361,3 +3361,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **细节**:宿主 addS() 助手=addDrawableChild+reg 一笔登记;clearAndInit 重建时**滚动位保留并钳制**(数值页回车刷新不丢位置),切页签 reset() 回顶;返回/关闭钮改为内容末尾随滚(去掉 min 钳底浮盖病灶);render 侧大标题/分组头 y 统一减 offset()。
 - **API 面(全部已核)**:Widget.setY/getY=yarn method_46419/46427(getX/getY 在树 ClassSelectScreen);mouseScrolled(DDDD)Z method_25401 / mouseDragged(DDIDD)Z method_25403 / mouseReleased(DDI)Z method_25406(mouseClicked 在树多处);DrawContext.fill 在树满仓。**纯客户端 UI 零新配置(照 m414 口径),configVersion 仍 155**;三文件括号平+javac 语法筛查过(仅缺依赖噪音)。
 - 实机盯:GUI 缩放调 3/4 开视觉设置,右缘出现滚动条,滚轮滚到底能看到"返回背包"不再浮盖按钮;数值微调页滚到中段拖滑条→松手回车刷新后停留原位置;切页签自动回顶;GUI 缩放 1/2(装得下)时无滚动条、观感与旧版一致;调试菜单同验。
+
+## m423 调试菜单滚动漏登按钮 + 召唤师干弟入口不显示(作者点名两件,2026-08-02)
+- **①调试菜单「滑动只有文字动、按钮不动」**:根因=m422 给 DebugScreen 接滚动器时,`section()` 摆网格按钮那处仍用裸 `addDrawableChild` 没走 `addS`(页签/爆率编辑器钮/关闭钮都登了,唯独占大头的命令网格漏了)——滚动时分组标题(render 侧减 offset)跟着走、按钮原地不动,文字压到别的按钮上。修=该处改 `addS` 一行,与本屏其余控件同口径整页随滚;VisualFxScreen 复查无同病(全部走 addS)。
+- **②召唤师看不见「干弟」设置入口**:根因=m414 的门写成 `"召唤师".equals(ClientStats.className)`,而 className 经 StatsPayload 传的是 ClassManager.learnedList 存的**职业 id**("summoner"),中文名永不相等=任何召唤师都看不见入口(m414 实机盯项当时没验到)。修=改比 `PlayerClass.SUMMONER.id`,并兜 `ClientTalents.classes.contains(id)`(双职业玩家本命非召唤师时 className 是第一职业 id,但已学召唤师同样能召干弟该看见入口;TalentSync 在学职/换职处与 StatsPayload 同点下发,数据同鲜)。
+- **③同根病顺手清账**:UltimateCastFx.classColor 键也是中文名收的却是 id——大招施放边缘光晕(m407)一直走暖金兜底不分职业;switch 键整改为 id,七职业色即日生效。全仓 `ClientStats.className` 消费点已再扫一遍:HUD(mpColors/classCnName)与 MainQuestLine.trialTitle 本就按 id 写,无第三处。
+- 纯客户端三文件,零新 API 零协议零配置,**configVersion 仍 155**;括号平衡自检过。
+- 实机盯:GUI 缩放调大开调试菜单滚动,分组标题与按钮**一起**滚不再错位;召唤师开背包左侧外列见「干弟」钮(换别的职业消失,双职业含召唤师也可见),点开设名字皮肤照 m414 清单验;任意职业放大招看屏幕边缘光晕带职业色(召唤师翠绿/战士炽橙)不再全员暖金。

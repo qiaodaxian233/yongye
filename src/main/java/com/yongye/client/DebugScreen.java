@@ -315,7 +315,9 @@ public class DebugScreen extends Screen {
             int bx = x0 + col * (BTN_W + GAP_X);
             int byy = by + rowIdx * (BTN_H + GAP_Y);
             final String cmd = btns[i].cmd(); // 捕获到 lambda,避免引用循环变量
-            addDrawableChild(ButtonWidget.builder(Text.literal(btns[i].label()), b -> run(cmd))
+            // m423:改走 addS 登记进滚动器——m422 漏了这处(只登了页签/爆率编辑器/关闭钮),
+            // 导致滚动时分组标题(render 侧减 offset)在动、网格按钮原地不动,文字与按钮错位。
+            addS(ButtonWidget.builder(Text.literal(btns[i].label()), b -> run(cmd))
                     .dimensions(bx, byy, BTN_W, BTN_H).build());
         }
         int rows = (btns.length + COLS - 1) / COLS;
