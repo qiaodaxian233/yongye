@@ -3401,3 +3401,9 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **POLISH_ROADMAP 状态收口**:27→🧪 m419、28→🧪 m420、29→🧪 m421、30→🧪 m424(此前四行还挂 ☐ 与实际不符);第 23 项挂账说明改「m427 已补齐」。
 - 纯客户端六文件(五管理器+面板)+路线图文档;**零新 API**(FxStats/HashSet/getId 全在树同包)、零协议、零配置,**configVersion 仍 156**;括号平衡自检六文件全平,关键符号 grep 回验全中(m300a 教训)。
 - 实机盯:`/yongye fxtest panel` 开面板→`fxtest lootbeam` 看光柱行「+7/s」跳一下后归零(延续在场不重复计)、扔第 25 件够格掉落看「丢」跳;打一圈怪超 12 只看血条行丢弃数;连放两次大招/连续 bosskill 看叠层行「丢1」(替换旧演出);关 enableMobHealthBar 后挨打看血条行只跳丢弃。
+
+## m428 复查遗留两处复杂度热点拆分(m345 复查报告「待下轮拆」清账——过了 80 个里程碑没人拆;2026-08-02)
+- **ClassSkillHandler.register()(496 行文件里 370 行的巨型方法)按事件拆五个私有方法**:registerMonkBlockBreak(武僧挖掘磨耐久)/registerMeleeHit(近战命中触发)/registerDamageTaken(受击:刺客闪避/剑客格挡反击/坦克真减伤)/registerServerTick(被动 tick)/registerDisconnectCleanup(m286 下线清状态)——**注册顺序与拆前逐字一致**(顺序有语义:TANK_REAPPLY 重放依赖 ALLOW_DAMAGE 的相对时序),五个事件块各自自包含(register() 原本无跨块局部变量,全部状态在类级静态 Map),纯搬移零逻辑变更;脚本切块后 grep 回验五方法「声明+调用」各恰一次、五事件注册各恰一次(m300a 教训)。
+- **YongyeConfig.load() 迁移堆抽 migrateDefaults()**:m214 起累积的 30 余条「仅旧默认迁移」if 链(m345 点名 1373 行起热点)整体搬进新私有方法,load() 里原位置一行调用;方法 javadoc 写明追加规矩(值判等迁移 vs 布尔翻转必须版本门,m397 条注释保留在块内);陈旧检查诊断段(要用原始 json 串)留在 load() 不动。**内容原样搬移零行为变更**(抽样回验 m214 文案/m397 版本门/m341 阶梯解锁/anubisSpellDamage 尾条全在)。
+- 两文件括号平衡自检全平;**javac 语法筛查过(仅缺依赖噪音)**;零新 API 零协议零配置,**configVersion 仍 156**。m345 复查遗留至此全部清账(CI workflow 那条 m344 早清)。
+- 实机盯:纯重构无观感变化——进服看日志「职业专属技能已挂载」照常一行;老配置文件启动一次看迁移提示与版本对齐行为与旧版一致;七职业随手各触发一类技能(命中/受击/tick 被动)确认无异。

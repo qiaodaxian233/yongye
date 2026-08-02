@@ -108,7 +108,17 @@ public final class ClassSkillHandler {
                 || e.getAttachedOrElse(ModAttachments.IS_PAIN, false);
     }
 
-    public static void register() {
+    public static void register() {   // m428:按事件拆私有方法(m345 复查遗留清账),注册顺序与拆前逐字一致
+        registerMonkBlockBreak();
+        registerMeleeHit();
+        registerDamageTaken();
+        registerServerTick();
+        registerDisconnectCleanup();
+        Yongye.LOGGER.info("[夜蚀] 职业专属技能已挂载");
+    }
+
+    /** 武僧:挖掘/破坏方块也额外损耗 1 点耐久(m428 自 register() 原样搬出)。 */
+    private static void registerMonkBlockBreak() {
         // 武僧:挖掘/破坏方块也额外损耗 1 点耐久(与攻击磨损一起 = 武器耐久×2 全用途;纯事件不依赖 mixin)
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
             if (world.isClient || !(player instanceof ServerPlayerEntity p)) return;
@@ -121,7 +131,10 @@ public final class ClassSkillHandler {
                 main.setDamage(main.getDamage() + 1);
             }
         });
+    }
 
+    /** 近战命中触发:各职业主动/被动命中逻辑(m428 原样搬出)。 */
+    private static void registerMeleeHit() {
         // ===== 近战命中触发 =====
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (world.isClient || hand != Hand.MAIN_HAND) return ActionResult.PASS;
@@ -304,7 +317,10 @@ public final class ClassSkillHandler {
 
             return ActionResult.PASS;
         });
+    }
 
+    /** 受到伤害触发:刺客闪避/剑客格挡反击/坦克真减伤重放(m428 原样搬出)。 */
+    private static void registerDamageTaken() {
         // ===== 受到伤害触发:刺客闪避 / 剑客格挡反击 =====
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!(entity instanceof ServerPlayerEntity p)) return true;
@@ -378,7 +394,10 @@ public final class ClassSkillHandler {
             }
             return true;
         });
+    }
 
+    /** 被动 tick:坦克嘲讽/护盾、刺客脱战加速等(m428 原样搬出)。 */
+    private static void registerServerTick() {
         // ===== 被动 tick:坦克嘲讽/护盾、刺客脱战加速 =====
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             YongyeConfig cfg = YongyeConfig.get();
@@ -466,7 +485,10 @@ public final class ClassSkillHandler {
                 }
             }
         });
+    }
 
+    /** m286 下线清状态(m428 原样搬出)。 */
+    private static void registerDisconnectCleanup() {
         // m286:下线清状态(四个按 UUID 的 Map 此前只增不减,长开服务器缓慢累积)
         net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             java.util.UUID id = handler.getPlayer().getUuid();
@@ -475,8 +497,6 @@ public final class ClassSkillHandler {
             tankLastMove.remove(id);
             tankLastPos.remove(id);
         });
-
-        Yongye.LOGGER.info("[夜蚀] 职业专属技能已挂载");
     }
 
     private static void bonusHit(LivingEntity target, DamageSource src, float dmg, net.minecraft.world.World world) {

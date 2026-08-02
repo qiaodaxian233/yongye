@@ -1599,57 +1599,7 @@ public class YongyeConfig {
                 String json = Files.readString(path);
                 INSTANCE = GSON.fromJson(json, YongyeConfig.class);
                 if (INSTANCE == null) INSTANCE = new YongyeConfig();
-                // m214:标识默认文案改版「抖音:乔大仙 → DY:乔大仙」;仅当文件里仍是旧默认值时迁移,自定义文案不动
-                if ("抖音:乔大仙".equals(INSTANCE.itemWatermarkText)) INSTANCE.itemWatermarkText = "DY:乔大仙";
-                // m222:终局龙血默认值改版 1e9→1e19;仅当仍是旧默认值时迁移,自定义不动
-                if (INSTANCE.endDragonHealth == 1.0E9) INSTANCE.endDragonHealth = 1.0E19;
-                // m237:肉盾武器攻击折减默认值改版 0.5→0.3;仅当仍是旧默认值时迁移,自定义不动
-                if (INSTANCE.enhanceHybridDamageFraction == 0.5) INSTANCE.enhanceHybridDamageFraction = 0.3;
-                // m312:看板默认停靠位改版 左中(0,0,0)→左上(1,-2,14);仅当三项均仍为旧默认时迁移,自定义不动
-                if (INSTANCE.hudInfoAnchor == 0 && INSTANCE.hudInfoOffsetX == 0 && INSTANCE.hudInfoOffsetY == 0) {
-                    INSTANCE.hudInfoAnchor = 1; INSTANCE.hudInfoOffsetX = -2; INSTANCE.hudInfoOffsetY = 14;
-                }
-                // m253:战斗爽全物品黑名单默认值改版 ""→内置「前期拿不到」清单;仅当仍为空(m250 旧默认)时迁移,自定义不动
-                if (INSTANCE.questBattleAnyItemExtraBans == null || INSTANCE.questBattleAnyItemExtraBans.isBlank())
-                    INSTANCE.questBattleAnyItemExtraBans = QUEST_BANS_DEFAULT;
-                // m338/m339:蚀域第1天+皮肤BOSS第5天+BOSS全线加强;仅当仍为旧默认时迁移,自定义不动
-                if (INSTANCE.blightStartDay == 12 || INSTANCE.blightStartDay == 11) INSTANCE.blightStartDay = 1;
-                if (INSTANCE.mobBossStartDay == 10) INSTANCE.mobBossStartDay = 5;
-                // m341:皮肤BOSS阶梯解锁(第6天起一天一只,弱→强);旧默认(含 m339 短暂的 5)均迁移
-                if (INSTANCE.redSpiderMinDay == 12) INSTANCE.redSpiderMinDay = 6;
-                if (INSTANCE.deathMageMinDay == 14) INSTANCE.deathMageMinDay = 7;
-                if (INSTANCE.phoenixMinDay == 16) INSTANCE.phoenixMinDay = 8;
-                if (INSTANCE.wildDragonMinDay == 10 || INSTANCE.wildDragonMinDay == 5) INSTANCE.wildDragonMinDay = 9;
-                if (INSTANCE.anubisMinDay == 5) INSTANCE.anubisMinDay = 10;
-                if (INSTANCE.anubisBaseHealth == 1.0E6) INSTANCE.anubisBaseHealth = 1.5E6;
-                // m397:站姿默认改版 开→关(作者点名「只保留七式,持械走路回原版」)。布尔翻转必须
-                // 按版本门迁移——不加版本门的话每次启动都会把用户重新打开的开关又关掉(值判等区分不了
-                // 「沿用旧默认」与「用户主动开」,按作者决定统一关一次,之后设置屏开回即长期生效)。
-                if (INSTANCE.configVersion < 139) {
-                    INSTANCE.slashFxBattleStance = false;
-                    INSTANCE.slashFxGuardPose = false;
-                }
-                if (INSTANCE.phoenixBaseHealth == 4.0E5) INSTANCE.phoenixBaseHealth = 6.0E5;
-                if (INSTANCE.deathMageBaseHealth == 3.0E5) INSTANCE.deathMageBaseHealth = 4.5E5;
-                if (INSTANCE.redSpiderBaseHealth == 2.5E5) INSTANCE.redSpiderBaseHealth = 3.75E5;
-                if (INSTANCE.toroDragonBaseHealth == 6.0E5) INSTANCE.toroDragonBaseHealth = 9.0E5;
-                if (INSTANCE.phoenixBeamCooldownTicks == 160) INSTANCE.phoenixBeamCooldownTicks = 120;
-                if (INSTANCE.phoenixBeamDamage == 30.0) INSTANCE.phoenixBeamDamage = 45.0;
-                if (INSTANCE.phoenixTornadoCooldownTicks == 300) INSTANCE.phoenixTornadoCooldownTicks = 220;
-                if (INSTANCE.phoenixTornadoDamage == 25.0) INSTANCE.phoenixTornadoDamage = 38.0;
-                if (INSTANCE.mageStrikeCooldownTicks == 140) INSTANCE.mageStrikeCooldownTicks = 110;
-                if (INSTANCE.mageStrikeDamage == 35.0) INSTANCE.mageStrikeDamage = 52.0;
-                if (INSTANCE.mageNovaCooldownTicks == 240) INSTANCE.mageNovaCooldownTicks = 180;
-                if (INSTANCE.mageNovaDamage == 25.0) INSTANCE.mageNovaDamage = 38.0;
-                if (INSTANCE.mageBlinkCooldownTicks == 200) INSTANCE.mageBlinkCooldownTicks = 150;
-                if (INSTANCE.spiderWebCooldownTicks == 200) INSTANCE.spiderWebCooldownTicks = 150;
-                if (INSTANCE.spiderPounceCooldownTicks == 160) INSTANCE.spiderPounceCooldownTicks = 120;
-                if (INSTANCE.spiderPounceDamage == 25.0) INSTANCE.spiderPounceDamage = 38.0;
-                if (INSTANCE.toroBreathCooldownTicks == 140) INSTANCE.toroBreathCooldownTicks = 110;
-                if (INSTANCE.toroBreathDamage == 30.0) INSTANCE.toroBreathDamage = 45.0;
-                if (INSTANCE.toroDiveCooldownTicks == 220) INSTANCE.toroDiveCooldownTicks = 170;
-                if (INSTANCE.toroDiveDamage == 45.0) INSTANCE.toroDiveDamage = 68.0;
-                if (INSTANCE.anubisSpellDamage == 45.0) INSTANCE.anubisSpellDamage = 68.0;
+                migrateDefaults();   // m428:迁移堆抽方法(m345 复查遗留清账,内容原样搬移零行为变更)
                 // —— 陈旧检查:对比文件键 vs 当前字段,警告死键/缺失键/版本不符 ——
                 try {
                     JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
@@ -1674,6 +1624,66 @@ public class YongyeConfig {
             Yongye.LOGGER.error("[夜蚀] 读取配置失败,使用默认值", e);
             INSTANCE = new YongyeConfig();
         }
+    }
+
+
+    /**
+     * 「仅旧默认迁移」堆(m428 自 load() 原样搬出,m345 复查遗留清账):
+     * 每条默认值改版只在字段仍等于旧默认值时替换,自定义值一律不动;
+     * 布尔翻转类必须走版本门(见 m397 条注释)。新增迁移继续往末尾追加。
+     */
+    private static void migrateDefaults() {
+        // m214:标识默认文案改版「抖音:乔大仙 → DY:乔大仙」;仅当文件里仍是旧默认值时迁移,自定义文案不动
+        if ("抖音:乔大仙".equals(INSTANCE.itemWatermarkText)) INSTANCE.itemWatermarkText = "DY:乔大仙";
+        // m222:终局龙血默认值改版 1e9→1e19;仅当仍是旧默认值时迁移,自定义不动
+        if (INSTANCE.endDragonHealth == 1.0E9) INSTANCE.endDragonHealth = 1.0E19;
+        // m237:肉盾武器攻击折减默认值改版 0.5→0.3;仅当仍是旧默认值时迁移,自定义不动
+        if (INSTANCE.enhanceHybridDamageFraction == 0.5) INSTANCE.enhanceHybridDamageFraction = 0.3;
+        // m312:看板默认停靠位改版 左中(0,0,0)→左上(1,-2,14);仅当三项均仍为旧默认时迁移,自定义不动
+        if (INSTANCE.hudInfoAnchor == 0 && INSTANCE.hudInfoOffsetX == 0 && INSTANCE.hudInfoOffsetY == 0) {
+            INSTANCE.hudInfoAnchor = 1; INSTANCE.hudInfoOffsetX = -2; INSTANCE.hudInfoOffsetY = 14;
+        }
+        // m253:战斗爽全物品黑名单默认值改版 ""→内置「前期拿不到」清单;仅当仍为空(m250 旧默认)时迁移,自定义不动
+        if (INSTANCE.questBattleAnyItemExtraBans == null || INSTANCE.questBattleAnyItemExtraBans.isBlank())
+            INSTANCE.questBattleAnyItemExtraBans = QUEST_BANS_DEFAULT;
+        // m338/m339:蚀域第1天+皮肤BOSS第5天+BOSS全线加强;仅当仍为旧默认时迁移,自定义不动
+        if (INSTANCE.blightStartDay == 12 || INSTANCE.blightStartDay == 11) INSTANCE.blightStartDay = 1;
+        if (INSTANCE.mobBossStartDay == 10) INSTANCE.mobBossStartDay = 5;
+        // m341:皮肤BOSS阶梯解锁(第6天起一天一只,弱→强);旧默认(含 m339 短暂的 5)均迁移
+        if (INSTANCE.redSpiderMinDay == 12) INSTANCE.redSpiderMinDay = 6;
+        if (INSTANCE.deathMageMinDay == 14) INSTANCE.deathMageMinDay = 7;
+        if (INSTANCE.phoenixMinDay == 16) INSTANCE.phoenixMinDay = 8;
+        if (INSTANCE.wildDragonMinDay == 10 || INSTANCE.wildDragonMinDay == 5) INSTANCE.wildDragonMinDay = 9;
+        if (INSTANCE.anubisMinDay == 5) INSTANCE.anubisMinDay = 10;
+        if (INSTANCE.anubisBaseHealth == 1.0E6) INSTANCE.anubisBaseHealth = 1.5E6;
+        // m397:站姿默认改版 开→关(作者点名「只保留七式,持械走路回原版」)。布尔翻转必须
+        // 按版本门迁移——不加版本门的话每次启动都会把用户重新打开的开关又关掉(值判等区分不了
+        // 「沿用旧默认」与「用户主动开」,按作者决定统一关一次,之后设置屏开回即长期生效)。
+        if (INSTANCE.configVersion < 139) {
+            INSTANCE.slashFxBattleStance = false;
+            INSTANCE.slashFxGuardPose = false;
+        }
+        if (INSTANCE.phoenixBaseHealth == 4.0E5) INSTANCE.phoenixBaseHealth = 6.0E5;
+        if (INSTANCE.deathMageBaseHealth == 3.0E5) INSTANCE.deathMageBaseHealth = 4.5E5;
+        if (INSTANCE.redSpiderBaseHealth == 2.5E5) INSTANCE.redSpiderBaseHealth = 3.75E5;
+        if (INSTANCE.toroDragonBaseHealth == 6.0E5) INSTANCE.toroDragonBaseHealth = 9.0E5;
+        if (INSTANCE.phoenixBeamCooldownTicks == 160) INSTANCE.phoenixBeamCooldownTicks = 120;
+        if (INSTANCE.phoenixBeamDamage == 30.0) INSTANCE.phoenixBeamDamage = 45.0;
+        if (INSTANCE.phoenixTornadoCooldownTicks == 300) INSTANCE.phoenixTornadoCooldownTicks = 220;
+        if (INSTANCE.phoenixTornadoDamage == 25.0) INSTANCE.phoenixTornadoDamage = 38.0;
+        if (INSTANCE.mageStrikeCooldownTicks == 140) INSTANCE.mageStrikeCooldownTicks = 110;
+        if (INSTANCE.mageStrikeDamage == 35.0) INSTANCE.mageStrikeDamage = 52.0;
+        if (INSTANCE.mageNovaCooldownTicks == 240) INSTANCE.mageNovaCooldownTicks = 180;
+        if (INSTANCE.mageNovaDamage == 25.0) INSTANCE.mageNovaDamage = 38.0;
+        if (INSTANCE.mageBlinkCooldownTicks == 200) INSTANCE.mageBlinkCooldownTicks = 150;
+        if (INSTANCE.spiderWebCooldownTicks == 200) INSTANCE.spiderWebCooldownTicks = 150;
+        if (INSTANCE.spiderPounceCooldownTicks == 160) INSTANCE.spiderPounceCooldownTicks = 120;
+        if (INSTANCE.spiderPounceDamage == 25.0) INSTANCE.spiderPounceDamage = 38.0;
+        if (INSTANCE.toroBreathCooldownTicks == 140) INSTANCE.toroBreathCooldownTicks = 110;
+        if (INSTANCE.toroBreathDamage == 30.0) INSTANCE.toroBreathDamage = 45.0;
+        if (INSTANCE.toroDiveCooldownTicks == 220) INSTANCE.toroDiveCooldownTicks = 170;
+        if (INSTANCE.toroDiveDamage == 45.0) INSTANCE.toroDiveDamage = 68.0;
+        if (INSTANCE.anubisSpellDamage == 45.0) INSTANCE.anubisSpellDamage = 68.0;
     }
 
     /** 当前配置 schema 的全部字段名(public、非 static)。 */
