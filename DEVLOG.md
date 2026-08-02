@@ -3415,3 +3415,10 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **顺序细节**:仓库并账放在 `total.any()` 判空**之前**(背包空但仓库有货也该强化);传统材料扣账在 enhanceWith **之前**落盘(附件写盘与背包 setStack 同时序)。
 - 新配置 `vaultUseForAutoScroll`(默认开;总闸 enableVault 关时整段不走),配置+1 **configVersion 156→157**;两文件括号平衡自检过,javac 语法筛查过;零新 API(stackFor/sync/VAULT_ITEMS/materialValue 全在树 m359 先例)。
 - 实机盯:背包清空材料、仓库存几颗低档石+碎片→用自动强化卷,看每跳装备等级照涨、仓库数字实时掉;仓库放一颗 T6(超默认档 5)确认纹丝不动;碎裂一次看仓库石头没少(传统材料不退);`/yongye config set vaultUseForAutoScroll false` 后自动强化只吃背包。
+
+## m430 稀有拾取入包确认音分档(m376 裁剪「入包音分档暂裁,要挂拾取事件另一 API 面」清账,2026-08-02)
+- **背景**:m376 做掉落光柱时把路线图里「入包确认音分档」半句裁了,理由是当年要挂拾取事件=另开 API 面;m386 拾取通知卡用**背包差分**把「真入包」检测做出来了(满包不误报/被截胡不误报/0.5s 窗口合并),裁剪理由已不成立——本轮零新 API 面把这半句补上。
+- **实现**:PickupNoticeFx 差分循环里记本批最高品质档 batchMaxTier,循环后响一声(每 0.5s 窗口只响最高档一声,一把捡一堆不炸耳);**卡被队列挤掉也响**——响的是「拾取发生了」不是「卡显示了」。分档音全在树:蓝=经验球轻响(0.35×v,1.55)/紫=铃音 BLOCK_BELL_RESONATE(0.40×v,1.65)/金=升级凯旋 ENTITY_PLAYER_LEVELUP(0.50×v,1.35,与讨伐凯旋 0.85 音高错开);本地只自己听(mc.player.playSound,BossKillFx 在树先例),过 SoundGate 并发闸。
+- **门**:enablePickupSound(默认开)+ pickupSoundVolume(默认 0.8,0~2 钳制,0=静音);检测面复用 m386,enablePickupNotice/FxBudget 关档=不扫描=天然无声(音是通知卡系统的耳朵,不单独开一套扫描)。
+- 设置屏「镜头·特效」拾取通知旁+4 钮(入包音开/关+轻0.4/默认0.8);配置+2 **configVersion 157→158**;三文件括号平衡自检过,javac 语法筛查过;零新 API 零协议(三音效常量全在树:m250 经验球/m417 铃/m263 凯旋)。
+- 实机盯:捡蓝档(RARE 金苹果)听轻叮、捡紫档(T4 石)听铃、捡金档(职业武器/T7 石)听凯旋;一次捡 7 件混档只响一声金;满背包捡不进不响;`fxtest lootbeam` 那排全捡走听三档递进;关 enablePickupSound 或音量 0 全静默,通知卡照常。

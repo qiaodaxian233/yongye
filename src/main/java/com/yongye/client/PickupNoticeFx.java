@@ -96,6 +96,7 @@ public final class PickupNoticeFx {
                 for (Snap s : now.values()) itemGain.merge(s.sample.getItem(), s.count, Integer::sum);
                 for (Snap s : baseline.values()) itemGain.merge(s.sample.getItem(), -s.count, Integer::sum);
 
+                int batchMaxTier = 0;   // m430:本批(0.5s 窗口)真入包的最高品质档,只响一声
                 for (Map.Entry<String, Snap> en : now.entrySet()) {
                     Snap s = en.getValue();
                     Snap b = baseline.get(en.getKey());
@@ -105,8 +106,11 @@ public final class PickupNoticeFx {
                     if (allow <= 0) continue;                        // 总量没涨=组件变换,不是新获得
                     int shown = Math.min(gained, allow);
                     itemGain.put(s.sample.getItem(), allow - shown); // 同物品多指纹间不重复计入
-                    enqueue(new Card(s.sample, shown, LootBeamManager.tierOf(s.sample)));
+                    int tier = LootBeamManager.tierOf(s.sample);
+                    batchMaxTier = Math.max(batchMaxTier, tier);
+                    enqueue(new Card(s.sample, shown, tier));
                 }
+                playPickupSound(mc, batchMaxTier);                   // m430:分档确认音(卡被挤也响——响的是拾取不是卡)
             }
             baseline = now;
         });
@@ -190,6 +194,24 @@ public final class PickupNoticeFx {
 
     /** m411 调试面板探针:当前在队卡片数。 */
     static int liveCount() { return CARDS.size(); }
+
+    /**
+     * m430 入包确认音分档(m376 裁剪「入包确认音分档暂裁」清账——当年缺的拾取检测面
+     * m386 背包差分已经补上,零新 API 面):蓝=经验球轻响 / 紫=铃音 / 金=升级凯旋,
+     * 全部本地只自己听(mc.player.playSound,BossKillFx 在树先例);经 SoundGate 并发闸不炸耳。
+     */
+    private static void playPickupSound(MinecraftClient mc, int tier) {
+        if (tier <= 0 || mc.player == null) return;
+        YongyeConfig c = YongyeConfig.get();
+        if (!c.enablePickupSound) return;
+        float v = (float) Math.max(0.0, Math.min(2.0, c.pickupSoundVolume));
+        if (v <= 0f) return;
+        switch (tier) {
+            case 1 -> mc.player.playSound(net.minecraft.sound.SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 0.35f * v, 1.55f);
+            case 2 -> mc.player.playSound(net.minecraft.sound.SoundEvents.BLOCK_BELL_RESONATE, 0.40f * v, 1.65f);
+            default -> mc.player.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 0.50f * v, 1.35f);
+        }
+    }
 
     private static float easeOut(float t) { return 1f - (1f - t) * (1f - t); }
 }
