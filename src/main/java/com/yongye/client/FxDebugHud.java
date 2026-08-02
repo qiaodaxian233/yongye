@@ -34,12 +34,13 @@ public final class FxDebugHud {
                             + "  血条 " + MobHealthBarManager.liveCount()
                             + "  叠层 " + overlays,
             };
-            int y = h - 64 - lines.length * 11;
+            int y = h - 64 - FxBudget.safeY() - lines.length * 11;   // m418 吃安全边距
             int wMax = 0;
             for (String l : lines) wMax = Math.max(wMax, tr.getWidth(l));
-            ctx.fill(2, y - 3, 8 + wMax, y + lines.length * 11, 0xA0101820);
+            int lx = 2 + FxBudget.safeX();
+            ctx.fill(lx, y - 3, lx + 6 + wMax, y + lines.length * 11, 0xA0101820);
             for (String l : lines) {
-                ctx.drawTextWithShadow(tr, Text.literal(l), 5, y, 0xFF9CD8FF);
+                ctx.drawTextWithShadow(tr, Text.literal(l), lx + 3, y, 0xFF9CD8FF);
                 y += 11;
             }
         });

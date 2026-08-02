@@ -38,6 +38,16 @@ public final class FxBudget {
         return Math.max(OFF, Math.min(HIGH, q));
     }
 
+    /** m418(路线图26)HUD 安全边距 X(超宽屏/曲面屏/录播遮挡:边缘停靠元素统一向内收;0~80 钳制)。 */
+    public static int safeX() {
+        return Math.max(0, Math.min(80, YongyeConfig.get().hudSafeMarginX));
+    }
+
+    /** m418 HUD 安全边距 Y。 */
+    public static int safeY() {
+        return Math.max(0, Math.min(80, YongyeConfig.get().hudSafeMarginY));
+    }
+
     /** m417(路线图25)闪光强度中枢:低刺激整档 ×0.25 / 弱闪光 ×0.5 / 常规 ×1。
      *  所有整屏闪/罩/晕类一律乘此值(替代各处手写 reduceScreenFlash 三目)。 */
     public static float flashScale() {

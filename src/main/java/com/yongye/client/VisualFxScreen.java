@@ -57,6 +57,8 @@ public class VisualFxScreen extends Screen {
                     new Sld("看板横移", "hudInfoOffsetX", -300, 300, 0),
                     new Sld("看板纵移", "hudInfoOffsetY", -300, 300, 0),
                     new Sld("血条缩放", "bossBarScale", 0.3, 1.5, 2),
+                    new Sld("安全边距X", "hudSafeMarginX", 0, 80, 0),
+                    new Sld("安全边距Y", "hudSafeMarginY", 0, 80, 0),
             }),
             new SldSection("镜头与特效强度", new Sld[]{
                     new Sld("打击震动", "combatFxShakeScale", 0, 2, 2),

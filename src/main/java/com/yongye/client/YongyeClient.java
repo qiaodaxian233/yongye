@@ -298,11 +298,12 @@ public class YongyeClient implements ClientModInitializer {
             // 再叠 hudInfoOffsetX/Y 微调,最后钳回屏内(乱填偏移也不会飞出屏幕)。
             int sw = mc.getWindow().getScaledWidth(), sh = mc.getWindow().getScaledHeight();
             int anchor = cfg.hudInfoAnchor;
-            int bx = (anchor == 3 || anchor == 4 || anchor == 5) ? sw - bw - 3 : 3;
+            int sfx = FxBudget.safeX(), sfy = FxBudget.safeY();   // m418 安全边距:边缘停靠统一向内收
+            int bx = (anchor == 3 || anchor == 4 || anchor == 5) ? sw - bw - 3 - sfx : 3 + sfx;
             int by = switch (anchor) {
-                case 1, 3 -> 4;               // 上缘(顶中 BOSS 血条不在角上,角落可用)
-                case 2, 5 -> sh - bh - 48;    // 下缘(避开热栏/聊天输入行)
-                default   -> sh / 2 - bh - 10; // 左/右中,中线略上(m289 原位)
+                case 1, 3 -> 4 + sfy;               // 上缘(顶中 BOSS 血条不在角上,角落可用)
+                case 2, 5 -> sh - bh - 48 - sfy;    // 下缘(避开热栏/聊天输入行)
+                default   -> sh / 2 - bh - 10;      // 左/右中,中线略上(m289 原位;居中不吃边距)
             };
             bx = Math.max(0, Math.min(sw - bw, bx + cfg.hudInfoOffsetX));
             by = Math.max(0, Math.min(sh - bh, by + cfg.hudInfoOffsetY));
@@ -895,7 +896,7 @@ public class YongyeClient implements ClientModInitializer {
                 int size = 22, gap = 4;
                 int totalW = slots.size() * size + (slots.size() - 1) * gap;
                 int x0 = w / 2 - totalW / 2 + cfg.skillCdHudOffsetX;
-                int ty = h - 112 + cfg.skillCdHudOffsetY;                     // 面板/阶段名/箭头(h-82)再上方
+                int ty = h - 112 - FxBudget.safeY() + cfg.skillCdHudOffsetY;  // 面板/阶段名/箭头(h-82)再上方(m418 吃安全边距)
                 x0 = Math.max(2, Math.min(w - totalW - 2, x0));
                 ty = Math.max(2, Math.min(h - size - 2, ty));
                 for (int k = 0; k < slots.size(); k++) {
@@ -910,14 +911,15 @@ public class YongyeClient implements ClientModInitializer {
             int rows = (hasClass ? 2 : 0) + (weapon ? com.yongye.item.WeaponSkill.values().length : 0);
             boolean alignLeft;
             int edge, y;
+            int sfx = FxBudget.safeX(), sfy = FxBudget.safeY();   // m418 安全边距
             switch (cfg.skillCdHudAnchor) {
-                case 1 -> { alignLeft = true;  edge = 8;         y = h - 44; }            // 左下
-                case 2 -> { alignLeft = false; edge = w - 8;     y = h / 2 + 40; }        // 右中
-                case 3 -> { alignLeft = true;  edge = 8;         y = h / 2 + 40; }        // 左中
-                case 4 -> { alignLeft = false; edge = w - 8;     y = 14 + rows * rowH; }  // 右上
-                case 5 -> { alignLeft = true;  edge = 8;         y = 14 + rows * rowH; }  // 左上
-                case 6 -> { alignLeft = false; edge = w / 2 - 180; y = h - 50; }          // 面板左侧(旧)
-                default -> { alignLeft = false; edge = w - 8;    y = h - 44; }            // 右下(新默认)
+                case 1 -> { alignLeft = true;  edge = 8 + sfx;         y = h - 44 - sfy; }            // 左下
+                case 2 -> { alignLeft = false; edge = w - 8 - sfx;     y = h / 2 + 40; }              // 右中
+                case 3 -> { alignLeft = true;  edge = 8 + sfx;         y = h / 2 + 40; }              // 左中
+                case 4 -> { alignLeft = false; edge = w - 8 - sfx;     y = 14 + sfy + rows * rowH; }  // 右上
+                case 5 -> { alignLeft = true;  edge = 8 + sfx;         y = 14 + sfy + rows * rowH; }  // 左上
+                case 6 -> { alignLeft = false; edge = w / 2 - 180;     y = h - 50; }                  // 面板左侧(旧)
+                default -> { alignLeft = false; edge = w - 8 - sfx;    y = h - 44 - sfy; }            // 右下(新默认)
             }
             edge += cfg.skillCdHudOffsetX;
             y += cfg.skillCdHudOffsetY;

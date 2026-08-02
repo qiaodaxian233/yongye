@@ -128,7 +128,7 @@ public final class PickupNoticeFx {
                 float slide = age < SLIDE_MS ? 1f - easeOut(age / (float) SLIDE_MS) : 0f; // 1→0 右缘滑入
                 float fade = age > SHOW_MS - FADE_MS ? (SHOW_MS - age) / (float) FADE_MS : 1f;
                 int a = Math.max(8, (int) (255 * fade));
-                int x = w - CARD_W - 6 + (int) (slide * (CARD_W + 8));
+                int x = w - CARD_W - 6 - FxBudget.safeX() + (int) (slide * (CARD_W + 8)); // m418 吃安全边距
 
                 int rgb = TIER_RGB[Math.max(0, Math.min(2, cd.tier - 1))];
                 // 卡底(暗玻璃)+ 品质左条 + 顶高光(m142 HUD 手法)

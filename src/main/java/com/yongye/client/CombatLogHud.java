@@ -82,16 +82,18 @@ public final class CombatLogHud {
             var tr = mc.textRenderer;
             int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
             long now = System.nanoTime() / 1_000_000L;
-            int y = h - 96;                                      // 右缘热栏上方,与技能CD方块(居中)错层
+            int y = h - 96 - FxBudget.safeY();                   // 右缘热栏上方,与技能CD方块(居中)错层(m418 吃安全边距)
+            int ceil = h / 2 + 70;                               // m418 天花板:小屏高(GUI缩放大)时不爬进右缘拾取卡区(h/2-48 起往下)
             var it = LINES.iterator();
             while (it.hasNext()) {
                 Line l = it.next();
                 long age = now - l.bornMs;
                 if (age >= LIFE_MS) { it.remove(); continue; }
+                if (y < ceil) break;                             // 顶到天花板:老条目本帧不画(仍随寿命自灭)
                 int a = age > LIFE_MS - FADE_MS
                         ? Math.max(8, (int) (200 * (LIFE_MS - age) / (double) FADE_MS)) : 200;
                 ctx.drawTextWithShadow(tr, Text.literal(l.text),
-                        w - 6 - tr.getWidth(l.text), y, (a << 24) | l.rgb);
+                        w - 6 - FxBudget.safeX() - tr.getWidth(l.text), y, (a << 24) | l.rgb);
                 y -= 10;
             }
         });
