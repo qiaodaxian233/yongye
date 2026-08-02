@@ -73,13 +73,12 @@ public final class LootHandler {
         return SkillBookItem.create(t, EnhanceStoneDrops.bookLevelFor(world, t));
     }
 
-    /** m297:精英必爆套餐版——血量书照旧走配置等级区间,属性书走阶段书档。 */
+    /** m297:精英必爆套餐版——属性书走阶段书档;m432 起血量书也走阶段档(hMin/hMax 仅在关分档时用)。 */
     private static ItemStack stagedAnySkillBook(ServerWorld world, Random r, int hMin, int hMax) {
         SkillType[] types = SkillType.values();
         int pick = r.nextInt(types.length + 1); // 0 = 血量书,其余 = 属性书
         if (pick == 0) {
-            int lvl = hMin + (hMax > hMin ? r.nextInt(hMax - hMin + 1) : 0);
-            return HealthSkillBookItem.create(lvl);
+            return HealthSkillBookItem.create(EnhanceStoneDrops.healthBookLevelFor(world)); // m432
         }
         SkillType t = types[pick - 1];
         return SkillBookItem.create(t, EnhanceStoneDrops.bookLevelFor(world, t));
@@ -165,7 +164,10 @@ public final class LootHandler {
                 }
                 // 精英:技能书改为按概率掉(skillBookDropChanceElite,默认已调极低)+ 一件稀有以上战利品 + 概率材料
                 if (r.nextDouble() < cfg.skillBookDropChanceElite * lm) {
-                    drop(world, entity, HealthSkillBookItem.create(1 + r.nextInt(3))); // V1~V3
+                    // m432:开分档=血量书走阶段档(与同处属性书同梯);关=旧 V1~V3
+                    drop(world, entity, cfg.enableStagedSkillBooks
+                            ? HealthSkillBookItem.create(EnhanceStoneDrops.healthBookLevelFor(world))
+                            : HealthSkillBookItem.create(1 + r.nextInt(3)));
                 }
                 // 概率掉一本属性技能书(m297 开分档=阶段书档;关=旧 V1~V3)
                 if (r.nextDouble() < cfg.skillBookDropChanceElite * lm) {

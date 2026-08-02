@@ -104,6 +104,20 @@ public final class EnhanceStoneDrops {
         return bookTierLevel(b);
     }
 
+    /**
+     * m432 血量书阶段档(m302 遗留「血量书未入分档体系,后期血量成长明显慢于攻击,待作者定」清账)。
+     * <p>入档理由:血量书 +10/级是**平铺无封顶**的加法,与攻击书 0.5/级同属「吃得下大数」那一类
+     * ——百分比类书之所以钳前两档是因为它们封顶都极低(吸血 8%/暴击 25%),血量没有这个问题。
+     * 攻击走 m298 超线性曲线跑得更快,血量还卡在 V1~V30 的固定小等级,后期就是被怪一刀带走。
+     * <p>档位独立可调:healthBookTierCap(默 5=与攻击书同梯,调 2 即回「只到 100 档」的保守口径),
+     * 总闸仍是 enableStagedSkillBooks(关=各掉落点回各自的旧固定等级)。
+     */
+    public static int healthBookLevelFor(ServerWorld world) {
+        YongyeConfig c = YongyeConfig.get();
+        int b = Math.min(stageBookTier(world), Math.max(1, c.healthBookTierCap));
+        return bookTierLevel(b);
+    }
+
     /** 三权重选 0/1/2 偏移(权重和不必为 1,按比例;全 0 时落 0 偏移)。 */
     private static int pick(Random r, double w0, double w1, double w2) {
         double total = w0 + w1 + w2;

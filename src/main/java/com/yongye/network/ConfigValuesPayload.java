@@ -42,6 +42,9 @@ public record ConfigValuesPayload(String data) implements CustomPayload {
             "stoneDropChanceNormal",
             "stoneDaysPerTier",
             "stoneTierCap",
+            // m432:书档两个上限也进编辑器(血量书档新加,属性百分比档一直没进来)
+            "healthBookTierCap",
+            "skillBookPercentTierCap",
     };
 
     /** 字段 → 中文标签(客户端显示用);未列出的字段直接显示 key 原文。 */
@@ -57,6 +60,8 @@ public record ConfigValuesPayload(String data) implements CustomPayload {
             case "classWeaponDropChanceElite" -> "职业武器爆率(精英)";
             case "eliteChance" -> "精英化概率";
             case "mobBossChance" -> "怪物BOSS化概率";
+            case "healthBookTierCap" -> "血量书档位上限(1~5)";
+            case "skillBookPercentTierCap" -> "百分比书档位上限(1~5)";
             case "xpBonusElite" -> "精英额外经验";
             case "xpBonusMobBoss" -> "怪物BOSS额外经验";
             case "xpBonusVanillaBoss" -> "原版Boss额外经验";

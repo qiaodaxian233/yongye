@@ -3429,3 +3429,12 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **没有把仓库白名单开给原版物品**(m358 原话「仓库白名单扩到原版物品的口子」):VaultManager 类注释写死「只收本模组成长物资,不做万物箱」,开白名单会砸这条设计。改成从判定侧接:目标物是普通原版物品(m250 全物品抽取)时仓库天然存不了、countOf 返 0、行为与旧版逐字一致——**只在真会冲突的本模组材料上生效**,风险面最小。
 - 新配置 `questCountVault`(默认开,关=只数背包的旧行为;总闸 enableVault 关时也自动只数背包),配置+1 **configVersion 158→159**;三文件括号平衡自检过,javac 语法筛查过;零新 API(getInventory().count/附件读取全在树)。
 - 实机盯:开着自动入库,刷到「集齐 6× 生命碎片」的任务——碎片留在背包不再被扫走、集齐即完成;先手动把碎片全存进仓库再接任务(或用 `/yongye config set vaultAutoDeposit true` 让它扫),仓库有 6 个照样判完成;抽到原版物(铁锭/粘液球)行为与旧版一致;`/yongye config set questCountVault false` 回旧判定。
+
+## m432 血量书进 ×100 分档(m302 遗留「血量书未入分档体系,后期血量成长明显慢于攻击,待作者定」清账,2026-08-02)
+- **入档理由(m297 当年为什么把它排除、现在为什么该收进来)**:m297 分档时把书分成两类——攻击书 0.5/级**平铺无封顶**吃得下大数、百分比类(吸血 8%/暴击 25%/破甲 30%)封顶极低所以钳前两档;血量书 **+10/级也是平铺无封顶的加法**,本该跟攻击书同一类,当时归到「待定」搁置了。结果:攻击走 m298 超线性曲线一路上天,血量还卡在 V1~V3 / V10~V20 / V15~V30 的固定小等级——怪的伤害对位按玩家最大生命算(DynamicScaling),血量跟不上攻击就是后期被一刀带走。
+- **实现**:新 `EnhanceStoneDrops.healthBookLevelFor(world)` = `bookTierLevel(min(stageBookTier, healthBookTierCap))`,与属性书共用同一条随进度爬的书档梯;**独立上限** healthBookTierCap(默 5=与攻击书同梯,调 2 即回「只到 100 档」的保守口径),不受 skillBookPercentTierCap 约束(那是给百分比书的)。总闸仍是 enableStagedSkillBooks——关掉,四处各自回旧固定等级,一个开关全回退。
+- **接线四处(严格照 m297「书主链」同一批,不扩范围)**:①精英必爆套餐的血量书分支(原走配置区间)②精英概率掉的 V1~V3 ③BossHandler 的 V10~V20(BOSS 本就是高档书主要出处)④PainBossHandler 佩恩死亡奖励的 V15~V30。
+- **刻意没动的两处(与 m297 口径一致,要动请点名)**:①COMMON/RARE/EPIC **静态掉落池**里的 book(1)/bookRange(2,3)/book(5)——LootFactory 只吃 Random 拿不到 world,且那是普通怪的杂物池,给 V1 是有意的;②QuestManager 任务奖励 V2~V9(m297 当年也没给任务奖励接属性书阶段档)。
+- 爆率编辑器 EDITABLE_KEYS 加两键:healthBookTierCap(新)与 skillBookPercentTierCap(m297 起一直没进编辑器,顺手补),调试菜单即改即生效。
+- 配置+1 **configVersion 159→160**;六文件括号平衡自检过,javac 语法筛查过,healthBookLevelFor 定义 1 处调用 4 处 grep 回验(m300a 教训);零新 API。
+- 实机盯:第 9 天后打精英/BOSS,血量书应从 V1/V10 那种小数变成 V100/V1万 档并随天数爬;`/yongye config set healthBookTierCap 2` 后新掉的封在 V100;`enableStagedSkillBooks false` 后逐条回旧等级;调试菜单爆率编辑器能看到并直接改这两个新键;学一本大血量书看成长面板最大生命跳涨(+10/级)。

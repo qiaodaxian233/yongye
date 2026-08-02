@@ -92,7 +92,10 @@ public final class BossHandler {
         Random r = boss.getRandom();
         double m = cfg.bossDropMultiplier;
 
-        dropMany(world, boss, scale(3, m), rr -> HealthSkillBookItem.create(10 + rr.nextInt(11))); // V10~V20
+        // m432:开分档=血量书走阶段档(BOSS 是高档书主要出处,与 m297 属性书同处);关=旧 V10~V20
+        dropMany(world, boss, scale(3, m), rr -> cfg.enableStagedSkillBooks
+                ? HealthSkillBookItem.create(EnhanceStoneDrops.healthBookLevelFor(world))
+                : HealthSkillBookItem.create(10 + rr.nextInt(11)));
         // 属性技能书:m297 开分档=BOSS 掉 1~3 本阶段书档(skillBookBossAttackBias 概率强制攻击书——
         // 攻击书高档的主要出处,百分比类照旧钳前两档);关分档=旧「3 本 V3~V8」。
         if (cfg.enableStagedSkillBooks) {

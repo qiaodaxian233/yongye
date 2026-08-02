@@ -377,7 +377,10 @@ public final class PainBossHandler {
         drop(world, pain, new ItemStack(ModItems.ENDING_ESSENCE, 1 + r.nextInt(2)));
         drop(world, pain, new ItemStack(ModItems.CATASTROPHE_BLOOD_CORE, 1 + r.nextInt(2)));
         drop(world, pain, new ItemStack(ModItems.LIFE_CORE, 2));
-        drop(world, pain, HealthSkillBookItem.create(15 + r.nextInt(16)));   // V15~V30
+        // m432:开分档=血量书走阶段档;关=旧 V15~V30
+        drop(world, pain, YongyeConfig.get().enableStagedSkillBooks
+                ? HealthSkillBookItem.create(EnhanceStoneDrops.healthBookLevelFor(world))
+                : HealthSkillBookItem.create(15 + r.nextInt(16)));
         for (int i = 0; i < 3; i++) {
             SkillType st = SkillType.values()[r.nextInt(SkillType.values().length)];
             // m303 爆率复检:开分档时走阶段书档(攻击书吃满/百分比钳前两档),关=旧 V5~V15
