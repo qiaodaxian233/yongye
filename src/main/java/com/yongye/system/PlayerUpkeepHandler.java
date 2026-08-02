@@ -153,6 +153,15 @@ public final class PlayerUpkeepHandler {
             // 只镜像「主手 / 手 / 任意」槽的修饰(穿戴槽不在此列)
             AttributeModifierSlot slot = e.slot();
             if (slot != AttributeModifierSlot.MAINHAND && slot != AttributeModifierSlot.HAND && slot != AttributeModifierSlot.ANY) continue;
+            // m425(作者实机:「拿工具第一人称镐子隐形」):**攻速一律不镜像**。
+            //  攻速是"这把武器抡起来多快"的持械手感,不是"带着武器人变快/慢"的携带增益;
+            //  职业武器全带大额负攻速(-2.6~-3.0),镜像后与手持工具自身负攻速(下界合金镐 -2.8)
+            //  叠加 → 玩家攻速 4-2.8-2.6=-1.4 被钳到 0 → 攻击冷却永远充不满 → 原版第一人称
+            //  抬手动画目标值 = 冷却进度³ ≈ 0 → **手持物永远压在最低点 = 镐子隐形**
+            //  (顺带一直只能打出 0% 蓄力的挠痒刀)。拿武器时镜像本就撤销所以武器可见,
+            //  与作者「拿武器能看见、拿工具看不见」逐字对上;m146 时代那笔「镐子不显示疑外部
+            //  资源包」的悬案病根也是它(m133 就已引入)。攻击/生命/护甲等携带增益照旧镜像。
+            if (e.attribute() == net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_SPEED) continue;
             EntityAttributeInstance inst = p.getAttributeInstance(e.attribute());
             if (inst == null) continue;
             EntityAttributeModifier orig = e.modifier();
