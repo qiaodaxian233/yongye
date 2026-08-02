@@ -173,6 +173,11 @@ public class DebugScreen extends Screen {
                             new Btn("BOSS·阿努比斯", "yongye anubis"),
                             new Btn("小怪·阿努比斯恶灵", "yongye wraith"),
                     }),
+                    new Section("视觉回归测试台(m424;站桩怪,验完记得清)", new Btn[]{
+                            new Btn("刷怪矩阵 普通vs精英", "yongye fxtest mobs"),
+                            new Btn("掉落矩阵 全档光柱", "yongye fxtest lootbeam"),
+                            new Btn("清测试台", "yongye fxtest clear"),
+                    }),
             }),
             // —— 掉率(loot)——
             new Page("掉率", new Section[]{

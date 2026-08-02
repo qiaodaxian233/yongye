@@ -79,6 +79,9 @@ public final class MobBossHandler {
                 attachBar(mob);
                 return;
             }
+            // m424:视觉回归测试台的怪不参与自然 BOSS 化(两行矩阵都不许被随机 roll 污染,
+            //  否则名牌/血条被 BOSS 版覆盖,测试就不是测试了)。
+            if (mob.getCommandTags().contains(ModCommands.FXTEST_TAG)) return;
             if (ProgressionManager.gameDay(mob.getWorld()) < cfg.mobBossStartDay) return; // 早于设定天数不刷
             if (mob.getRandom().nextDouble() >= cfg.mobBossChance) return;
 

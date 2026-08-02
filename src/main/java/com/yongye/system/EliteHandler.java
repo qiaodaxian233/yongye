@@ -207,6 +207,10 @@ public final class EliteHandler {
                 ELITES.add(mob); // 重新加载时恢复追踪
                 return;
             }
+            // m424:视觉回归测试台的怪不参与自然精英化(对照行必须保持纯净;
+            //  测试台的精英行走 makeEliteDirect 显式精英化,不靠这里掷骰)。
+            //  守卫放在恢复追踪之后=测试台精英区块重载仍能恢复光环追踪。
+            if (mob.getCommandTags().contains(ModCommands.FXTEST_TAG)) return;
             if (mob.getRandom().nextDouble() >= cfg.eliteChance * NightfallManager.getEliteChanceMultiplier() * ProgressionManager.eliteChanceMultiplier(mob.getWorld())) return;
 
             makeElite(mob, cfg);
@@ -268,6 +272,16 @@ public final class EliteHandler {
             count++;
         }
         return count;
+    }
+
+    /** m424 视觉回归测试台专用:把指定怪直接精英化(/yongye fxtest mobs 精英行用)。
+     *  走与自然精英完全同一条 makeElite 管线(属性/装备/词缀/名牌)+ 进 ELITES 追踪
+     *  (光环与词缀行为由 END_SERVER_TICK 的 tickElite 驱动,与 AI 无关,站桩怪照常发光环)
+     *  ——保证测试台看到的 = 真实场景会看到的。 */
+    public static void makeEliteDirect(MobEntity mob) {
+        if (mob.getAttachedOrElse(ModAttachments.IS_ELITE, false)) return;
+        makeElite(mob, YongyeConfig.get());
+        ELITES.add(mob);
     }
 
     private static void makeElite(MobEntity mob, YongyeConfig cfg) {

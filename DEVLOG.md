@@ -3368,3 +3368,13 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **③同根病顺手清账**:UltimateCastFx.classColor 键也是中文名收的却是 id——大招施放边缘光晕(m407)一直走暖金兜底不分职业;switch 键整改为 id,七职业色即日生效。全仓 `ClientStats.className` 消费点已再扫一遍:HUD(mpColors/classCnName)与 MainQuestLine.trialTitle 本就按 id 写,无第三处。
 - 纯客户端三文件,零新 API 零协议零配置,**configVersion 仍 155**;括号平衡自检过。
 - 实机盯:GUI 缩放调大开调试菜单滚动,分组标题与按钮**一起**滚不再错位;召唤师开背包左侧外列见「干弟」钮(换别的职业消失,双职业含召唤师也可见),点开设名字皮肤照 m414 清单验;任意职业放大招看屏幕边缘光晕带职业色(召唤师翠绿/战士炽橙)不再全员暖金。
+
+## m424 视觉回归测试场景(路线图30 收官,2026-08-02)
+- **定位**:fxtest 现有 damage/stress/lootbeam/nightfall/bosskill/cast/panel 已盖演出侧;本笔补齐两块缺口=**刷怪矩阵**与**掉落矩阵全档化**,加一键清场,「改任何视觉相关代码后 30 秒内肉眼全量回归」闭环。
+- **fxtest mobs 刷怪矩阵**:玩家南侧摆两行×三列站桩怪——近行=普通对照(尸壳/掠夺者/蜘蛛,全选白天不燃的怪),远行=同款三只经新 `EliteHandler.makeEliteDirect`(公开薄封装,走与自然精英**完全同一条** makeElite 管线:属性/装备/词缀/名牌+进 ELITES 追踪;光环与词缀行为由 END_SERVER_TICK 的 tickElite 驱动与 AI 无关,站桩照发)。怪一律 setAiDisabled+setPersistent+命令标签 `yongye_fxtest`(**spawn 前打标**=ENTITY_LOAD 同步回调内即可见)。
+- **防污染守卫(两处一行)**:EliteHandler/MobBossHandler 的 ENTITY_LOAD 随机转化对带测试标签的怪直接豁免——否则对照行可能被掷中精英/BOSS 化,矩阵就不是矩阵了;EliteHandler 侧守卫放在「已精英恢复追踪」分支**之后**=测试精英区块重载仍能恢复光环。
+- **fxtest lootbeam 扩全档**:3 件→7 件一排(左→右档位递降):职业武器/神器(生命神像)/强化石T7=金三来源、强化石T4/附魔金苹果EPIC=紫两来源、金苹果RARE=蓝、**圆石对照应无光柱**——LootBeamManager.tierOf 逐档各来一件;掉落物同打测试标签。
+- **fxtest clear**:清当前维度全部带标签实体(怪+掉落物),先收集后删不动在迭代的集合(iterateEntities/discard 全在树 m119/m155/m223 口径)。调试菜单「刷怪」页加测试台三钮。
+- 测试命令照 m411 口径零配置,**configVersion 仍 155**;四文件括号平衡自检过。
+- **待编译验证 2 处(均低险有退路)**:①`MobEntity.setAiDisabled(Z)` 首用——yarn 1.21.1 官方映射已逐字核(method_5977),报错删该行=怪会走动但矩阵仍可用;②`EntityType.PILLAGER` 常量首用——HUSK/SPIDER 同类兄弟常量在树(BossAbilityHandler)CI 绿过,极低险,报错换 EntityType.STRAY 也不行就删列。
+- 实机盯:`/yongye fxtest mobs` 看两行三列站桩,远行金字名牌带词缀/光环/精英血条、近行素净;开色盲记号再看精英行记号;`fxtest lootbeam` 数光柱=金3紫2蓝1、圆石无柱;`fxtest clear` 一键全消;隔天回来测试怪还在(persistent);自然刷的怪照常有概率精英/BOSS 化(守卫只认标签)。

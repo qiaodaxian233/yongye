@@ -380,20 +380,32 @@ public final class ModCommands {
                                 .then(CommandManager.literal("lootbeam").executes(ctx -> {
                                     ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
                                     var w = p.getServerWorld();
+                                    // m424 扩成全档掉落矩阵(LootBeamManager.tierOf 口径逐档各来一件):
+                                    // 金三来源(职业武器/神器/强化石T7百万级)、紫两来源(强化石T4千级/EPIC)、
+                                    // 蓝(RARE)、末尾普通品**无柱对照**——一排七件从左到右档位递降。
                                     net.minecraft.item.ItemStack[] drops = {
-                                            new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.CHAOS_BLADE),   // 金(职业武器口径)
-                                            new net.minecraft.item.ItemStack(net.minecraft.item.Items.ENCHANTED_GOLDEN_APPLE), // 紫(EPIC)
-                                            new net.minecraft.item.ItemStack(net.minecraft.item.Items.GOLDEN_APPLE)};     // 蓝(RARE)
+                                            new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.CHAOS_BLADE),                    // 金:职业武器口径
+                                            new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getArtifact(ArtifactType.LIFE_IDOL)), // 金:神器
+                                            new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.enhanceStone(7)),                // 金:强化石T7(百万级)
+                                            new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.enhanceStone(4)),                // 紫:强化石T4(千级)
+                                            new net.minecraft.item.ItemStack(net.minecraft.item.Items.ENCHANTED_GOLDEN_APPLE),             // 紫:EPIC
+                                            new net.minecraft.item.ItemStack(net.minecraft.item.Items.GOLDEN_APPLE),                       // 蓝:RARE
+                                            new net.minecraft.item.ItemStack(net.minecraft.item.Items.COBBLESTONE)};                       // 对照:普通品不起柱
                                     for (int i = 0; i < drops.length; i++) {
                                         var e = new net.minecraft.entity.ItemEntity(w,
-                                                p.getX() + (i - 1) * 2.0, p.getY() + 0.3, p.getZ() + 2.5, drops[i]);
+                                                p.getX() + (i - 3) * 1.5, p.getY() + 0.3, p.getZ() + 2.5, drops[i]);
                                         e.setVelocity(0, 0.1, 0);
+                                        e.addCommandTag(FXTEST_TAG);   // m424:进测试标签,fxtest clear 连掉落物一起收
                                         w.spawnEntity(e);
                                     }
                                     ctx.getSource().sendFeedback(() -> Text.literal(
-                                            "已在面前落下 金/紫/蓝 三档测试掉落(真实物品,验完记得捡走或清掉)").formatted(Formatting.GOLD), false);
+                                            "已落下全档掉落矩阵(左→右:金×3 紫×2 蓝×1 对照×1;末件普通品应无光柱),验完 fxtest clear 清场").formatted(Formatting.GOLD), false);
                                     return 1;
                                 }))
+                                .then(CommandManager.literal("mobs")
+                                        .executes(ctx -> fxtestMobs(ctx.getSource().getPlayerOrThrow())))
+                                .then(CommandManager.literal("clear")
+                                        .executes(ctx -> fxtestClear(ctx.getSource().getPlayerOrThrow())))
                                 .then(CommandManager.literal("nightfall")
                                         .then(CommandManager.argument("lvl", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 99))
                                                 .executes(ctx -> {
@@ -745,6 +757,51 @@ public final class ModCommands {
         p.sendMessage(Text.literal("干弟槽 " + slot + " 的" + what + " → " + (five[slot - 1].isEmpty() ? "默认" : five[slot - 1])
                 + (isSkin ? "(客户端拉取中,几秒内换肤;拉不到=原贴图)" : renamed > 0 ? "(在场 " + renamed + " 只已改名)" : "(下次召唤生效)"))
                 .formatted(Formatting.GOLD), false);
+        return 1;
+    }
+
+    /** m424 视觉回归测试台:所有测试刷出的怪/掉落物都打这个命令标签,
+     *  一键清场(fxtest clear)靠它;EliteHandler / MobBossHandler 的自然转化也按它豁免。 */
+    public static final String FXTEST_TAG = "yongye_fxtest";
+
+    /** m424 fxtest mobs 刷怪矩阵:玩家南侧(z+)摆两行×三列站桩怪——
+     *  近行=普通对照(尸壳/掠夺者/蜘蛛,全是白天不燃的怪),远行=同款三只走真精英管线,
+     *  并排肉眼对比 光环/词缀名牌/血条/色盲记号。AI 关闭+永不 despawn+测试标签,验完 fxtest clear。 */
+    private static int fxtestMobs(ServerPlayerEntity p) {
+        if (!(p.getWorld() instanceof net.minecraft.server.world.ServerWorld w)) return 0;
+        net.minecraft.entity.EntityType<?>[] types = {
+                net.minecraft.entity.EntityType.HUSK,       // 尸壳:僵尸系但日晒不燃
+                net.minecraft.entity.EntityType.PILLAGER,   // 掠夺者:远程持弩,名牌/血条另一种脸
+                net.minecraft.entity.EntityType.SPIDER };   // 蜘蛛:体型宽,验光环贴地观感
+        int spawned = 0;
+        for (int row = 0; row < 2; row++) {                 // 0=普通对照行(近) 1=精英行(远)
+            for (int i = 0; i < types.length; i++) {
+                if (!(types[i].create(w) instanceof net.minecraft.entity.mob.MobEntity mob)) continue;
+                mob.refreshPositionAndAngles(p.getX() + (i - 1) * 3.0, p.getY(),
+                        p.getZ() + 5.0 + row * 4.0, 180f, 0f);   // 面朝北=正对站在原地的玩家
+                mob.setAiDisabled(true);   // 站桩:光环/名牌/血条慢慢看(词缀行为由 tickElite 驱动仍在)
+                mob.setPersistent();       // 防原版随机 despawn 拆台
+                mob.addCommandTag(FXTEST_TAG);   // spawn 前打标=ENTITY_LOAD 同步回调里即可见,豁免自然转化
+                if (row == 1) EliteHandler.makeEliteDirect(mob);
+                w.spawnEntity(mob);
+                spawned++;
+            }
+        }
+        final int n = spawned;
+        p.sendMessage(Text.literal("测试台已就位:南侧近行=普通对照 ×3,远行=精英 ×3(站桩,永不消失);"
+                + "共 " + n + " 只,验完 /yongye fxtest clear 一键清场").formatted(Formatting.GOLD), false);
+        return 1;
+    }
+
+    /** m424 fxtest clear:清掉当前维度所有带测试标签的实体(怪+掉落物)。 */
+    private static int fxtestClear(ServerPlayerEntity p) {
+        if (!(p.getWorld() instanceof net.minecraft.server.world.ServerWorld w)) return 0;
+        java.util.List<net.minecraft.entity.Entity> doomed = new java.util.ArrayList<>();
+        for (net.minecraft.entity.Entity e : w.iterateEntities()) {
+            if (e.getCommandTags().contains(FXTEST_TAG)) doomed.add(e);   // 先收集后删,不动在迭代的集合
+        }
+        for (net.minecraft.entity.Entity e : doomed) e.discard();
+        p.sendMessage(Text.literal("测试台已清场:移除 " + doomed.size() + " 个测试实体").formatted(Formatting.GOLD), false);
         return 1;
     }
 
