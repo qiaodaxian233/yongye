@@ -992,10 +992,22 @@ public class YongyeClient implements ClientModInitializer {
         int lvl = stack.getOrDefault(ModComponents.ENHANCE_LEVEL, 0);
         int start = Math.max(1, cfg.weaponTintStartLevel);
         int end = Math.max(start + 1, cfg.weaponTintEndLevel);
-        if (lvl <= start) return 0xFFFFFFFF; // 0~起始级:不透明纯白=保持黑白
+        if (lvl <= 0) return 0xFFFFFFFF;                              // 未强化:不透明纯白
+        // m443 低段爬色(作者实机:「强化了颜色没变化」)——原 m211 是 lvl<=100 直接返回纯白,
+        // 意味着从 +1 强化到 +99 屏幕上**零反馈**,玩家自然以为染色坏了。现在低段也给一点冰蓝,
+        // 幅度由 weaponTintLowMaxSat 封顶(默 0.35=淡淡一层,不抢 +100 之后的正戏);
+        // 指数 0.6 让前几十级就看得出变化(线性的话 +10 几乎无感)。关 weaponTintLowRamp 回 m211 老口径。
+        float lowCap = (float) Math.max(0.0, Math.min(1.0, cfg.weaponTintLowMaxSat));
+        if (lvl < start) {
+            if (!cfg.weaponTintLowRamp) return 0xFFFFFFFF;
+            float sat = lowCap * (float) Math.pow(lvl / (double) start, 0.6);
+            return 0xFF000000 | hsvToRgb(200f / 360f, sat, 1.0f);
+        }
         double t = (Math.log(Math.min(lvl, end)) - Math.log(start)) / (Math.log(end) - Math.log(start));
         float hue = (float) (((200.0 + 160.0 * t) % 360.0) / 360.0); // 冰蓝→蓝紫→品红→正红,无绿无黄
-        float sat = (float) Math.min(1.0, t * 1.25);                  // 饱和度略快拉满 =「越来越鲜艳」
+        // 从低段终点接着往上爬,起始级处无跳变(开低段爬色时 sat 在 start 处正好等于 lowCap)
+        float base = cfg.weaponTintLowRamp ? lowCap : 0f;
+        float sat = (float) Math.min(1.0, base + (1.0 - base) * Math.min(1.0, t * 1.25));
         return 0xFF000000 | hsvToRgb(hue, sat, 1.0f);                 // 补满 alpha,防隐形
     }
 
