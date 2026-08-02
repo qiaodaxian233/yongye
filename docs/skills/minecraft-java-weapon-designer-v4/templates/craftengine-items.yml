@@ -1,0 +1,8 @@
+items:
+  <namespace>:<weapon_id>:
+    material: <BASE_MATERIAL>
+    data:
+      item-name: <!i><white><DISPLAY_NAME>
+    model:
+      type: minecraft:model
+      path: <namespace>:item/<weapon_id>

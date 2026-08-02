@@ -63,19 +63,48 @@ public final class ChantFx {
         };
     }
 
-    /** 竖线分隔随机抽一句(照 m226 肝帝台词:空/全空白=不出声)。 */
+    /**
+     * m440 台词分层抽取(作者:「更中二更帅的词,可以是强化到多少级激活后面的新学的」——
+     * 与武器技能同一套成长语义:R/G/V 按品质解锁,台词也按强化等级解锁):
+     *  - 语法照 m226 竖线池,新增 <b>@N 前缀</b>=主手武器强化等级 ≥N 才解锁该句(阈值建议对齐
+     *    品质表:@100 稀有 / @250 史诗 / @1000 神器 / @2500 至尊);无前缀=常驻。
+     *  - 抽取偏新:60% 从<b>已解锁的最高档</b>那几句里抽(刚强化上去立刻听得出「学了新词」),
+     *    其余 40% 全池均匀——老词不废,新词有牌面。
+     *  - 等级读主手 ENHANCE_LEVEL 组件(m211 染色管线同款,客户端天然同步);空手/无组件=0,
+     *    只出常驻句。全池未解锁/清空=不出声(m226 语义)。
+     */
     private static String pick(String pool) {
+        var mc = MinecraftClient.getInstance();
+        int lv = mc.player == null ? 0
+                : mc.player.getMainHandStack().getOrDefault(com.yongye.registry.ModComponents.ENHANCE_LEVEL, 0);
         if (pool == null || pool.isBlank()) return null;
-        String[] arr = pool.split("\\|");
-        int n = 0;
-        for (String s : arr) if (!s.isBlank()) n++;
-        if (n == 0) return null;
-        int want = (int) (System.nanoTime() % n);
-        for (String s : arr) {
-            if (s.isBlank()) continue;
-            if (want-- == 0) return s.trim();
+        java.util.List<String> texts = new java.util.ArrayList<>();
+        java.util.List<Integer> gates = new java.util.ArrayList<>();
+        int maxGate = -1;
+        for (String raw : pool.split("\\|")) {
+            String t = raw.trim();
+            if (t.isEmpty()) continue;
+            int gate = 0;
+            if (t.startsWith("@")) {
+                int sp = t.indexOf(' ');
+                if (sp > 1) {
+                    try { gate = Integer.parseInt(t.substring(1, sp)); t = t.substring(sp + 1).trim(); }
+                    catch (NumberFormatException e) { gate = 0; }   // 写坏的前缀当常驻句,不吞词
+                }
+            }
+            if (gate > lv || t.isEmpty()) continue;                  // 未解锁:跳过
+            texts.add(t);
+            gates.add(gate);
+            if (gate > maxGate) maxGate = gate;
         }
-        return null;
+        if (texts.isEmpty()) return null;
+        long seed = System.nanoTime();
+        if (maxGate > 0 && (seed % 100) < 60) {                      // 60% 偏最高档
+            java.util.List<String> top = new java.util.ArrayList<>();
+            for (int i = 0; i < texts.size(); i++) if (gates.get(i) == maxGate) top.add(texts.get(i));
+            return top.get((int) ((seed / 100) % top.size()));
+        }
+        return texts.get((int) ((seed / 100) % texts.size()));
     }
 
     public static void register() {

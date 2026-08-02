@@ -1,0 +1,28 @@
+{
+  "name": "minecraft-java-weapon-designer",
+  "version": "4.0.0",
+  "language": "zh-CN",
+  "entry": "SKILL.md",
+  "capabilities": [
+    "java-resource-pack",
+    "datapack",
+    "dragoncore",
+    "itemsadder",
+    "craftengine",
+    "fabric",
+    "neoforge",
+    "blockbench-model-analysis",
+    "animated-texture-analysis",
+    "batch-asset-validation",
+    "character-and-boss-design",
+    "bedrock-geometry-analysis",
+    "bedrock-animation-analysis",
+    "dragoncore-entitymodel",
+    "germ-style-entity-layout",
+    "mythicmobs-cross-reference",
+    "animation-combat-timeline-sync",
+    "sound-reference-analysis",
+    "hitbox-and-visible-bounds-validation"
+  ],
+  "contains_purchased_assets": false
+}

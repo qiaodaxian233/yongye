@@ -1,0 +1,7 @@
+custom_weapon_1:
+  match: "custom_weapon_1"
+  path: "custom_weapon_set/1"
+
+custom_weapon_2:
+  match: "custom_weapon_2"
+  path: "custom_weapon_set/2"

@@ -1,0 +1,6 @@
+{
+  "pack": {
+    "pack_format": <TARGET_VERSION_PACK_FORMAT>,
+    "description": "<PACK_DESCRIPTION>"
+  }
+}

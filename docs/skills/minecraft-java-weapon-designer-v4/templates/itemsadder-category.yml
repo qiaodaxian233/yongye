@@ -1,0 +1,11 @@
+info:
+  namespace: <namespace>
+categories:
+  <category_id>:
+    enabled: true
+    skip_if_already: false
+    icon: "<namespace>:<weapon_id>"
+    name: <CATEGORY_NAME>
+    permission: ia.menu
+    items:
+      - "<namespace>:<weapon_id>"

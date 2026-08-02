@@ -1,0 +1,10 @@
+categories:
+  <namespace>:<category_id>:
+    name: <!i><CATEGORY_NAME>
+    lore:
+      - <!i><gray><DESCRIPTION>
+    priority: 1
+    icon: <namespace>:<weapon_id>
+    list:
+      - <namespace>:<weapon_id>
+    hidden: false

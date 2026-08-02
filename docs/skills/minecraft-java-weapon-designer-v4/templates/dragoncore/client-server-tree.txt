@@ -1,0 +1,13 @@
+weapon-pack/
+├─ 客户端/
+│  └─ DragonCore/
+│     └─ models/
+│        └─ items/
+│           └─ custom_weapon_set/
+│              └─ 1/
+│                 ├─ model.json
+│                 ├─ weapon.png
+│                 └─ weapon.png.mcmeta
+└─ 服务端/
+   └─ DragonCore/
+      └─ ItemModel.yml

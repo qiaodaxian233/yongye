@@ -1,0 +1,11 @@
+custom_entity:
+  entity: "<MATCH_DISPLAY_NAME>"
+  model: "<entity_id>/<entity_id>.json"
+  animation: "<entity_id>/<entity_id>.animation.json"
+  texture: "<entity_id>/<entity_id>.png"
+  glowTexture: "<entity_id>/<entity_id>_glow.png"
+  height: <HEIGHT>
+  width: <WIDTH>
+  scale: 1
+  contains: true
+  renderAlways: true

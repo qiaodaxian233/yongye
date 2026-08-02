@@ -1,0 +1,10 @@
+info:
+  namespace: <namespace>
+items:
+  <weapon_id>:
+    display_name: <DISPLAY_NAME>
+    permission: none
+    resource:
+      material: <BASE_MATERIAL>
+      generate: false
+      model_path: <weapon_id>

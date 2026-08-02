@@ -1,0 +1,20 @@
+character-pack/
+├─ 客户端/
+│  ├─ models/entities/<entity_id>/
+│  │  ├─ <entity_id>.json
+│  │  ├─ <entity_id>.animation.json
+│  │  ├─ <entity_id>.png
+│  │  └─ <entity_id>_glow.png
+│  ├─ models/items/<entity_id>/
+│  │  ├─ weapon/model.json
+│  │  └─ effect/model.json
+│  └─ models/sound/<entity_id>/
+│     └─ *.ogg
+└─ 服务端/
+   ├─ DragonCore/
+   │  ├─ EntityModel/<entity_id>.yml
+   │  └─ ItemModel.yml
+   └─ MythicMobs/
+      ├─ Mobs/<entity_id>.yml
+      ├─ Items/<entity_id>_items.yml
+      └─ Skills/<entity_id>_skills.yml

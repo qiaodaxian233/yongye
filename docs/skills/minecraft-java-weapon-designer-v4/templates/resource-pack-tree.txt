@@ -1,0 +1,13 @@
+resource_pack/
+├─ pack.mcmeta
+└─ assets/
+   └─ <namespace>/
+      ├─ models/
+      │  └─ item/
+      │     └─ <weapon_id>.json
+      ├─ textures/
+      │  └─ item/
+      │     └─ <weapon_id>.png
+      └─ lang/
+         ├─ zh_cn.json
+         └─ en_us.json

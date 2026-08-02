@@ -1,0 +1,11 @@
+custom_entity_attack:
+  Cooldown: <COOLDOWN_SECONDS>
+  Conditions:
+  - offgcd
+  - targetwithin{d=<RANGE>} true
+  Skills:
+  - gcd{ticks=<LOCK_TICKS>}
+  - animation{name=<ANIMATION_NAME>} @self
+  - delay <HIT_DELAY_TICKS>
+  - damage{a=<DAMAGE>} @target
+  - sound{s=<SOUND_PATH>;volume=1;pitch=1} @self

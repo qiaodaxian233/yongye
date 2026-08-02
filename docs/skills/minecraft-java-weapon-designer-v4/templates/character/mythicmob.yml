@@ -1,0 +1,11 @@
+custom_entity:
+  Type: ZOMBIE
+  Display: '<DISPLAY_NAME>'
+  Health: <HEALTH>
+  Damage: <BASE_DAMAGE>
+  Options:
+    MovementSpeed: <MOVEMENT_SPEED>
+    Silent: true
+    PreventOtherDrops: true
+  Skills:
+  - skill{s=custom_entity_attack} ~onTimer:10
