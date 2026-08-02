@@ -359,7 +359,7 @@ public class YongyeClient implements ClientModInitializer {
                     // m382 多杀连锁:击杀信号复用 KILL 包,客户端本地滚动窗口计链
                     if (payload.kind() == com.yongye.network.CombatFxPayload.KILL) MultiKillFx.onKill();
                 }));
-        ClientTickEvents.END_CLIENT_TICK.register(client -> { CombatFxManager.tick(); FxStats.tick(); SoundGate.tick(); }); // m411 统计滚动 · m419 音效并发计时
+        ClientTickEvents.END_CLIENT_TICK.register(client -> { CombatFxManager.tick(); FxStats.tick(); SoundGate.tick(); SprintAfterimageFeature.tick(client); }); // m411 统计滚动 · m419 音效并发计时 · m434 残影轨迹采样
         // m373 伤害飘字:收命中数值 → 世界内怪身上弹漂浮数字(普通白/重击金大字)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.DamageNumberPayload.ID, (payload, context) ->
                 context.client().execute(() -> {
