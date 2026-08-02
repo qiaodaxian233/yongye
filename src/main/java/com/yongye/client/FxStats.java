@@ -9,9 +9,9 @@ package com.yongye.client;
 public final class FxStats {
     private FxStats() {}
 
-    public static final int NUM = 0, BEAM = 1, BAR = 2, OVERLAY = 3, CARD = 4;
-    public static final String[] CN = {"飘字", "光柱", "血条", "叠层", "拾取卡"};
-    private static final int N = 5;
+    public static final int NUM = 0, BEAM = 1, BAR = 2, OVERLAY = 3, CARD = 4, SOUND = 5;
+    public static final String[] CN = {"飘字", "光柱", "血条", "叠层", "拾取卡", "音效"};
+    private static final int N = 6;
 
     private static final int[] accUsed = new int[N], accDrop = new int[N];
     private static final int[] secUsed = new int[N], secDrop = new int[N];

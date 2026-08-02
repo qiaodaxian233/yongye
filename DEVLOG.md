@@ -3330,3 +3330,13 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - **重叠治理(DoD「各 GUI Scale 不重叠」的实际冲突点)**:右缘 拾取卡(h/2-48 起向下)× 战斗日志(h-96 向上)在小屏高(GUI 缩放大,scaled h<~600 且两者同时拉满)会交叠——战斗日志加**天花板 h/2+70**,顶到即停画老条目(条目仍随寿命自灭不积压)。其余元素已各自带钳制(m308/m403/m405 口径)复查无新增冲突;全局 HUD 缩放不做——原版 GUI Scale 已覆盖整体缩放,模组侧只补"安全区"缺口(BOSS 血条已有独立 bossBarScale),此取舍记入 DoD。
 - 配置+2(两边距默认 0),**configVersion 151→152**;数值页「安全边距X/Y」两滑条即拖即看;七文件括号平+javac 筛查过零新 API。
 - 实机盯:拖安全边距X 看 看板/日志/拾取卡/FX面板 四路同步向内收、面板与CD方块(居中)纹丝不动;GUI 缩放调到 4 开战斗日志+连捡五件,日志不爬进卡片区;边距归 0 逐帧回原样。
+
+## m419 音效并发管理器(路线图27,2026-08-02)
+- **架构**:新 SoundGateMixin 拦客户端声音系统唯一起播口 `SoundSystem.play(SoundInstance)` HEAD(cancellable,require=0 不符静默不挂,m248 探针可查存活;重载消歧用全描述符,延迟播放到点后同走此口天然覆盖),本地音/服务端 PlaySound 包/粒子附带音**一个口管全部**;判定全在新 SoundGate,任何异常一律放行(管流器绝不做声音系统单点故障)。
+- **同类音限流**:同一音效 id 在 soundSameIdWindowTicks(默3)窗口内最多 soundSameIdMaxPerWindow(默2)次,超出丢弃——AOE 一刀 20 只怪 20 声同款受击音同刻叠放只加响度不加信息,留 2 声保方位感;窗口表 HashMap 超 256 键整清防长会话膨胀(至多损失 1 个窗口记忆)。
+- **优先级**:MUSIC / RECORDS(音符盒乐曲逐音符不许裁)/ WEATHER / VOICE / MASTER(UI)与循环音(isRepeatable,掐头=整段永久缺失)**永不限流不占预算**;其余共享全局每 tick 预算 soundGlobalMaxPerTick(默24,下限钳4)先到先得。
+- **ducking(第 18 项挂账在此清)**:讨伐凯旋 / 永夜转场 / 多杀播报三处客户端 stinger 起播即 duckPulse 拉 soundDuckTicks(默30t)压制窗,窗内 AMBIENT 类环境氛围音让路——m388 只避自家转场/讨伐,升级为对全部环境声普适;BOSS 登场吼(m263 服务端 playSoundToPlayer 直发无客户端挂点)按 id `minecraft:entity.wither.spawn` 过闸自动触发(大招 burst/核心陷落同 id 顺带压环境,合意)。
+- **统计**:FxStats 加 SOUND 类(m411「细粒度丢弃待 24/27 顺路补」清账),FxDebugHud 加「音效 +N/s 丢N/s ·压制中」行。
+- 配置+5(enableSoundConcurrency 默开),**configVersion 152→153**;设置屏音效区+5钮(并发开/关+限流严1/默2/宽4);十文件括号平+javac 语法筛查过(仅缺依赖噪音)。
+- **待编译验证 2 处(均低险有退路)**:①SoundSystem/SoundInstance mixin 面首用——play 签名与 getId/getCategory/getVolume/isRepeatable 已逐字核 yarn 1.21.1 官方映射(method_4854/4775/4774/4781/4786),require=0 不符只丢并发管理;②SoundCategory 枚举常量 MUSIC/RECORDS/WEATHER/VOICE/MASTER 首用(AMBIENT/PLAYERS/HOSTILE 在树,同枚举兄弟常量极低险)。
+- 实机盯:开 FX 面板(`/yongye fxtest panel`)后 `stress 200` 或 AOE 清一波怪,看「音效」行丢弃数跳动、耳朵不再被同款音糊脸;杀 BOSS/永夜转场瞬间夜风幽响让路(压制中标记);音符盒红石音乐不缺音;设置屏关并发=完全回原版;latest.log 搜「SoundGate(音效并发)」确认注入存活。

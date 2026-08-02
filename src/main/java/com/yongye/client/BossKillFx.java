@@ -37,6 +37,7 @@ public final class BossKillFx {
         bossName = name == null ? "" : name;
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player != null) {
+            SoundGate.duckPulse();                                               // m419 凯旋音压环境
             mc.player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 0.85f); // 凯旋(在树)
         }
     }

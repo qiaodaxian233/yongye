@@ -25,7 +25,8 @@
     "client.PlayerSlashSwingMixin",
     "client.SlashPoseMixin",
     "client.WeaponSheathMixin",
-    "client.SkyTextureMixin"
+    "client.SkyTextureMixin",
+    "client.SoundGateMixin"
   ],
   "injectors": {
     "defaultRequire": 1

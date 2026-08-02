@@ -139,6 +139,7 @@ public final class NightfallTransitionFx {
 
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player != null) {
+            SoundGate.duckPulse();   // m419 转场提示音压环境
             if (up) {
                 mc.player.playSound(SoundEvents.ENTITY_WARDEN_HEARTBEAT, 0.9f * inten, 0.55f);
             } else {

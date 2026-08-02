@@ -169,6 +169,11 @@ public class VisualFxScreen extends Screen {
                             new Btn("夜声·轻0.3", "yongye config set nightAmbientSoundVolume 0.3"),
                             new Btn("夜声·默认0.6", "yongye config set nightAmbientSoundVolume 0.6"),
                             new Btn("夜声·响1.0", "yongye config set nightAmbientSoundVolume 1.0"),
+                            new Btn("音效并发·开", "yongye config set enableSoundConcurrency true"),
+                            new Btn("音效并发·关", "yongye config set enableSoundConcurrency false"),
+                            new Btn("同类限流·严1", "yongye config set soundSameIdMaxPerWindow 1"),
+                            new Btn("同类限流·默认2", "yongye config set soundSameIdMaxPerWindow 2"),
+                            new Btn("同类限流·宽4", "yongye config set soundSameIdMaxPerWindow 4"),
                     }),
                     new Section("刀光(斩击轨迹)", new Btn[]{
                             new Btn("刀光·开", "yongye config set enableSlashFx true"),

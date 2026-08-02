@@ -69,6 +69,7 @@ public final class MultiKillFx {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player != null) {
             // 升调经验音:档位越高音越高(m279 升调音同款声源)
+            SoundGate.duckPulse();   // m419 多杀播报压环境
             float pitch = Math.min(2.0f, 0.9f + tier * 0.11f);
             mc.player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, pitch);
         }

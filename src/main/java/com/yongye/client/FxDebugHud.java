@@ -33,6 +33,8 @@ public final class FxDebugHud {
                     "光柱 " + LootBeamManager.liveCount()
                             + "  血条 " + MobHealthBarManager.liveCount()
                             + "  叠层 " + overlays,
+                    "音效 +" + FxStats.perSecUsed(FxStats.SOUND) + "/s 丢" + FxStats.perSecDropped(FxStats.SOUND)
+                            + "/s" + (SoundGate.isDucking() ? " ·压制中" : ""),
             };
             int y = h - 64 - FxBudget.safeY() - lines.length * 11;   // m418 吃安全边距
             int wMax = 0;
