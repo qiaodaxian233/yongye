@@ -113,7 +113,9 @@ public final class NightfallTransitionFx {
 
     /** m411 fxtest 直触:强制播一场转场,**不碰 lastLevel 基线**——下一次真实同步照常按基线走。 */
     public static void testPlay(String name, boolean up) {
-        if (!YongyeConfig.get().enableNightfallTransition || !FxBudget.on()) return;
+        if (!YongyeConfig.get().enableNightfallTransition || !FxBudget.on()) { FxStats.dropped(FxStats.OVERLAY); return; } // m427
+        if (playing) FxStats.dropped(FxStats.OVERLAY);         // m427:替换旧的
+        FxStats.used(FxStats.OVERLAY);
         stageName = name == null || name.isEmpty() ? "测试阶段" : name;
         upgrade = up;
         bornNanos = System.nanoTime();
@@ -128,10 +130,12 @@ public final class NightfallTransitionFx {
         lastLevel = level;                                     // 边界 3:终值记账,跨级天然合并
 
         YongyeConfig c = YongyeConfig.get();
-        if (!c.enableNightfallTransition || !FxBudget.on()) return; // m381 OFF 档让位
+        if (!c.enableNightfallTransition || !FxBudget.on()) { FxStats.dropped(FxStats.OVERLAY); return; } // m381 OFF 档让位(m427 记丢弃)
         float inten = (float) Math.max(0.0, Math.min(2.0, c.transitionIntensity));
-        if (inten <= 0f) return;
+        if (inten <= 0f) { FxStats.dropped(FxStats.OVERLAY); return; }
 
+        if (playing) FxStats.dropped(FxStats.OVERLAY);         // m427:替换掉进行中的旧演出=旧的记丢弃
+        FxStats.used(FxStats.OVERLAY);
         playing = true;                                        // 替换式:同时最多 1 个
         upgrade = up;
         stageName = name == null ? "" : name;

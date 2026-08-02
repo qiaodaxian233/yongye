@@ -31,7 +31,9 @@ public final class BossKillFx {
 
     /** 收包入口(主线程)。 */
     public static void onBossKill(String name) {
-        if (!YongyeConfig.get().enableBossKillFx || !FxBudget.on()) return;
+        if (!YongyeConfig.get().enableBossKillFx || !FxBudget.on()) { FxStats.dropped(FxStats.OVERLAY); return; } // m427 记丢弃
+        if (showing) FxStats.dropped(FxStats.OVERLAY);         // m427:替换掉进行中的旧演出
+        FxStats.used(FxStats.OVERLAY);
         showing = true;
         bornNanos = System.nanoTime();
         bossName = name == null ? "" : name;

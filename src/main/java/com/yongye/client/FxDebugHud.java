@@ -30,9 +30,12 @@ public final class FxDebugHud {
                             + " +" + FxStats.perSecUsed(FxStats.NUM) + "/s 丢" + FxStats.perSecDropped(FxStats.NUM) + "/s",
                     "拾取卡 活" + PickupNoticeFx.liveCount()
                             + " +" + FxStats.perSecUsed(FxStats.CARD) + "/s 丢" + FxStats.perSecDropped(FxStats.CARD) + "/s",
-                    "光柱 " + LootBeamManager.liveCount()
-                            + "  血条 " + MobHealthBarManager.liveCount()
-                            + "  叠层 " + overlays,
+                    "光柱 活" + LootBeamManager.liveCount()
+                            + " +" + FxStats.perSecUsed(FxStats.BEAM) + "/s 丢" + FxStats.perSecDropped(FxStats.BEAM) + "/s",
+                    "血条 活" + MobHealthBarManager.liveCount()
+                            + " +" + FxStats.perSecUsed(FxStats.BAR) + "/s 丢" + FxStats.perSecDropped(FxStats.BAR) + "/s",
+                    "叠层 活" + overlays
+                            + " +" + FxStats.perSecUsed(FxStats.OVERLAY) + "/s 丢" + FxStats.perSecDropped(FxStats.OVERLAY) + "/s",
                     "音效 +" + FxStats.perSecUsed(FxStats.SOUND) + "/s 丢" + FxStats.perSecDropped(FxStats.SOUND)
                             + "/s" + (SoundGate.isDucking() ? " ·压制中" : ""),
             };

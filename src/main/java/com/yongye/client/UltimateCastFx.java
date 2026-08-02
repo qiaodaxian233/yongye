@@ -42,7 +42,9 @@ public final class UltimateCastFx {
     /** 大招施放边沿(YongyeClient 的 SkillCdPayload 收包处调)。 */
     public static void onUltimateCast() {
         YongyeConfig c = YongyeConfig.get();
-        if (!c.enableSkillCastFx || !FxBudget.on()) return;
+        if (!c.enableSkillCastFx || !FxBudget.on()) { FxStats.dropped(FxStats.OVERLAY); return; } // m427 记丢弃
+        if (startNanos != 0) FxStats.dropped(FxStats.OVERLAY); // m427:覆盖旧光晕=旧的记丢弃
+        FxStats.used(FxStats.OVERLAY);
         color = classColor(ClientStats.className);
         startNanos = System.nanoTime();               // 覆盖旧的:同时最多 1 个
     }

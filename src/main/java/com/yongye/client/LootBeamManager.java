@@ -53,6 +53,8 @@ public final class LootBeamManager {
 
     private static final List<Beam> BEAMS = new ArrayList<>();
     private static int scanCd = 0;
+    /** m427:上一轮扫描在场的光柱实体 id——重扫是全量重建,靠它区分「新出现」与「延续」,只有新柱计 used。 */
+    private static final java.util.Set<Integer> PREV_IDS = new java.util.HashSet<>();
 
     /** 客户端初始化时挂扫描 + 世界渲染(YongyeClient 调)。 */
     public static void register() {
@@ -64,16 +66,20 @@ public final class LootBeamManager {
         if (--scanCd > 0) return;
         scanCd = SCAN_INTERVAL;
         BEAMS.clear();
-        if (!YongyeConfig.get().enableLootBeam || !FxBudget.on()) return; // m381 预算闸
-        if (mc.world == null || mc.player == null) return;
+        if (!YongyeConfig.get().enableLootBeam || !FxBudget.on()) { PREV_IDS.clear(); return; } // m381 预算闸(m427:清基线,重开时全按新柱计)
+        if (mc.world == null || mc.player == null) { PREV_IDS.clear(); return; }
+        int cap = Math.max(4, FxBudget.scaleCount(MAX_BEAMS));                                  // m381 缩上限(保底 4)
         for (Entity e : mc.world.getEntities()) {
             if (!(e instanceof ItemEntity item) || !item.isAlive()) continue;
             if (item.squaredDistanceTo(mc.player) > FxBudget.scaleDistSq(MAX_DIST_SQ)) continue; // m381 缩可见距
             int tier = tierOf(item.getStack());
             if (tier <= 0) continue;
+            if (BEAMS.size() >= cap) { FxStats.dropped(FxStats.BEAM); continue; }               // m427:够格却被上限裁=丢弃(改 break 为计数,代价仍是原扫描同级)
             BEAMS.add(new Beam(item, tier));
-            if (BEAMS.size() >= Math.max(4, FxBudget.scaleCount(MAX_BEAMS))) break; // m381 缩上限(保底 4)
+            if (!PREV_IDS.contains(item.getId())) FxStats.used(FxStats.BEAM);                   // m427:只有新出现的柱计 used,延续在场的不重复计
         }
+        PREV_IDS.clear();
+        for (Beam b : BEAMS) PREV_IDS.add(b.entity.getId());
     }
 
     /** 品质定级:0=不起柱 1=蓝 2=紫 3=金。 */

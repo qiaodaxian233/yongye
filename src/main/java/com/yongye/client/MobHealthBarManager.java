@@ -74,7 +74,7 @@ public final class MobHealthBarManager {
     /** 命中信号入口(DamageNumberPayload 接收处调,主线程)。 */
     public static void onHit(int entityId) {
         if (entityId < 0) return;
-        if (!YongyeConfig.get().enableMobHealthBar || !FxBudget.on()) return;
+        if (!YongyeConfig.get().enableMobHealthBar || !FxBudget.on()) { FxStats.dropped(FxStats.BAR); return; } // m427 记丢弃(与飘字口径一致)
         Bar b = BARS.get(entityId);
         if (b == null) {
             int cap = Math.max(4, FxBudget.scaleCount(MAX_TRACKED));
@@ -85,9 +85,11 @@ public final class MobHealthBarManager {
                 }
                 if (oldest == null) break;
                 BARS.remove(oldest);
+                FxStats.dropped(FxStats.BAR);                  // m427:上限挤条=丢弃
             }
             b = new Bar();
             BARS.put(entityId, b);
+            FxStats.used(FxStats.BAR);                         // m427:新条计一次;老条刷新不重复计(条没变多)
         }
         b.lastHitNanos = System.nanoTime();
     }
