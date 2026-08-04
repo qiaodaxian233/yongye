@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m453 召唤师彻底移除(全删+老档自动迁移+旧物转换壳,v171)+ m454 对外文档六职业口径同步——两笔已本地提交,**PAT 失效未推送**,patch 已交付作者;CI 待推送后验证(重点盯 DataComponentTypes.ENCHANTMENTS/CUSTOM_NAME 两常量)。
+> 最新:m453 召唤师彻底移除(全删+老档自动迁移+旧物转换壳,v171)+ m454 对外文档六职业口径同步——已推送 main(34fd0bf),**CI 绿**;m453 标注的两个待验常量(DataComponentTypes.ENCHANTMENTS/CUSTOM_NAME)经云端真实构建证实存在,待编译验证清零。下一步=作者实机验收(老召唤师档入服迁移/旧鹰扬入包转换/六页签)。
