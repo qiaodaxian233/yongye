@@ -258,4 +258,4 @@ push 后告诉用户 `git fetch origin && git reset --hard origin/main` 同步�
 - 用户做图标的流程：给 GPT 现有 PNG 当参考图保持画风，出透明背景 PNG → 缩放后覆盖。各物品的提示词在聊天记录里有完整一份(材料 8 + 神器 10 + 技能书 7 + 精英皮 5 的提示词模板)。
 - 实体贴图放 `assets/yongye/textures/entity/`，文件名固定:`elite_skeleton/elite_witch/elite_zombie/elite_creeper/elite_spider.png`、`pain_boss.png`。要加新精英种类:告诉 Claude 怪名,在 `EliteSkinFeatureRenderer` 加一行映射即可。
 
-> 最新:m455 /yongye day 天数直改命令(宣传拍摄:跳到第 N 天保留/指定当日时刻,天数口径 getTimeOfDay 全链路即时生效;调时刻别用会清天数的 /time set)+ m456 Flashback 回放守卫(回放重放 S2C 弹屏包=录素材回放弹「杀怪三选一」病根,新 ReplayGuard 反射探测 isInReplay 屏蔽六类服务端弹屏,pending 不弹不清退出回放补弹,replayGuardPopups 默认开,v171→172)。待编译验证 1 低险=FabricLoader.isModLoaded(删行退)。下一步=作者装 Flashback 实测回放不弹+录制照弹,/yongye day 15 看板跳天。
+> 最新:m455 /yongye day 天数直改命令(宣传拍摄:跳到第 N 天保留/指定当日时刻,天数口径 getTimeOfDay 全链路即时生效;调时刻别用会清天数的 /time set)+ m456 Flashback 回放守卫(回放重放 S2C 弹屏包=录素材回放弹「杀怪三选一」病根,新 ReplayGuard 反射探测 isInReplay 屏蔽六类服务端弹屏,pending 不弹不清退出回放补弹,replayGuardPopups 默认开,v171→172)——已推送 main(5e62cab),**CI 绿**,m456 标注的 FabricLoader.isModLoaded 经云端真实构建证实存在,待编译验证清零。下一步=作者实机验收:装 Flashback 回放不弹三选一/录制照弹,/yongye day 15 看板跳天。
