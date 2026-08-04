@@ -34,6 +34,11 @@ import java.util.function.IntConsumer;
  *    16t 内天光柱(END_ROD)从玩家头顶节节升起、地面冲击波环(EXPLOSION+FLAME)逐帧扩散到技能半径、
  *    每个受害者脚下魂火柱冲天,终帧多点大爆+爆炸音。
  * 开关 weaponSkillFancyFx(关=只留三招原有的简版粒子);weaponSkillFxScale 统一缩放粒子密度(0.2~3)。
+ *
+ * <p><b>m451 起本类还托管「剑客四技能」编排</b>(剑气波/招架反弹/剑气凌空/剑气层气场,见文件下半)。
+ * 之所以不另开一个类:这里的多帧任务队列(含逐任务 try/catch)、ring/shoot/n 几个画法助手正是
+ * 那四条要用的东西,项目守则第 4 条「不造新接口,先复用已有」;而且**不必在主类新增 register()**,
+ * 少一处重复注册风险。两边各自有独立开关(weaponSkillFancyFx / swordsmanFancyFx),互不影响。
  */
 public final class WeaponSkillFx {
     private WeaponSkillFx() {}
@@ -229,6 +234,216 @@ public final class WeaponSkillFx {
                 }
                 w.playSound(null, p.getX(), p.getY(), p.getZ(),
                         SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 1.2f, 0.75f);
+            }
+        });
+    }
+
+    // ==================== 剑客四技能(m451)====================
+    // 节拍全部取自作者手绘 azure_soulblade bbmodel 里那五条骨骼动画的关键帧时刻。
+    // 骨骼动画本身原版物品模型放不了(m447 已如实说明),但**它的节拍能放**——这正是 m448
+    // 「万剑归一」的做法,本笔把剩下四条按同一条路子落地。
+    //
+    // 一处诚实的改编:作者的动画都从「起手蓄势」开始(剑气波 0→0.38s、凌空 0→0.38s),
+    // 而游戏里这些技能是**命中那一瞬间触发**的——起手其实是玩家自己那一刀,已经挥完了。
+    // 所以四条统一只取「出刀之后」的段落,段内相对时长按原比例保留:
+    //   剑气波   0.55→1.4s  的 0.85s → 9t 推进(重音落在原 0.82 那一拍)
+    //   招架反弹 0→1.05s    六拍全取 → 21t(它本来就从接触瞬间起算,无需裁)
+    //   剑气凌空 0.38→1.65s 的 1.27s → 25t 四段(拉出/加粗/崩解/消散)
+    //   身法如风 1.2s loop  → 24t 一圈,唯一的 loop 动画,对位的是「剑气层」这个持续状态
+    //
+    // 纪律:全服务端 spawnParticles(联机同屏可见,零客户端零协议);粒子/音效常量全部在树已用
+    // (SWEEP_ATTACK/SOUL_FIRE_FLAME/ENCHANTED_HIT/END_ROD/CRIT · ATTACK_SWEEP/STRONG/CRIT/
+    // KNOCKBACK/BELL_RESONATE),**零新 API 面**;伤害/判定/耗层一律不碰,四条全是纯演出。
+
+    private static boolean swOff() { return !YongyeConfig.get().swordsmanFancyFx; }
+
+    private static double swScale() {
+        return MathHelper.clamp(YongyeConfig.get().swordsmanFxScale, 0.2, 3.0);
+    }
+
+    /**
+     * 视线的水平右向量。直视天顶/脚底时 look×(0,1,0) 退化成零向量、normalize() 会返回 ZERO
+     * 把整个扇面压成一点,所以这里用偏航角兜一个任意水平单位向量(此时任何水平方向都与视线正交)。
+     */
+    private static Vec3d rightOf(Vec3d look, float yawDeg) {
+        Vec3d r = look.crossProduct(new Vec3d(0, 1, 0));
+        if (r.lengthSquared() < 1.0E-6) {
+            double a = Math.toRadians(yawDeg);
+            r = new Vec3d(-Math.sin(a), 0, Math.cos(a));
+        }
+        return r.normalize();
+    }
+
+    /**
+     * 剑气波(作者 skill.剑气波_sword_qi_wave 的出刀段):一道冰蓝横扇自身前推出到 range,
+     * 越远越宽、两端后掠下垂,第 5t 一记重音(原 0.82 那一拍),末端拍散成星屑。
+     * 此前这一招只有身前 1.5 格处 6 颗 SWEEP、**连音效都没有**——范围打到 4~6 格却看不见任何东西。
+     */
+    public static void swordQiWave(ServerWorld w, ServerPlayerEntity p, double range) {
+        if (swOff()) return;
+        final double s = swScale();
+        final Vec3d eye = p.getEyePos().add(0, -0.25, 0);
+        final Vec3d look = p.getRotationVector().normalize();
+        final Vec3d right = rightOf(look, p.getYaw());
+        final int ticks = 9;
+        final double step = Math.max(1.0, range) / ticks;
+
+        w.playSound(null, p.getX(), p.getY(), p.getZ(),
+                SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 0.9f, 1.45f);
+
+        run(ticks, t -> {
+            double d = step * (t + 1);
+            Vec3d c = eye.add(look.multiply(d));
+            double wid = 1.2 + d * 0.42;                                 // 横扇越推越宽
+            int m = n(7, s);
+            for (int i = -m; i <= m; i++) {
+                double f = i / (double) m;                               // -1..1 横向参数
+                Vec3d q = c.add(right.multiply(f * wid))
+                        .add(look.multiply(-Math.abs(f) * 1.1))          // 两端后掠成弯月
+                        .add(new Vec3d(0, -f * f * 0.35, 0));            // 扇面两端下垂
+                w.spawnParticles(ParticleTypes.SWEEP_ATTACK, q.x, q.y, q.z, 1, 0, 0, 0, 0);
+                if (i % 2 == 0) {
+                    w.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, q.x, q.y, q.z, 1, 0.04, 0.04, 0.04, 0.01);
+                }
+            }
+            if (t == 4) {                                                // 原 0.82 那一记重音
+                w.spawnParticles(ParticleTypes.ENCHANTED_HIT, c.x, c.y, c.z, n(14, s), 0.5, 0.35, 0.5, 0.12);
+                w.playSound(null, c.x, c.y, c.z,
+                        SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, SoundCategory.PLAYERS, 0.7f, 1.5f);
+            }
+            if (t == ticks - 1) {                                        // 末端拍散
+                w.spawnParticles(ParticleTypes.END_ROD, c.x, c.y, c.z, n(10, s), wid * 0.5, 0.3, wid * 0.5, 0.06);
+            }
+        });
+    }
+
+    /**
+     * 招架反弹(作者 skill.招架反弹_parry_reflect,六拍全取:0 接触 / 0.24 卸力 / 0.43 反弹 /
+     * 0.58 二段余劲 / 0.8 回位 / 1.05 收):面向攻击者立起一面冰蓝刃壁 → 向内收束卸力 →
+     * 沿连线把力打回去 → 余劲 → 归位。此前这一招**只有一声盾响、零粒子**,看不出「挡住了」还是「挨了」。
+     */
+    public static void swordParry(ServerWorld w, ServerPlayerEntity p, Vec3d attackerPos) {
+        if (swOff()) return;
+        final double s = swScale();
+        final Vec3d self = p.getPos().add(0, p.getStandingEyeHeight() * 0.6, 0);
+        final Vec3d to = attackerPos.subtract(self);
+        final Vec3d dir = (to.lengthSquared() < 1.0E-4 ? p.getRotationVector() : to).normalize();
+        final Vec3d right = rightOf(dir, p.getYaw());
+        final double dist = Math.min(6.0, to.length());
+        final int ticks = 21;
+
+        run(ticks, t -> {
+            Vec3d wall = self.add(dir.multiply(1.1));
+            if (t == 0) {                                                // 接触:刃壁立起
+                for (int i = -3; i <= 3; i++) {
+                    for (int j = 0; j <= 2; j++) {
+                        Vec3d q = wall.add(right.multiply(i * 0.28)).add(new Vec3d(0, j * 0.32 - 0.32, 0));
+                        w.spawnParticles(ParticleTypes.ENCHANTED_HIT, q.x, q.y, q.z, 1, 0.02, 0.02, 0.02, 0.0);
+                    }
+                }
+            } else if (t == 4) {                                         // 卸力:向内收束
+                ring(w, wall, 0.75, ParticleTypes.SOUL_FIRE_FLAME, n(12, s), 0.0);
+            } else if (t == 8) {                                         // 反弹:沿连线把力送回去
+                int seg = Math.max(2, (int) (dist * 2));
+                for (int i = 0; i <= seg; i++) {
+                    Vec3d q = self.add(dir.multiply(dist * i / (double) seg));
+                    w.spawnParticles(ParticleTypes.CRIT, q.x, q.y, q.z, n(2, s), 0.06, 0.06, 0.06, 0.02);
+                }
+                w.playSound(null, p.getX(), p.getY(), p.getZ(),
+                        SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 0.7f, 1.6f);
+            } else if (t == 12) {                                        // 二段余劲
+                w.spawnParticles(ParticleTypes.END_ROD, wall.x, wall.y, wall.z, n(8, s), 0.4, 0.3, 0.4, 0.05);
+            } else if (t == 16) {                                        // 回位
+                ring(w, self, 0.9, ParticleTypes.SOUL_FIRE_FLAME, n(8, s), 0.2);
+            }
+        });
+    }
+
+    /**
+     * 剑气凌空(作者 skill.剑气凌空_aerial_slash,五条动画里唯一没有 particles 通道的一条=纯刃势,
+     * 所以这里把「光刃本体」当主角):0→6t 光刃沿视线逐段拉出、6→13t 留痕加粗、13→20t 崩解成刃屑、
+     * 20→25t 消散。弹道在发射瞬间快照(伤害本就沿这条线结算过了,人走开光刃也该留在原处)。
+     * 此前这一招是**在同一 tick 里每格画 1 颗 SWEEP** —— 12 格的穿透只闪一下,几乎看不见。
+     */
+    public static void swordAerial(ServerWorld w, ServerPlayerEntity p, double range) {
+        if (swOff()) return;
+        final double s = swScale();
+        final Vec3d base = p.getPos().add(0, p.getStandingEyeHeight() * 0.9, 0);
+        final Vec3d dir = p.getRotationVector().normalize();
+        final Vec3d right = rightOf(dir, p.getYaw());
+        final double len = Math.max(2.0, range);
+        final int ticks = 25;
+
+        run(ticks, t -> {
+            if (t < 6) {                                                 // 光刃逐段拉出
+                double f0 = t / 6.0, f1 = (t + 1) / 6.0;
+                for (double d = len * f0; d < len * f1; d += 0.5) {
+                    Vec3d q = base.add(dir.multiply(d));
+                    w.spawnParticles(ParticleTypes.SWEEP_ATTACK, q.x, q.y, q.z, 1, 0.05, 0.05, 0.05, 0.0);
+                    w.spawnParticles(ParticleTypes.END_ROD, q.x, q.y, q.z, n(1, s), 0.05, 0.05, 0.05, 0.01);
+                }
+                if (t == 5) {                                            // 拉到底:一记轻脆确认
+                    Vec3d tip = base.add(dir.multiply(len));
+                    w.playSound(null, tip.x, tip.y, tip.z,
+                            SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.5f, 1.7f);
+                }
+            } else if (t < 13) {                                         // 留痕:刃身向两侧鼓出
+                double off = 0.09 * (t - 5);
+                for (double d = 0.5; d < len; d += 1.5) {
+                    Vec3d c = base.add(dir.multiply(d));
+                    for (int k = -1; k <= 1; k += 2) {
+                        Vec3d q = c.add(right.multiply(k * off));
+                        w.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, q.x, q.y, q.z, 1, 0.03, 0.03, 0.03, 0.0);
+                    }
+                }
+            } else if (t < 20) {                                         // 崩解:碎成飘散刃屑
+                for (double d = 1.0; d < len; d += 2.0) {
+                    Vec3d c = base.add(dir.multiply(d));
+                    w.spawnParticles(ParticleTypes.END_ROD, c.x, c.y, c.z, n(1, s), 0.25, 0.25, 0.25, 0.03);
+                }
+            } else if (t % 2 == 0) {                                     // 消散
+                Vec3d c = base.add(dir.multiply(len * 0.5));
+                w.spawnParticles(ParticleTypes.ENCHANTED_HIT, c.x, c.y, c.z,
+                        n(2, s), len * 0.25, 0.3, len * 0.25, 0.01);
+            }
+        });
+    }
+
+    /**
+     * 剑气层气场(作者 skill.身法如风_windstep 是五条里唯一的 loop 动画,所以它对位的不是某一招、
+     * 而是「剑气层」这个**持续状态**:24t 转一圈,环上光点数=当前层数)。
+     *
+     * <p>为什么值得做:剑气层此前只喂 MP 条上的数字,世界里毫无表现——而攒够层意味着
+     * 「剑气凌空」已上膛,这件事只有盯着 HUD 才知道。上膛档改用 END_ROD 白芒 + 一记高音铃
+     * (pitch 1.8,与武僧金钟罩的同一音效 pitch 1.0 明显错开),抬眼就能看出上没上膛。
+     *
+     * <p><b>为什么上膛档是 9 层而不是 10</b>:加层发生在同一次命中事件的前半段,凌空判定在后半段读
+     * ≥10 —— 也就是说层数刚变成 10 的**那一刀自己就洞穿了**,10 层从来不会停留一刀的时间;而且
+     * min(10,…) 封顶后每刀都会再次得到 10,拿 10 当触发档会变成每刀重复放。所以「下一刀(蓄满时)
+     * 洞穿」的正确播报点是层数刚到 9。
+     *
+     * <p>调用侧只在层数 == 1 / 5 / 9 三档触发,不是每次命中都放——否则连击时任务会层层叠加。
+     */
+    public static void swordEdgeAura(ServerWorld w, ServerPlayerEntity p, int stacks, boolean armed) {
+        if (swOff() || !YongyeConfig.get().swordsmanEdgeAuraFx) return;
+        final double s = swScale();
+        final int k = Math.max(1, Math.min(10, stacks));
+        final boolean full = armed;
+        final int ticks = 24;
+
+        run(ticks, t -> {
+            double a = Math.PI * 2 * t / (double) ticks;
+            double r = 0.85 + 0.05 * k;
+            for (int i = 0; i < k; i++) {
+                double ang = a + Math.PI * 2 * i / k;
+                double y = 0.35 + 0.55 * (0.5 + 0.5 * Math.sin(a * 2 + i));
+                w.spawnParticles(full ? ParticleTypes.END_ROD : ParticleTypes.SOUL_FIRE_FLAME,
+                        p.getX() + Math.cos(ang) * r, p.getY() + y, p.getZ() + Math.sin(ang) * r,
+                        n(1, s), 0.02, 0.02, 0.02, 0.0);
+            }
+            if (full && t == 0) {
+                w.playSound(null, p.getX(), p.getY(), p.getZ(),
+                        SoundEvents.BLOCK_BELL_RESONATE, SoundCategory.PLAYERS, 0.7f, 1.8f);
             }
         });
     }

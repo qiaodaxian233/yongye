@@ -151,7 +151,13 @@ public final class ClassSkillHandler {
             // ===== MP 状态更新:命中触发 =====
             // 剑客剑气:每次命中+1层,最多10层
             if (ClassManager.isActive(p, PlayerClass.SWORDSMAN)) {
-                swordsmanEdge.merge(p.getUuid(), 1, (a, b) -> Math.min(10, a + b));
+                int edgeNow = swordsmanEdge.merge(p.getUuid(), 1, (a, b) -> Math.min(10, a + b));
+                // m451:剑气层此前只喂 MP 条数字,世界里毫无表现。只在 1/5/9 三档放气场
+                // (每次命中都放的话连击时 24t 任务会层层叠加);9 层=下一刀蓄满即洞穿,白芒+高音铃报「上膛」。
+                // 不用 10 当档:层数刚到 10 的那一刀在本事件后半段就自己洞穿了,且封顶后每刀都会再得 10。
+                if ((edgeNow == 1 || edgeNow == 5 || edgeNow == 9) && world instanceof ServerWorld swEdge) {
+                    WeaponSkillFx.swordEdgeAura(swEdge, p, edgeNow, edgeNow == 9);
+                }
             }
             // 刺客命中=进入战斗,重置暗能计时
             if (ClassManager.isActive(p, PlayerClass.ASSASSIN)) {
@@ -273,8 +279,13 @@ public final class ClassSkillHandler {
                     le.timeUntilRegen = 0;
                 }
                 if (world instanceof ServerWorld sw) {
-                    Vec3d c = p.getPos().add(dir.x * 1.5, p.getStandingEyeHeight() * 0.6, dir.z * 1.5);
-                    sw.spawnParticles(ParticleTypes.SWEEP_ATTACK, c.x, c.y, c.z, 6, 0.6, 0.2, 0.6, 0.0);
+                    if (cfg.swordsmanFancyFx) {
+                        // m451:横扇月牙 9t 推进到 range(节拍取作者 bbmodel 剑气波出刀段);伤害口径不变
+                        WeaponSkillFx.swordQiWave(sw, p, range);
+                    } else {                                   // 关演出=回 m234 单帧简版
+                        Vec3d c = p.getPos().add(dir.x * 1.5, p.getStandingEyeHeight() * 0.6, dir.z * 1.5);
+                        sw.spawnParticles(ParticleTypes.SWEEP_ATTACK, c.x, c.y, c.z, 6, 0.6, 0.2, 0.6, 0.0);
+                    }
                 }
             }
 
@@ -304,13 +315,16 @@ public final class ClassSkillHandler {
                             hitN++;
                         }
                     }
-                    if (world instanceof ServerWorld sw2) {
+                    // m451:开演出时这条逐格单帧粒子让位(同一 tick 画完只闪一下),改由 swordAerial 分 25t 演
+                    if (world instanceof ServerWorld sw2 && !cfg.swordsmanFancyFx) {
                         sw2.spawnParticles(ParticleTypes.SWEEP_ATTACK, cpt.x, cpt.y, cpt.z, 1, 0.05, 0.05, 0.05, 0.0);
                     }
                 }
                 if (world instanceof ServerWorld sw2) {
                     sw2.playSound(null, p.getX(), p.getY(), p.getZ(),
                             SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.0f, 1.35f);
+                    // m451:光刃逐段拉出→留痕加粗→崩解→消散(弹道已快照,人走开光刃留在原处)
+                    WeaponSkillFx.swordAerial(sw2, p, cfg.swordsmanPierceRange);
                 }
                 p.sendMessage(Text.literal("剑气凌空!洞穿 " + hitN + " 个目标").formatted(Formatting.AQUA), true);
             }
@@ -359,6 +373,9 @@ public final class ClassSkillHandler {
                 if (p.getWorld() instanceof ServerWorld sw) {
                     sw.playSound(null, p.getX(), p.getY(), p.getZ(),
                             SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.PLAYERS, 1.0f, 1.4f);
+                    // m451:刃壁立起→卸力收束→沿连线反弹→余劲归位(原来这一招只有这声盾响,零粒子)
+                    WeaponSkillFx.swordParry(sw, p,
+                            attacker.getPos().add(0, attacker.getStandingEyeHeight() * 0.6, 0));
                 }
                 p.sendMessage(Text.literal("格挡反击!").formatted(Formatting.AQUA), true);
                 return false;
