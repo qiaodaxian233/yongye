@@ -149,24 +149,31 @@ public class YongyeClient implements ClientModInitializer {
                 context.client().execute(() -> ClientTalents.update(payload.points(), payload.classes(), payload.learned())));
 
         // 开局选职:收到 S2C 后置位,待进入世界且无其它界面时再弹出(避免被登录过场覆盖)
+        // m456:Flashback 回放会重放录制期的 S2C 包——回放中屏蔽全部「服务端推送弹屏」(下同六处)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenClassSelectPayload.ID, (payload, context) ->
-                context.client().execute(() -> pendingClassSelect = true));
+                context.client().execute(() -> { if (!ReplayGuard.suppressPopups()) pendingClassSelect = true; }));
 
         // 开局难度:收到 S2C 后置位,待进入世界且无其它界面时再弹出(同选职机制)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenDifficultyPayload.ID, (payload, context) ->
-                context.client().execute(() -> pendingDifficulty = true));
+                context.client().execute(() -> { if (!ReplayGuard.suppressPopups()) pendingDifficulty = true; }));
 
         // 调试菜单:收到 S2C(由 /yongye debug 触发)即打开 DebugScreen。
         // 命令在世界内显式触发,不存在登录过场覆盖问题,直接 setScreen 即可。
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenDebugPayload.ID, (payload, context) ->
-                context.client().execute(() -> context.client().setScreen(new DebugScreen())));
+                context.client().execute(() -> {
+                    if (!ReplayGuard.suppressPopups()) context.client().setScreen(new DebugScreen());
+                }));
 
         // 守护界面:收到 S2C(右键守护书触发)即打开 WardScreen。
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenWardPayload.ID, (payload, context) ->
-                context.client().execute(() -> context.client().setScreen(new WardScreen())));
+                context.client().execute(() -> {
+                    if (!ReplayGuard.suppressPopups()) context.client().setScreen(new WardScreen());
+                }));
         // m328 任务书:右键书 → 开界面;进度快照 → 刷新界面
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenQuestBookPayload.ID, (payload, context) ->
-                context.client().execute(() -> context.client().setScreen(new QuestBookScreen(null))));
+                context.client().execute(() -> {
+                    if (!ReplayGuard.suppressPopups()) context.client().setScreen(new QuestBookScreen(null));
+                }));
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.MainQuestSyncPayload.ID, (payload, context) ->
                 context.client().execute(() -> QuestBookScreen.onSync(payload)));
         // m351 Boss 图鉴数据(随主线同步一并到达)
@@ -230,8 +237,10 @@ public class YongyeClient implements ClientModInitializer {
                 }));
 
         // m366 猎杀勋章:收三选一数据 → 无屏直接弹;正开着别的屏就挂 pending,tick 里关屏后补弹
+        // m456:回放中直接丢弃(作者实机踩中的就是这只——录宣传素材回放时三选一糊镜头)
         ClientPlayNetworking.registerGlobalReceiver(com.yongye.network.OpenMedalChoicePayload.ID, (payload, context) ->
                 context.client().execute(() -> {
+                    if (ReplayGuard.suppressPopups()) return;
                     if (payload.data() == null || payload.data().isEmpty()) return;
                     if (context.client().currentScreen == null && context.client().player != null) {
                         context.client().setScreen(new MedalChoiceScreen(payload.data()));
@@ -744,15 +753,17 @@ public class YongyeClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             // 每 tick 刷新血量速率采样(供血量 HUD 显示实时回血/掉血)
             HealthRateTracker.tick();
-            if (pendingDifficulty && client.player != null && client.currentScreen == null) {
+            // m456:回放中不消费 pending(不弹也不清——真游戏里挂上的待选,退出回放后照常补弹)
+            boolean replaySuppress = ReplayGuard.suppressPopups();
+            if (!replaySuppress && pendingDifficulty && client.player != null && client.currentScreen == null) {
                 pendingDifficulty = false;
                 client.setScreen(new DifficultyScreen());
             }
-            if (pendingClassSelect && client.player != null && client.currentScreen == null) {
+            if (!replaySuppress && pendingClassSelect && client.player != null && client.currentScreen == null) {
                 pendingClassSelect = false;
                 client.setScreen(new ClassSelectScreen());
             }
-            if (pendingMedal != null && client.player != null && client.currentScreen == null) {
+            if (!replaySuppress && pendingMedal != null && client.player != null && client.currentScreen == null) {
                 String d = pendingMedal;
                 pendingMedal = null;
                 if (!d.isEmpty()) client.setScreen(new MedalChoiceScreen(d));   // m366 三选一

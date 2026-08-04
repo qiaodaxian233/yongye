@@ -3709,3 +3709,42 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
 - 纯文档零代码,配置 v 仍 171。
 - **PAT 失效备注**:交接文档里那串 PAT 推送报 Invalid token,m453/m454 均本地提交 + format-patch 交付,
   作者贴新 PAT 后 `git am *.patch` 之外也可由 AI 直接补推并盯 CI。
+
+## m455 /yongye day 天数直改命令(作者:「做宣传的话怎么直接修改天数」,2026-08-04)
+- **答案先行**:全模组按天逻辑唯一口径 = `ProgressionManager.gameDay = getTimeOfDay/24000`(m252 收口),
+  所以**改主世界 timeOfDay 就是改天数**,看板天数/按天预告/精英概率/每10天进化/挖掘解锁/佩恩·阿努比斯等
+  BOSS 降临天数门全部即时跟走(新刷出来的怪立刻按新天数算,已在场的怪不回溯)。原版命令也能用:
+  `/time add 24000` = 快进一天;但 **`/time set` 是写绝对值**——`/time set night` 会把天数打回第 1 天,
+  拍宣传极易误伤,这就是要专用命令的原因。
+- **新命令**(挂在 /yongye 树下,OP 2 级,加在 nightfall 后):
+  `/yongye day` 查当前天数(展示口径第 1 天起算,与看板一致)/`/yongye day <N>` 跳到第 N 天且
+  **保留当日时刻**(白天拍白天夜里拍夜里)/`/yongye day <N> <时刻0..23999>` 连当日时刻一起指定
+  (0=清晨 6000=正午 13000=入夜 18000=午夜)。往回跳也允许(拍摄需要);反馈行报「第 X 天 → 第 N 天」。
+- **边界已核**:ProgressionManager.tickFirstDay(第一天慢速)只在 tod<12000 时接管、跳到第 2 天以后
+  自动交还原版;跳回第 1 天白天会重新进入慢速节奏(符合语义)。NightfallManager 永夜等级是独立线不受影响
+  (宣传要摆永夜氛围照旧 `/yongye nightfall <级>`)。
+- **零新 API**:setTimeOfDay/getTimeOfDay/getOverworld/IntegerArgumentType 全在树先例
+  (ProgressionManager/NightfallManager/nightfall 命令同款);零配置变更(运营命令口径,同 /yongye protectscroll)。
+- 实机盯:①`/yongye day 15` 看板立跳「第15天」且预告行跟着换;②接 `/yongye day 15 13000` 入夜;
+  ③确认别再用 `/time set`(会清天数),调时刻走本命令第三参或 `/time add`。
+
+## m456 Flashback 回放守卫(作者:「用 flashback 会弹出杀怪的那个三选一」,2026-08-04)
+- **病根**:「杀怪三选一」= m366 猎杀勋章(击杀里程碑弹 OpenMedalChoicePayload → MedalChoiceScreen)。
+  Flashback 回放的原理是把录制期间收到的全部 S2C 包**原样重放**给客户端(模组 HUD/血条能在回放里显示
+  正是靠这个),于是录素材时触发过的「打开界面」类包在回放里**再弹一次**,三选一直接糊在宣传镜头上。
+  同病还有五只:选职 / 选难度 / 调试菜单(录时开过 /yongye debug 就会重放)/ 守护书 / 任务书。
+- **方案**:新 `client/ReplayGuard`——Flashback 纯客户端、非编译依赖不能 import,反射探测
+  `com.moulberry.flashback.Flashback#isInReplay()`(类名/方法名/mod id=flashback 均照其 GitHub 1.21 分支
+  源码逐字核对,public static boolean,含"正在打开回放"状态);未装/反射任何一步失败 → **永久短路 false
+  零影响**(m254 player-animator 同款 try/catch(Throwable) 降级口径)。YongyeClient 六个「服务端推送弹屏」
+  接收器 + END_CLIENT_TICK 三处 pending 补弹全部接 `ReplayGuard.suppressPopups()` 门:回放中包直接丢弃、
+  pending **不弹也不清**(真游戏里挂上的待选勋章,退出回放后照常补弹,不丢卡)。
+- **刻意不挡**:①录制时的实时弹屏(录的时候是真在打真在选,理应弹;只有回放播放不该弹);②数据类包
+  (HUD 看板/血条/MP/格挡/天象等)照常重放——回放里 HUD 正常显示是卖点不是病。
+- 配置 +1 `replayGuardPopups`(默认开)**configVersion 171→172**。
+- **待编译验证 1 项(低险有退路)**:`FabricLoader.isModLoaded`(FabricLoader 在树=YongyeConfig 取配置目录,
+  isModLoaded 是 loader 标准 API 首用;报错删该行只留 Class.forName 探测,行为不变)。反射三件套
+  (Class.forName/getMethod/invoke)纯 JDK 零 MC 面。
+- 实机盯:①装 Flashback 录一段刷怪够里程碑的素材 → 回放不再弹三选一、退出回放回世界后待选卡照常弹回;
+  ②录制中里程碑达成仍实时弹(别误伤正常游玩);③`config set replayGuardPopups false` 回旧行为;
+  ④未装 Flashback 的客户端启动无异常日志。
