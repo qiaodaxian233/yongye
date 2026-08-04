@@ -195,8 +195,8 @@ public class ClassWeaponItem extends Item {
 
     /**
      * 松手/中断:释放魔法弹。
-     * 用手动逐点射线检测第一个目标(不用 RaycastContext,避免版本敏感点)。
-     * 蓄力越满伤害/耗血越高(0.4×~1.0×)。
+     * m450 起为飞行法术球(WarlockBoltHandler tick 推进,命中/撞墙才结算;命中口径与旧射线同源)。
+     * 蓄力越满伤害/耗血越高。
      */
     @Override
     public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {  // 【待编译验证】1.21.2+可能返回boolean
@@ -224,53 +224,12 @@ public class ClassWeaponItem extends Item {
         }
         p.setHealth(Math.max(1.0f, p.getHealth() - hpCost));
 
-        // 手动逐点射线(步长0.5格,检测前方范围内第一个目标)
+        // m450:瞬发射线 → 飞行法术球(WarlockBoltHandler tick 推进;命中口径/伤害公式与旧版同源,
+        // 只是「当帧结算」改成「球到才结算」——作者点名「右键蓄力完成后远程法术球是不是应该有」)
         Vec3d eye = p.getEyePos();
         Vec3d dir = p.getRotationVector().normalize();
-        double range = cfg.warlockBoltRange;
-        LivingEntity hit = null;
-        ServerWorld sw = (ServerWorld) world;
-        for (double d = 0.5; d <= range; d += 0.5) {
-            Vec3d pt = eye.add(dir.x * d, dir.y * d, dir.z * d);
-            // 粒子光束
-            if ((int)(d * 2) % 3 == 0) {
-                sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, pt.x, pt.y, pt.z, 1, 0.05, 0.05, 0.05, 0.0);
-            }
-            if (hit != null) continue;
-            Box box = new Box(pt.x - 0.5, pt.y - 0.5, pt.z - 0.5, pt.x + 0.5, pt.y + 0.5, pt.z + 0.5);
-            List<LivingEntity> near = sw.getEntitiesByClass(LivingEntity.class, box,
-                    e -> e.isAlive() && e != p && !(e instanceof PlayerEntity));
-            if (!near.isEmpty()) hit = near.get(0);
-        }
-
-        if (hit != null) {
-            DamageSource magic = world.getDamageSources().magic();
-            hit.damage(magic, damage);
-            hit.timeUntilRegen = 0;
-            // 命中爆点粒子
-            Vec3d hpos = hit.getPos().add(0, 1.0, 0);
-            sw.spawnParticles(ParticleTypes.SOUL, hpos.x, hpos.y, hpos.z, 12, 0.4, 0.4, 0.4, 0.05);
-            sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, hpos.x, hpos.y, hpos.z, 8, 0.3, 0.3, 0.3, 0.02);
-            // m261 补:旧 0~1 蓄力量 charge 已改为按秒倍率 mult,音调改用「倍率/封顶」映射回 0~1(蓄越满音越尖)
-            world.playSound(null, hit.getBlockPos(), SoundEvents.ENTITY_BLAZE_HURT,
-                    SoundCategory.PLAYERS, 1.0f, 0.7f + (float) (mult / Math.max(1.0, cfg.warlockBoltMultCap)) * 0.5f);
-            p.sendMessage(Text.literal(String.format("魔法弹命中!%.1f伤害(×%.1f) / 耗%.1f血", damage, mult, hpCost))
-                    .formatted(Formatting.LIGHT_PURPLE), true);
-        } else {
-            // 未命中音效
-            world.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_ENDER_PEARL_THROW,
-                    SoundCategory.PLAYERS, 0.6f, 1.2f);
-        }
-    }
-
-    @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.literal("职业专属 · 【" + playerClass.cn + "】").formatted(Formatting.GOLD));
-        tooltip.add(flavor(playerClass).formatted(Formatting.GRAY));
-        if (playerClass == PlayerClass.WARLOCK) {
-            tooltip.add(Text.literal("✦ 右键蓄力吟唱,松手释放魔法弹").formatted(Formatting.LIGHT_PURPLE));
-            tooltip.add(Text.literal("  蓄力越满伤害越高 · 消耗生命施法").formatted(Formatting.DARK_PURPLE));
-        }
+        com.yongye.system.WarlockBoltHandler.fire((ServerWorld) world, p, eye, dir,
+                cfg.warlockBoltRange, damage, mult);
         tooltip.add(Text.literal("✦ 手持且本职业生效时强化:").formatted(Formatting.LIGHT_PURPLE));
         tooltip.add(synergy(playerClass).formatted(Formatting.WHITE));
     }

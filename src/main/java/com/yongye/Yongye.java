@@ -107,7 +107,8 @@ public class Yongye implements ModInitializer {
         com.yongye.system.CandleSpawnHandler.register();        // m305 烛之维度:百倍刷怪+实体闸
         com.yongye.system.SurvivalRankHandler.register();
         com.yongye.system.NightfallWeatherHandler.register();
-        com.yongye.system.NightfallSkyWeatherHandler.register();   // m435 原版雨雪雷随永夜加深(与天象分工:那边造事件,这边调原版节律)
+        com.yongye.system.NightfallSkyWeatherHandler.register();
+        com.yongye.system.WarlockBoltHandler.register();           // m450 术士魔法弹弹道(飞行法术球)   // m435 原版雨雪雷随永夜加深(与天象分工:那边造事件,这边调原版节律)
         com.yongye.system.NightfallVisionHandler.register();
         EliteHandler.register();
         EliteCombatAI.register(); // m309 精英战斗AI:跳劈/走位/自爆翻倍/逃跑回归/跳搭
