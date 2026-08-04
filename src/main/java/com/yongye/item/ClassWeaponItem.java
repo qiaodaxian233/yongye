@@ -230,6 +230,16 @@ public class ClassWeaponItem extends Item {
         Vec3d dir = p.getRotationVector().normalize();
         com.yongye.system.WarlockBoltHandler.fire((ServerWorld) world, p, eye, dir,
                 cfg.warlockBoltRange, damage, mult);
+    }
+
+    @Override
+    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+        tooltip.add(Text.literal("职业专属 · 【" + playerClass.cn + "】").formatted(Formatting.GOLD));
+        tooltip.add(flavor(playerClass).formatted(Formatting.GRAY));
+        if (playerClass == PlayerClass.WARLOCK) {
+            tooltip.add(Text.literal("✦ 右键蓄力吟唱,松手释放魔法弹").formatted(Formatting.LIGHT_PURPLE));
+            tooltip.add(Text.literal("  蓄力越满伤害越高 · 消耗生命施法").formatted(Formatting.DARK_PURPLE));
+        }
         tooltip.add(Text.literal("✦ 手持且本职业生效时强化:").formatted(Formatting.LIGHT_PURPLE));
         tooltip.add(synergy(playerClass).formatted(Formatting.WHITE));
     }
