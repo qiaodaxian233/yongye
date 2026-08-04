@@ -335,36 +335,6 @@ public final class ModCommands {
                             return 1;
                         }))
 
-                        // m413 召唤师干弟自定义(作者点名:输 ID 自动拉皮肤;皮肤客户端下一帧即换,名字在场即改)
-                        .then(CommandManager.literal("puppet")
-                                .then(CommandManager.literal("skin")
-                                        .then(CommandManager.argument("槽", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 5))
-                                                .then(CommandManager.argument("ID", StringArgumentType.word())
-                                                        .executes(ctx -> puppetSet(ctx.getSource().getPlayerOrThrow(),
-                                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "槽"),
-                                                                StringArgumentType.getString(ctx, "ID"), true)))))
-                                .then(CommandManager.literal("name")
-                                        .then(CommandManager.argument("槽", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 5))
-                                                .then(CommandManager.argument("名字", StringArgumentType.greedyString())
-                                                        .executes(ctx -> puppetSet(ctx.getSource().getPlayerOrThrow(),
-                                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "槽"),
-                                                                StringArgumentType.getString(ctx, "名字"), false)))))
-                                .then(CommandManager.literal("reset").executes(ctx -> {
-                                    setConfigField("summonGanDiSkins", "");
-                                    setConfigField("summonGanDiNames", "");
-                                    int n = SummonerHandler.applyGanDiNames(ctx.getSource().getPlayerOrThrow());
-                                    ctx.getSource().sendFeedback(() -> Text.literal(
-                                            "干弟皮肤与名字已全部还原默认" + (n > 0 ? "(在场 " + n + " 只已改回)" : "")).formatted(Formatting.AQUA), false);
-                                    return 1;
-                                }))
-                                .then(CommandManager.literal("list").executes(ctx -> {
-                                    var c = com.yongye.YongyeConfig.get();
-                                    ctx.getSource().sendFeedback(() -> Text.literal(
-                                            "干弟自定义 · 皮肤槽=[" + c.summonGanDiSkins + "] 名字槽=[" + c.summonGanDiNames
-                                                    + "](槽 1~5 对应 岛风/晚安/不爱肝/迷人/芥末)").formatted(Formatting.AQUA), false);
-                                    return 1;
-                                })))
-
                         // m411(路线图23)FX 测试:不跑真实流程,一条命令触发各演出/压测(纯视觉零状态)
                         .then(CommandManager.literal("fxtest")
                                 .then(CommandManager.literal("damage")
@@ -596,7 +566,7 @@ public final class ModCommands {
                                     String tid = StringArgumentType.getString(ctx, "type");
                                     com.yongye.item.PlayerClass cls = com.yongye.item.PlayerClass.byId(tid);
                                     if (cls == null) {
-                                        ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin/summoner)"));
+                                        ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin)"));
                                         return 0;
                                     }
                                     p.giveItemStack(new net.minecraft.item.ItemStack(com.yongye.registry.ModItems.getClassBook(cls)));
@@ -627,7 +597,7 @@ public final class ModCommands {
                                     String tid = StringArgumentType.getString(ctx, "type");
                                     com.yongye.item.PlayerClass cls = com.yongye.item.PlayerClass.byId(tid);
                                     if (cls == null) {
-                                        ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin/summoner)"));
+                                        ctx.getSource().sendError(Text.literal("未知职业: " + tid + "(tank/warrior/warlock/swordsman/monk/assassin)"));
                                         return 0;
                                     }
                                     net.minecraft.item.Item w = com.yongye.registry.ModItems.getClassWeapon(cls);
@@ -742,23 +712,6 @@ public final class ModCommands {
     // 支持类型:boolean / int / long / double / String。数组等复杂字段只读不写。
     // 改完立即写盘(YongyeConfig.save());部分字段需重进世界才生效。
 
-    /** m413:改干弟第 slot(1~5) 槽的皮肤ID或名字——重组逗号串写回配置,名字顺手给在场小队即改。 */
-    private static int puppetSet(ServerPlayerEntity p, int slot, String value, boolean isSkin) {
-        var c = com.yongye.YongyeConfig.get();
-        String raw = isSkin ? c.summonGanDiSkins : c.summonGanDiNames;
-        String[] parts = (raw == null ? "" : raw).split(",", -1);
-        String[] five = new String[5];
-        for (int i = 0; i < 5; i++) five[i] = i < parts.length ? parts[i] : "";
-        String v0 = value == null ? "" : value.trim().replace(",", "");
-        five[slot - 1] = "-".equals(v0) ? "" : v0; // 槽内不许带逗号;"-"=哨兵清槽回默认(m414 UI 空框下发)
-        setConfigField(isSkin ? "summonGanDiSkins" : "summonGanDiNames", String.join(",", five));
-        int renamed = isSkin ? 0 : SummonerHandler.applyGanDiNames(p);
-        String what = isSkin ? "皮肤ID" : "名字";
-        p.sendMessage(Text.literal("干弟槽 " + slot + " 的" + what + " → " + (five[slot - 1].isEmpty() ? "默认" : five[slot - 1])
-                + (isSkin ? "(客户端拉取中,几秒内换肤;拉不到=原贴图)" : renamed > 0 ? "(在场 " + renamed + " 只已改名)" : "(下次召唤生效)"))
-                .formatted(Formatting.GOLD), false);
-        return 1;
-    }
 
     /** m424 视觉回归测试台:所有测试刷出的怪/掉落物都打这个命令标签,
      *  一键清场(fxtest clear)靠它;EliteHandler / MobBossHandler 的自然转化也按它豁免。 */

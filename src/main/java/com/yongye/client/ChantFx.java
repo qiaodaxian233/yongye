@@ -58,7 +58,6 @@ public final class ChantFx {
             case "swordsman" -> c.chantSwordsman;
             case "monk"      -> c.chantMonk;
             case "assassin"  -> c.chantAssassin;
-            case "summoner"  -> c.chantSummoner;
             default -> "";
         };
     }

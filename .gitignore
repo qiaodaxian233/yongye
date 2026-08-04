@@ -18,3 +18,6 @@ bin/
 
 # fabric
 run/
+
+# 沙箱 javac 筛查会在仓库根落临时 argfile(m453 起两会话都中招),永久挡住
+javac.*.args

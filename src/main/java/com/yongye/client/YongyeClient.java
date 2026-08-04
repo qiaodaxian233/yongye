@@ -963,9 +963,6 @@ public class YongyeClient implements ClientModInitializer {
         });
 
 
-        // 【m223】肝帝渲染器(玩家模型+模组皮肤)
-        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
-                com.yongye.registry.ModEntities.GANDI, GanDiRenderer::new);
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
                 com.yongye.registry.ModEntities.WARLOCK_CLONE, WarlockCloneRenderer::new); // m262 术士分身
 
@@ -1280,14 +1277,5 @@ public class YongyeClient implements ClientModInitializer {
                 String classLabel = pc != null ? "本命·" + pc.cn : "无职业";
                 if (featureUnlocked("cls")) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
                         Text.literal(classLabel), b -> client.setScreen(new StatsScreen(screen))));
-                // m414 干弟小队设置(作者点名:UI 里设皮肤/名字,**只有召唤师看见**;换职业开关背包即时增减)
-                // m423 修:className 存的是职业 id("summoner"),m414 误比中文名"召唤师"永不相等
-                // =任何召唤师都看不见入口(作者实机点名)。改比 id;再兜 ClientTalents 已学列表
-                // (双职业玩家本命非召唤师时 className 是第一职业,但已学召唤师同样能召干弟,该看见入口)。
-                // m426 召唤师下架:开关关时入口一并隐藏(已学者的召唤/干弟功能不受影响,只收设置入口)。
-                boolean isSummoner = com.yongye.item.PlayerClass.SUMMONER.id.equals(ClientStats.className)
-                        || ClientTalents.classes.contains(com.yongye.item.PlayerClass.SUMMONER.id);
-                if (isSummoner && com.yongye.YongyeConfig.get().enableSummonerClass) Screens.getButtons(screen).add(new YongyeButton(bxOut, by + pitch * rOut++, bw, bh,
-                        Text.literal("干弟"), b -> client.setScreen(new GanDiConfigScreen(screen))));
     }
 }

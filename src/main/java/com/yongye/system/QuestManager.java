@@ -130,7 +130,7 @@ public final class QuestManager {
                     fail(victim);
                 }
             }
-            ServerPlayerEntity killer = SummonerHandler.creditedKiller(source); // m300 召唤物击杀记主人
+            ServerPlayerEntity killer = SummonKillCredit.creditedKiller(source); // m300 召唤物击杀记主人
             if (killer == null) return;
             Quest q = ACTIVE.get(killer.getUuid());
             if (q == null || q.done) return;

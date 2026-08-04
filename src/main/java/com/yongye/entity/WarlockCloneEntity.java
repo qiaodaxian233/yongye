@@ -23,7 +23,7 @@ import java.util.UUID;
 
 /**
  * 术士·暗影分身(m262)——作者:「法师小技能改成召唤两个分身,50% 血量、100% 攻击」。
- * 结构照 GanDiEntity 极简化(友军近战锁敌对,无台词无变体):
+ * 结构照旧版肝帝实体极简化而来(该实体已随 m453 召唤师移除;友军近战锁敌对,无台词无变体):
  *  - 属性在召唤时按主人快照:血量基值=主人最大生命×minorWarlockCloneHpRatio、攻击=主人攻击×AtkRatio
  *    (setBaseValue 直写基值,与肝帝的 addFlat 成长互不相干,分身是一次性快照);
  *  - 寿命 minorWarlockCloneLifeTicks(默认 30 秒)到点魂火散场;主人的仇恨目标出生即继承;

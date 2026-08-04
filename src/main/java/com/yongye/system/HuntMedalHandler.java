@@ -85,7 +85,7 @@ public final class HuntMedalHandler {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (!(entity instanceof Monster)) return;
             if (!YongyeConfig.get().enableHuntMedal) return;
-            ServerPlayerEntity killer = SummonerHandler.creditedKiller(source);
+            ServerPlayerEntity killer = SummonKillCredit.creditedKiller(source);
             if (killer == null) return;
             onKill(killer);
         });

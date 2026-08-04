@@ -20,7 +20,7 @@ import java.util.function.Function;
  * 不引外部依赖(FTB Quests 是独立模组还要玩家另装):内建 16 阶段线性主线,从「活过第一夜」一路到
  * 「终焉:讨伐末影龙」,右键任务书/背包「任务」钮打开进度界面,达成后领奖自动进下一阶段。
  * 架构:阶段表静态数据(标题/描述/判定/奖励);进度=玩家附件(persistent+copyOnDeath,死亡不清);
- * 击杀类计数走 AFTER_DEATH 钩子(击杀归属复用 SummonerHandler.creditedKiller,召唤物击杀也算主人——
+ * 击杀类计数走 AFTER_DEATH 钩子(击杀归属复用 SummonKillCredit.creditedKiller,召唤物击杀也算主人——
  * 与掉落/看板同口径);领取=服务端权威复核 check 再发奖。与随机限时任务(QuestManager)完全独立并行。
  */
 public final class MainQuestLine {
@@ -87,7 +87,7 @@ public final class MainQuestLine {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (!YongyeConfig.get().enableMainQuest) return;
             if (entity instanceof ServerPlayerEntity) return;
-            ServerPlayerEntity killer = SummonerHandler.creditedKiller(source);
+            ServerPlayerEntity killer = SummonKillCredit.creditedKiller(source);
             if (killer == null) return;
 
             killer.setAttached(ModAttachments.MAIN_KILLS, kills(killer) + 1);
@@ -225,7 +225,6 @@ public final class MainQuestLine {
             case "assassin" -> new String[]{"潜影", "追猎", "绝影"};
             case "swordsman"-> new String[]{"砺刃", "剑心", "剑圣"};
             case "warlock"  -> new String[]{"引灵", "噬渊", "冥主"};
-            case "summoner" -> new String[]{"唤物", "统御", "万军"};
             default -> new String[]{"试炼·壹", "试炼·贰", "试炼·叁"};
         };
         return names[Math.max(0, Math.min(2, tier))];

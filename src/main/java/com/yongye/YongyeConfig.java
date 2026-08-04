@@ -23,7 +23,7 @@ public class YongyeConfig {
     private static YongyeConfig INSTANCE;
 
     /** 当前配置 schema 版本号。每次我重新平衡默认值时 +1;加载旧版本文件会在日志里警告"配置可能过时"。 */
-    public static final int CURRENT_CONFIG_VERSION = 170; // m451 剑客四技能演出+3 // m450 术士法术球+1 // m448 万剑归一剑群+2 // m443 染色低段爬色+2 // m440 咏唱台词分层改版(仅旧默认迁移) · m439 召唤师重新上架(版本门迁移) · m438 大招咏唱台词+8 · m437 动作俯仰跟随+1 · m435 永夜天气联动+7 · m433 疾跑残影+5 · m432 血量书分档+1 · m431 搜集任务仓库算数+1 · m430 入包确认音+2 · m429 自动卷轴仓库直供+1 · m426 召唤师下架开关+1 · m421 镜头三通道硬顶+3 · m420 首次提示+1 · m419 音效并发管理器+5 · m418 HUD安全边距+2 · m417 低刺激整档+色盲记号+2 · m416 普通怪附伤三态门+1 · m415 战斗日志+2 · m413 干弟自定义皮肤名+2 · m411 FX调试面板+1 · m410 天赋加点脉冲+1 · m409 强化结果演出+1 · m408 主菜单动效+1 · m407 大招起手光晕+2 · m406 暴击/处决飘字+合并窗口+2 · m405 技能CD方块样式skillCdHudStyle+1(去m403的Plain布尔) · m403 技能CD无框半透明+停靠位+3 · m397 站姿默认关(版本门迁移) · m394 背挂微调+4 · m393 HUD微动效+1 · m391 页签过渡+1 · m388 永夜音景+2 · m387 讨伐演出+1 · m386 拾取通知卡+1 · m385 怪物微型血条+1 · m384 死亡转场+1 · m383 命中音分层+1 · m382 多杀弹字+1 · m381 特效质量档+1 · m380 永夜转场+3 · m377 永夜氛围粒子+2 · m376 掉落光柱+1 · m375 UI动效+1 · m374 受击方向指示+1 · m373 伤害飘字+2 · m367 肉盾脱战回盾+1 · m366 猎杀勋章+9 · m365 血条缩放+1 · m364 每日悬赏+9 · m363 渐进解锁+1 · m361 主线目标常显+1 · m359 强化直供+1 · m357 自动存/学书直供+2 · m356 材料仓库+1 · m352 事件天象+1 · m351 BOSS图鉴页+1 · m350 任务书节点地图+1 · m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
+    public static final int CURRENT_CONFIG_VERSION = 171; // m453 召唤师彻底移除(-40+字段,删除项 Gson 读旧档自动忽略,无需迁移) // m451 剑客四技能演出+3 // m450 术士法术球+1 // m448 万剑归一剑群+2 // m443 染色低段爬色+2 // m440 咏唱台词分层改版(仅旧默认迁移) · m439 召唤师重新上架(版本门迁移) · m438 大招咏唱台词+8 · m437 动作俯仰跟随+1 · m435 永夜天气联动+7 · m433 疾跑残影+5 · m432 血量书分档+1 · m431 搜集任务仓库算数+1 · m430 入包确认音+2 · m429 自动卷轴仓库直供+1 · m426 召唤师下架开关+1 · m421 镜头三通道硬顶+3 · m420 首次提示+1 · m419 音效并发管理器+5 · m418 HUD安全边距+2 · m417 低刺激整档+色盲记号+2 · m416 普通怪附伤三态门+1 · m415 战斗日志+2 · m413 干弟自定义皮肤名+2 · m411 FX调试面板+1 · m410 天赋加点脉冲+1 · m409 强化结果演出+1 · m408 主菜单动效+1 · m407 大招起手光晕+2 · m406 暴击/处决飘字+合并窗口+2 · m405 技能CD方块样式skillCdHudStyle+1(去m403的Plain布尔) · m403 技能CD无框半透明+停靠位+3 · m397 站姿默认关(版本门迁移) · m394 背挂微调+4 · m393 HUD微动效+1 · m391 页签过渡+1 · m388 永夜音景+2 · m387 讨伐演出+1 · m386 拾取通知卡+1 · m385 怪物微型血条+1 · m384 死亡转场+1 · m383 命中音分层+1 · m382 多杀弹字+1 · m381 特效质量档+1 · m380 永夜转场+3 · m377 永夜氛围粒子+2 · m376 掉落光柱+1 · m375 UI动效+1 · m374 受击方向指示+1 · m373 伤害飘字+2 · m367 肉盾脱战回盾+1 · m366 猎杀勋章+9 · m365 血条缩放+1 · m364 每日悬赏+9 · m363 渐进解锁+1 · m361 主线目标常显+1 · m359 强化直供+1 · m357 自动存/学书直供+2 · m356 材料仓库+1 · m352 事件天象+1 · m351 BOSS图鉴页+1 · m350 任务书节点地图+1 · m348 新手引导+3 · m346 技能CD常显HUD+3 · m341 P0~P3修复+BOSS阶梯解锁 · m338 蚀域/锻造+2 · m339 BOSS加强改版 · m337 转移+1 · m336 跟手+1 · m335 性能护栏+4 · m334 反卡+9 · m332 试炼+1 · m331 龙魂+1 · m330 永夜+3 · m328 主线任务+2 · m325~m327 任务权重/保血/拖刀+3 · m323 合书+1 · m322 获取提示+1 · m320 召唤协同+3 · m316 疾跑姿态+2 · m311 全怪紫气分档+1 · m312 看板默认左上(-2,14) · ...m308 看板挪位紧凑+4 · m309 精英战斗AI+14 · m310 僵尸红眼紫光+2
     public int configVersion = CURRENT_CONFIG_VERSION;
 
     // —— 战利品宝箱(m245)——
@@ -247,14 +247,9 @@ public class YongyeConfig {
     public boolean enableEnhanceInherit = true;
     public double enhanceInheritKeepFraction = 0.8;   // 继承保留比例(0.8=转移80%,1.0=无损)
     // ============ m299:召唤物免友伤 ============
-    public boolean summonFriendlyFireImmune = true;  // 玩家(横扫/误点/弹射物)打不伤己方召唤物:傀儡/肝帝/暗影分身
+    public boolean summonFriendlyFireImmune = true;  // 玩家(横扫/误点/弹射物)打不伤己方召唤物(m453 起仅暗影分身)
     // ============ m300:击杀归属 ============
-    public boolean summonKillsCreditOwner = true;    // 召唤物(傀儡/肝帝/暗影分身)击杀记主人:看板/掉落/保护卷/贪婪/任务/蚀域全口径
-    /** m426(作者点名下架):召唤师职业是否对玩家开放。关(默认)=选职界面无此页签、职业书/职业武器
-     *  不进掉落与创造栏、学习/替换到召唤师被服务端拒绝、背包「干弟」设置入口隐藏;
-     *  **已学召唤师的存档不受影响**(技能/傀儡/干弟照常,只是获取渠道与设置入口下架,不砸老档)。
-     *  想恢复:/yongye config set enableSummonerClass true(创造栏需重启生效,其余即时)。 */
-    public boolean enableSummonerClass = true;   // m439:作者点名重新上架(m426 曾默认下架)
+    public boolean summonKillsCreditOwner = true;    // 召唤物(m453 起仅暗影分身)击杀记主人:看板/掉落/保护卷/贪婪/任务/蚀域全口径
     public int dragonSoulPerKill = 1;                // m331 每次讨伐末影龙掉落龙魂数
     public boolean enableNgPlus = true;              // m330 永夜+总开关(状态仍持久,关=倍率不生效)
     public double ngPlusMobMult = 2.0;               // m330 二周目怪物血/攻倍率(封顶后乘)
@@ -1026,59 +1021,6 @@ public class YongyeConfig {
     /** 战斗爽难度下永夜 V5+ 深渊倍增的缩放:每级倍率 step×(等级-5) 再乘此值(1=不减弱,0.5=减半,0=该机制在战斗爽中关闭)。 */
     public double battleFunBeyondScale = 0.5;
 
-    // ============ m223:召唤师职业 ============
-    /** 「召唤」一次召出的铁傀儡数量。 */
-    public int ultSummonerGolemCount = 5;
-    /** 傀儡寿命(秒),到点自散;再次召唤会先散掉上一批。 */
-    public int ultSummonerGolemLifeSec = 60;
-    /** 「强化」倍率:傀儡血/攻各 ×(1+此值),默认 1.0=翻一倍。 */
-    public double summonerGolemBoostMult = 1.0;
-    /** 「癫狂」(大招键,m232 起不再需要潜行)消耗的生命值。 */
-    public double ultSummonerFrenzyHpCost = 20.0;
-    /** 「癫狂」力量II+速度II 的持续时间(tick)。 */
-    public int ultSummonerFrenzyDurationTicks = 400;
-    /** 肝帝:生命 / 攻击 / 移速 / 寿命秒(注册期读取,改后需重启生效)。 */
-    public double gandiHealth = 300.0;
-    public double gandiAttack = 40.0;
-    public double gandiSpeed = 0.35;
-    public int gandiLifeSec = 60;
-    /** 肝帝台词(登场/战斗/闲聊/告别,只发给召唤他们的朋友):关=全员沉默。 */
-    public boolean gandiChatEnabled = true;
-    // —— m227 肝帝台词池:竖线 | 分隔句子,随机抽一句;清空该字段=该类台词沉默。
-    //    Debug「配置」页有查改入口;改句示例:/yongye config set gandiTalkDaofengSpawn 句1|句2
-    public String gandiTalkDaofengSpawn  = "岛风到位!这地形我看看能改点啥。|圆梦镇施工队,进场!";
-    public String gandiTalkDaofengCombat = "打架别拆我建筑啊!|先围一圈墙,稳住!";
-    public String gandiTalkDaofengIdle   = "这块地……适合盖个圆梦镇。|薰衣草配夜蚀,还挺搭。";
-    public String gandiTalkDaofengBye    = "我先回去画图纸了,下次见!";
-    public String gandiTalkDaofengDeath  = "工地……先塌一半……";
-    public String gandiTalkWananSpawn    = "晚安已上线,生电机器马上开转。|别慌,后勤交给我。";
-    public String gandiTalkWananCombat   = "傀儡耐久我包了,放心冲!|效率!效率!";
-    public String gandiTalkWananIdle     = "这刷铁机一小时能出三组……|红石一响,黄金万两。";
-    public String gandiTalkWananBye      = "机器停了,我也该睡了,晚安~";
-    public String gandiTalkWananDeath    = "机器,烧了……";
-    public String gandiTalkBuganSpawn    = "不爱肝?骗人的,一百万方块都肝完了。|重活来了?正好活动筋骨。";
-    public String gandiTalkBuganCombat   = "站我后面!这波我扛!|这点伤害,还没搬砖累。";
-    public String gandiTalkBuganIdle     = "下个项目复刻白熊山,你说行吗?|肝到天亮,不算什么。";
-    public String gandiTalkBuganBye      = "行了,回去继续搬我的百万方块。";
-    public String gandiTalkBuganDeath    = "这波,扛不住了……";
-    public String gandiTalkMirenSpawn    = "迷人参上,蒸汽机压满!|机械之城的火,借你用用。";
-    public String gandiTalkMirenCombat   = "给傀儡点火!全速输出!|别省煤,烧就完了!";
-    public String gandiTalkMirenIdle     = "回头带你看我的飞艇船坞。|机械之城,今晚亮灯。";
-    public String gandiTalkMirenBye      = "蒸汽散了……我也撤了。";
-    public String gandiTalkMirenDeath    = "锅炉,炸了……";
-    public String gandiTalkJiemoSpawn    = "肝痒痒了,该活动一下了。|芥末到岗,今天也要肝到发光。";
-    public String gandiTalkJiemoCombat   = "手不能停,肝就完事!|打怪也是肝,冲!";
-    public String gandiTalkJiemoIdle     = "闲着也是闲着,再肝一单。|这点活,不够我塞牙缝的。";
-    public String gandiTalkJiemoBye      = "先下了,回床上躺会儿……明天接着肝。";
-    public String gandiTalkJiemoDeath    = "肝……肝不动了……";
-    // —— m229 召唤物成长与鹰扬 ——
-    /** 召唤物(傀儡+肝帝)附加生命 = 召唤者(朋友)最大生命 × 此比例(随你一起成长)。 */
-    public double summonerOwnerHpRatio = 0.5;
-    /** 召唤物附加攻击 = 召唤者攻击 × 此比例。 */
-    public double summonerOwnerAtkRatio = 0.5;
-    /** 手持「鹰扬」且本职业生效时,铁傀儡强化倍率额外加成。 */
-    public double summonerStaffExtraBoost = 0.5;
-
     // —— m232 职业小技能(默认 C 键,与大招各自冷却互不占用) ——
     /** 职业小技能总开关。 */
     public boolean enableClassMinorSkill = true;
@@ -1112,17 +1054,6 @@ public class YongyeConfig {
     /** 刺客·疾影步:冲刺力度 / 加速持续(tick,速度II)。 */
     public double minorAssassinDashStrength = 1.6;
     public int minorAssassinSpeedTicks = 60;
-
-    // —— m233 召唤师强化包(三技能职业,每一件都要够硬) ——
-    /** 傀儡持续回血(每秒,0=关):在场傀儡缓慢自愈,「强化」的血量翻倍更耐用。 */
-    public double summonerGolemRegenPerSec = 2.0;
-    /** 统御被动:场上有自己的召唤物(傀儡/朋友)存活时,召唤者获得抗性I。 */
-    public boolean enableSummonerGuardAura = true;
-    /** 统御:召唤物存活数达到此值时抗性升 II 级(默认 5=一整队傀儡)。 */
-    public int summonerGuardAuraBigCount = 5;
-    /** 癫狂自身增益等级(amplifier,0起):力量默认 2=力量III,速度默认 1=速度II。 */
-    public int ultSummonerFrenzyPowerAmp = 2;
-    public int ultSummonerFrenzySpeedAmp = 1;
 
     // —— m234 技能吃攻击力(统一「基础值 + 攻击 × 倍率」,与 m72 武器技能同公式;倍率 0=回固定值老行为) ——
     /** 大招:旋风斩 / 灭世 / 百裂拳 / 万剑归一 的攻击倍率。 */
@@ -1187,13 +1118,6 @@ public class YongyeConfig {
     /** m411(路线图23)FX 调试面板:左下角实时显示各类特效存活/每秒新增/每秒丢弃与画质档;
      *  `/yongye fxtest panel` 一键开合。默认关(调试工具,玩家日常不见)。 */
     public boolean enableFxDebugHud = false;
-    /** m413 召唤师干弟自定义皮肤(作者点名):5 槽逗号分隔的正版 ID(如 "Notch,jeb_,,,"),
-     *  输入 ID 客户端自动经 Mojang 官方管线拉皮肤与臂型;空槽/拉不到=原贴图。改配置在场即时换肤。
-     *  推荐用 /yongye puppet skin <槽1-5> <ID> 逐槽设置。 */
-    public String summonGanDiSkins = "";
-    /** m413 干弟自定义名:5 槽逗号分隔,空槽=默认(岛风/晚安/不爱肝/迷人/芥末);
-     *  /yongye puppet name <槽1-5> <名字> 逐槽设置并给在场小队即时改名。 */
-    public String summonGanDiNames = "";
     /** m415(路线图24)战斗日志简版:右缘小字列最近 承伤来源/暴击/处决/新中的负面状态,调平衡用。默认关。 */
     public boolean enableCombatLog = false;
     /** m415 战斗日志最多同屏行数(3~12)。 */
@@ -1396,7 +1320,7 @@ public class YongyeConfig {
     // ============ m438 大招咏唱台词(学 Celestisynth 的 chant message) ============
     /** 放大招时准星下方甩一句职业台词(8 向描边+淡出);关=只留 m407 光晕。 */
     public boolean enableChantMessage = true;
-    /** 各职业咏唱台词池:竖线 | 分隔,**清空=该职业不出声**(照 m226 肝帝台词口径)。
+    /** 各职业咏唱台词池:竖线 | 分隔,**清空=该职业不出声**(m226 起的台词池口径)。
      *  m440 分层语法:「@N 台词」=主手强化等级 ≥N 才解锁(阈值对齐品质表 @100稀有/@1000神器/@2500至尊),
      *  无前缀=常驻;抽取 60% 偏已解锁的最高档=刚强化上去立刻听得出新词。只用 BMP 内字符(踩坑第 9 条)。 */
     public String chantTank = "此处不可过。|山不移,我不退。|@100 天塌下来,由我扛着。|@1000 众生之盾,永不破碎。|@2500 我即城墙,我即终焉之壁。";
@@ -1405,7 +1329,6 @@ public class YongyeConfig {
     public String chantSwordsman = "剑锋所指。|一剑,足矣。|@100 万剑听令,为我开道。|@1000 此剑一出,天地让路。|@2500 斩断星河,不过抬手之间。";
     public String chantMonk = "拳意已至。|空手,亦是刃。|@100 百裂,千击。|@1000 肉身成圣。|@2500 一拳,碎苍穹。";
     public String chantAssassin = "你没看见我。|已经太迟了。|@100 影中取命。|@1000 死神欠我一声道谢。|@2500 你的名字,已从生死簿上划去。";
-    public String chantSummoner = "都出来吧。|众生听令。|@100 肝痒痒了。|@1000 万军随行,百鬼夜行。|@2500 此界生灵,皆为我兵。";
 
     /** m450 术士魔法弹飞行速度(格/tick,0.3~8,默 1.5=30格/秒;拉到 8≈旧版瞬发手感)。
      *  松手后魔法弹是一颗真的会飞的球(灵魂火核心+龙息晕圈+PORTAL 尾迹,蓄力越满球越大),
@@ -1754,11 +1677,6 @@ public class YongyeConfig {
             INSTANCE.slashFxBattleStance = false;
             INSTANCE.slashFxGuardPose = false;
         }
-        // m439:召唤师重新上架(作者点名)。布尔翻转走版本门——m426 下架时全体老档都是 false,
-        // 值判等区分不了「m426 的旧默认」与「玩家主动关」,按作者决定统一开一次,之后想关设置里关回即长期生效。
-        if (INSTANCE.configVersion < 165) {
-            INSTANCE.enableSummonerClass = true;
-        }
         if (INSTANCE.phoenixBaseHealth == 4.0E5) INSTANCE.phoenixBaseHealth = 6.0E5;
         if (INSTANCE.deathMageBaseHealth == 3.0E5) INSTANCE.deathMageBaseHealth = 4.5E5;
         if (INSTANCE.redSpiderBaseHealth == 2.5E5) INSTANCE.redSpiderBaseHealth = 3.75E5;
@@ -1787,7 +1705,6 @@ public class YongyeConfig {
         if ("万剑归一。|一剑,足矣。|剑锋所指。".equals(INSTANCE.chantSwordsman)) INSTANCE.chantSwordsman = "剑锋所指。|一剑,足矣。|@100 万剑听令,为我开道。|@1000 此剑一出,天地让路。|@2500 斩断星河,不过抬手之间。";
         if ("拳意已至。|百裂。|空手,亦是刃。".equals(INSTANCE.chantMonk)) INSTANCE.chantMonk = "拳意已至。|空手,亦是刃。|@100 百裂,千击。|@1000 肉身成圣。|@2500 一拳,碎苍穹。";
         if ("你没看见我。|影中取命。|已经太迟了。".equals(INSTANCE.chantAssassin)) INSTANCE.chantAssassin = "你没看见我。|已经太迟了。|@100 影中取命。|@1000 死神欠我一声道谢。|@2500 你的名字,已从生死簿上划去。";
-        if ("都出来吧。|众生听令。|肝痒痒了。".equals(INSTANCE.chantSummoner)) INSTANCE.chantSummoner = "都出来吧。|众生听令。|@100 肝痒痒了。|@1000 万军随行,百鬼夜行。|@2500 此界生灵,皆为我兵。";
     }
 
     /** 当前配置 schema 的全部字段名(public、非 static)。 */

@@ -24,7 +24,7 @@ public final class UltimateCastFx {
     private static int color = 0xFFD780;
 
     /** 职业色(键=PlayerClass **id**,ClientStats.className 同口径;没配到=暖金兜底)。
-     *  m423 修:原键是中文名而 className 传的是 id("summoner"等)永不命中,
+     *  m423 修:原键是中文名而 className 传的是 id("tank"等)永不命中,
      *  大招光晕一直走暖金兜底不分职业——与干弟入口同根病(cn↔id 口径混用),一并清账。 */
     static int classColor(String id) {   // m438:放宽包内可见,咏唱台词复用同一张职业色表
         return switch (id) {
@@ -34,7 +34,6 @@ public final class UltimateCastFx {
             case "swordsman" -> 0x3EE6D0; // 剑客·青
             case "monk"      -> 0xFFCC33; // 武僧·金
             case "assassin"  -> 0xFF4560; // 刺客·绯红
-            case "summoner"  -> 0x59D96A; // 召唤师·翠绿
             default -> 0xFFD780;
         };
     }

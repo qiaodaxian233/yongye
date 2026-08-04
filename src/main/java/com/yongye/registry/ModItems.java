@@ -186,25 +186,29 @@ public final class ModItems {
         return CLASS_WEAPONS.get(c);
     }
 
-    /** m426:可对玩家下发(掉落/宝箱/创造栏)的职业列表——召唤师被 enableSummonerClass=false
-     *  下架时剔除;掉落点每次调用实时读配置,改配置即时生效(创造栏在注册期取一次需重启)。 */
+    /** 可对玩家下发(掉落/宝箱/创造栏)的职业列表。m453:召唤师随枚举一并移除,不再需要 m426 的下架过滤,
+     *  方法保留是因为掉落/宝箱/创造栏九个调用点都走它,收敛一个口子以后再有职业增删只改这里。 */
     public static PlayerClass[] droppableClasses() {
-        if (com.yongye.YongyeConfig.get().enableSummonerClass) return PlayerClass.values();
-        java.util.List<PlayerClass> l = new java.util.ArrayList<>();
-        for (PlayerClass c : PlayerClass.values()) if (c != PlayerClass.SUMMONER) l.add(c);
-        return l.toArray(new PlayerClass[0]);
+        return PlayerClass.values();
     }
 
-    /** m426:可下发职业武器的职业列表(在 WEAPON_CLASSES 排武僧基础上,再按下架开关剔召唤师)。 */
+    /** 可下发职业武器的职业列表(= WEAPON_CLASSES,排武僧;理由同上)。 */
     public static PlayerClass[] droppableWeaponClasses() {
-        if (com.yongye.YongyeConfig.get().enableSummonerClass) return WEAPON_CLASSES;
-        java.util.List<PlayerClass> l = new java.util.ArrayList<>();
-        for (PlayerClass c : WEAPON_CLASSES) if (c != PlayerClass.SUMMONER) l.add(c);
-        return l.toArray(new PlayerClass[0]);
+        return WEAPON_CLASSES;
     }
     public static Map<PlayerClass, Item> classWeapons() {
         return CLASS_WEAPONS;
     }
+
+    // —— m453 召唤师彻底移除 · 旧物自动转换壳(占住旧 id,防老档读档蒸发;入包 1t 内转剑客同级装备)——
+    /** 旧「鹰扬」→ 剑客「流光」:附魔/自定义名照搬,强化等级按流光基础值重算(m337 转移同口径)。 */
+    public static final Item LEGACY_SUMMONER_WEAPON = register("class_weapon_summoner",
+            new com.yongye.item.LegacySummonerItem(() -> getClassWeapon(PlayerClass.SWORDSMAN), true,
+                    new Item.Settings().maxCount(1)));
+    /** 旧「职业书·召唤师」→ 职业书·剑客(数量保留)。 */
+    public static final Item LEGACY_SUMMONER_BOOK = register("class_book_summoner",
+            new com.yongye.item.LegacySummonerItem(() -> getClassBook(PlayerClass.SWORDSMAN), false,
+                    new Item.Settings().maxCount(1)));
 
     // —— 坦克专属盾·磐盾(m44)——
     public static final Item TANK_SHIELD = register("tank_shield",

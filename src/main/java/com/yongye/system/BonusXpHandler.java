@@ -40,7 +40,7 @@ public final class BonusXpHandler {
 
             // m291 贪婪强化:额外经验 = 基准 × min(封顶, 等级×每级值)。与上面分档独立叠加。
             // m300:击杀归属统一——召唤物击杀按主人的贪婪等级结算(傀儡杀怪原版不掉经验,这份保底经验归主人)
-            net.minecraft.server.network.ServerPlayerEntity killer = SummonerHandler.creditedKiller(source);
+            net.minecraft.server.network.ServerPlayerEntity killer = SummonKillCredit.creditedKiller(source);
             if (killer != null) {
                 int lv = SkillEffectManager.getLearnedLevel(killer, com.yongye.item.SkillType.GREED);
                 if (lv > 0) {

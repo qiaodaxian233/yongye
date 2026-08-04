@@ -27,7 +27,7 @@ public final class SkillFxHelper {
         int color = switch (c) {
             case WARRIOR -> 4;               // 红
             case TANK -> 1;                  // 绿
-            case ASSASSIN, SUMMONER -> 3;    // 粉
+            case ASSASSIN -> 3;              // 粉
             case WARLOCK -> 0;               // 蓝
             case MONK, SWORDSMAN -> 2;       // 黄绿
         };

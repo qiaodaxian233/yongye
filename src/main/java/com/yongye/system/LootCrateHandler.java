@@ -59,10 +59,10 @@ public final class LootCrateHandler {
         if (attacker instanceof net.minecraft.entity.mob.MobEntity m
                 && m instanceof net.minecraft.entity.Tameable t
                 && t.getOwner() instanceof PlayerEntity) return true;
-        // 铁傀儡等非 Tameable 召唤物:有攻击目标记录且世界里能找到玩家即可放行——
-        // 从简:傀儡击杀按环境击杀处理会漏掉召唤流的战果,这里放宽为「攻击者是友方傀儡也算」。
+        // 铁傀儡(玩家自建的原版傀儡)击杀也放行:帮玩家清怪的战果不该按环境击杀漏掉(m453 起仅指原版傀儡)。
         if (attacker instanceof net.minecraft.entity.passive.IronGolemEntity) return true;
-        if (attacker instanceof com.yongye.entity.GanDiEntity) return true;
+        // m453:术士暗影分身击杀同样放行(与 m300 击杀归属口径对齐;此前只写了召唤师侧是漏项)
+        if (attacker instanceof com.yongye.entity.WarlockCloneEntity) return true;
         return false;
     }
 

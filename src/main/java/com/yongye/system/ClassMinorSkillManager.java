@@ -159,12 +159,6 @@ public final class ClassMinorSkillManager {
                 burst(sw, p, ParticleTypes.CLOUD, SoundEvents.ENTITY_PHANTOM_FLAP);
                 msg(p, "疾影步!", Formatting.AQUA);
             }
-            case SUMMONER -> {
-                // 召唤:5 座强化铁傀儡(m232 从大招挪来,独立冷却;大招 X 专职癫狂)
-                int n = SummonerHandler.summonGolems(p);
-                burst(sw, p, ParticleTypes.POOF, SoundEvents.BLOCK_ANVIL_PLACE);
-                msg(p, "召唤!" + n + " 座强化铁傀儡拔地而起(大招键=癫狂请朋友助阵)", Formatting.AQUA);
-            }
         }
         return true;
     }

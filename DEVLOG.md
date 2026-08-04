@@ -3666,3 +3666,33 @@ ServerBossBar#setName)。Java 数 164 不变。configVersion 不变(仍 19)。
   只写留存的干弟自定义(m413/m414)。「仅两处平衡」指 m416 普通怪附伤去除与 m432 血量书分档,其余数值零改动,
   文中如实标注。
 - 纯文档零代码,配置 v 仍 170。
+
+## m453 召唤师职业彻底移除(作者点名:「我要彻底移除召唤师」,2026-08-04)
+- **范围**:代码 31 文件 + 资源 8 文件 + 配置 40+ 字段。删净:PlayerClass.SUMMONER 枚举、SummonerHandler/
+  GanDiEntity/GanDi 渲染器·皮肤缓存·设置屏五文件、GANDI 实体注册、傀儡召唤/癫狂/统御/肝帝台词全套、
+  选职页签与技能介绍行、干弟按钮与 puppet 命令、Debug 三区块、HUD 三分支、咏唱/大招光晕分支、
+  职业书/武器/配方/肝帝贴图×5/选职海报、lang 条目;m426/m439 的上下架开关体系(enableSummonerClass)
+  随之整体退役。配置 **v170→171**(纯删字段,Gson 读旧档多余键自动忽略,无需迁移块)。
+- **m300 击杀归属基建迁出**:creditedKiller 被九系统共用且术士暗影分身仍在册,不能陪葬——
+  新建 SummonKillCredit 承接(只剩 玩家/分身 两路径),九处调用点全量改指;免友伤/协同集火
+  收窄到只护分身(Angerable 压仇恨那段是傀儡专用,一并退役)。
+- **老档三重防线**(彻底移除≠砸档):
+  ①职业:ClassManager 入服 JOIN 清洗——learned 摘 "summoner",摘空→重置 STARTING_CLASS_CHOSEN+
+   GOT_CLASS_BOOK,同次登录 YongyeNet 的 JOIN(注册顺序在后,Yongye.java 79<157 行)照新玩家流程
+   重发职业选择书**免费重选本命**;还剩职业→顶为本命。两种情况都聊天栏明示;
+  ②物品:直接反注册会让读档物品变空气,重强化「鹰扬」不能蒸发——LegacySummonerItem 转换壳占住
+   旧 id(不进创造栏/掉落/合成),入包 1t 内服务端 inventoryTick 转剑客同级装备:强化等级走
+   EquipmentEnhancer.withLevel 按**流光自己的基础值**重算(m337 转移同口径;整组件拷贝会把鹰扬
+   形状的属性错贴到剑上,踩坑清单第 3 条),附魔/自定义名照搬;职业书→剑客职业书。两个 model json
+   +武器/书贴图随壳保留,待老档消化完连壳一并删净;末影箱里的旧物要取回背包才转(inventoryTick 不扫末影箱);
+  ③实体:GANDI 反注册,区块加载遇到旧肝帝原版自动丢弃(日志一条,无害)。
+- **顺手补一个口径漏项**:LootCrateHandler 的击杀放行名单写了肝帝没写暗影分身(m300 统一口径时漏的),
+  分身击杀此前不触发宝箱掉落——补上;原版铁傀儡放行保留(玩家自建傀儡帮清怪的战果不该按环境击杀漏掉)。
+- **编译纪律**:javac 默认 100 错截断,差点复刻 m450a 的静默假通过——本轮 -Xmaxerrs 拉满重跑:
+  5614 错逐类核过全是外部依赖噪音(package does not exist / cannot find symbol / @Override 对外部超类),
+  被删符号悬空 **0**;两个资源校验只剩文档已注明的 pack.mcmeta 假阳性;仓库根再次落 javac.*.args
+  临时文件(上会话同样中招),.gitignore 根治。
+- **待编译验证**:DataComponentTypes.ENCHANTMENTS / CUSTOM_NAME 两常量在树无先例(UNBREAKABLE/
+  ATTRIBUTE_MODIFIERS 同类命名规律推定),CI 是真闸门。
+- 实机盯:①老召唤师档进服看两条迁移提示与重发的选职书;②背包/箱子里的旧鹰扬拾起后 1t 转「流光」
+  且强化等级/附魔在;③选职界面 6 页签;④术士分身照常免友伤/协同集火/击杀记主人,现在还多了宝箱掉落。

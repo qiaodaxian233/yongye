@@ -29,7 +29,7 @@ public final class ProtectScrollHandler {
             YongyeConfig c = YongyeConfig.get();
             if (!(entity instanceof Monster)) return;
             if (!(entity.getWorld() instanceof ServerWorld world)) return;
-            ServerPlayerEntity killer = SummonerHandler.creditedKiller(source); // m300 召唤物击杀记主人
+            ServerPlayerEntity killer = SummonKillCredit.creditedKiller(source); // m300 召唤物击杀记主人
             if (killer == null) return;
 
             // m276:自动卷轴低概率掉落(独立于保护卷开关)

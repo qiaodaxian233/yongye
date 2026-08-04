@@ -31,7 +31,7 @@ import net.minecraft.util.Formatting;
  *   否则归零;每日目标/奖励都按连击加成 (100+streak×bountyStreakBonusPercent)%。
  * 奖励=强化石(基准档+1,精英档)×N + 终焉精华 ×N,offerOrDrop 直接进包(配合 m357 自动入库落仓库)。
  * 同步零新包:HudInfoPayload 尾加 bounty 字段(m361/m363 同款追加口径),任务书第 5 页签「悬赏」展示。
- * 击杀归属走 SummonerHandler.creditedKiller(m300 口径,召唤物击杀记主人)。
+ * 击杀归属走 SummonKillCredit.creditedKiller(m300 口径,召唤物击杀记主人)。
  */
 public final class DailyBountyHandler {
     private DailyBountyHandler() {}
@@ -48,7 +48,7 @@ public final class DailyBountyHandler {
                 return;
             }
             if (!(entity instanceof Monster)) return;
-            ServerPlayerEntity killer = SummonerHandler.creditedKiller(source);
+            ServerPlayerEntity killer = SummonKillCredit.creditedKiller(source);
             if (killer == null) return;
             addProgress(killer, T_KILL, 1);
             if (entity.getAttachedOrElse(ModAttachments.IS_ELITE, false)) addProgress(killer, T_ELITE, 1);

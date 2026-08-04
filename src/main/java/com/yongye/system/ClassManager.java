@@ -52,9 +52,6 @@ public final class ClassManager {
                     new CMod(3, -0.1, Operation.ADD_MULTIPLIED_BASE));
             case ASSASSIN -> List.of(new CMod(3, 0.2, Operation.ADD_MULTIPLIED_BASE), new CMod(1, -3, Operation.ADD_VALUE),
                     new CMod(2, 2, Operation.ADD_VALUE));
-            // m225 召唤师:后排指挥位——+10 血(站得住)、-20% 攻(输出全靠傀儡)、+1 实体交互距离(远程点兵)
-            case SUMMONER -> List.of(new CMod(0, 10, Operation.ADD_VALUE),
-                    new CMod(2, -0.2, Operation.ADD_MULTIPLIED_TOTAL), new CMod(5, 1, Operation.ADD_VALUE));
         };
     }
 
@@ -101,11 +98,6 @@ public final class ClassManager {
     /** 开局选职:把所选职业作为第一(本命)职业授予,出生即生效;可选附赠专属武器。
      *  已选过 / 已有职业则不再授予(防重复与防刷)。 */
     public static boolean chooseStartingClass(ServerPlayerEntity p, PlayerClass c) {
-        // m426 召唤师下架:服务端权威拒绝(选职界面已不显示,此处兜伪造裸包,C2S 复核铁律)
-        if (c == PlayerClass.SUMMONER && !YongyeConfig.get().enableSummonerClass) {
-            p.sendMessage(Text.literal("召唤师职业当前未开放").formatted(Formatting.RED), false);
-            return false;
-        }
         if (p.getAttachedOrElse(ModAttachments.STARTING_CLASS_CHOSEN, false)) return false;
         List<String> learned = learnedList(p);
         if (!learned.isEmpty()) {           // 老玩家已有职业:只补标记,不再弹窗
@@ -148,11 +140,6 @@ public final class ClassManager {
 
     public static boolean learn(ServerPlayerEntity p, PlayerClass type) {
         YongyeConfig cfg = YongyeConfig.get();
-        // m426 召唤师下架:老档里残留的召唤师职业书也学不了(服务端权威)
-        if (type == PlayerClass.SUMMONER && !cfg.enableSummonerClass) {
-            p.sendMessage(Text.literal("召唤师职业当前未开放").formatted(Formatting.RED), true);
-            return false;
-        }
         List<String> learned = learnedList(p);
         if (learned.contains(type.id)) {
             p.sendMessage(Text.literal("你已经学过【" + type.cn + "】了").formatted(Formatting.YELLOW), true);
@@ -186,11 +173,6 @@ public final class ClassManager {
         List<String> learned = learnedList(p);
         PlayerClass nc = PlayerClass.byId(newId);
         if (nc == null) return false;
-        // m426 召唤师下架:替换流程也进不来(与 chooseStartingClass/learn 同门)
-        if (nc == PlayerClass.SUMMONER && !cfg.enableSummonerClass) {
-            p.sendMessage(Text.literal("召唤师职业当前未开放").formatted(Formatting.RED), true);
-            return false;
-        }
         if (learned.size() < 2) {                       // 防御:不足 2 职业不该走替换流程
             p.sendMessage(Text.literal("当前职业不足 2 个,无需替换").formatted(Formatting.YELLOW), true);
             return false;
@@ -311,6 +293,27 @@ public final class ClassManager {
     }
 
     public static void register() {
+        // m453 召唤师彻底移除 · 老档清洗:已学列表里的 "summoner" 入服即摘除。
+        // 摘完为空 → 重置「已选职」与「已发选职书」标记,本次登录 YongyeNet 的 JOIN(注册在本回调之后,
+        // 见 Yongye.java 顺序:ClassManager 79 行 < YongyeNet 157 行)会照新玩家流程重发职业选择书,免费重选本命;
+        // 摘完还剩别的职业 → 剩下的顶为本命,只提示不打断。
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayerEntity p = handler.player;
+            List<String> learned = learnedList(p);
+            if (!learned.remove("summoner")) return;
+            p.setAttached(ModAttachments.LEARNED_CLASSES, learned);
+            if (learned.isEmpty()) {
+                p.setAttached(ModAttachments.STARTING_CLASS_CHOSEN, false);
+                p.setAttached(ModAttachments.GOT_CLASS_BOOK, false);
+                p.sendMessage(Text.literal("【夜蚀】召唤师职业已从模组中移除,请用新发放的「职业选择书」免费重选本命职业").formatted(Formatting.GOLD), false);
+            } else {
+                p.sendMessage(Text.literal("【夜蚀】召唤师职业已从模组中移除,你的本命职业变更为【"
+                        + (PlayerClass.byId(learned.get(0)) != null ? PlayerClass.byId(learned.get(0)).cn : "?") + "】").formatted(Formatting.GOLD), false);
+            }
+            applyClasses(p);
+            com.yongye.network.YongyeNet.sendStats(p);
+            com.yongye.network.YongyeNet.sendTalents(p);
+        });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (server.getTicks() % 20 != 0) return;
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) applyClasses(p);

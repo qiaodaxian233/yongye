@@ -7,8 +7,8 @@ public enum PlayerClass {
     WARLOCK("warlock", "术士"),
     SWORDSMAN("swordsman", "剑客"),
     MONK("monk", "武僧"),
-    ASSASSIN("assassin", "刺客"),
-    SUMMONER("summoner", "召唤师");   // m223 召唤流:召唤傀儡/强化/癫狂
+    ASSASSIN("assassin", "刺客");
+    // m453:召唤师(summoner)彻底移除(作者点名);旧档 "summoner" 字符串经 byId 得 null,由 ClassManager 入服清洗
 
     public final String id;
     public final String cn;

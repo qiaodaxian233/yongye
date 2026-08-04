@@ -10,7 +10,7 @@ import net.minecraft.util.Identifier;
 
 /**
  * 术士分身渲染器(m262)——玩家模型 + 程序化暗紫剪影皮肤(warlock_clone.png)。
- * 结构与 GanDiRenderer 一致(该写法已实机编译验证),单皮肤宽臂,无变体切换。
+ * 结构沿自旧版肝帝渲染器(该写法已实机编译验证;肝帝已随 m453 召唤师移除),单皮肤宽臂,无变体切换。
  */
 public class WarlockCloneRenderer extends BipedEntityRenderer<WarlockCloneEntity, PlayerEntityModel<WarlockCloneEntity>> {
 

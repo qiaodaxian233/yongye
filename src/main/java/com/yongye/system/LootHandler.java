@@ -122,7 +122,7 @@ public final class LootHandler {
             if (!cfg.enableRandomLoot) return;
             if (!(entity instanceof Monster)) return;
             if (!(entity.getWorld() instanceof ServerWorld world)) return;
-            ServerPlayerEntity credited = SummonerHandler.creditedKiller(damageSource); // m300 召唤物击杀记主人
+            ServerPlayerEntity credited = SummonKillCredit.creditedKiller(damageSource); // m300 召唤物击杀记主人
             if (cfg.lootRequirePlayerKill && credited == null) return;
             // Boss 掉落由 BossHandler 负责,避免重复
             if (entity.getAttachedOrElse(com.yongye.registry.ModAttachments.IS_BOSS, false)) return;

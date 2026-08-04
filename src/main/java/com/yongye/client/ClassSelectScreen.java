@@ -22,25 +22,16 @@ public class ClassSelectScreen extends Screen {
     /** 海报贴图像素(m215 起横版,统一 1280×720,16:9)。 */
     private static final int TW = 1280, TH = 720;
 
-    /** m426:开放给玩家选的职业(召唤师被 enableSummonerClass=false 下架时无此页签);
-     *  SKILL_INTRO 仍按 PlayerClass.values() 全量对位,渲染处改用 ordinal 取行,过滤后不错位。 */
-    private final PlayerClass[] classes = buildClasses();
-    private final YongyeButton[] tabs = new YongyeButton[buildClasses().length];
+    /** m453:召唤师随枚举移除,页签回到 PlayerClass.values() 全量(六职业);
+     *  SKILL_INTRO 按 values() 顺序一一对位,渲染处用 ordinal 取行。 */
+    private final PlayerClass[] classes = PlayerClass.values();
+    private final YongyeButton[] tabs = new YongyeButton[PlayerClass.values().length];
     private int sel = 0;
-
-    private static PlayerClass[] buildClasses() {
-        java.util.List<PlayerClass> l = new java.util.ArrayList<>();
-        for (PlayerClass c : PlayerClass.values()) {
-            if (c == PlayerClass.SUMMONER && !com.yongye.YongyeConfig.get().enableSummonerClass) continue;
-            l.add(c);
-        }
-        return l.toArray(new PlayerClass[0]);
-    }
 
     // init() 里算好的布局(底部页签行/确认行 Y)
     private int tabY, confirmY;
 
-    /** m228:技能按键介绍(与 PlayerClass.values() 顺序一一对应:肉盾/战士/术士/剑客/武僧/刺客/召唤师)。 */
+    /** m228:技能按键介绍(与 PlayerClass.values() 顺序一一对应:肉盾/战士/术士/剑客/武僧/刺客)。 */
     private static final String[][] SKILL_INTRO = {
             {"【X】不动如山:嘲讽群怪 + 抗性/吸收护体", "【C】盾击:小范围重击 + 击退减速", "被动:嘲讽聚怪 · 护盾吸收 · 格挡反震 · 15% 真减伤"},
             {"【X】旋风斩:周身范围一击", "【C】战吼:震慑周围(虚弱/缓慢),自身力量", "被动:吸血 15% · 残血目标斩杀"},
@@ -48,7 +39,6 @@ public class ClassSelectScreen extends Screen {
             {"【X】万剑归一:前方大范围剑气洞穿", "【C】剑气斩:前方短距剑气", "连斩 10 刀自动放穿透剑气 · 招架反弹 · +12% 移速"},
             {"【X】百裂拳:周身连击 + 强力击退", "【C】金钟罩:短时抗性II + 回复", "空手连击层层叠伤 · 15% 缴械 · 越打越痛"},
             {"【X】影遁:隐身 + 迅捷突袭", "【C】疾影步:向前猛冲 + 短暂加速", "背刺伤害翻倍 · 20% 闪避/暴击 · 脱战加速+夜视"},
-            {"【X】癫狂:献祭生命,请朋友们助阵(岛风·晚安·不爱肝·迷人·芥末)", "【C】召唤:5 座强化铁傀儡(独立冷却,不占大招)", "傀儡血攻×2且持续回血 · 统御:召唤物在场自身获抗性 · 朋友们各带光环"},
     };
     private static final String COMMON_INTRO = "通用:R/G/V=混沌之刃武器技能(需持有) · 大招与小技能冷却互不占用 · 按键均可在 设置-按键 里改";
 

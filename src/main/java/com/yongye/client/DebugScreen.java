@@ -142,7 +142,6 @@ public class DebugScreen extends Screen {
                             new Btn("剑客 swordsman", "yongye classbook swordsman"),
                             new Btn("武僧 monk", "yongye classbook monk"),
                             new Btn("刺客 assassin", "yongye classbook assassin"),
-                            new Btn("召唤师 summoner", "yongye classbook summoner"),
                     }),
                     new Section("职业专属武器(classweapon)", new Btn[]{
                             new Btn("坦克·镇魂", "yongye classweapon tank"),
@@ -153,10 +152,6 @@ public class DebugScreen extends Screen {
                     }),
                     new Section("特殊武器", new Btn[]{
                             new Btn("混沌之刃", "yongye chaosblade"),
-                    }),
-                    new Section("召唤师上/下架(m426;掉落/选职即时,创造栏重启生效)", new Btn[]{
-                            new Btn("召唤师:开放", "yongye config set enableSummonerClass true"),
-                            new Btn("召唤师:下架·默认", "yongye config set enableSummonerClass false"),
                     }),
             }),
             // —— 刷怪 / 事件 ——
@@ -235,14 +230,6 @@ public class DebugScreen extends Screen {
                             new Btn("佩恩血 2万", "yongye config set painBossMaxHealth 20000"),
                             new Btn("佩恩攻 2000", "yongye config set painBossAttack 2000"),
                             new Btn("脉动黑暗·开", "yongye config set nightfallDarknessEffect true"),
-                    }),
-                    new Section("肝帝台词(字段=gandiTalk+成员+类别;| 分句;改句:config set 字段 句1|句2)", new Btn[]{
-                            new Btn("查·岛风登场", "yongye config get gandiTalkDaofengSpawn"),
-                            new Btn("查·晚安战斗", "yongye config get gandiTalkWananCombat"),
-                            new Btn("查·不爱肝闲聊", "yongye config get gandiTalkBuganIdle"),
-                            new Btn("查·迷人告别", "yongye config get gandiTalkMirenBye"),
-                            new Btn("台词·开", "yongye config set gandiChatEnabled true"),
-                            new Btn("台词·关", "yongye config set gandiChatEnabled false"),
                     }),
                     new Section("Boss 门控(掠夺者队长)", new Btn[]{
                             new Btn("队长Boss第8天", "yongye config set bossRaidCaptainMinDay 8"),

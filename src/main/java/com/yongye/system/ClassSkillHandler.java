@@ -73,7 +73,6 @@ public final class ClassSkillHandler {
         UUID id = p.getUuid();
         long now = p.getServerWorld().getTime();
         return switch (cls) {
-            case SUMMONER -> SummonerHandler.aliveGolemRatio(p);   // m223:傀儡存活比
             case WARLOCK -> {
                 // 灵力 = 当前血/最大血(实时反映,施法耗血即掉条)
                 float ratio = p.getHealth() / Math.max(1f, p.getMaxHealth());
