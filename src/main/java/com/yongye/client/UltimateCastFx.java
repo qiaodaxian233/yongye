@@ -48,6 +48,12 @@ public final class UltimateCastFx {
         color = classColor(ClientStats.className);
         startNanos = System.nanoTime();               // 覆盖旧的:同时最多 1 个
         ChantFx.onCast(ClientStats.className);        // m438 咏唱台词同帧甩出(零新协议,共用本边沿)
+        SwordRainFx.onCast(ClientStats.className);    // m448 万剑归一幻影剑群(剑客限定,拍点取自作者 bbmodel)
+        if ("swordsman".equals(ClientStats.className)) {
+            // m448「这动作没有」另一半:放大招时本地玩家甩一记居合(m254 七式之第 6 式,蓄而后发的气口最像「归一」)
+            MinecraftClient mc2 = MinecraftClient.getInstance();
+            if (mc2.player != null) SlashAnimManager.playFor(mc2.player, 6); // 第 6 式=居合(SlashFxManager V_IAI 私有常量,此处字面量+注释)
+        }
     }
 
     /** m411 调试面板探针:光晕是否进行中。 */
