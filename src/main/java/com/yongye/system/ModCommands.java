@@ -166,6 +166,46 @@ public final class ModCommands {
                                     return 1;
                                 })))
 
+                        // m455 天数直改(宣传拍摄用):全模组按天逻辑唯一口径 = ProgressionManager.gameDay
+                        // (getTimeOfDay/24000,m252 收口),故只改主世界 timeOfDay 即全链路生效(看板天数/
+                        // 按天预告/精英概率/进化/挖掘解锁/BOSS 降临天数门全部即时跟走,新刷的怪立刻按新天数算)。
+                        // /yongye day            → 查看当前天数(展示口径 = 第 1 天起算,与看板一致)
+                        // /yongye day <N>        → 跳到第 N 天,保留当日时刻(白天拍白天、夜里拍夜里)
+                        // /yongye day <N> <时刻>  → 跳到第 N 天并指定当日时刻(0=清晨 6000=正午 13000=入夜 18000=午夜)
+                        // ⚠ 跳完想调时刻别用原版 /time set(它写的是**绝对值**会把天数打回第 1 天),
+                        //   用 /yongye day <N> <时刻> 或 /time add。
+                        .then(CommandManager.literal("day")
+                                .executes(ctx -> {
+                                    net.minecraft.server.world.ServerWorld ow = ctx.getSource().getServer().getOverworld();
+                                    long day = ProgressionManager.gameDay(ow) + 1;
+                                    long tod = ow.getTimeOfDay() % 24000L;
+                                    ctx.getSource().sendFeedback(() ->
+                                            Text.literal("当前:第 " + day + " 天(当日时刻 " + tod + ")").formatted(Formatting.GOLD), false);
+                                    return 1;
+                                })
+                                .then(CommandManager.argument("day", IntegerArgumentType.integer(1))
+                                        .executes(ctx -> {
+                                            int n = IntegerArgumentType.getInteger(ctx, "day");
+                                            net.minecraft.server.world.ServerWorld ow = ctx.getSource().getServer().getOverworld();
+                                            long old = ProgressionManager.gameDay(ow) + 1;
+                                            ow.setTimeOfDay((n - 1L) * 24000L + ow.getTimeOfDay() % 24000L);
+                                            ctx.getSource().sendFeedback(() ->
+                                                    Text.literal("天数:第 " + old + " 天 → 第 " + n + " 天(当日时刻保留)")
+                                                            .formatted(Formatting.GOLD), false);
+                                            return 1;
+                                        })
+                                        .then(CommandManager.argument("timeOfDay", IntegerArgumentType.integer(0, 23999)).executes(ctx -> {
+                                            int n = IntegerArgumentType.getInteger(ctx, "day");
+                                            int tod = IntegerArgumentType.getInteger(ctx, "timeOfDay");
+                                            net.minecraft.server.world.ServerWorld ow = ctx.getSource().getServer().getOverworld();
+                                            long old = ProgressionManager.gameDay(ow) + 1;
+                                            ow.setTimeOfDay((n - 1L) * 24000L + tod);
+                                            ctx.getSource().sendFeedback(() ->
+                                                    Text.literal("天数:第 " + old + " 天 → 第 " + n + " 天(当日时刻 " + tod + ")")
+                                                            .formatted(Formatting.GOLD), false);
+                                            return 1;
+                                        }))))
+
                         .then(CommandManager.literal("redeem").executes(ctx -> {
                             NightfallManager.redeem(ctx.getSource().getServer());
                             return 1;
